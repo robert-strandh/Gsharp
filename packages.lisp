@@ -115,7 +115,7 @@
 	   #:128th-rest #:measure-rest #:double-whole-rest))
 
 (defpackage :score-pane
-  (:use :clim :clim-extensions :clim-lisp :sdl)
+  (:use :clim :clim-extensions :clim-lisp :sdl :gsharp-buffer)
   (:export #:draw-staff #:draw-stem #:draw-right-stem #:draw-left-stem 
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot

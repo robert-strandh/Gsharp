@@ -9,6 +9,10 @@
    ;; nil indicates that accidental has not been placed yet
    (accidental-position :initform nil :accessor accidental-position)))
 
+(define-presentation-method present
+    (staff (type staff) stream (view textual-view) &key)
+  (format stream "[staff ~a]" (name staff)))
+
 (defmethod draw-staff-and-clef (pane (staff staff) x1 x2)
   (when (clef staff)
     (draw-clef pane (name (clef staff)) (+ x1 10) (lineno (clef staff)))
@@ -30,7 +34,7 @@
 	    for x from (+ x1 10 (staff-step 8)) by (staff-step 2.5)
 	    while (eq (aref (keysig staff) pitch) :sharp)
 	    do (draw-accidental pane :sharp x (+ line yoffset)))))
-  (draw-staff pane x1 x2))
+  (draw-staff staff pane x1 x2))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))

@@ -72,7 +72,6 @@
    (keysig :accessor keysig :initarg :keysig
 	   :initform (make-array 7 :initial-element :natural))))
 	   
-
 (defmethod print-object ((s staff) stream)
   (with-slots (name clef keysig) s
     (format stream "[= :name ~W :clef ~W :keysig ~W ] " name clef keysig)))

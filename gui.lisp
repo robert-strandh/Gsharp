@@ -117,7 +117,7 @@
 	       (setf *commands* *global-command-table*)
 	       (when *kbd-macro-recording-p* (setf *kbd-macro-funs* '()
 						   *kbd-macro-recording-p* nil))))
-      (redisplay-gsharp-panes *gsharp-frame* :force-p t))))
+      (redisplay-frame-panes *gsharp-frame*))))
 	    
 (define-application-frame gsharp ()
   ((buffer :initarg :buffer :accessor buffer)
@@ -129,6 +129,7 @@
    (score (make-pane 'score-pane
 		     :width 700 :height 900
 		     :name "score"
+		     :display-time :no-clear
 		     :display-function 'display-score))
    (state (make-pane 'score-pane
 		     :width 50 :height 200
@@ -197,41 +198,6 @@
 	      (loop repeat (dots state)
 		    for dx from (+ right 5) by 5 do
 		    (draw-dot pane (+ xpos dx) 4)))))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Presentation tests for now
-
-(define-presentation-type bla ())
-
-(define-presentation-type blabla () :inherit-from 'bla)
-
-(define-presentation-method present (object (type bla) stream view &key)
-  (declare (ignore view))
-  (write-string object stream))
-
-(define-presentation-type hello ())
-
-(define-presentation-method present (object (type hello) stream view &key)
-  (declare (ignore object view))
-  (draw-line* stream 10 40 40 40))
-
-(defmethod medium-draw-line* (stream x1 y1 x2 y2)
-  (declare (ignore x1 y1 x2 y2))
-  (format stream "[a line]"))
-
-(define-gsharp-command com-accept-x ((x 'bla))
-  (format *error-output* "~a~%" x))
-
-(define-gsharp-command com-accept-y ((y 'blabla))
-  (format *error-output* "~a~%" y))
-
-(define-gsharp-command com-accept-z ((z 'hello))
-  (format *error-output* "~a~%" z))
-
-;;; Presentation tests for now
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun draw-the-cursor (pane x)
   (let* ((state (input-state *gsharp-frame*))
@@ -346,8 +312,36 @@
 	  (input-state *gsharp-frame*) input-state
 	  (staves (car (layers (car (segments buffer))))) (list staff))))
 
-(define-gsharp-command (com-load-file :name t) ((filename 'string :prompt "File Name"))
-  (let* ((buffer (read-everything filename))
+(define-presentation-type completable-pathname ()
+  :inherit-from 'pathname)
+
+(define-condition file-not-found (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "File nont found"))))
+
+(define-presentation-method accept
+    ((type completable-pathname) stream (view textual-view) &key)
+  (multiple-value-bind (pathname success string)
+      (complete-input stream
+		      (lambda (so-far mode)
+			(complete-from-possibilities
+			 so-far (ext:ambiguous-files so-far) '()
+			 :action mode
+			 :predicate (lambda (obj) (declare (ignore obj)) t)
+			 :name-key #'namestring
+			 :value-key #'identity))
+		      :allow-any-input t)
+    (declare (ignore success))
+    (or pathname string)))
+
+(define-gsharp-command (com-load-file :name t) ()
+  (let* ((stream (frame-standard-input *gsharp-frame*))
+	 (filename (handler-case (accept 'completable-pathname :stream stream
+					 :prompt "File Name")
+		     (simple-parse-error () (error 'file-not-found))))
+	 (buffer (read-everything filename))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state staff))
 	 (cursor (make-initial-cursor buffer)))
@@ -356,10 +350,14 @@
 	  (cursor *gsharp-frame*) cursor)
     (number-all (buffer *gsharp-frame*))))
 
-(define-gsharp-command (com-save-buffer-as :name t) ((filename 'string :prompt "File Name"))
-  (with-open-file (stream filename :direction :output)
-    (save-buffer-to-stream (buffer *gsharp-frame*) stream)
-    (message "Saved buffer to ~A~%" filename)))
+(define-gsharp-command (com-save-buffer-as :name t) ()
+  (let* ((stream (frame-standard-input *gsharp-frame*))
+	 (filename (handler-case (accept 'completable-pathname :stream stream
+					 :prompt "File Name")
+		     (simple-parse-error () (error 'file-not-found)))))
+    (with-open-file (stream filename :direction :output)
+      (save-buffer-to-stream (buffer *gsharp-frame*) stream)
+      (message "Saved buffer to ~A~%" filename))))
 
 (define-gsharp-command (com-quit :name t) ()
   (frame-exit *application-frame*))
@@ -445,9 +443,10 @@
 		 (setf (staff (input-state *gsharp-frame*))
 		       staff))))))
 
-(define-gsharp-command (com-insert-layer-after :name t) ((staff-name 'string :prompt "Staff"))
+(define-gsharp-command (com-insert-layer-after :name t) ()
   (let ((cursor (cursor *gsharp-frame*))
-	(staff (find-staff staff-name (buffer *gsharp-frame*))))
+	(staff (accept 'staff :prompt "Staff")))
+;;;	(staff (find-staff staff-name (buffer *gsharp-frame*))))
     (if (not staff)
 	(message "No such staff in buffer~%")
 	(progn (insert-layer-after (make-initialized-layer) cursor)
@@ -456,7 +455,6 @@
 		 (add-staff-to-layer staff layer)
 		 (setf (staff (input-state *gsharp-frame*))
 		       staff))))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

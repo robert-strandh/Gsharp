@@ -407,13 +407,16 @@
   (loop for staff-line in (slot-value record 'staff-lines)
 	do (replay-output-record staff-line stream region x-offset y-offset)))
 
-(defun draw-staff (pane x1 x2)
-  (multiple-value-bind (left right) (bar-line-offsets *font*)
-    (loop for staff-step from 0 by 2
-	  repeat 5 do
-	  (present (make-instance 'staff-line :x1 (+ x1 left) :staff-step staff-step :x2 (+ x2 right))
-		   'staff-line :stream pane))))
-;;;	(draw-staff-line pane (+ x1 left) staff-step (+ x2 right))))
+(define-presentation-method present
+    (staff (type staff) stream (view textual-view) &key)
+  (format stream "[staff ~a]" (name staff)))
+
+(defun draw-staff (staff pane x1 x2)
+  (with-output-as-presentation (pane staff 'staff)
+    (multiple-value-bind (left right) (bar-line-offsets *font*)
+      (loop for staff-step from 0 by 2
+	    repeat 5
+	    do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right))))))
 
 ;;;;;;;;;;;;;;;;;; stem
 
