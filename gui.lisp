@@ -1063,7 +1063,7 @@
 (define-gsharp-command com-end-kbd-macro ()
   (message "keyboad macro defined~%")
   (setf *kbd-macro-recording-p* nil
-	*kbd-macro-keys* (nreverse *kbd-macro-keys*)))
+	*kbd-macro-keys* (nreverse (cddr *kbd-macro-keys*))))
 
 (define-gsharp-command com-call-last-kbd-macro ()
   (loop with commands = *global-command-table*
