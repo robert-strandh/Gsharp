@@ -7,118 +7,47 @@
 	 (bar (barno slice 0)))
   (make-cursor bar 0)))
 
-(defparameter *global-command-table* (make-hash-table :test #'equal))
-(defparameter *x-command-table* (make-hash-table :test #'equal))
-(defparameter *i-command-table* (make-hash-table :test #'equal))
-(defparameter *ix-command-table* (make-hash-table :test #'equal))
-(defparameter *c-x-command-table* (make-hash-table :test #'equal))
-(defparameter *commands* *global-command-table*)
-
-(defun add-command (gesture command table)
-  (setf (gethash (list (car gesture) (apply #'make-modifier-state (cdr gesture)))
-		 table)
-	command))	
-
-;;; global command table
-
-(add-command '(#\L :shift) 'com-lower *global-command-table*)
-(add-command '(#\H :shift) 'com-higher *global-command-table*)
-(add-command '(#\f :control) 'com-forward-element *global-command-table*)
-(add-command '(#\b :control) 'com-backward-element *global-command-table*)
-(add-command '(#\d :control) 'com-delete-element *global-command-table*)
-(add-command '(#\h :control) 'com-erase-element *global-command-table*)
-(add-command '(#\c) 'com-insert-note-c *global-command-table*)
-(add-command '(#\d) 'com-insert-note-d *global-command-table*)
-(add-command '(#\e) 'com-insert-note-e *global-command-table*)
-(add-command '(#\f) 'com-insert-note-f *global-command-table*)
-(add-command '(#\g) 'com-insert-note-g *global-command-table*)
-(add-command '(#\a) 'com-insert-note-a *global-command-table*)
-(add-command '(#\b) 'com-insert-note-b *global-command-table*)
-(add-command '(#\,) 'com-insert-rest *global-command-table*)
-(add-command '(#\Space) 'com-insert-empty-cluster *global-command-table*)
-(add-command '(#\C :shift) 'com-add-note-c *global-command-table*)
-(add-command '(#\D :shift) 'com-add-note-d *global-command-table*)
-(add-command '(#\E :shift) 'com-add-note-e *global-command-table*)
-(add-command '(#\F :shift) 'com-add-note-f *global-command-table*)
-(add-command '(#\G :shift) 'com-add-note-g *global-command-table*)
-(add-command '(#\A :shift) 'com-add-note-a *global-command-table*)
-(add-command '(#\B :shift) 'com-add-note-b *global-command-table*)
-(add-command '(#\h :meta) 'com-rotate-notehead *global-command-table*)
-(add-command '(#\s :meta) 'com-rotate-stem-direction *global-command-table*)
-(add-command '(#\p) 'com-current-increment *global-command-table*)
-(add-command '(#\n) 'com-current-decrement *Global-command-table*)
-(add-command '(#\| :shift) 'com-insert-measure-bar *global-command-table*)
-(add-command '(#\.) 'com-more-dots *global-command-table*)
-(add-command '(#\[) 'com-more-lbeams *global-command-table*)
-(add-command '(#\]) 'com-more-rbeams *global-command-table*)
-(add-command '(#\#) 'com-sharper *global-command-table*)
-(add-command '(#\# :shift) 'com-sharper *global-command-table*)
-(add-command '(#\@ :shift) 'com-flatter *global-command-table*)
-(add-command '(#\# :meta) 'com-more-sharps *global-command-table*)
-(add-command '(#\# :meta :shift) 'com-more-sharps *global-command-table*)
-(add-command '(#\@ :meta :shift) 'com-more-flats *global-command-table*)
-(add-command '(#\u :meta) 'com-up *global-command-table*)
-(add-command '(#\d :meta) 'com-down *global-command-table*)
-(add-command '(#\l :meta) 'com-left *global-command-table*)
-(add-command '(#\r :meta) 'com-right *global-command-table*)
-(add-command '(#\p :meta) 'com-previous-layer *global-command-table*)
-(add-command '(#\n :meta) 'com-next-layer *global-command-table*)
-(add-command '(#\x) *x-command-table* *global-command-table*)
-(add-command '(#\i) *i-command-table* *global-command-table*)
-(add-command '(#\x :control) *c-x-command-table* *global-command-table*)
-
-;;; i command table
-(add-command '(#\.) 'com-istate-more-dots *i-command-table*)
-(add-command '(#\[) 'com-istate-more-lbeams *i-command-table*)
-(add-command '(#\]) 'com-istate-more-rbeams *i-command-table*)
-(add-command '(#\h) 'com-istate-rotate-notehead *i-command-table*)
-(add-command '(#\s) 'com-istate-rotate-stem-direction *i-command-table*)
-(add-command '(#\x) *ix-command-table* *i-command-table*)
-
-;;; ix command table
-(add-command '(#\.) 'com-istate-fewer-dots *ix-command-table*)
-(add-command '(#\[) 'com-istate-fewer-lbeams *ix-command-table*)
-(add-command '(#\]) 'com-istate-fewer-rbeams *ix-command-table*)
-
-;;; x-command-table
-(add-command '(#\.) 'com-fewer-dots *x-command-table*)
-(add-command '(#\[) 'com-fewer-lbeams *x-command-table*)
-(add-command '(#\]) 'com-fewer-rbeams *x-command-table*)
-
-;;; c-x-command-table
-(add-command '(#\( :shift) 'com-start-kbd-macro *c-x-command-table*)
-(add-command '(#\() 'com-start-kbd-macro *c-x-command-table*)
-(add-command '(#\) :shift) 'com-end-kbd-macro *c-x-command-table*)
-(add-command '(#\)) 'com-end-kbd-macro *c-x-command-table*)
-(add-command '(#\e) 'com-call-last-kbd-macro *c-x-command-table*)
-
-(defmethod redisplay-gsharp-panes (frame &key force-p)
-  (loop for pane in (frame-current-panes frame)
-	do (when (typep pane 'score-pane:score-pane)
-	     (redisplay-frame-pane frame pane :force-p force-p))))
-
 (defvar *gsharp-frame*)
 
 (defparameter *kbd-macro-recording-p* nil)
 (defparameter *kbd-macro-funs* '())
 
+(defparameter *accumulated-keys* '())
+(defparameter *modes* (list *global-mode-table*))
+(defparameter *last-character* nil)
+
 (defmethod dispatch-event :around ((pane score-pane:score-pane) (event key-press-event))
   (when (keyboard-event-character event)
-    (let* ((key (list (keyboard-event-character event)
-		      (event-modifier-state event)))
-	   (command (gethash key *commands*)))
-      (cond ((hash-table-p command) (setf *commands* command))
-	    ((fboundp command)
-	     (when *kbd-macro-recording-p* (push command *kbd-macro-funs*))
-	     (handler-case (funcall command)
-	       (gsharp-condition (condition) (format *error-output* "~a~%" condition)))
-	     (setf *commands* *global-command-table*))
-	    (t (format *error-output* "no command for ~a~%" key)
-	       (setf *commands* *global-command-table*)
-	       (when *kbd-macro-recording-p* (setf *kbd-macro-funs* '()
-						   *kbd-macro-recording-p* nil))))
+    (let ((key (list (keyboard-event-character event)
+		     (event-modifier-state event))))
+      (setf *accumulated-keys* (append *accumulated-keys* (list key)))
+      (setf *last-character* (char-to-unicode (car key)))
+      (let (dico)
+	(cond ((and (setf dico (find t *modes*
+				     :key (lambda (x)
+					    (multiple-value-bind (value exists-p prefix-p)
+						(dico-object x *accumulated-keys*)
+					      (declare (ignore value prefix-p))
+					      exists-p))))
+		    (fboundp (dico-object dico *accumulated-keys*)))
+	       (let ((command (dico-object dico *accumulated-keys*)))
+		 (when *kbd-macro-recording-p* (push command *kbd-macro-funs*))
+		 (handler-case (funcall command)
+		   (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
+	       (setf *accumulated-keys* '()))
+	      ((setf dico (find-if (lambda (x)
+				     (multiple-value-bind (value exists-p prefix-p)
+					 (dico-object x *accumulated-keys*)
+				       (declare (ignore value exists-p))
+				       prefix-p))
+				   *modes*))
+	       nil)
+	      (t (format *error-output* "no command for ~a~%" *accumulated-keys*)
+		 (setf *accumulated-keys* '())
+		 (when *kbd-macro-recording-p* (setf *kbd-macro-funs* '()
+						     *kbd-macro-recording-p* nil)))))
       (redisplay-frame-panes *gsharp-frame*))))
-	    
+
 (define-application-frame gsharp ()
   ((buffer :initarg :buffer :accessor buffer)
    (cursor :initarg :cursor :accessor cursor)
@@ -201,24 +130,33 @@
 
 (defun draw-the-cursor (pane x)
   (let* ((state (input-state *gsharp-frame*))
-	 (staff (staff state))
-	 (yoffset (gsharp-drawing::staff-yoffset staff))
-	 (clef (clef staff))
-	 (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
-			 (lineno clef)))
-	 (lnote-offset (score-pane:staff-step (- (last-note state) bottom-line))))
-    (draw-line* pane
-		x (+ (score-pane:staff-step 12) yoffset)
-		x (+ (score-pane:staff-step -4) yoffset)
-		:ink +yellow+)
-    (draw-line* pane
-		(- x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
-		(- x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
-		:ink +red+)
-    (draw-line* pane
-		(+ x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
-		(+ x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
-		:ink +red+)))
+	 (staff (car (staves (layer (cursor *gsharp-frame*)))))
+	 (yoffset (gsharp-drawing::staff-yoffset staff)))
+    (if (typep staff 'fiveline-staff)
+	(let* ((clef (clef staff))
+	       (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
+			       (lineno clef)))
+	       (lnote-offset (score-pane:staff-step (- (last-note state) bottom-line))))
+	  (draw-line* pane
+		      x (+ (score-pane:staff-step 12) yoffset)
+		      x (+ (score-pane:staff-step -4) yoffset)
+		      :ink +yellow+)
+	  (draw-line* pane
+		      (- x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
+		      (- x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
+		      :ink +red+)
+	  (draw-line* pane
+		      (+ x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
+		      (+ x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
+		      :ink +red+))
+	(progn (draw-line* pane
+			   (+ x 1) (+ (score-pane:staff-step 2) yoffset)
+			   (+ x 1) (+ (score-pane:staff-step -2) yoffset)
+			   :ink +red+)
+	       (draw-line* pane
+			   (- x 1) (+ (score-pane:staff-step 2) yoffset)
+			   (- x 1) (+ (score-pane:staff-step -2) yoffset)
+			   :ink +red+)))))
 
 (defmethod display-score ((frame gsharp) pane)
   (let* ((buffer (buffer frame)))
@@ -288,6 +226,7 @@
 	 ("Slice" :menu slice-command-table)
 	 ("Measure" :menu measure-command-table)
 	 ("Modes" :menu modes-command-table)
+	 ("Staves" :menu staves-command-table)
 	 ("Play" :menu play-command-table)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -306,7 +245,7 @@
   (let* ((buffer (make-initialized-buffer))
 	 (cursor (make-initial-cursor buffer))
 	 (staff (car (staves buffer)))
-	 (input-state (make-input-state staff)))
+	 (input-state (make-input-state)))
     (setf (buffer *gsharp-frame*) buffer
 	  (cursor *gsharp-frame*) cursor
 	  (input-state *gsharp-frame*) input-state
@@ -344,8 +283,7 @@
 					 :prompt "File Name")
 		     (simple-parse-error () (error 'file-not-found))))
 	 (buffer (read-everything filename))
-	 (staff (car (staves buffer)))
-	 (input-state (make-input-state staff))
+	 (input-state (make-input-state))
 	 (cursor (make-initial-cursor buffer)))
     (setf (buffer *gsharp-frame*) buffer
 	  (input-state *gsharp-frame*) input-state
@@ -398,12 +336,14 @@
 
 (define-gsharp-command (com-insert-segment-before :name t) ()
   (let ((cursor (cursor *gsharp-frame*)))
-    (insert-segment-before (make-initialized-segment) cursor)
+    (insert-segment-before (make-initialized-segment (car (staves (buffer *gsharp-frame*))))
+			   cursor)
     (backward-segment cursor)))
 
 (define-gsharp-command (com-insert-segment-after :name t) ()
   (let ((cursor (cursor *gsharp-frame*)))
-    (insert-segment-after (make-initialized-segment) cursor)
+    (insert-segment-after (make-initialized-segment (car (staves (buffer *gsharp-frame*))))
+			  cursor)
     (forward-segment cursor)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -413,50 +353,64 @@
 (make-command-table
  'layer-command-table
  :errorp nil
- :menu '(("Next" :command com-next-layer)
-	 ("Previous" :command com-previous-layer)
-	 ("Delete Current" :command com-delete-layer)
-	 ("Insert After Current" :command com-insert-layer-after)
-	 ("Insert Before Current" :command com-insert-layer-before)))
+ :menu '(("Select" :command com-select-layer)
+	 ("Rename" :command com-rename-layer)
+	 ("New"    :command com-add-layer)
+	 ("Delete" :command com-delete-layer)))
 
-(define-gsharp-command (com-next-layer :name t) ()
-  (next-layer (cursor *gsharp-frame*))
-  (setf (staff (input-state *gsharp-frame*))
-	(car (staves (layer (slice (bar (cursor *gsharp-frame*))))))))
+(define-condition layer-name-not-unique (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "Layer name already exists"))))
 
-(define-gsharp-command (com-previous-layer :name t) ()
-  (previous-layer (cursor *gsharp-frame*))
-  (setf (staff (input-state *gsharp-frame*))
-	(car (staves (layer (slice (bar (cursor *gsharp-frame*))))))))
+(defun acquire-unique-layer-name (prompt)
+  (let ((name (accept 'string :prompt prompt)))
+    (assert (not (member name (layers (segment (cursor *gsharp-frame*)))
+			 :test #'string= :key #'name))
+	    () `layer-name-not-unique)
+    name))
 
+(define-condition no-such-layer (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "No such layer"))))
 
+(define-presentation-method accept
+    ((type layer) stream (view textual-view) &key)
+  (multiple-value-bind (layer success string)
+      (handler-case (complete-input stream
+				    (lambda (so-far mode)
+				      (complete-from-possibilities
+				       so-far
+				       (layers (segment (cursor *gsharp-frame*)))
+				       '()
+				       :action mode
+				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :name-key #'name
+				       :value-key #'identity)))
+	(simple-parse-error () (error 'no-such-layer)))
+    (declare (ignore string))
+    (if success layer (error 'no-such-layer))))
+
+(define-gsharp-command (com-select-layer :name t) ()
+  (let ((selected-layer (accept 'layer :prompt "Select layer")))
+    (select-layer (cursor *gsharp-frame*) selected-layer)))
+
+(define-gsharp-command (com-rename-layer :name t) ()
+  (setf (name (accept 'layer :prompt "Rename layer"))
+	(acquire-unique-layer-name "New name of layer")))
+
+(define-gsharp-command (com-add-layer :name t) ()
+  (let* ((name (acquire-unique-layer-name "Name of new layer"))
+	 (staff (accept 'score-pane:staff :prompt "Initial staff of new layer"))
+	 (new-layer (make-layer name staff)))
+    (add-layer new-layer (segment (cursor *gsharp-frame*)))
+    (select-layer (cursor *gsharp-frame*) new-layer)))
+    
 (define-gsharp-command (com-delete-layer :name t) ()
   (delete-layer (cursor *gsharp-frame*)))
-
-(define-gsharp-command (com-insert-layer-before :name t) ((staff-name 'string :prompt "Staff"))
-  (let ((cursor (cursor *gsharp-frame*))
-	(staff (find-staff staff-name (buffer *gsharp-frame*))))
-    (if (not staff)
-	(message "No such staff in buffer~%")
-	(progn (insert-layer-before (make-initialized-layer) cursor)
-	       (previous-layer cursor)
-	       (let ((layer (layer (slice (bar (cursor *gsharp-frame*))))))
-		 (add-staff-to-layer staff layer)
-		 (setf (staff (input-state *gsharp-frame*))
-		       staff))))))
-
-(define-gsharp-command (com-insert-layer-after :name t) ()
-  (let ((cursor (cursor *gsharp-frame*))
-	(staff (accept 'score-pane:staff :prompt "Staff")))
-;;;	(staff (find-staff staff-name (buffer *gsharp-frame*))))
-    (if (not staff)
-	(message "No such staff in buffer~%")
-	(progn (insert-layer-after (make-initialized-layer) cursor)
-	       (next-layer cursor)
-	       (let ((layer (layer (slice (bar (cursor *gsharp-frame*))))))
-		 (add-staff-to-layer staff layer)
-		 (setf (staff (input-state *gsharp-frame*))
-		       staff))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -511,6 +465,20 @@
 
 (define-gsharp-command (com-fundamental :name t) ()
   nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; staves menu
+
+(make-command-table
+ 'staves-command-table
+ :errorp nil
+ :menu '(("Rotate" :command com-rotate-staves)))
+
+(define-gsharp-command (com-rotate-staves :name t) ()
+  (let ((layer (layer (cursor *gsharp-frame*))))
+    (setf (staves layer)
+	  (append (cdr (staves layer)) (list (car (staves layer)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -588,7 +556,7 @@
     (error "write compatibility layer for RUN-PROGRAM")))
 
 (define-gsharp-command (com-play-layer :name t) ()
-  (let* ((slice (body (layer (slice (bar (cursor *gsharp-frame*))))))
+  (let* ((slice (body (layer (cursor *gsharp-frame*))))
 	 (durations (measure-durations (list slice)))
 	 (tracks (list (track-from-slice slice 0 durations)))
 	 (midifile (make-instance 'midifile
@@ -609,7 +577,7 @@
   (setq climi::*all-ports* nil)
   (let* ((buffer (make-initialized-buffer))
 	 (staff (car (staves buffer)))
-	 (input-state (make-input-state staff))
+	 (input-state (make-input-state))
 	 (cursor (make-initial-cursor buffer)))
     (setf *gsharp-frame* (make-application-frame 'gsharp
 						 :buffer buffer
@@ -639,11 +607,11 @@
 
 (defun insert-note (pitch cluster)
   (let* ((state (input-state *gsharp-frame*))
+	 (staff (car (staves (layer (slice (bar cluster))))))
 	 (note (make-note pitch
-			  (staff state)
+			  staff
 			  (notehead state)
-			  (aref (keysig (staff state)) (mod pitch 7))
-;;;			  (accidentals state)
+			  (aref (keysig staff) (mod pitch 7))
 			  (dots state))))
     (setf *current-cluster* cluster
 	  *current-note* note)
@@ -690,7 +658,7 @@
 			  (if (eq (notehead state) :filled) (lbeams state) 0)
 			  (dots state)
 			  (notehead state)
-			  (staff (input-state *gsharp-frame*)))))
+			  (car (staves (layer (cursor *gsharp-frame*)))))))
     (insert-element rest cursor)
     (forward-element cursor)
     rest))
@@ -972,10 +940,11 @@
 	  (:up :down)
 	  (:down :auto))))
 
-(define-gsharp-command (com-set-clef :name t) ((name '(member :treble :bass :c))
-				     (line '(or integer null) :prompt "Line"))
-  (setf (clef (staff (input-state *gsharp-frame*)))
-	(make-clef name line)))
+(define-gsharp-command (com-set-clef :name t) ()
+  (let ((staff (accept 'score-pane:fiveline-staff :prompt "Set clef of staff"))
+	(type (accept 'clef-type :prompt "Type of clef"))
+	(line (accept 'integer :prompt "Line of clef")))
+    (setf (clef staff) (make-clef type line))))
 
 (define-gsharp-command com-higher ()
   (incf (last-note (input-state *gsharp-frame*)) 7))
@@ -989,7 +958,7 @@
     (loop until (end-of-bar-p cursor)
 	  do (push (cursor-element cursor) elements)
 	  do (delete-element cursor))
-    (insert-bar-after (make-bar) cursor)
+    (insert-bar-after (make-instance (class-of (bar cursor))) cursor)
     (forward-bar cursor)
     (loop for element in elements
 	  do (insert-element element cursor))))
@@ -1022,7 +991,7 @@
     (if success staff (error 'no-such-staff))))
 
 (define-presentation-method accept
-    ((type fiveline-staff) stream (view textual-view) &key)
+    ((type score-pane:fiveline-staff) stream (view textual-view) &key)
   (multiple-value-bind (staff success string)
       (handler-case (complete-input stream
 				    (lambda (so-far mode)
@@ -1056,7 +1025,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       '(:fiveline)
+				       '(:fiveline :lyrics)
 				       '()
 				       :action mode
 				       :predicate (lambda (obj) (declare (ignore obj)) t)
@@ -1093,26 +1062,27 @@
      (declare (ignore condition))
      (format stream "Staff name already exists"))))
 
-(defun acquire-unique-staff-name ()
-  (let ((name (accept 'string :prompt "Staff name")))
+(defun acquire-unique-staff-name (prompt)
+  (let ((name (accept 'string :prompt prompt)))
     (assert (not (member name (staves (buffer *gsharp-frame*)) :test #'string= :key #'name))
 	    () `staff-name-not-unique)
     name))
 
 (defun acquire-new-staff ()
-  (let ((name (acquire-unique-staff-name)))
+  (let ((name (acquire-unique-staff-name "Name of new staff")))
     (ecase (accept 'staff-type :prompt "Type")
-      (:fiveline (let ((clef (accept 'clef-type :prompt "Clef"))
-		       (line (accept 'integer :prompt "Line")))
-		   (make-fiveline-staff name (make-clef clef line)))))))
+      (:fiveline (let ((clef (accept 'clef-type :prompt "Clef type of new staff"))
+		       (line (accept 'integer :prompt "Line of clef")))
+		   (make-fiveline-staff name (make-clef clef line))))
+      (:lyrics (make-lyrics-staff name)))))
 
-(define-gsharp-command (com-add-staff-before :name t) ()
-  (add-staff-before-staff (accept 'score-pane:staff :prompt "Before staff")
+(define-gsharp-command (com-insert-staff-before :name t) ()
+  (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")
 			  (acquire-new-staff)
 			  (buffer *gsharp-frame*)))
 
-(define-gsharp-command (com-add-staff-after :name t) ()
-  (add-staff-after-staff (accept 'score-pane:staff :prompt "After staff")
+(define-gsharp-command (com-insert-staff-after :name t) ()
+  (add-staff-after-staff (accept 'score-pane:staff :prompt "Insert staff after staff")
 			 (acquire-new-staff)
 			 (buffer *gsharp-frame*)))
 
@@ -1121,23 +1091,24 @@
 			    (buffer *gsharp-frame*)))
 
 (define-gsharp-command (com-rename-staff :name t) ()
-  (let* ((staff (accept 'score-pane:staff :prompt "Staff"))
-	 (name (acquire-unique-staff-name))
+  (let* ((staff (accept 'score-pane:staff :prompt "Rename staff"))
+	 (name (acquire-unique-staff-name "New name of staff"))
 	 (buffer (buffer *gsharp-frame*)))
     (rename-staff name staff buffer)))
 
-(define-gsharp-command (com-add-layer-staff :name t) ()
-  (let ((staff (accept 'score-pane:staff :prompt "Staff"))
-	(layer (layer (slice (bar (cursor *gsharp-frame*))))))
+(define-gsharp-command (com-add-staff-to-layer :name t) ()
+  (let ((staff (accept 'score-pane:staff :prompt "Add staff to layer"))
+	(layer (layer (cursor *gsharp-frame*))))
     (add-staff-to-layer staff layer)))
 
-(define-gsharp-command (com-delete-layer-staff :name t) ((name 'string))
-  (let ((staff (find-staff name (buffer *gsharp-frame*)))
-	(layer (layer (slice (bar (cursor *gsharp-frame*))))))
+;;; FIXME restrict to staves that are actually in the layer. 
+(define-gsharp-command (com-delete-staff-from-layer :name t) ()
+  (let ((staff (accept 'score-pane:staff :prompt "Add staff to layer"))
+	(layer (layer (cursor *gsharp-frame*))))
     (remove-staff-from-layer staff layer)))
 
 (define-gsharp-command com-more-sharps ()
-  (let ((keysig (keysig (staff (input-state *gsharp-frame*)))))
+  (let ((keysig (keysig (car (staves (layer (cursor *gsharp-frame*)))))))
     (cond ((eq (aref keysig 3) :flat) (setf (aref keysig 3) :natural))
 	  ((eq (aref keysig 0) :flat) (setf (aref keysig 0) :natural))
 	  ((eq (aref keysig 4) :flat) (setf (aref keysig 4) :natural))
@@ -1154,7 +1125,7 @@
 	  ((eq (aref keysig 6) :natural) (setf (aref keysig 6) :sharp)))))
 
 (define-gsharp-command com-more-flats ()
-  (let ((keysig (keysig (staff (input-state *gsharp-frame*)))))
+  (let ((keysig (keysig (car (staves (layer (cursor *gsharp-frame*)))))))
     (cond ((eq (aref keysig 6) :sharp) (setf (aref keysig 6) :natural))
 	  ((eq (aref keysig 2) :sharp) (setf (aref keysig 2) :natural))
 	  ((eq (aref keysig 5) :sharp) (setf (aref keysig 5) :natural))

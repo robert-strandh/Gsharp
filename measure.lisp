@@ -154,8 +154,7 @@
   (when (buffer segment)
     (mark-modified (buffer segment))))
 
-(defmethod add-layer :after ((layer layer) (segment rsegment) position)
-  (declare (ignore position))
+(defmethod add-layer :after ((layer layer) (segment rsegment))
   (mark-modified segment))
 
 (defmethod remove-layer :before ((layer rlayer))

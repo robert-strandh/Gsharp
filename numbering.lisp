@@ -82,8 +82,7 @@
 (defnclass nsegment segment
   ())
 
-(defmethod add-layer :after ((layer nlayer) (segment segment) position)
-  (declare (ignore position))
+(defmethod add-layer :after ((layer nlayer) (segment segment))
   (number-elements (layers segment)))
 
 (defmethod remove-layer :around ((layer nlayer))

@@ -65,7 +65,9 @@
 ;;; Staff
 
 (defclass staff ()
-  ((name :accessor name :initarg :name :initform "default")))
+  ((name :accessor name :initarg :name :initform "default staff")))
+
+;;; fiveline
 
 (defgeneric clef (fiveline-staff))
 
@@ -98,6 +100,26 @@
 
 (set-dispatch-macro-character #\[ #\=
   #'read-fiveline-staff-v3
+  *gsharp-readtable-v3*)
+
+;;; lyric
+
+(defclass lyrics-staff (staff)
+  ())
+
+(defmethod print-object ((s lyrics-staff) stream)
+  (with-slots (name) s
+     (format stream "[L :name ~W ] " name)))
+
+(defun make-lyrics-staff (name)
+  (make-instance 'lyrics-staff :name name))
+
+(defun read-lyrics-staff-v3 (stream char n)
+  (declare (ignore char n))
+  (apply #'make-instance 'lyrics-staff (read-delimited-list #\] stream t)))
+
+(set-dispatch-macro-character #\[ #\L
+  #'read-lyrics-staff-v3
   *gsharp-readtable-v3*)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -243,6 +265,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Melody element
+
+(defclass melody-element (element) ())
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Cluster
 
 ;;; Return a list of the notes of the cluster
@@ -261,7 +289,7 @@
 ;;; to any cluster. 
 (defgeneric remove-note (note))
 
-(defclass cluster (element)
+(defclass cluster (melody-element)
   ((notes :initform '() :initarg :notes :accessor notes)
    (stem-direction :initarg :stem-direction :accessor stem-direction)
    (stem-length :initform nil :initarg :stem-length :accessor stem-length)))
@@ -329,7 +357,7 @@
 ;;;
 ;;; Rest
 
-(defclass rest (element)
+(defclass rest (melody-element)
   ((staff :initarg :staff :reader staff)
    (staff-pos :initarg :staff-pos :initform 4 :reader staff-pos)))
 
@@ -372,6 +400,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Lyrics element
+
+(defclass lyrics-element (element)
+  ((staff :initarg :staff :reader staff)
+   (text :initarg :text
+	 :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
+	 :reader text)))
+
+(defun make-lyrics-element (rbeams lbeams dots notehead staff)
+  (make-instance 'lyrics-element
+     :rbeams rbeams :lbeams lbeams :dots dots
+     :notehead notehead :staff staff))
+
+(defmethod print-object ((elem lyrics-element) stream)
+  (with-slots (notehead rbeams lbeams dots xoffset staff text) elem
+     (format stream "[A :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :staff ~W :text ~W ] " text)))
+
+(defun read-lyrics-element-v3 (stream char n)
+  (declare (ignore char n))
+  (apply #'make-instance 'lyrics-element (read-delimited-list #\] stream t)))
+
+(set-dispatch-macro-character #\[ #\A
+  #'read-lyrics-element-v3
+  *gsharp-readtable-v3*)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Bar
 
 ;;; It is recommended that the concept of a bar be hidden from the
@@ -400,37 +455,6 @@
 (defclass bar ()
   ((slice :initform nil :initarg :slice :reader slice)
    (elements :initform '() :initarg :elements :reader elements)))
-
-(defmethod print-object ((b bar) stream)
-  (format stream "[| :elements ~W ] " (elements b)))
-
-(defun make-bar ()
-  (make-instance 'bar))
-
-(defun read-bar-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((elements (read stream nil nil t))
-	 (bar (make-instance 'bar :elements elements)))
-    (loop for element in elements do
-	  (setf (slot-value element 'bar) bar))
-    (skip-until-close-bracket stream)
-    bar))
-
-(set-dispatch-macro-character #\[ #\|
-  #'read-bar-v2
-  *gsharp-readtable-v2*)
-
-(defun read-bar-v3 (stream char n)
-  (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (bar (apply #'make-instance 'bar rest)))
-    (loop for element in (elements bar) do
-	  (setf (slot-value element 'bar) bar))
-    bar))
-
-(set-dispatch-macro-character #\[ #\|
-  #'read-bar-v3
-  *gsharp-readtable-v3*)
 
 (defmethod nb-elements ((bar bar))
   (length (elements bar)))
@@ -465,6 +489,59 @@
       (setf elements (delete element elements :test #'eq)))
     (setf bar nil)))
 
+(defclass melody-bar (bar) ())
+
+(defmethod print-object ((b melody-bar) stream)
+  (format stream "[| :elements ~W ] " (elements b)))
+
+(defun make-melody-bar ()
+  (make-instance 'melody-bar))
+
+(defun read-melody-bar-v2 (stream char n)
+  (declare (ignore char n))
+  (let* ((elements (read stream nil nil t))
+	 (bar (make-instance 'melody-bar :elements elements)))
+    (loop for element in elements do
+	  (setf (slot-value element 'bar) bar))
+    (skip-until-close-bracket stream)
+    bar))
+
+(set-dispatch-macro-character #\[ #\|
+  #'read-melody-bar-v2
+  *gsharp-readtable-v2*)
+
+(defun read-melody-bar-v3 (stream char n)
+  (declare (ignore char n))
+  (let* ((rest (read-delimited-list #\] stream t))
+	 (bar (apply #'make-instance 'melody-bar rest)))
+    (loop for element in (elements bar) do
+	  (setf (slot-value element 'bar) bar))
+    bar))
+
+(set-dispatch-macro-character #\[ #\|
+  #'read-melody-bar-v3
+  *gsharp-readtable-v3*)
+
+(defclass lyrics-bar (bar) ())
+
+(defmethod print-object ((b lyrics-bar) stream)
+  (format stream "[C :elements ~W ] " (elements b)))
+
+(defun make-lyrics-bar ()
+  (make-instance 'lyrics-bar))
+
+(defun read-lyrics-bar-v3 (stream char n)
+  (declare (ignore char n))
+  (let* ((rest (read-delimited-list #\] stream t))
+	 (bar (apply #'make-instance 'lyrics-bar rest)))
+    (loop for element in (elements bar) do
+	  (setf (slot-value element 'bar) bar))
+    bar))
+
+(set-dispatch-macro-character #\[ #\C
+  #'read-lyrics-bar-v3
+  *gsharp-readtable-v3*)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Slice
@@ -496,11 +573,6 @@
 
 (defun make-empty-slice ()
   (make-instance 'slice))
-
-(defun make-initialized-slice ()
-  (let ((slice (make-empty-slice)))
-    (add-bar (make-bar) slice 0)
-    slice))
 
 (defun read-slice-v2 (stream char n)
   (declare (ignore char n))
@@ -552,14 +624,24 @@
      (declare (ignore condition))
      (format stream "Attempt to delete a bar not in a slice"))))
 
-(defmethod remove-bar ((bar bar))
+(defmethod remove-bar ((bar melody-bar))
   (with-slots (slice) bar
     (assert slice () 'bar-not-in-slice)
     (with-slots (bars) slice
       (setf bars (delete bar bars :test #'eq))
       (unless bars
 	;; make sure there is one bar left
-	(add-bar (make-bar) slice 0)))
+	(add-bar (make-instance 'melody-bar) slice 0)))
+    (setf slice nil)))
+
+(defmethod remove-bar ((bar lyrics-bar))
+  (with-slots (slice) bar
+    (assert slice () 'bar-not-in-slice)
+    (with-slots (bars) slice
+      (setf bars (delete bar bars :test #'eq))
+      (unless bars
+	;; make sure there is one bar left
+	(add-bar (make-instance 'lyrics-bar) slice 0)))
     (setf slice nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -592,34 +674,46 @@
 (defgeneric tail (layer))
 
 (defclass layer ()
-  ((segment :initform nil :initarg :segment :reader segment)
-   (staves :initform '() :initarg :staves :accessor staves)
+  ((name :initform "default layer" :initarg :name :accessor name)
+   (segment :initform nil :initarg :segment :reader segment)
+   (staves :initarg :staves :accessor staves)
    (head :initarg :head :accessor head)
    (body :initarg :body :accessor body)
    (tail :initarg :tail :accessor tail)))
 
-(defmethod print-object ((l layer) stream)
-  (with-slots (head body tail staves) l
-    (format stream "[_ :staves ~W :head ~W :body ~W :tail ~W ] "
-	    staves head body tail)))
+;;; melody layer
 
-(defun make-initialized-layer ()
-  (let* ((head (make-initialized-slice))
-	 (body (make-initialized-slice))
-	 (tail (make-initialized-slice))
-	 (result (make-instance 'layer :head head :body body :tail tail)))
-    (setf (slot-value head 'layer) result
-	  (slot-value body 'layer) result
-	  (slot-value tail 'layer) result)
-    result))
+(defclass melody-layer (layer) ())
 
-(defun read-layer-v2 (stream char n)
+(defmethod make-layer (name (initial-staff fiveline-staff))
+  (flet ((make-initialized-slice ()
+	   (let ((slice (make-empty-slice)))
+	     (add-bar (make-instance 'melody-bar) slice 0)
+	     slice)))
+    (let* ((head (make-initialized-slice))
+	   (body (make-initialized-slice))
+	   (tail (make-initialized-slice))
+	   (result (make-instance 'melody-layer
+		      :name name :staves (list initial-staff)
+		      :head head :body body :tail tail)))
+      (setf (slot-value head 'layer) result
+	    (slot-value body 'layer) result
+	    (slot-value tail 'layer) result)
+      result)))
+  
+(defmethod print-object ((l melody-layer) stream)
+  (with-slots (head body tail name staves) l
+    (format stream "[_ :name ~W :staves ~W :head ~W :body ~W :tail ~W ] "
+	    name staves head body tail)))
+
+(defun read-melody-layer-v2 (stream char n)
   (declare (ignore char n))
   (let* ((staves (read stream nil nil t))
 	 (head (read stream nil nil t))
 	 (body (read stream nil nil t))
 	 (tail (read stream nil nil t))
-	 (layer (make-instance 'layer :staves staves :head head :body body :tail tail)))
+	 (layer (make-instance 'melody-layer
+		   :staves staves :head head :body body :tail tail)))
     (setf (slot-value head 'layer) layer
 	  (slot-value body 'layer) layer
 	  (slot-value tail 'layer) layer)
@@ -627,20 +721,58 @@
     layer))
 
 (set-dispatch-macro-character #\[ #\_
-  #'read-layer-v2
+  #'read-melody-layer-v2
   *gsharp-readtable-v2*)
 
-(defun read-layer-v3 (stream char n)
+(defun read-melody-layer-v3 (stream char n)
   (declare (ignore char n))
   (let* ((rest (read-delimited-list #\] stream t))
-	 (layer (apply #'make-instance 'layer rest)))
+	 (layer (apply #'make-instance 'melody-layer rest)))
     (setf (slot-value (head layer) 'layer) layer
 	  (slot-value (body layer) 'layer) layer
 	  (slot-value (tail layer) 'layer) layer)
     layer))
 
 (set-dispatch-macro-character #\[ #\_
-  #'read-layer-v3
+  #'read-melody-layer-v3
+  *gsharp-readtable-v3*)
+
+;;; lyrics layer
+
+(defclass lyrics-layer (layer) ())
+
+(defmethod make-layer (name (initial-staff lyrics-staff))
+  (flet ((make-initialized-slice ()
+	   (let ((slice (make-empty-slice)))
+	     (add-bar (make-instance 'lyrics-bar) slice 0)
+	     slice)))
+    (let* ((head (make-initialized-slice))
+	   (body (make-initialized-slice))
+	   (tail (make-initialized-slice))
+	   (result (make-instance 'lyrics-layer
+		      :name name :staves (list initial-staff)
+		      :head head :body body :tail tail)))
+      (setf (slot-value head 'layer) result
+	    (slot-value body 'layer) result
+	    (slot-value tail 'layer) result)
+      result)))
+
+(defmethod print-object ((l lyrics-layer) stream)
+  (with-slots (head body tail name staves) l
+    (format stream "[M :name ~W :staves ~W :head ~W :body ~W :tail ~W ] "
+	    name staves head body tail)))
+
+(defun read-lyrics-layer-v3 (stream char n)
+  (declare (ignore char n))
+  (let* ((rest (read-delimited-list #\] stream t))
+	 (layer (apply #'make-instance 'lyrics-layer rest)))
+    (setf (slot-value (head layer) 'layer) layer
+	  (slot-value (body layer) 'layer) layer
+	  (slot-value (tail layer) 'layer) layer)
+    layer))
+
+(set-dispatch-macro-character #\[ #\M
+  #'read-lyrics-layer-v3
   *gsharp-readtable-v3*)
 
 (defmethod slices ((layer layer))
@@ -657,7 +789,7 @@
   (:report
    (lambda (condition stream)
      (declare (ignore condition))
-     (format stream "That staff already in the layer"))))
+     (format stream "That staff is already in the layer"))))
 
 (define-condition staff-not-in-layer (gsharp-condition) ()
   (:report
@@ -674,8 +806,7 @@
 (defmethod add-staff-to-layer ((staff staff) (layer layer))
   (assert (not (member staff (staves layer) :test #'eq))
 	  () 'staff-already-in-layer)
-  (setf (staves layer)
-	(append (staves layer) (list staff))))
+  (push staff (staves layer)))
 
 (defmethod remove-staff-from-layer ((staff staff) (layer layer))
   (assert (not (null (staves layer)))
@@ -708,11 +839,8 @@
 ;;; and strictly less than the number of layers of the segment.
 (defgeneric layerno (segment position))
 
-;;; Add a layer to a segment.  The new layer will be inserted before
-;;; the element in the position indicated.  Values of position must be
-;;; greater than or equal to zero and less than or equal to the
-;;; current number of segments of the layer.
-(defgeneric add-layer (layer segment position))
+;;; Add a layer to a segment.
+(defgeneric add-layer (layer segment))
 
 ;;; Delete a layer from the segment to which it belongs
 (defgeneric remove-layer (layer))
@@ -727,9 +855,9 @@
 (defun make-empty-segment ()
   (make-instance 'segment))
 
-(defun make-initialized-segment ()
+(defun make-initialized-segment (staff)
   (let ((segment (make-empty-segment)))
-    (add-layer (make-initialized-layer) segment 0)
+    (add-layer (make-layer "Default layer" staff) segment)
     segment))
 
 (defun read-segment-v2 (stream char n)
@@ -769,11 +897,11 @@
      (declare (ignore condition))
      (format stream "Attempt to add a layer already in a segment"))))
 
-(defmethod add-layer ((layer layer) (seg segment) position)
+(defmethod add-layer ((layer layer) (seg segment))
   (with-slots (segment) layer
     (assert (not segment) () 'layer-already-in-a-segment)
     (with-slots (layers) seg
-      (setf layers (ninsert-element layer layers position)))
+       (push layer layers))
     (setf segment seg)))
 
 (define-condition layer-not-in-segment (gsharp-condition) ()
@@ -789,7 +917,8 @@
       (setf layers (delete layer layers :test #'eq))
       ;; make sure there is one layer left
       (unless layers
-	(add-layer (make-initialized-layer) segment 0)))
+	(add-layer (make-layer "Default layer" (car (staves (buffer segment))))
+		   segment)))
     (setf segment nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -832,7 +961,8 @@
 
 (defclass buffer ()
   ((segments :initform '() :initarg :segments :accessor segments)
-   (staves :initform (list (make-fiveline-staff "default")) :initarg :staves :accessor staves)
+   (staves :initform (list (make-fiveline-staff "default staff"))
+	   :initarg :staves :accessor staves)
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
@@ -849,7 +979,7 @@
 
 (defun make-initialized-buffer ()
   (let ((buffer (make-empty-buffer)))
-    (add-segment (make-initialized-segment) buffer 0)
+    (add-segment (make-initialized-segment (car (staves buffer))) buffer 0)
     buffer))
 
 (defun read-buffer-v2 (stream char n)
@@ -912,7 +1042,7 @@
       (setf segments (delete segment segments :test #'eq))
       ;; make sure there is one segment left
       (unless segments
-	(add-segment (make-initialized-segment) buffer 0)))
+	(add-segment (make-initialized-segment (car (staves buffer))) buffer 0)))
     (setf buffer nil)))
 
 (define-condition staff-already-in-buffer (gsharp-condition) ()

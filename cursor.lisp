@@ -198,6 +198,9 @@
 ;;;
 ;;; Slice
 
+(defmethod slice ((cursor gsharp-cursor))
+  (slice (bar cursor)))
+
 (defgeneric first-slice-p (cursor))
 
 (defgeneric last-slice-p (cursor))
@@ -316,43 +319,17 @@
 ;;;
 ;;; Layer
 
-(defgeneric next-layer (cursor))
+(defmethod layer ((cursor gsharp-cursor))
+  (layer (slice cursor)))
 
-(defgeneric previous-layer (cursor))
+(defgeneric select-layer (cursor new-layer))
 
-(defmethod next-layer ((cursor gsharp-cursor))
+(defmethod select-layer ((cursor gsharp-cursor) (new-layer layer))
   (let* ((oldbar (bar cursor))
 	 (oldbarno (number oldbar))
 	 (oldslice (slice oldbar))
 	 (oldsliceno (number oldslice))
-	 (oldlayer (layer oldslice))
-	 (oldlayerno (number oldlayer))
-	 (segment (segment oldlayer))
-	 (nb-layers (nb-layers segment))
-	 (newlayerno (if (= oldlayerno (1- nb-layers))
-			 0
-			 (1+ oldlayerno)))
-	 (newlayer (layerno segment newlayerno))
-	 (newslice (sliceno newlayer oldsliceno))
-	 (newbarno (min (1- (nb-bars newslice)) oldbarno))
-	 (newbar (barno newslice newbarno)))
-    (unset-cursor cursor)
-    (set-cursor cursor newbar 0)))
-
-(defmethod previous-layer ((cursor gsharp-cursor))
-  (let* ((oldbar (bar cursor))
-	 (oldbarno (number oldbar))
-	 (oldslice (slice oldbar))
-	 (oldsliceno (number oldslice))
-	 (oldlayer (layer oldslice))
-	 (oldlayerno (number oldlayer))
-	 (segment (segment oldlayer))
-	 (nb-layers (nb-layers segment))
-	 (newlayerno (if (zerop oldlayerno)
-			 (1- nb-layers)
-			 (1- oldlayerno)))
-	 (newlayer (layerno segment newlayerno))
-	 (newslice (sliceno newlayer oldsliceno))
+	 (newslice (sliceno new-layer oldsliceno))
 	 (newbarno (min (1- (nb-bars newslice)) oldbarno))
 	 (newbar (barno newslice newbarno)))
     (unset-cursor cursor)
@@ -368,9 +345,8 @@
 ;;;
 ;;; Segment
 
-(defgeneric insert-layer-before (layer cursor))
-
-(defgeneric insert-layer-after (layer cursor))
+(defmethod segment ((cursor gsharp-cursor))
+  (segment (layer cursor)))
 
 (defgeneric delete-layer (cursor))
 
@@ -398,14 +374,6 @@
 					  (1- layerno))))
       (mapc #'set-cursor cursors))))
 
-(defmethod insert-layer-before ((layer layer) (cursor gsharp-cursor))
-  (let ((cursor-layer (cursor-layer cursor)))
-    (add-layer layer (segment cursor-layer) (number cursor-layer))))
-
-(defmethod insert-layer-after ((layer layer) (cursor gsharp-cursor))
-  (let ((cursor-layer (cursor-layer cursor)))
-    (add-layer layer (segment cursor-layer) (1+ (number cursor-layer)))))
-
 (defmethod delete-layer ((cursor gsharp-cursor))
   (remove-layer (cursor-layer cursor)))
 
@@ -415,6 +383,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Buffer
+
+(defmethod buffer ((cursor gsharp-cursor))
+  (buffer (segment cursor)))
 
 (defgeneric first-segment-p (cursor))
 

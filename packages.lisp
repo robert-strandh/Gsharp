@@ -1,7 +1,13 @@
+(defpackage :sequence-dico
+  (:use :clim-lisp)
+  (:export #:sequence-dico #:standard-sequence-dico
+	   #:make-sequence-dico #:dico-object))
+
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
   (:use :clim-lisp :clim-mop)
-  (:export #:ninsert-element #:define-added-mixin))
+  (:export #:ninsert-element #:define-added-mixin
+	   #:unicode-to-char #:char-to-unicode))
 
 (defpackage :gf
   (:use :common-lisp)
@@ -36,18 +42,24 @@
   (:use :common-lisp :gsharp-utilities)
   (:shadow #:rest)
   (:export #:clef #:make-clef #:name #:lineno
-	   #:staff #:fiveline-staff #:make-fiveline-staff #:gsharp-condition
-	   #:pitch #:accidentals #:dots #:cluster #:note
+	   #:staff #:fiveline-staff #:make-fiveline-staff
+	   #:lyrics-staff #:make-lyrics-staff
+	   #:gsharp-condition
+	   #:pitch #:accidentals #:dots #:note
 	   #:make-note #:note-less #:note-equal #:bar
-	   #:notehead #:rbeams #:lbeams #:dots #:element #:notes
+	   #:notehead #:rbeams #:lbeams #:dots #:element
+	   #:melody-element #:notes
 	   #:add-note #:find-note #:remove-note #:cluster #:make-cluster
-	   #:rest #:make-rest #:slice #:elements
+	   #:rest #:make-rest #:lyrics-element
+	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
-	   #:remove-element #:bar #:make-bar #:layer
+	   #:remove-element #:bar #:make-bar
+	   #:melody-bar #:lyrics-bar
+	   #:layer
 	   #:bars #:nb-bars #:barno #:add-bar #:remove-bar
-	   #:slice #:make-empty-slice #:make-initialized-slice
+	   #:slice
 	   #:segment #:slices #:sliceno
-	   #:head #:body #:tail #:make-initialized-layer #:buffer
+	   #:head #:body #:tail #:make-layer #:buffer
 	   #:make-empty-buffer #:make-initialized-buffer 
 	   #:layers #:nb-layers #:layerno
 	   #:add-layer #:remove-layer #:segment
@@ -62,7 +74,7 @@
 	   #:stem-direction #:stem-length #:notehead-duration #:element-duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
-	   #:left-margin
+	   #:left-margin #:text
 	   ))
 
 (defpackage :gsharp-numbering
@@ -122,7 +134,8 @@
 (defpackage :score-pane
   (:use :clim :clim-extensions :clim-lisp :sdl)
   (:shadow #:rest)
-  (:export #:draw-staff #:draw-stem #:draw-right-stem #:draw-left-stem 
+  (:export #:draw-fiveline-staff #:draw-lyrics-staff
+	   #:draw-stem #:draw-right-stem #:draw-left-stem 
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
 	   #:draw-flags-up #:draw-flags-down
@@ -130,7 +143,7 @@
 	   #:with-staff-size #:with-notehead-right-offsets
 	   #:with-suspended-note-offset
 	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
-	   #:clef #:staff #:notehead))
+	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead))
 
 (defpackage :gsharp-beaming
   (:use :common-lisp)
@@ -150,8 +163,7 @@
 	   #:forward-slice #:backward-slice
 	   #:head-slice #:body-slice #:tail-slice
 	   #:in-last-slice #:in-first-slice
-	   #:next-layer #:previous-layer 
-	   #:insert-layer-before #:insert-layer-after #:delete-layer
+	   #:select-layer #:delete-layer
 	   #:forward-segment #:backward-segment
 	   #:insert-segment-before #:insert-segment-after
 	   #:delete-segment
@@ -184,9 +196,9 @@
 	   #:unknown-event #:status #:data-byte))
 
 (defpackage :gsharp
-  (:use :clim :clim-lisp
+  (:use :clim :clim-lisp :gsharp-utilities
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
-	:gsharp-measure :sdl :midi)
+	:gsharp-measure :sdl :midi :sequence-dico)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest))
 

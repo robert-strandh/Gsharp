@@ -14,10 +14,14 @@
   (format stream "[~a clef on staff step ~a]" (name object) (lineno object)))
 
 (define-presentation-method present
-    (object (type score-pane:staff) stream (view textual-view) &key)
-   (format stream "[staff ~a]" (name object)))
+    (object (type score-pane:fiveline-staff) stream (view textual-view) &key)
+   (format stream "[fiveline staff ~a]" (name object)))
 
-(defmethod draw-staff-and-clef (pane (staff staff) x1 x2)
+(define-presentation-method present
+    (object (type score-pane:lyrics-staff) stream (view textual-view) &key)
+   (format stream "[lyrics staff ~a]" (name object)))
+
+(defmethod draw-staff-and-clef (pane (staff fiveline-staff) x1 x2)
   (when (clef staff)
     (present (clef staff)
 	     `((score-pane:clef)
@@ -44,7 +48,13 @@
 	    while (eq (aref (keysig staff) pitch) :sharp)
 	    do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))
   (present staff
-	   `((score-pane:staff)
+	   `((score-pane:fiveline-staff)
+	     :x1 ,x1 :x2 ,x2)
+	   :stream pane))
+
+(defmethod draw-staff-and-clef (pane (staff lyrics-staff) x1 x2)
+  (present staff
+	   `((score-pane:lyrics-staff)
 	     :x1 ,x1 :x2 ,x2)
 	   :stream pane))
 
@@ -115,10 +125,16 @@
     (let* ((staves (staves buffer))
 	   (timesig-offset (max (* (score-pane:staff-step 2)
 				   (loop for staff in staves
-					 maximize (count :flat (keysig staff))))
+					 maximize
+					 (if (typep staff 'fiveline-staff)
+					     (count :flat (keysig staff))
+					     0)))
 				(* (score-pane:staff-step 2.5)
 				   (loop for staff in staves
-					 maximize (count :sharp (keysig staff))))))
+					 maximize
+					 (if (typep staff 'fiveline-staff)
+					     (count :sharp (keysig staff))
+					     0)))))
 	   (method (let ((old-method (buffer-cost-method buffer)))
 		     (make-measure-cost-method (min-width old-method)
 					       (spacing-style old-method)
@@ -146,7 +162,7 @@
 		   (decf yy 90))))
 	 buffer)))))
 
-(define-added-mixin velement () element
+(define-added-mixin velement () melody-element
   ((final-stem-direction :accessor final-stem-direction)
    (final-stem-position :accessor final-stem-position)
    (final-stem-yoffset :initform 0 :accessor final-stem-yoffset)
@@ -155,6 +171,9 @@
    (maxpos :accessor element-maxpos)
    (max-yoffset :accessor element-max-yoffset)
    (xpos :accessor element-xpos)))
+
+(define-added-mixin welement () lyrics-element
+  ((xpos :accessor element-xpos)))
 
 (defun compute-maxpos-minpos (element)
   (if (and (typep element 'cluster) (notes element))
@@ -350,7 +369,7 @@
 (defun draw-cursor (pane x)
   (draw-line* pane x (score-pane:staff-step -4) x (score-pane:staff-step 12) :ink +red+))
 
-(defmethod draw-bar (pane (bar bar) x width time-alist draw-cursor)
+(defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
   (let ((elements (elements bar))
 	(group '()))
@@ -364,6 +383,22 @@
 	  (draw-beam-group pane (nreverse group))))
   (when (eq (cursor-bar *cursor*) bar)
     (let ((elements (elements bar)))
+      (if (null (cursor-element *cursor*))
+	  (funcall draw-cursor (/ (+ (if (null elements)
+					 x
+					 (element-xpos (car (last elements))))
+				     x width) 2))
+	  (loop for element in elements
+		and xx = x then (element-xpos element) do
+		(when (eq (cursor-element *cursor*) element)
+		  (funcall draw-cursor (/ (+ xx (element-xpos element)) 2))))))))
+
+(defmethod draw-bar (pane (bar lyrics-bar) x width time-alist draw-cursor)
+  (compute-element-x-positions bar x time-alist)
+  (let ((elements (elements bar)))
+    (loop for element in elements
+	  do (draw-element pane element (element-xpos element)))
+    (when (eq (cursor-bar *cursor*) bar)
       (if (null (cursor-element *cursor*))
 	  (funcall draw-cursor (/ (+ (if (null elements)
 					 x
@@ -600,3 +635,12 @@
     (score-pane:draw-rest pane (notehead-duration element) x (staff-pos element))
     (draw-dots pane (dots element) x (1+ (staff-pos element)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Lyrics element
+
+(defmethod draw-element (pane (element lyrics-element) x &optional (flags t))
+  (declare (ignore flags))
+  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
+    (draw-text* pane (map 'string #'unicode-to-char (text element))
+		x 0 :align-x :center)))

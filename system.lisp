@@ -22,6 +22,7 @@
 
 (gsharp-defsystem (:gsharp)
    "packages"
+   "sequence-dico"
    "utilities"
    "gf"
    "sdl"
@@ -38,4 +39,5 @@
    "cursor"
    "input-state"
    "midi"
+   "modes"
    "gui")

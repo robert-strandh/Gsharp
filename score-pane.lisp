@@ -417,16 +417,31 @@
 
 (define-presentation-type staff () :options (x1 x2))
 
-(defun draw-staff (pane x1 x2)
+(define-presentation-type fiveline-staff () :inherit-from 'staff :options (x1 x2))
+
+(defun draw-fiveline-staff (pane x1 x2)
   (multiple-value-bind (left right) (bar-line-offsets *font*)
     (loop for staff-step from 0 by 2
 	  repeat 5
 	  do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right)))))
 
 (define-presentation-method present
-    (object (type staff) stream (view score-view) &key)
-  (with-output-as-presentation (stream object 'staff)
-    (draw-staff stream x1 x2)))
+    (object (type fiveline-staff) stream (view score-view) &key)
+  (with-output-as-presentation (stream object 'fiveline-staff)
+    (draw-fiveline-staff stream x1 x2)))
+
+(define-presentation-type lyrics-staff () :inherit-from 'staff :options (x1 x2))
+
+(defun draw-lyrics-staff (pane x1 x2)
+  (declare (ignore x2))
+  (multiple-value-bind (left right) (bar-line-offsets *font*)
+    (declare (ignore right))
+    (draw-text* pane "--" (+ x1 left) 0)))
+
+(define-presentation-method present
+    (object (type lyrics-staff) stream (view score-view) &key)
+  (with-output-as-presentation (stream object 'lyrics-staff)
+    (draw-lyrics-staff stream x1 x2)))
 
 ;;;;;;;;;;;;;;;;;; stem
 

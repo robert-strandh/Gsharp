@@ -7,8 +7,7 @@
    (notehead :initform :filled :accessor notehead)
    (stem-direction :initform :auto :accessor stem-direction)
    (last-note :initform 34 :accessor last-note) ; a B in the fourth octave
-   (accidentals :initform :natural :accessor accidentals)
-   (staff :initarg :staff :accessor staff)))
+   (accidentals :initform :natural :accessor accidentals)))
 
-(defun make-input-state (staff)
-  (make-instance 'input-state :staff staff))
+(defun make-input-state ()
+  (make-instance 'input-state))
