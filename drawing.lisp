@@ -51,11 +51,11 @@
 
 (defun compute-widths (measures method)
   (let* ((compress (compute-compress-factor measures method))
-	 (start-times (sort (remove-duplicates
-			     (apply #'append (mapcar #'measure-start-times
-						     measures)))
-			    #'<))
-	 (min-dist (reduce #'min (gsharp-measure::abs-rel start-times))))
+	 (min-dists (mapcar (lambda (measure)
+			      (reduce #'min (gsharp-measure::abs-rel
+					     (measure-start-times measure))))
+			    measures))
+	 (min-dist (reduce #'min min-dists)))
     (loop for measure in measures
 	  collect (/ (nat-width method (measure-coeff measure) min-dist)
 		     compress))))
@@ -82,11 +82,11 @@
 
 (defun draw-system (pane measures x widths method staves draw-cursor)
   (let* ((compress (compute-compress-factor measures method))
-	 (start-times (sort (remove-duplicates
-			     (apply #'append (mapcar #'measure-start-times
-						     measures)))
-			    #'<))
-	 (min-dist (reduce #'min (gsharp-measure::abs-rel start-times))))
+	 (min-dists (mapcar (lambda (measure)
+			      (reduce #'min (gsharp-measure::abs-rel
+					     (measure-start-times measure))))
+			    measures))
+	 (min-dist (reduce #'min min-dists)))
     (loop for measure in measures
 	  for width in widths do
 	  (draw-measure pane measure min-dist compress x method draw-cursor)
