@@ -245,6 +245,20 @@ element of the CHAIN."
      (when (= gap-start (length buffer))
        (setf gap-start 0))))
   
+(defmethod insert-vector* ((chain standard-flexichain) position vector)
+  (with-slots (element-type buffer gap-start) chain
+     (assert (<= 0 position (nb-elements chain)) ()
+	     'flexi-position-error :chain chain :position position)
+     (assert (typep (array-element-type  vector) element-type) ()
+	     'flexi-incompatible-type-error :element vector :chain chain)
+     (ensure-gap-position chain position)
+     (ensure-room chain (+ (nb-elements chain) (length vector)))
+     (loop for elem across vector
+	   do (setf (aref buffer gap-start) elem)
+	      (incf gap-start)
+	      (when (= gap-start (length buffer))
+		(setf gap-start 0)))))
+  
 (defmethod delete* ((chain standard-flexichain) position)
   (with-slots (buffer expand-factor min-size fill-element gap-end) chain
     (assert (< -1 position (nb-elements chain)) ()
