@@ -331,7 +331,7 @@ on the left of the buffer."
 on the right of the buffer."
   (with-slots (buffer gap-start gap-end) chain
     (let ((buffer-size (length buffer)))
-      (cond ((< (- gap-start hot-spot) (- buffer-size gap-start))
+      (cond ((< (- gap-start hot-spot) hot-spot)
              (push-elements-right chain (- gap-start hot-spot)))
             ((<= hot-spot (- buffer-size gap-start))
              (hop-elements-right chain hot-spot))
