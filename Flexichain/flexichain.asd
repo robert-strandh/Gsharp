@@ -29,9 +29,7 @@
 ;; for testing.
 (defsystem flexichain
   :name "flexichain"
-  :components ((:file "skiplist-package")
-               (:file "skiplist" :depends-on ("skiplist-package"))
-               (:file "flexichain-package" :depends-on ("skiplist-package"))
+  :components ((:file "flexichain-package")
                (:file "utilities" :depends-on ("flexichain-package"))
                (:file "flexichain" :depends-on ("utilities"))
                (:file "flexicursor" :depends-on ("flexichain"))))

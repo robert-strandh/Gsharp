@@ -20,7 +20,7 @@
 
 
 (defpackage :flexichain
-  (:use :common-lisp :skiplist)
+  (:use :common-lisp)
   (:export #:flexichain #:standard-flexichain
 	   #:flexi-error #:flexi-initialization-error
 	   #:flexi-position-error #:flexi-incompatible-type-error
