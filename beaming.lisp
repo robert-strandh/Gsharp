@@ -9,10 +9,10 @@
 
 ;;; The result of the computation is a VALID BEAMING.  Such a beaming
 ;;; is represented as a list of two elements representing the left and
-;;; the right end of the beam, respectively.  Each element is a cons
-;;; of two integers, the fist representing the staff line where the
-;;; lower line is numbered 0, and so on in steps of two so that the
-;;; upper one is numbered 8.  The second of the two integers
+;;; the right end of the primary beam, respectively.  Each element is
+;;; a cons of two integers, the fist representing the staff line where
+;;; the lower line is numbered 0, and so on in steps of two so that
+;;; the upper one is numbered 8.  The second of the two integers
 ;;; represents the position of the beam with respect to the staff
 ;;; line, where 0 means straddle, 1 means sit and -1 means hang.  This
 ;;; representation makes it easy to transform the constellation by

@@ -1,5 +1,34 @@
 \chapter{Release notes}
 
+\section{Release 0.3 (2003-??-??)}
+
+\subsection{Features added from 0.2}
+
+\begin{itemize}
+\item right edge of staff is no longer hard wired.
+\item left margin is now a parameter of the buffer (and on disk).
+\item x-position of first measure on line now depends on the size of
+  the key signature.  This means that wide key signatures no longer
+  overlap with notes of the first measure on the line.
+\item Improved MIDI generation making it no longer necessary to pad 
+measures with empty clusters.
+\item Fixed a problem that made {\gs} crash on new versions of
+  McCLIM (thanks to Andy Hefner for figuring this out). 
+\item {\gs} can now use asdf instead of mk:defystem (thanks to
+  Christophe Rhodes).
+\item {\gs} now runs on SBCL as well as on CMUCL (thanks to Christophe
+  Rhodes).
+\end{itemize}
+
+\subsection{Bug fixes from 0.2}
+
+\begin{itemize}
+\item last sharp sign in key signature with seven sharp signs is now
+  drawn. 
+\item fixed conformance bugs in some \texttt{loop} constructs (thanks to
+  Christophe Rhodes).
+\end{itemize}
+
 \section{Release 0.2 (2003-09-06)}
 
 \subsection{Features added from 0.1}

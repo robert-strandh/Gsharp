@@ -81,9 +81,10 @@
 (add-command '(#\[) 'com-fewer-lbeams *x-command-table*)
 (add-command '(#\]) 'com-fewer-rbeams *x-command-table*)
 
-(defmethod redisplay-frame-panes (frame &key force-p)
-  (loop for pane in (frame-panes frame)
-	do (redisplay-frame-pane frame pane :force-p force-p)))
+(defmethod redisplay-gsharp-panes (frame &key force-p)
+  (loop for pane in (frame-current-panes frame)
+	do (when (typep pane 'score-pane)
+	     (redisplay-frame-pane frame pane :force-p force-p))))
 
 (defvar *gsharp-frame*)
 
@@ -99,7 +100,7 @@
 	     (setf *commands* *global-command-table*))
 	    (t (format *error-output* "no command for ~a~%" key)
 	       (setf *commands* *global-command-table*)))
-      (redisplay-frame-panes *gsharp-frame* :force-p t))))
+      (redisplay-gsharp-panes *gsharp-frame* :force-p t))))
 	    
 (define-application-frame gsharp ()
   ((buffer :initarg :buffer :accessor buffer)
@@ -109,16 +110,17 @@
   (:pointer-documentation t)
   (:panes
    (score (make-pane 'score-pane
-		     :width 700
-		     :height 900
+		     :width 700 :height 900
+		     :name "score"
 		     :display-function 'display-score))
    (state (make-pane 'score-pane
-		     :width 50 :height 200 :display-function 'display-state))
+		     :width 50 :height 200
+		     :name "state"
+		     :display-function 'display-state))
    (element (make-pane 'score-pane
-		       :width 50
-		       :height 700
-		       :min-height 100
-		       :max-height 20000
+		       :width 50 :height 700
+		       :min-height 100 :max-height 20000
+		       :name "element"
 		       :display-function 'display-element))
    (interactor :interactor :height 100 :min-height 50 :max-height 200))
   (:layouts
@@ -167,10 +169,10 @@
 		    (declare (ignore up))
 		    (let ((x (+ xpos right)))
 		      (loop repeat (rbeams state)
-			    for staff-step from 12 by -2 do
+			    for staff-step downfrom 12 by 2 do
 			    (draw-beam pane x staff-step 0 (+ x 10) staff-step 0))
 		      (loop repeat (lbeams state)
-			    for staff-step from 12 by -2 do
+			    for staff-step downfrom 12 by 2 do
 			    (draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
 		(draw-right-stem pane xpos (staff-step 4) (staff-step 12))))
 	    (with-notehead-right-offsets (right up)
@@ -240,7 +242,8 @@
     (recompute-measures buffer)
     (with-score-pane pane
       (flet ((draw-cursor (x) (draw-the-cursor pane x)))
-	(draw-buffer pane buffer (cursor *gsharp-frame*) 0 800 #'draw-cursor)))))
+	(draw-buffer pane buffer (cursor *gsharp-frame*)
+		     (left-margin buffer) 800 #'draw-cursor)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -300,7 +303,7 @@
 	 ("Segment" :menu segment-command-table)
 	 ("Layer" :menu layer-command-table)
 	 ("Slice" :menu slice-command-table)
-	 ("Bar" :menu bar-command-table)
+	 ("Measure" :menu measure-command-table)
 	 ("Modes" :menu modes-command-table)
 	 ("Play" :menu play-command-table)))
 
@@ -316,7 +319,7 @@
 	 ("Save as" :command com-save-buffer-as)
 	 ("Quit" :command com-quit)))
 
-(define-gsharp-command com-new-buffer ()
+(define-gsharp-command (com-new-buffer :name t) ()
   (let* ((buffer (make-initialized-buffer))
 	 (cursor (make-initial-cursor buffer))
 	 (staff (car (staves buffer)))
@@ -326,7 +329,7 @@
 	  (input-state *gsharp-frame*) input-state
 	  (staves (car (layers (car (segments buffer))))) (list staff))))
 
-(define-gsharp-command com-load-file ((filename 'string :prompt "File Name"))
+(define-gsharp-command (com-load-file :name t) ((filename 'string :prompt "File Name"))
   (let* ((buffer (read-everything filename))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state staff))
@@ -336,14 +339,14 @@
 	  (cursor *gsharp-frame*) cursor)
     (number-all (buffer *gsharp-frame*))))
 
-(define-gsharp-command com-save-buffer-as ((filename 'string :prompt "File Name"))
+(define-gsharp-command (com-save-buffer-as :name t) ((filename 'string :prompt "File Name"))
   (with-open-file (stream filename :direction :output)
     (save-buffer-to-stream (buffer *gsharp-frame*) stream)
     (message "Saved buffer to ~A~%" filename)))
 
-(define-gsharp-command com-quit ()
-  (unix::unix-exit))
-;;  (frame-exit *application-frame*))
+(define-gsharp-command (com-quit :name t) ()
+  #+cmu (unix::unix-exit)
+  #+sbcl (frame-exit *application-frame*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -368,21 +371,21 @@
 	 ("Insert After Current" :command com-insert-segment-after)
 	 ("Insert Before Current" :command com-insert-segment-before)))
 
-(define-gsharp-command com-forward-segment ()
+(define-gsharp-command (com-forward-segment :name t) ()
   (forward-segment (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-backward-segment ()
+(define-gsharp-command (com-backward-segment :name t) ()
   (backward-segment (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-delete-segment ()
+(define-gsharp-command (com-delete-segment :name t) ()
   (delete-segment (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-insert-segment-before ()
+(define-gsharp-command (com-insert-segment-before :name t) ()
   (let ((cursor (cursor *gsharp-frame*)))
     (insert-segment-before (make-initialized-segment) cursor)
     (backward-segment cursor)))
 
-(define-gsharp-command com-insert-segment-after ()
+(define-gsharp-command (com-insert-segment-after :name t) ()
   (let ((cursor (cursor *gsharp-frame*)))
     (insert-segment-after (make-initialized-segment) cursor)
     (forward-segment cursor)))
@@ -400,21 +403,21 @@
 	 ("Insert After Current" :command com-insert-layer-after)
 	 ("Insert Before Current" :command com-insert-layer-before)))
 
-(define-gsharp-command com-next-layer ()
+(define-gsharp-command (com-next-layer :name t) ()
   (next-layer (cursor *gsharp-frame*))
   (setf (staff (input-state *gsharp-frame*))
 	(car (staves (layer (slice (bar (cursor *gsharp-frame*))))))))
 
-(define-gsharp-command com-previous-layer ()
+(define-gsharp-command (com-previous-layer :name t) ()
   (previous-layer (cursor *gsharp-frame*))
   (setf (staff (input-state *gsharp-frame*))
 	(car (staves (layer (slice (bar (cursor *gsharp-frame*))))))))
 
 
-(define-gsharp-command com-delete-layer ()
+(define-gsharp-command (com-delete-layer :name t) ()
   (delete-layer (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-insert-layer-before ((staff-name 'string :prompt "Staff"))
+(define-gsharp-command (com-insert-layer-before :name t) ((staff-name 'string :prompt "Staff"))
   (let ((cursor (cursor *gsharp-frame*))
 	(staff (find-staff staff-name (buffer *gsharp-frame*))))
     (if (not staff)
@@ -426,7 +429,7 @@
 		 (setf (staff (input-state *gsharp-frame*))
 		       staff))))))
 
-(define-gsharp-command com-insert-layer-after ((staff-name 'string :prompt "Staff"))
+(define-gsharp-command (com-insert-layer-after :name t) ((staff-name 'string :prompt "Staff"))
   (let ((cursor (cursor *gsharp-frame*))
 	(staff (find-staff staff-name (buffer *gsharp-frame*))))
     (if (not staff)
@@ -450,19 +453,19 @@
 	 ("Body" :command com-body-slice)
 	 ("Tail" :command com-tail-slisce)))
 
-(define-gsharp-command com-head-slice ()
+(define-gsharp-command (com-head-slice :name t) ()
   (head-slice (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-body-slice ()
+(define-gsharp-command (com-body-slice :name t) ()
   (body-slice (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-tail-slice ()
+(define-gsharp-command (com-tail-slice :name t) ()
   (tail-slice (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-forward-slice ()
+(define-gsharp-command (com-forward-slice :name t) ()
   (forward-slice (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-backward-slice ()
+(define-gsharp-command (com-backward-slice :name t) ()
   (backward-slice (cursor *gsharp-frame*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -470,16 +473,15 @@
 ;;; bar menu
 
 (make-command-table
- 'bar-command-table
+ 'measure-command-table
  :errorp nil
- :menu '(("Forward" :command com-forward-bar)
-	 ("Backward" :command com-backward-bar)
-	 ("Delete Current" :command com-delete-bar)))
+ :menu '(("Forward" :command com-forward-measure)
+	 ("Backward" :command com-backward-measure)))
 
-(define-gsharp-command com-forward-bar ()
+(define-gsharp-command (com-forward-measure :name t) ()
   (forward-bar (cursor *gsharp-frame*)))
 
-(define-gsharp-command com-backward-bar ()
+(define-gsharp-command (com-backward-measure :name t) ()
   (backward-bar (cursor *gsharp-frame*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -491,7 +493,7 @@
  :errorp nil
  :menu '(("Fundamental" :command com-fundamental)))
 
-(define-gsharp-command com-fundamental ()
+(define-gsharp-command (com-fundamental :name t) ()
   nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -510,52 +512,80 @@
      (ecase (accidentals note)
        (:double-flat -2) (:flat -1) (:natural 0) (:sharp 1) (:double-sharp 2))))
 
-(defun track-from-slice (slice channel)
+(defun measure-durations (slices)
+  (let ((durations (mapcar (lambda (slice)
+			     (mapcar (lambda (bar)
+				       (reduce #'+ (elements bar)
+					       :key #'element-duration))
+				     (bars slice)))
+			   slices)))
+    (loop while durations
+	  collect (reduce #'max (mapcar #'car durations))
+	  do (setf durations (remove nil (mapcar #'cdr durations))))))
+
+(defun events-from-element (element time channel)
+  (when (typep element 'cluster)
+    (append (mapcar (lambda (note)
+		      (make-instance 'note-on-message
+				     :time time
+				     :status (+ #x90 channel)
+				     :key (midi-pitch note) :velocity 100))
+		    (notes element))
+	    (mapcar (lambda (note)
+		      (make-instance 'note-off-message
+				     :time (+ time (* 128 (element-duration element)))
+				     :status (+ #x80 channel)
+				     :key (midi-pitch note) :velocity 100))
+		    (notes element)))))
+
+(defun events-from-bar (bar time channel)
+  (mapcan (lambda (element)
+	    (prog1 (events-from-element element time channel)
+	      (incf time (* 128 (element-duration element)))))
+	  (elements bar)))
+
+(defun track-from-slice (slice channel durations)
   (cons (make-instance 'program-change-message
 	  :time 0 :status  (+ #xc0 channel) :program 0)
 	(let ((time 0))
-	  (mapcan
-	   (lambda (bar)
-	     (mapcan
-	      (lambda (element)
-		(prog1 (when (typep element 'cluster)
-			 (append (mapcar (lambda (note)
-					   (make-instance 'note-on-message
-					     :time time
-					     :status (+ #x90 channel)
-					     :key (midi-pitch note) :velocity 100))
-					 (notes element))
-				 (mapcar (lambda (note)
-					   (make-instance 'note-off-message
-					     :time (+ time (* 128 (element-duration element)))
-					     :status (+ #x80 channel)
-					     :key (midi-pitch note) :velocity 100))
-					 (notes element))))
-		  (incf time (* 128 (element-duration element)))))
-	      (elements bar)))
-	   (bars slice)))))
-	  
-(define-gsharp-command com-play-segment ()
+	  (mapcan (lambda (bar duration)
+		    (prog1 (events-from-bar bar time channel)
+		      (incf time (* 128 duration))))
+		  (bars slice) durations))))
+
+(define-gsharp-command (com-play-segment :name t) ()
   (let* ((slices (mapcar #'body (layers (car (segments (buffer *gsharp-frame*))))))
+	 (durations (measure-durations slices))
 	 (tracks (loop for slice in slices
 		       for i from 0
-		       collect (track-from-slice slice i)))
+		       collect (track-from-slice slice i durations)))
 	 (midifile (make-instance 'midifile
 		     :format 1
 		     :division 25
 		     :tracks tracks)))
     (write-midi-file midifile "test.mid")
-    (ext:run-program "timidity" '("test.mid"))))
+    #+cmu
+    (ext:run-program "timidity" '("test.mid"))
+    #+sbcl
+    (sb-ext:run-program "timidity" '("test.mid"))
+    #-(or cmu sbcl)
+    (error "write compatibility layer for RUN-PROGRAM")))
 
-(define-gsharp-command com-play-layer ()
+(define-gsharp-command (com-play-layer :name t) ()
   (let* ((slice (body (layer (slice (bar (cursor *gsharp-frame*))))))
-	 (tracks (list (track-from-slice slice 0)))
+	 (durations (measure-durations (list slice)))
+	 (tracks (list (track-from-slice slice 0 durations)))
 	 (midifile (make-instance 'midifile
 		     :format 1
 		     :division 25
 		     :tracks tracks)))
     (write-midi-file midifile "test.mid")
-    (ext:run-program "timidity" '("test.mid"))))
+    #+cmu
+    (ext:run-program "timidity" '("test.mid"))
+    #+sbcl
+    (sb-ext:run-program "timidity" '("test.mid"))
+    #-(or cmu sbcl)
+    (error "write compatibility layer for RUN-PROGRAM")))
 
 (defun run-gsharp ()
   (loop for port in climi::*all-ports*
@@ -926,7 +956,7 @@
 	  (:up :down)
 	  (:down :auto))))
 
-(define-gsharp-command com-set-clef ((name '(member :treble :bass :c))
+(define-gsharp-command (com-set-clef :name t) ((name '(member :treble :bass :c))
 				     (line '(or integer null) :prompt "Line"))
   (setf (clef (staff (input-state *gsharp-frame*)))
 	(make-clef name line)))
@@ -952,23 +982,23 @@
 ;;;
 ;;; Adding, deleting, and modifying staves
 
-(define-gsharp-command com-add-staff ((name 'string))
+(define-gsharp-command (com-add-staff :name t) ((name 'string))
   (add-new-staff-to-buffer name (buffer *gsharp-frame*)))
 
-(define-gsharp-command com-delete-staff ((name 'string))
+(define-gsharp-command (com-delete-staff :name t) ((name 'string))
   (remove-staff-from-buffer name (buffer *gsharp-frame*)))
 
-(define-gsharp-command com-rename-staff ((name 'string))
+(define-gsharp-command (com-rename-staff :name t) ((name 'string))
   (let ((buffer (buffer *gsharp-frame*))
 	(state (input-state *gsharp-frame*)))
     (rename-staff name (staff state) buffer)))
 
-(define-gsharp-command com-add-layer-staff ((name 'string))
+(define-gsharp-command (com-add-layer-staff :name t) ((name 'string))
   (let ((staff (find-staff name (buffer *gsharp-frame*)))
 	(layer (layer (slice (bar (cursor *gsharp-frame*))))))
     (add-staff-to-layer staff layer)))
 
-(define-gsharp-command com-delete-layer-staff ((name 'string))
+(define-gsharp-command (com-delete-layer-staff :name t) ((name 'string))
   (let ((staff (find-staff name (buffer *gsharp-frame*)))
 	(layer (layer (slice (bar (cursor *gsharp-frame*))))))
     (remove-staff-from-layer staff layer)))

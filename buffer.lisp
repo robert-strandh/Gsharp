@@ -815,7 +815,7 @@
 (defgeneric staves (buffer))
 
 ;;; Find a staff based on its name
-(defgeneric find-staff (staff-name buffer &optional (errorp t)))
+(defgeneric find-staff (staff-name buffer &optional errorp))
 
 ;;; Add a segment to the buffer at the position given
 (defgeneric add-segment (segment buffer position))
@@ -826,7 +826,8 @@
 (defvar *default-spacing-style* 0.4)
 (defvar *default-min-width* 17)
 (defvar *default-right-edge* 700)
-(defvar *default-left-offset* 70)
+(defvar *default-left-offset* 30)
+(defvar *default-left-margin* 20)
 
 (defclass buffer ()
   ((segments :initform '() :initarg :segments :accessor segments)
@@ -834,12 +835,13 @@
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
-   (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)))
+   (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
+   (left-margin :initform *default-left-margin* :initarg :left-margin :accessor left-margin)))
 
 (defmethod print-object ((b buffer) stream)
-  (with-slots (staves segments min-width spacing-style right-edge left-offset) b
-    (format stream "[B :staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W ] "
-	    staves segments min-width spacing-style right-edge left-offset)))
+  (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
+    (format stream "[B :staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W ] "
+	    staves segments min-width spacing-style right-edge left-offset left-margin)))
 
 (defun make-empty-buffer ()
   (make-instance 'buffer))

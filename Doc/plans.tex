@@ -90,7 +90,85 @@ is computed:
   the notes of the element. 
 \end{itemize}
 
+\subsection{Other minor projects}
+
+\begin{itemize}
+\item multi-buffer, multi-frame
+\item display additional information around current element (beaming
+  information, stem information (auto or not)), etc
+\end{itemize}
+
 \section{Major projects}
+
+\subsection{Improved spacing algorithm}
+
+There are two aspects of the spacing algorithm:
+
+\begin{enumerate}
+\item Determining how to divide a sequence of measures into pages and
+  lines based on the amount of space each measure will require on a
+  given line,
+\item Rendering the page(s) actually visible by the user at any given
+  time. 
+\end{enumerate}
+
+We can spend relatively much time on rendering since it is supposedly
+only done for a small fraction of the entire score and relatively
+little time on dividing sequences of measures into pages and lines.
+Also, we can accept a rough estimate of the space that a measure needs
+for the purpose of dividing into pages and lines, whereas the
+rendering phase needs to be very precise so as to avoid overlapping
+characters. 
+
+For rendering, we can assume that we have a bunch of \emph{lines},
+each one being a \emph{sequence of measures}.  For this phase, one
+idea would be to compute an \emph{elasticity function} for each
+measure indicating how willing it is to stretch or compress given that
+a certain force is applied to it.  In fact it would indicate the width
+as a function of force applied.  Such a function would be piecewise
+linear with rational coordinates to avoid rounding errors.  The
+elasticity function of a line would be the sum of the elasticity
+functions of the measures of the line, again a piecewise linear
+function.  The combined function would then be solved for the line
+length which gives a force to be applied to each measure (elementary
+mechanics give that each measure in the sequence would have the same
+force applied to it).  To render each measure, that force would be
+applied to it.  
+
+The problem with dividing a sequence of measures into lines and pages
+is that the elasticity function depends on the context.  Specifically,
+the \emph{natural width} (the width that the measure would take when
+given a force of 0) depends on the smallest distance between two
+adjacent time lines \emph{of all of the time lines in all of the
+measures on a line}.  This gets messy, since currently, we depend on
+the cost function of a line to be combined in constant time, i.e., the
+cost function of a line with a new measure added to the beginning or
+to the end of it is possible to compute in constant time from the cost
+function of the existing line and that of the new measure.  Either I
+am being to conservative here, and we can afford to spend more time
+computing the cost function of a line, or else, we need to find an
+approximation of the elasticity function that will combine in constant
+time.  This is hard to know until we have tested {\gs} on large
+scores, and until we have implemented the page-breaking algorithm (as
+opposed to the line-breaking algorithm that we now have). An example
+of an approximation of the elasticity function would be to use the
+current estimate with an additional value called \emph{additional
+constant space}.  The cost combination function would add the constant
+spaces required by each measure as long as newly added measures have
+the same smallest time-line distance (min-dist).  As soon as a measure
+with smaller min-dist is added to the line, the additional constant
+space of the existing line is set to 0.  The assumption is that the
+existing line is going to have to expand as a result of the smaller
+min-dist which will eliminate the need for the additional constant
+space.  Adding a measure with a larger min-dist than that of the
+existing line would simply ignore the additional constant space of
+that measure.  Again, the assumption is that the new measure will have
+to expand so that the additional space will not be needed.
+
+The additional constant spaced of a measure would be computed as if it
+would be inserted into a line having the same min-dist as the measure
+itself.  Such space would include space for lyrics, accidentals of
+complicated clusters, etc. 
 
 \subsection{Menu items with arguments}
 
@@ -140,4 +218,42 @@ instance:
 \item Pages with a fixed number of filled pages.
 \item Pages with an arbitrary number of pages, but the number must be
   of the form $n = ax + b$.
+\end{itemize}
+
+\subsection{Other major projects}
+
+\begin{itemize}
+\item presentations everywhere (note heads, clusters, beam groups). 
+\item context menus on notes, etc
+\item allow mouse-based input of new notes by making staff steps
+  around cursor into presentations.  Move pointer to horizontal
+  location of cursor after interaction.
+\item allow mouse-based addition and deletion of notes in existing
+  clusters by making staff steps around cluster into presentations
+\item make sure user can use either keyboard or mouse without changing
+  too often
+\item add new views of score, especially to manipulate staves,
+  brackets, braces, instruments, etc.
+\item perhaps hide interactor by default and use something like M-x to
+  make it visible. 
+\item use output recording (hierarchical records) to reorganize pixmaps
+  and to substitute combined pixmaps. 
+\end{itemize}
+
+\section{McCLIM issues and projects}
+
+\begin{itemize}
+\item add better system for Emacs-style commands and key
+  bindings 
+\item fix problem of input focus being retained (also a
+  problem for Goatee)
+\item make sure gestures work as announced
+\item perhaps make it possible to use something like M-x to change
+  input focus
+\item make setf of frame-layout work
+\item multiple top-level frames (as in Franz CLIM).
+\item remove compilation warnings in McCLIM
+\item remove dead code
+\item remove reasons for remarks such as XXX:, FIXME, etc, or at least
+  put a name in their place
 \end{itemize}

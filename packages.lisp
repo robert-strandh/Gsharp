@@ -60,7 +60,8 @@
 	   #:remove-staff-from-layer
 	   #:stem-direction #:stem-length #:notehead-duration #:element-duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
-	   #:min-width #:spacing-style #:right-edge #:left-offset
+	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
+	   #:left-margin
 	   ))
 
 (defpackage :gsharp-numbering
@@ -82,7 +83,7 @@
 	   #:measure-min-dist #:measure-coeff #:measure-start-times
 	   #:measure-bar-pos #:measure-seg-pos #:measure-bars #:measures
 	   #:nb-measures #:measureno
-	   #:recompute-measures #:measure-cost-method 
+	   #:recompute-measures #:measure-cost-method #:make-measure-cost-method
 	   #:buffer-cost-method
 	   #:reduced-width #:natural-width #:compress-factor
 	   #:measure-seq-cost))

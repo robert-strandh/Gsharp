@@ -2,26 +2,40 @@
 
 (defparameter *gsharp-directory* (directory-namestring *load-truename*))
 
-(defsystem :gsharp
+(defmacro gsharp-defsystem ((module &key depends-on) &rest components)
+  `(defsystem ,module
     :source-pathname *gsharp-directory*
-    :source-extension "lisp"
-    :components
-    (:serial
-     "packages"
-     "utilities"
-     "gf"
-     "sdl"
-     "charmap"
-     "buffer"
-     "numbering"
-     "Obseq/obseq"
-     "measure"
-     "postscript"
-     "glyphs"
-     "score-pane"
-     "beaming"
-     "drawing"
-     "cursor"
-     "input-state"
-     "midi"
-     "gui"))
+    ,@(and depends-on `(:depends-on ,depends-on))
+    :components (:serial ,@components)))
+
+#+asdf
+(defmacro gsharp-defsystem ((module &key depends-on) &rest components)
+  `(asdf:defsystem ,module
+    ,@(and depends-on `(:depends-on ,depends-on))
+    :serial t
+    :components (,@(loop for c in components
+			 for p = (merge-pathnames
+				  (parse-namestring c)
+				  (make-pathname :type "lisp"
+						 :defaults *gsharp-directory*))
+			 collect `(:file ,(pathname-name p) :pathname ,p)))))
+
+(gsharp-defsystem (:gsharp)
+   "packages"
+   "utilities"
+   "gf"
+   "sdl"
+   "charmap"
+   "buffer"
+   "numbering"
+   "Obseq/obseq"
+   "measure"
+   "postscript"
+   "glyphs"
+   "score-pane"
+   "beaming"
+   "drawing"
+   "cursor"
+   "input-state"
+   "midi"
+   "gui")

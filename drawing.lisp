@@ -25,7 +25,7 @@
 		     (:bass (lineno (clef staff)))
 		     (:treble (+ (lineno (clef staff)) 6))
 		     (:c (+ (lineno (clef staff))) 3))))
-      (loop for pitch in '(3 0 4 1 5 2)
+      (loop for pitch in '(3 0 4 1 5 2 6)
 	    for line in '(0 -3 1 -2 -5 -1 -4)
 	    for x from (+ x1 10 (staff-step 8)) by (staff-step 2.5)
 	    while (eq (aref (keysig staff) pitch) :sharp)
@@ -96,28 +96,38 @@
 			 (staff-yoffset (car (last staves)))))))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y draw-cursor)
-  (let ((method (buffer-cost-method buffer))
-	(staves (staves buffer)))
-    (loop for staff in staves
-	  for offset from 0 by -90 do
-	  (setf (staff-yoffset staff) offset))
-    (with-staff-size 6
+  (with-staff-size 6
+    (let* ((staves (staves buffer))
+	   (timesig-offset (max (* (staff-step 2)
+				   (loop for staff in staves
+					 maximize (count :flat (keysig staff))))
+				(* (staff-step 2.5)
+				   (loop for staff in staves
+					 maximize (count :sharp (keysig staff))))))
+	   (method (let ((old-method (buffer-cost-method buffer)))
+		     (make-measure-cost-method (min-width old-method)
+					       (spacing-style old-method)
+					       (- (line-width old-method) timesig-offset))))
+	   (right-edge (right-edge buffer)))
+      (loop for staff in staves
+	    for offset downfrom 0 by 90 do
+	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
 	 (lambda (measures)
 	   (let ((widths (compute-widths measures method)))
 	     (with-vertical-score-position (pane yy)
-	       (draw-system pane measures (+ x (left-offset buffer))
+	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
 			    widths method staves draw-cursor)
-	       (draw-bar-line pane (+ x 20)
+	       (draw-bar-line pane x
 			      (staff-step 8)
 			      (staff-yoffset (car (last staves)))))
 	     (loop for staff in staves do
 		   (with-vertical-score-position (pane yy)
 		     (if (member staff (staves (layer (slice (bar *cursor*)))))
-			 (draw-staff-and-clef pane staff (+ x 20) 700)
+			 (draw-staff-and-clef pane staff x right-edge)
 			 (with-light-glyphs pane
-			   (draw-staff-and-clef pane staff (+ x 20) 700))))
+			   (draw-staff-and-clef pane staff x right-edge))))
 		   (decf yy 90))))
 	 buffer)))))
 
@@ -351,7 +361,7 @@
 ;;;
 ;;; Cluster
 
-(defgeneric draw-element (pane element x &optional (flags t)))
+(defgeneric draw-element (pane element x &optional flags))
 
 (defmethod note-difference ((note1 note) (note2 note))
   (- (pitch note1) (pitch note2)))

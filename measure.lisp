@@ -295,7 +295,7 @@
     (setf (obseq-cost-method buffer)
 	  (make-measure-cost-method
 	   (min-width buffer) (spacing-style buffer)
-	   (- (right-edge buffer) (left-offset buffer))))
+	   (- (right-edge buffer) (left-margin buffer) (left-offset buffer))))
     (obseq-solve buffer)
     (setf (modified-p buffer) nil)))
 
