@@ -1,7 +1,11 @@
 (in-package :score-pane)
 
 (defclass score-pane (application-pane)
-  ((pixmaps :initform (make-hash-table :test #'eq) :reader pane-pixmaps)))
+  ((pixmaps :initform (make-hash-table :test #'eq) :reader pane-pixmaps)
+   (darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
+			     :reader darker-gray-progressions)
+   (lighter-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
+			      :reader lighter-gray-progressions)))
 
 (defmethod dispatch-event :before ((pane score-pane) (event pointer-enter-event))
   (let ((port (port pane)))
@@ -474,10 +478,8 @@
     (when (stream-drawing-p *pane*)
       (medium-draw-rectangle* medium x1 y1 x2 y2 t))))
 
-(defparameter *darker-gray-progressions*
-  (make-array 10 :initial-element nil :adjustable t))
-(defparameter *lighter-gray-progressions*
-  (make-array 10 :initial-element nil :adjustable t))
+(defvar *darker-gray-progressions*)
+(defvar *lighter-gray-progressions*)
 
 ;;; don't delete this yet, since I don't know how the other one will work out. 
 ;; (defun ensure-gray-progressions (index)
@@ -563,7 +565,7 @@
 (defclass upward-beam-output-record (beam-output-record)
   ())
 
-(defmethod replay-output-record ((record upward-beam-output-record) stream
+(defmethod replay-output-record ((record upward-beam-output-record) (stream score-pane)
 				 &optional (region +everywhere+)
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
@@ -572,15 +574,17 @@
       (let ((medium (sheet-medium stream)))
 	(let ((*light-glyph* (not (eq ink +black+))))
 	  (with-drawing-options (medium :ink ink)
-	    ;; we replay with the identity tranformation, so
-	    ;; we have to draw the other way
-	    (draw-downward-beam medium x1 (1- y2) (1- (+ y1 thickness)) thickness
-				(/ (- x2 x1) (- y2 y1 thickness)))))))))
+	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
+		  (*darker-gray-progressions* (darker-gray-progressions stream)))
+	      ;; we replay with the identity tranformation, so
+	      ;; we have to draw the other way
+	      (draw-downward-beam medium x1 (1- y2) (1- (+ y1 thickness)) thickness
+				  (/ (- x2 x1) (- y2 y1 thickness))))))))))
 
 (defclass downward-beam-output-record (beam-output-record)
   ())
 
-(defmethod replay-output-record ((record downward-beam-output-record) stream
+(defmethod replay-output-record ((record downward-beam-output-record) (stream score-pane)
 				 &optional (region +everywhere+)
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
@@ -589,10 +593,12 @@
       (let ((medium (sheet-medium stream)))
 	(let ((*light-glyph* (not (eq ink +black+))))
 	  (with-drawing-options (medium :ink ink)
-	    ;; we replay with the identity tranformation, so
-	    ;; we have to draw the other way
-	    (draw-upward-beam medium x1 (1- (+ y1 thickness)) (1- y2) thickness
-			      (/ (- x2 x1) (- y2 y1 thickness)))))))))
+	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
+		  (*darker-gray-progressions* (darker-gray-progressions stream)))
+	      ;; we replay with the identity tranformation, so
+	      ;; we have to draw the other way
+	      (draw-upward-beam medium x1 (1- (+ y1 thickness)) (1- y2) thickness
+				(/ (- x2 x1) (- y2 y1 thickness))))))))))
 
 (defun draw-sloped-beam (medium x1 y1 x2 y2 thickness inverse-slope)
   (let ((transformation (medium-transformation *pane*)))
@@ -658,6 +664,8 @@
   (let ((pixmap (gensym))
 	(mirror (gensym)))
     `(let* ((*pane* ,pane)
+	    (*lighter-gray-progressions* (lighter-gray-progressions pane))
+	    (*darker-gray-progressions* (darker-gray-progressions pane))
 	    (,pixmap (allocate-pixmap *pane* 800 900))
 	    (,mirror (sheet-direct-mirror *pane*)))
       (draw-rectangle* ,pixmap 0 0 800 900 :filled t :ink +white+)
