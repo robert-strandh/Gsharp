@@ -172,9 +172,11 @@ sequence was inserted using INSERT."))
 	  'flexi-position-error :chain (chain cursor) :position position)
   (with-slots (chain index) cursor
      (with-slots (cursors) chain
-	(setf (skiplist-find cursors index)
-	      (delete cursor (skiplist-find cursors index)
-		      :key #'wp-value :test #'eq))
+	(let ((remaining (delete cursor (skiplist-find cursors index)
+				 :key #'wp-value :test #'eq)))
+	  (if (null remaining)
+	      (skiplist-delete cursors index)
+	      (setf (skiplist-find cursors index) remaining)))
 	(setf index (position-index chain (1- position)))
 	(push (make-wp cursor) (skiplist-find cursors index)))))
 
@@ -186,9 +188,11 @@ sequence was inserted using INSERT."))
 	  'flexi-position-error :chain (chain cursor) :position position)
   (with-slots (chain index) cursor
      (with-slots (cursors) chain
-	(setf (skiplist-find cursors index)
-	      (delete cursor (skiplist-find cursors index)
-		      :key #'wp-value :test #'eq))
+	(let ((remaining (delete cursor (skiplist-find cursors index)
+				 :key #'wp-value :test #'eq)))
+	  (if (null remaining)
+	      (skiplist-delete cursors index)
+	      (setf (skiplist-find cursors index) remaining)))
 	(setf index (position-index chain position))
 	(push (make-wp cursor) (skiplist-find cursors index)))))
 
@@ -197,12 +201,6 @@ sequence was inserted using INSERT."))
 
 (defmethod at-end-p ((cursor standard-flexicursor))
   (= (cursor-pos cursor) (nb-elements (chain cursor))))
-
-(defmethod move> ((cursor standard-flexicursor) &optional (n 1))
-  (incf (cursor-pos cursor) n))
-
-(defmethod move< ((cursor standard-flexicursor) &optional (n 1))
-  (decf (cursor-pos cursor) n))
 
 (defmethod insert ((cursor standard-flexicursor) object)
   (insert* (chain cursor) (cursor-pos cursor) object))
@@ -213,18 +211,16 @@ sequence was inserted using INSERT."))
 	 (insert cursor object))
        sequence))
 
-(defmethod delete* :around ((chain standard-cursorchain) position)
+(defmethod delete* :before ((chain standard-cursorchain) position)
   (with-slots (cursors) chain
      (let* ((old-index (position-index chain position))
 	    (cursors-to-adjust (skiplist-find cursors old-index)))
-       (when cursors-to-adjust
-	 (skiplist-delete cursors old-index))
-       (call-next-method)
        (loop for cursor-wp in cursors-to-adjust
 	     as cursor = (wp-value cursor-wp)
 	     when cursor
-	       do (setf (cursor-pos cursor) position)
-	       and do  (push cursor-wp (skiplist-find cursors (flexicursor-index cursor)))))))
+	       do (typecase cursor
+		    (right-sticky-flexicursor (incf (cursor-pos cursor)))
+		    (left-sticky-flexicursor (decf (cursor-pos cursor))))))))
 
 (defmethod delete> ((cursor standard-flexicursor) &optional (n 1))
   (let ((chain (chain cursor))
