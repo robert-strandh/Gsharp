@@ -80,7 +80,7 @@
     (unless pos
       (setf pos (random (flexichain:nb-elements *fc-real*))
 	    elem (random 1000000)))
-    (add-inst `(setf element* ,pos ,elem))
+    (add-inst `(se* ,pos ,elem))
     (setf (flexichain:element* *fc-real* pos) elem)
     (setf (stupid:element* *fc-fake* pos) elem)))
 
@@ -182,6 +182,7 @@
   (randomcase  (m<) (m>)))
 
 (defun test-step ()
+  (compare)
   (when (zerop (random 200))
     (setf *ins-del-state* (not *ins-del-state*)))
   (randomcase (i-or-d) (setel) (mc) (cc) (scp) (mov)))
@@ -195,6 +196,7 @@
   (setf *fc-fake* (make-instance 'stupid:standard-cursorchain)))
   
 (defun tester ()
+  (reset-all)
   (mlc)
   (mrc)
   (loop repeat 100000
