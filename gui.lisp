@@ -328,7 +328,7 @@
 		      (lambda (so-far mode)
 			(complete-from-possibilities
 			 so-far
-			 #+cmu (ext:ambiguous-files so-far) #-cmu
+			 #+cmu (ext:ambiguous-files so-far) #-cmu '()
 			 '()
 			 :action mode
 			 :predicate (lambda (obj) (declare (ignore obj)) t)
