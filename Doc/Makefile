@@ -16,6 +16,7 @@ all : $(NAME).ps
 $(NAME).dvi: $(TEXFILES) $(PSTEX_T) $(VERBATIM)
 	latex $<
 	makeindex $(NAME)
+	bibtex gsharp
 	latex $<
 
 $(NAME).ps: $(NAME).dvi $(PSTEX)
@@ -27,7 +28,6 @@ view: $(NAME).ps
 clean:
 	rm -f *.aux *.log *~
 
-spotless:
-	make clean
-	rm -f *.ps *.dvi *.pstex *.pstex_t *.toc *.idx *.ilg *.ind
+spotless: clean
+	rm -f *.ps *.dvi *.pstex *.pstex_t *.toc *.idx *.ilg *.ind *.bbl
 
