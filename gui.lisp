@@ -567,7 +567,7 @@
     #+cmu
     (ext:run-program "timidity" '("test.mid"))
     #+sbcl
-    (sb-ext:run-program "timidity" '("test.mid"))
+    (sb-ext:run-program "timidity" '("test.mid") :search t)
     #-(or cmu sbcl)
     (error "write compatibility layer for RUN-PROGRAM")))
 
@@ -583,7 +583,7 @@
     #+cmu
     (ext:run-program "timidity" '("test.mid"))
     #+sbcl
-    (sb-ext:run-program "timidity" '("test.mid"))
+    (sb-ext:run-program "timidity" '("test.mid") :search t)
     #-(or cmu sbcl)
     (error "write compatibility layer for RUN-PROGRAM")))
 
