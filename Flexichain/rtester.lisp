@@ -21,8 +21,6 @@
 ;; (setf element*)
 ;; clone-cursor fcu
 ;; (setf cursor-pos)
-;; move> fcu &optional (n 1)
-;; move< fcu &optional (n 1)
 ;; insert fcu obj
 ;; delete< fcu
 ;; delete> fcu
@@ -64,21 +62,24 @@
   (push inst *instructions*))
 
 (defun i* (&optional
-	   (pos (random (1+ (flexichain:nb-elements *fc-real*))))
+	   (pos (random (1+ (stupid:nb-elements *fc-fake*))))
 	   (elem (random 1000000)))   
   (add-inst `(i* ,pos ,elem))
   (flexichain:insert* *fc-real* pos elem)
   (stupid:insert* *fc-fake* pos elem))
 
-(defun d* (&optional (pos (random (flexichain:nb-elements *fc-real*))))
-  (add-inst `(d* ,pos))
-  (flexichain:delete* *fc-real* pos)
-  (stupid:delete* *fc-fake* pos))
+(defun d* (&optional pos)
+  (unless (zerop (stupid:nb-elements *fc-fake*))
+    (unless pos
+      (setf pos (random (stupid:nb-elements *fc-fake*))))
+    (add-inst `(d* ,pos))
+    (flexichain:delete* *fc-real* pos)
+    (stupid:delete* *fc-fake* pos)))
 
 (defun se* (&optional pos elem)
   (unless (zerop (stupid:nb-elements *fc-fake*))
     (unless pos
-      (setf pos (random (flexichain:nb-elements *fc-real*))
+      (setf pos (random (stupid:nb-elements *fc-fake*))
 	    elem (random 1000000)))
     (add-inst `(se* ,pos ,elem))
     (setf (flexichain:element* *fc-real* pos) elem)
@@ -110,19 +111,6 @@
   (add-inst `(scp ,elt ,pos))
   (setf (flexichain:cursor-pos (elt *cursors-real* elt)) pos)
   (setf (stupid:cursor-pos (elt *cursors-fake* elt)) pos))
-
-(defun m< (&optional (elt (random (length *cursors-real*))))
-  (unless (zerop (stupid:cursor-pos (elt *cursors-fake* elt)))
-    (add-inst `(m< ,elt))
-    (flexichain:move< (elt *cursors-real* elt))
-    (stupid:move< (elt *cursors-fake* elt))))
-      
-(defun m> (&optional (elt (random (length *cursors-fake*))))
-  (unless (= (stupid:cursor-pos (elt *cursors-fake* elt))
-	     (stupid:nb-elements (stupid:chain (elt *cursors-fake* elt))))
-    (add-inst `(m> ,elt))
-    (flexichain:move> (elt *cursors-real* elt))
-    (stupid:move> (elt *cursors-fake* elt))))
 
 (defun ii (&optional
 	   (elt (random (length *cursors-fake*)))
@@ -178,14 +166,11 @@
 (defun mc ()
   (randomcase (mlc) (mrc)))
 
-(defun mov ()
-  (randomcase  (m<) (m>)))
-
 (defun test-step ()
-  (compare)
   (when (zerop (random 200))
     (setf *ins-del-state* (not *ins-del-state*)))
-  (randomcase (i-or-d) (setel) (mc) (cc) (scp) (mov)))
+  (randomcase (i-or-d) (setel) (mc) (cc) (scp))
+  (compare))
 
 (defun reset-all ()
   (setf *instructions* '())
@@ -195,15 +180,16 @@
   (setf *fc-real* (make-instance 'flexichain:standard-cursorchain))
   (setf *fc-fake* (make-instance 'stupid:standard-cursorchain)))
   
-(defun tester ()
+(defun tester (&optional (n 1))
   (reset-all)
   (mlc)
   (mrc)
-  (loop repeat 100000
+  (loop repeat n
 	do (test-step)))
 
 (defun replay (instructions)
   (let ((*instructions* '()))
     (reset-all)
     (loop for inst in (reverse instructions)
-	  do (apply (car inst) (cdr inst)))))
+	  do (apply (car inst) (cdr inst))
+	     (compare))))
