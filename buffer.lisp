@@ -636,6 +636,12 @@
    (tail :initarg :tail :accessor tail))
   (:default-initargs :name "default layer"))
 
+(defmethod initialize-instance :after ((l layer) &rest args)
+  (declare (ignore args))
+  (setf (layer (head l)) l
+	(layer (body l)) l
+	(layer (tail l)) l))
+
 (defmethod print-object :after ((l layer) stream)
   (with-slots (head body tail staves) l
     (format stream ":staves ~W :head ~W :body ~W :tail ~W "
@@ -664,12 +670,7 @@
   
 (defun read-melody-layer-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (layer (apply #'make-instance 'melody-layer rest)))
-    (setf (slot-value (head layer) 'layer) layer
-	  (slot-value (body layer) 'layer) layer
-	  (slot-value (tail layer) 'layer) layer)
-    layer))
+  (apply #'make-instance 'melody-layer (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\_
   #'read-melody-layer-v3
@@ -698,12 +699,7 @@
 
 (defun read-lyrics-layer-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (layer (apply #'make-instance 'lyrics-layer rest)))
-    (setf (slot-value (head layer) 'layer) layer
-	  (slot-value (body layer) 'layer) layer
-	  (slot-value (tail layer) 'layer) layer)
-    layer))
+  (apply #'make-instance 'lyrics-layer (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\M
   #'read-lyrics-layer-v3
@@ -784,6 +780,11 @@
    (buffer :initform nil :initarg :buffer :accessor buffer)
    (layers :initform '() :initarg :layers :accessor layers)))
 
+(defmethod initialize-instance :after ((s segment) &rest args)
+  (declare (ignore args))
+  (loop for layer in (layers s)
+	do (setf (segment layer) s)))
+
 (defmethod print-object :after ((s segment) stream)
   (format stream ":layers ~W " (layers s)))
 
@@ -797,11 +798,7 @@
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (segment (apply #'make-instance 'segment rest)))
-    (loop for layer in (layers segment) do
-	  (setf (slot-value layer 'segment) segment))
-    segment))
+  (apply #'make-instance 'segment (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\S
   #'read-segment-v3
@@ -892,6 +889,11 @@
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
    (left-margin :initform *default-left-margin* :initarg :left-margin :accessor left-margin)))
 
+(defmethod initialize-instance :after ((b buffer) &rest args)
+  (declare (ignore args))
+  (loop for segment in (segments b)
+	do (setf (buffer segment) b)))
+
 (defmethod print-object :after ((b buffer) stream)
   (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
     (format stream ":staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W "
@@ -907,11 +909,7 @@
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (buffer (apply #'make-instance 'buffer rest)))
-    (loop for segment in (segments buffer) do
-	  (setf (slot-value segment 'buffer) buffer))
-    buffer))
+  (apply #'make-instance 'buffer (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\B
   #'read-buffer-v3

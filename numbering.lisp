@@ -64,7 +64,7 @@
 (defnclass nlayer layer
   ())
 
-(defmethod initialize-instance :after ((layer layer) &rest args)
+(defmethod initialize-instance :after ((layer nlayer) &rest args)
   (declare (ignore args))
   (setf (number (head layer)) 0
 	(number (body layer)) 1
