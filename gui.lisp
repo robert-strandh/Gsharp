@@ -100,22 +100,22 @@
 (defvar *gsharp-frame*)
 
 (defparameter *kbd-macro-recording-p* nil)
-(defparameter *kbd-macro-keys* '())
+(defparameter *kbd-macro-funs* '())
 
 (defmethod dispatch-event :around ((pane score-pane) (event key-press-event))
   (when (keyboard-event-character event)
     (let* ((key (list (keyboard-event-character event)
 		      (event-modifier-state event)))
 	   (command (gethash key *commands*)))
-      (when *kbd-macro-recording-p* (push key *kbd-macro-keys*))
       (cond ((hash-table-p command) (setf *commands* command))
 	    ((fboundp command)
+	     (when *kbd-macro-recording-p* (push command *kbd-macro-funs*))
 	     (handler-case (funcall command)
 	       (gsharp-condition (condition) (format *error-output* "~a~%" condition)))
 	     (setf *commands* *global-command-table*))
 	    (t (format *error-output* "no command for ~a~%" key)
 	       (setf *commands* *global-command-table*)
-	       (when *kbd-macro-recording-p* (setf *kbd-macro-keys* '()
+	       (when *kbd-macro-recording-p* (setf *kbd-macro-funs* '()
 						   *kbd-macro-recording-p* nil))))
       (redisplay-gsharp-panes *gsharp-frame* :force-p t))))
 	    
@@ -1058,19 +1058,13 @@
 (define-gsharp-command com-start-kbd-macro ()
   (message "defining keyboad macro~%")
   (setf *kbd-macro-recording-p* t
-	*kbd-macro-keys* '()))  
+	*kbd-macro-funs* '()))  
 
 (define-gsharp-command com-end-kbd-macro ()
   (message "keyboad macro defined~%")
   (setf *kbd-macro-recording-p* nil
-	*kbd-macro-keys* (nreverse (cddr *kbd-macro-keys*))))
+	*kbd-macro-funs* (nreverse (cdr *kbd-macro-funs*))))
 
 (define-gsharp-command com-call-last-kbd-macro ()
-  (loop with commands = *global-command-table*
-	for key in *kbd-macro-keys* do
-	(let ((command (gethash key commands)))
-	  (cond ((hash-table-p command) (setf commands command))
-		((fboundp command)
-		 (handler-case (funcall command)
-		   (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
-		(t (message "no command for ~a~%" key))))))
+  (handler-case (mapc #'funcall *kbd-macro-funs*)
+    (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
