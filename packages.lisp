@@ -50,12 +50,12 @@
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
 	   #:add-note #:find-note #:remove-note #:cluster #:make-cluster
-	   #:rest #:make-rest #:lyrics-element
+	   #:rest #:make-rest #:lyrics-element #:make-lyrics-element
 	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
 	   #:remove-element #:bar #:make-bar
 	   #:melody-bar #:lyrics-bar
-	   #:layer
+	   #:layer #:lyrics-layer #:melody-layer
 	   #:bars #:nb-bars #:barno #:add-bar #:remove-bar
 	   #:slice
 	   #:segment #:slices #:sliceno
@@ -74,7 +74,7 @@
 	   #:stem-direction #:stem-length #:notehead-duration #:element-duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
-	   #:left-margin #:text
+	   #:left-margin #:text #:append-char #:erase-char
 	   ))
 
 (defpackage :gsharp-numbering

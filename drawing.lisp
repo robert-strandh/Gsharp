@@ -642,5 +642,4 @@
 (defmethod draw-element (pane (element lyrics-element) x &optional (flags t))
   (declare (ignore flags))
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
-    (draw-text* pane (map 'string #'unicode-to-char (text element))
-		x 0 :align-x :center)))
+    (draw-text* pane (text element) x 0 :align-x :center)))

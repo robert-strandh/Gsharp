@@ -13,7 +13,7 @@
 (defparameter *kbd-macro-funs* '())
 
 (defparameter *accumulated-keys* '())
-(defparameter *modes* (list *global-mode-table*))
+(defparameter *modes* (list *melody-layer-mode-table* *global-mode-table*))
 (defparameter *last-character* nil)
 
 (defmethod dispatch-event :around ((pane score-pane:score-pane) (event key-press-event))
@@ -29,7 +29,8 @@
 						(dico-object x *accumulated-keys*)
 					      (declare (ignore value prefix-p))
 					      exists-p))))
-		    (fboundp (dico-object dico *accumulated-keys*)))
+		    (or (functionp (dico-object dico *accumulated-keys*))
+			(fboundp (dico-object dico *accumulated-keys*))))
 	       (let ((command (dico-object dico *accumulated-keys*)))
 		 (when *kbd-macro-recording-p* (push command *kbd-macro-funs*))
 		 (handler-case (funcall command)
@@ -393,6 +394,11 @@
 	(simple-parse-error () (error 'no-such-layer)))
     (declare (ignore string))
     (if success layer (error 'no-such-layer))))
+
+(defmethod select-layer :after (cursor (layer layer))
+  (setf *modes* (list (cond ((typep layer 'melody-layer) *melody-layer-mode-table*)
+			    ((typep layer 'lyrics-layer) *lyrics-layer-mode-table*))
+		      *global-mode-table*)))
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
@@ -1155,3 +1161,20 @@
 (define-gsharp-command com-call-last-kbd-macro ()
   (handler-case (mapc #'funcall *kbd-macro-funs*)
     (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Lyrics
+
+(defun insert-lyrics-element ()
+  (let* ((state (input-state *gsharp-frame*))
+	 (cursor (cursor *gsharp-frame*))
+	 (element (make-lyrics-element
+		   (if (eq (notehead state) :filled) (rbeams state) 0)
+		   (if (eq (notehead state) :filled) (lbeams state) 0)
+		   (dots state)
+		   (notehead state)
+		   (car (staves (layer (cursor *gsharp-frame*)))))))
+    (insert-element element cursor)
+    (forward-element cursor)
+    element))

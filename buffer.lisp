@@ -408,6 +408,14 @@
 	 :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
 	 :reader text)))
 
+(defmethod initialize-instance :after ((elem lyrics-element) &rest args)
+  (declare (ignore args))
+  (with-slots (text) elem
+     (unless (adjustable-array-p text)
+       (let ((length (length text)))
+	 (setf text (make-array length :adjustable t :element-type 'fixnum
+				:fill-pointer length :initial-contents text))))))
+
 (defun make-lyrics-element (rbeams lbeams dots notehead staff)
   (make-instance 'lyrics-element
      :rbeams rbeams :lbeams lbeams :dots dots
@@ -415,7 +423,7 @@
 
 (defmethod print-object ((elem lyrics-element) stream)
   (with-slots (notehead rbeams lbeams dots xoffset staff text) elem
-     (format stream "[A :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :staff ~W :text ~W ] " text)))
+     (format stream "[A :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :staff ~W :text ~W ] " notehead rbeams lbeams dots xoffset staff text)))
 
 (defun read-lyrics-element-v3 (stream char n)
   (declare (ignore char n))
@@ -424,6 +432,13 @@
 (set-dispatch-macro-character #\[ #\A
   #'read-lyrics-element-v3
   *gsharp-readtable-v3*)
+
+(defmethod append-char ((elem lyrics-element) char)
+  (vector-push-extend char (text elem)))
+
+(defmethod erase-char ((elem lyrics-element))
+  (unless (zerop (fill-pointer (text elem)))
+    (decf (fill-pointer (text elem)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
