@@ -1,0 +1,143 @@
+\chapter{Plans for the future}
+
+\section{Minor issues}
+
+There are tons of minor issues to fix.  Here is a partial list.
+
+\subsection{Notation issues}
+
+\begin{itemize}
+\item Elements now have an additional property that lets the user
+  position them horizontally with an offset relative to their normal
+  aligned position, so that notes with an interval of a second form
+  different layers do not overlap physically.  But we also have to
+  introduce a set of primitives to alter this offset, and perhaps some
+  visual indications that show the offset.  Perhaps we should show a
+  thin yellow line where the alignment is whenever there is a nonzero
+  offset.  I am suggesting yellow, because it would not destroy the
+  overall visual impression of the score. 
+\item The cursor is currently drawn by the drawing routine for the
+  layer, but that routine is not supposed to know where the cursor
+  is.  We need to separate out cursor drawing from layer drawing. 
+\end{itemize}
+
+\subsection{Implementation details}
+
+\begin{itemize}
+\item Playing as MIDI should create a temporary file with a unique
+  name in \texttt{/tmp} as opposed a file in the current directory
+  with a name that can clash with others. 
+\item Someone who knows how pathnames work needs to find out how to
+  use them in place of strings for filenames. 
+\end{itemize}
+
+\section{Major issues}
+
+\subsection{Implementation details}
+
+\begin{itemize}
+\item Different information might need to be attached conceptually to
+  barlines, in particular: fermata, repeat bars, etc.  It would be
+  natural to physically attach this information to the bar, indicating
+  properties of the barline at the end of the bar, but there is a
+  conceptual problem with this, since some of this information is not
+  unique to the layer, but sometimes global to all layers that are
+  traversed by the resulting barline and sometimes even (repeat bars?)
+  to the entire score.  One could imagine a separate structure for the
+  segment, indicating positions of repeat bars and such.  It would
+  have the additional advantage that if a barline is deleted in a
+  layer which has a repeat bar further on, the visual effect would be
+  nicer.  Operating on this new structure should be possible from any
+  layer. 
+\item The fermata symbol is sometimes centered on a beam (tremolo).
+  We currently have no way of attaching any information to a beam,  
+\end{itemize}
+
+\section{Minor projects}
+
+\subsection{Default staff line for rests}
+
+When using several voices (usually two) on one staff line, one would
+like for rests to be placed on (say) the upper staff line for the
+upper voice and (say) the lower staff line for the lower voice rather
+than, as now, having all rests inserted by default on the middle staff
+line.  It would be nice if a layer had a default staff line for rests
+so that changing hte layer automatically changes the default staff
+line for rests.  
+
+\subsection{Default stem direction for a layer}
+
+When using several voices on a staff line, one somtimes wants the
+stems of the upper voice to be up and the ones of the lower voice to
+be down.  It would be nice for a layer to have a default stem
+direction so that changing the voice would automatically change the
+stem direction.  
+
+Here is a possible specification of such a feature:
+
+A new element is still created according to the stem direction of the
+input state without taking into account the stem direction of the
+layer.  When a layer is displayed, the following final stem direction
+is computed:
+
+\begin{itemize}
+\item if the stem direction of the element is not \emph{auto} then
+  that stem direction is used;
+\item if the stem direction of the element is \emph{auto}, but the
+  default stem direction of the layer is not \emph{auto}, then the
+  default stem direction of the layer is used;
+\item otherwise, the stem direction is computed from the position of
+  the notes of the element. 
+\end{itemize}
+
+\section{Major projects}
+
+\subsection{Menu items with arguments}
+
+This is a {\clim} project.  Currently {\clim} does not know how to
+read arguments when a command has been invoked from a menu item.
+Consequently, we are restricted to menu items that have no arguments. 
+
+\subsection{Layout by page}
+
+We need to have a more sophisticated layout algorithm that divides the
+score into pages rather than just lines.  One interesting idea seems
+to be to use the {\obseq} library in a nested kind of way, where an
+invocation of the cost combination method on the global level would
+provoke another call to the \texttt{solve} function on the page
+level.  This would be really cute, actually, and it would show the
+power of the approach of the {\obseq} library.  
+
+Here is how it would be done.  First it requires a minor modification
+to the {\obseq} library.  Instead of the elements \emph{inheriting}
+from \texttt{obseq-elem}, they need to be separate so that an element
+can be contained in more than one \texttt{obseq}.  This modification
+has some consequences: the operations to compute the next and previous
+element need to take an \texttt{obseq} argument to dispatch on.  The
+operations \texttt{last-undamaged-element} and
+\texttt{first-undamaged-element} must be modified and renamed to (say)
+\texttt{tail-valid-elements} and \texttt{head-valid-elements} and take
+a number instead of an element, since the \texttt{obseq} itself does
+not have a mapping from its internal elements to the client element.
+This requires the client to know how many elements there are, which is
+a minor inconvenience (but still an inconvenience). Then the seq-cost
+on the global level will be an obseq on the page level, and a call to
+combine a seq-cost and an element on the global level would trigger a
+call to solve on the page level.
+
+We also need to have different cost combination strategies, for
+instance:
+
+\begin{itemize}
+\item Paper roll with last line not right justified.  This involves
+  assigning a low cost to the last line even when it has to be highly
+  stretched in order to fill the line.  
+\item Paper roll with last line right justified.  This is all we have
+  right now.
+\item Pages with last page not filled and last line on last page not
+  filled. 
+\item Pages with last page filled normally.
+\item Pages with a fixed number of filled pages.
+\item Pages with an arbitrary number of pages, but the number must be
+  of the form $n = ax + b$.
+\end{itemize}

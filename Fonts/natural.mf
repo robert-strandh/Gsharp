@@ -1,0 +1,90 @@
+% The width of a natural sign is slightly less than 2/3s of the 
+% staff line distance of that font.
+global_variable(numeric)(natural_width_multiplier)(0.6);
+
+begingroup
+
+  local_variable(numeric)(hole_width)
+    (round(sharp_hole_width_multiplier * staff_line_distance));
+
+  % Hope that half a pixel will not be visible and will not influence 
+  % the required distance to the noteheads. 
+  if(odd(hole_width)):
+    local_variable(numeric)(xoffset)(0.5);
+  else:
+    local_variable(numeric)(xoffset)(0);
+  fi;
+
+  local_variable(numeric)(width)(hole_width + 2 * stem_thickness);
+  local_variable(numeric)(xleft)(-0.5 * width);
+  local_variable(numeric)(xright)(-xleft);
+
+  % The left part of the character is right in the middle of the 
+  % staff line and the lower edge of the right part touches the upper
+  % edge of the staff line
+  local_variable(numeric)(yleft)(-0.5 * staff_line_thickness);
+  local_variable(numeric)(yright)(-yleft);
+
+  % The path for the thick part
+  local_variable(path)(thickpart)
+    ((xleft, yleft) -- (xright, yright));
+
+  begin_character(natural)
+
+    % Draw the thick part
+    pickup penrazor scaled (0.4 * staff_line_distance) rotated 90
+                    scaled magnification;
+    draw thickpart shifted 
+      (0, 0.5 * staff_line_distance)
+      shifted (xoffset, yoffset)
+      scaled magnification;
+    draw thickpart shifted 
+      (0, -0.5 * staff_line_distance)
+      shifted (xoffset, yoffset)
+      scaled magnification;
+
+    % Draw the thin part
+    pickup penrazor scaled stem_thickness
+                    scaled magnification;
+    draw ((xleft + 0.5 * stem_thickness, 1.5 * staff_line_distance) --
+          (xleft + 0.5 * stem_thickness, -0.5 * staff_line_distance))
+	 shifted (xoffset, yoffset)
+         scaled magnification;
+    draw ((xright - 0.5 * stem_thickness, -1.5 * staff_line_distance) --
+          (xright - 0.5 * stem_thickness, 0.5 * staff_line_distance))
+	 shifted (xoffset, yoffset)
+         scaled magnification;
+
+  end_character;
+
+  begin_character(natural_light)
+
+    % Draw the thick part
+    pickup penrazor scaled (0.4 * staff_line_distance) rotated 90
+                    scaled magnification;
+    draw thickpart shifted 
+      (0, 0.5 * staff_line_distance)
+      shifted (xoffset, yoffset)
+      scaled magnification;
+    draw thickpart shifted 
+      (0, -0.5 * staff_line_distance)
+      shifted (xoffset, yoffset)
+      scaled magnification;
+
+    % Draw the thin part
+    pickup penrazor scaled stem_thickness
+                    scaled magnification;
+    draw ((xleft + 0.5 * stem_thickness, 1.5 * staff_line_distance) --
+          (xleft + 0.5 * stem_thickness, -0.5 * staff_line_distance))
+	 shifted (xoffset, yoffset)
+         scaled magnification;
+    draw ((xright - 0.5 * stem_thickness, -1.5 * staff_line_distance) --
+          (xright - 0.5 * stem_thickness, 0.5 * staff_line_distance))
+	 shifted (xoffset, yoffset)
+         scaled magnification;
+
+    stripes(1,2);
+	 
+  end_character;
+
+endgroup;

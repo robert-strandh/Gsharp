@@ -1,0 +1,21 @@
+% save, declare, and initialize a local variable
+
+def local_variable(text type, name, initial_value) =
+  save name;
+  type name;
+  name = initial_value;
+enddef;
+
+
+def global_variable(text type, name, initial_value) = 
+  type name;
+  name = initial_value;
+enddef;
+
+def begin_character(expr code) =
+  begingroup charcode := code; clearxy; clearit; clearpen;
+enddef;
+
+def end_character =
+  shipit; endgroup
+enddef;

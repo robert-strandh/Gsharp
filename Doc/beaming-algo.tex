@@ -1,0 +1,198 @@
+%======================================================
+\chapter{The beaming algorithm}
+
+The beaming algorithm of {\gs} was inspired by the book by Ross.
+Unfortunately, his method is not easily converted int an algorithm,
+and his examples occasionally break his own rules.  We thus had to
+invent our own algorithms that is as close to what we believe Ross
+intended as we could possibly achieve. 
+
+Generally speaking (we are simplifying the discussion to a single
+beam) the beaming problem takes as input the x- and y-positions of a
+number of clusters and computes the position of the endpoints of the
+beam to connect the clusters. 
+
+\section{Beaming is symmetric}
+
+From studying the examples of Ross, one concludes that beaming
+is symmetric, i.e., the solution to a beaming problem is also a
+solution to the beaming problem obtained when the beam group is
+reflected either in the middle staff line, or in an arbitrary vertical
+line.  This makes it necessary to handle only beaming problems with
+stems in one direction (say up) and with the first note (say) lower
+than the last of the beam group. 
+
+\section{Only the notes closest to the beam count}
+
+Each cluster can be reduced to one with only a single notehead, namely
+the one closest to the beam.  In our case, it would be the note on the
+highest staff position in each cluster.
+
+\section{Notes determining slope and position}
+
+The slope of the beam is determined only by the outermost clusters
+(though Ross shows some examples of exceptions to this rule).  The
+position of the beam is translated vertically by an even number of
+staff steps, should any of the clusters in the group otherwise have
+too short a stem. 
+
+With these observations, we now only have to find the slope and
+initial position of a beam of a beam group consisting of two clusters,
+each with a single note and where the note of the leftmost cluster is
+on the same or a lower staff position than the one of the rightmost
+cluster.  
+
+\section{General algorithm for single beam}
+
+In the description that follows, we use the {\gs} method of naming
+staff positions which is that we count in half staff steps above the lowest
+line of the staff).  For example The first ledger line below the staff has
+position -2 and the upper line of the staff has position 8. 
+
+The primary beam can not be lower than the middle staff line (position
+4), but it can hang under it. 
+
+Here is the rule we use (and which coincides with that of Ross in most
+cases):
+
+\begin{itemize}
+\item if the rightmost note is strictly lower than then the first
+  ledger line below the staff (it has a position of at most -3), then
+  the left side always hangs under the middle staff line and the right
+  side either hangs under, straddles or sits on that same line.  We vary the
+  beam slope according to the position of the left note
+  \begin{itemize} 
+  \item if it has the same position as the right one, then the right
+    side of the beam also hangs under the line
+  \item if it is one lower than that of the right note, then the right
+    side of the beam straddles the line so that its slope reflects the
+    difference in position
+  \item otherwise (i.e., the left note is more than one position
+    below the right one), then the right side of the beam sits on the
+    line. 
+  \end{itemize}
+\item if instead the rightmost note is ON the first ledger line
+  (position -2) we raise the beam a little, but it is still entirely
+  on the middle staff line:
+  \begin{itemize}
+  \item if the left note is also has position -2, both sides of the
+    beam will straddle the middle line.
+  \item if the left note has position -3, then the beam hangs the line
+    on the left and straddles the line on the right.
+  \item otherwise (the left note is at least two positions lower than
+    the right one) the beam hangs on the left side and sits on the
+    right side. 
+  \end{itemize}
+\item if instead the rightmost note is below the lowest staff line
+  (position -1) the beam is entirely ether on the middle staff line
+  (position 4) or on the one above it (position 6). 
+  \begin{itemize}
+  \item if the left note has the same position (-1), then the beam
+    hangs the line at position 6 at both ends. 
+  \item if the left note is one position lower (-2) the beam is on the
+    middle staff line (position 4), with the left side straddling it and
+    the right side sitting on it. 
+  \item otherwise (the left note is at least two positions lower than
+    the right one) the beam is again on the middle staff line with the
+    left side hanging under it and the right side sitting on it. 
+  \end{itemize}
+\item if instead the rightmost note is on one of the normal staff
+  lines (even position from 0 to 8 inclusive) then the right side of
+  the stem always straddles a line (possibly not physically shown) six
+  positions higher, which makes the right stem 3 1/4 staff steps
+  (6 1/2 positions) long. 
+  \begin{itemize}
+  \item if the left note has the same position as the right one, the
+    left side of the beam also straddles the same line.
+  \item if the left note is one position below the right one, the left
+    side of the beam hangs under the same line.
+  \item if the left note is two positions below the right one, the
+    left side of the beam straddles the staff line below the one that
+    the right side of the beam straddles.
+  \item otherwise (i.e., the left note is at least three positions
+    lower than the right note, the left side of the beam hangs under
+    the staff line below the one that the right side of the beam
+    straddles. 
+  \end{itemize}
+\item if instead the rightmost note is between two ordinary staff
+  lines (odd positions from 1 to 7 inclusive), then the right side of
+  the beam always sits on a staff line 5 positions above the right
+  note, which makes the right stem 3 staff steps long (6 positions).
+  \begin{itemize}
+  \item if the left note has the same position as the right one, the
+    left side of the beam also sits on the same line
+  \item if the left note is one positions lower than the right one, the
+    left side of the beam straddles the same line.
+  \item if the left note is two positions lower than the right one,
+    the left side of the beam hangs under the same line.
+  \item otherwise (the left note is at least three positions lower
+    than the right one), the left side of the beam straddles the staff
+    line immediately below the one of the right side of the beam. 
+  \end{itemize}
+\item if instead the rightmost note is above the entire staff on an
+  even position (on a fictive ledger line above the staff), then the
+  right side of the beam sits on a fictive line four positions above
+  the note.  That makes the right stem extremely short (2 1/2 staff
+  step, or 5 positions)
+  \begin{itemize}
+  \item if the left note has the same position as the right one, the
+    left part of the beam also sits on the same line.
+  \item if the left note has a position one below that of the right
+    note, the left part of the beam straddles the same line.
+  \item if the left note has a position two below that of the right
+    note, the left part of the beam hangs under the same line.
+  \item if the left note has a position three, four or five below that
+    of the right note, the left part of the beam straddles the line
+    below the one on the right. 
+  \item otherwise (the left note has a position of at least six below
+    the right one), the left part of the beam hangs under the staff
+    line below the one on the right.
+  \end{itemize}
+\item otherwise, i.e., the rightmost note is above the entire staff in
+  an odd position (below a fictive ledger line above the staff) then
+  the right side of the beam always straddles a (fictive) line five
+  positions above the note.  This makes the right stem 2 3/4 staff
+  step (5 1/2 positions) long.
+  \begin{itemize}
+  \item if the left note has the same position as the right one, then
+    the left part of the beam also straddles the same line
+  \item if the left note has a position one lower than the right note,
+    then the left side of the beam hangs under the same line
+  \item if the left note has a position two lower than the right note, 
+    the left side of the beam straddles a line one below the one on
+    the right.
+  \item if the left note has a position three, four, five, or six
+    lower than the note on the right, then the left side of the beam
+    hangs under the line below the one on the right.
+  \item otherwise (the left note has a position at least seven lower
+    than the note on the right), then the left part of the note
+    straddles a line two staff steps (four positions) below the line
+    on the right.  This is the only case with such a high beam slant. 
+  \end{itemize}
+\end{itemize}
+
+\section{Algorithms for more than one beam}
+
+Double beaming adds more constraints, so it is easier.
+
+Triple beaming adds even more. 
+
+With more than three beams, things get messy because we cannot
+preserve normal spacing between beams. 
+
+\section{Avoiding too high a beam slant}
+
+When the horizontal distance between the two outer notes is too small,
+normal beaming cannot be used, since it would result in beam slants
+that are esthetically too great.  Ross only gives examples, but from
+those examples, one may conclude that beam slants more than 18 degrees
+are not used.  Ross also does not give any hints as to how to go about
+finding a correct solution in this case, he simply hints that (for
+stems up, upward beam) the left part of the beam must be raised a
+bit.  Our solution is to recursively try a new beaming with the left
+note one position higher up, until a solution is found.  A solution is
+always found since ultimately, when the who notes have the same
+position, a horizontal beam will always be the result, and a
+horizontal beam has a slant of zero degrees. 
+
+

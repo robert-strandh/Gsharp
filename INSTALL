@@ -1,0 +1,12 @@
+;;; Load the system definition file
+
+(load "system.lisp")
+
+;;; Compile and load the system
+
+(operate-on-system :gsharp :compile)
+(operate-on-system :gsharp :load)
+
+;;; Run Gsharp
+
+(gsharp::run-gsharp)

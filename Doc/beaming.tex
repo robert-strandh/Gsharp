@@ -1,0 +1,289 @@
+\subsection Beaming
+
+For the purpose of this section, a cluster is a collection of note
+heads that share a stem.  A beam group is a collection of clusters,
+the stems of which are connected by beams.
+
+There are two phases to determining correct beaming.  The first phase
+consists of deciding, for each beam group, whether it is to be beamed to
+any or both of the beam groups to the left and right of it, and if so,
+how many beams are to be used.  We refer to this process as beam
+grouping.  The next phase takes each of the groups and computes a valid
+position and slant for the beams of the group.  We call this process
+beams positioning.
+
+\subsubsection Beam Grouping
+
+Beam grouping is best done manually, since automatic beam grouping is
+hard and a matter of taste.  If a semi-automatic procedure is desired,
+it could be implemented as a macro that computes grouping as a function
+of current time signatures. 
+
+For each cluster c, the user indicates two numbers, l(c) and r(c), which
+indicate the number of beams to be used to connect c to its left and
+right neighbors, respectively.
+
+The number max(l(c), r(c)) determines the duration of the cluster c, so
+that zero means means a duration of 1/4 or more depending on the type of
+noteheads, one means a duration of 1/8 etc. We write C to mean the
+current (or center) cluster, L to mean the left neighbor of C and R to
+mean the right neighbor of C.
+
+The number of beams to be drawn between L and C (written bL) and between
+C and R (written bR) is determined as follows.  If 
+
+        min(r(L), l(C)) = min(r(C), l(R)) = 0
+
+then we use flags instead of beams for C.  The number of flags to be
+drawn is max(l(C), r(C)).  The reason for the use of flags is justified
+by the fact that at the same time either L does not want to have a right
+beam or C does not want to have a left beam AND either C does not want a
+right beam or R does not want a left beam.  Using beams would violate
+the preferences of one or more of L, C, and R. 
+
+If instead 
+
+        min(r(L), l(C)) > 0, or
+        min(r(C), l(R)) > 0
+
+then we use beams.  The number of full-size beams (i.e. stretching all
+the way from one cluster to the other) between L and C is determined as
+min(r(L), l(C)), and the number of full-size beams between C and R is
+determined as min(r(c), l(R)).  Notice that this calculation would give
+the same result if done from the point of view of L and R respectively,
+which is a reasonable property. 
+
+We now consider C to have 
+
+        max(min(r(L), l(C)), min(r(C), l(R)))
+
+full-size beams, which is less than or equal to the number that we
+want to show, which is
+
+        max(l(C), r(C))
+
+so we have to make up for the difference by drawing 
+
+        max(l(C), r(C)) - max(min(r(L), l(C)), min(r(C), l(R)))
+
+fractional beams.  These beams are always drawn on the side having the
+most full-size beams, whether l(C) and r(C) indicate it or not.  Thus if
+
+        min(r(L), l(C)) >  min(r(C), l(R))
+
+then the fractional beams are drawn on the left side of the stem of C,
+otherwise, they are drawn on the right side of the stem. 
+
+These rules might seem complicated, but it comes out quite nice at the
+end.  For instance, a user that does not want any beams at all simply
+always gives l(c) = 0 for all clusters c. That way the expression 
+
+        min(r(L), l(C))
+
+is always zero.  For the first cluster C of a group, typically l(C) = 0,
+and r(C) = n, where n is the number of beams that gives C its correct
+duration.  For the last cluster of a group, typically l(C) = n,  and r(C)
+= 0.  For the interior clusters of a group, typically l(C) = r(C) = n.
+Sometimes, however, in a group of (say) four clusters, C1, C2, C3, and C4,
+you want all of them to be connected by one beam, but in addition you
+want C1 and C2 to be connected by a secondary beams, as well as C3 and
+C4. Then you would have 
+
+                l(C1) = r(C4) = 0, 
+                r(C1) = l(C2) = 2,
+                r(C2) = l(C3) = 1,
+                r(C3) = l(C4) = 2.
+
+The method described in this section is simple yet flexible.  Automating
+grouping is very hard and manual settings must be allowed.  Instead we
+use a method that is essentially manual.  We suggest optional minor
+modes that compute grouping semi-automatically, or incrementally during
+data entry.  
+
+\subsubsection Beam Positioning
+
+The input to this phase is a sequence of clusters with the number of beams
+indicated for each pair of adjacent clusters.  This number is always at
+least one, since otherwise we would have more than one group.
+
+A valid beaming of a beam group consists of the slant and position of
+each beam of the group.  Since beams are parallel and since their
+distances are fixed, the valid beaming is completely determined by the
+direction and length of the stems of the two extreme clusters of the
+group.  
+
+A beaming B is valid for a beam group G if and only if a B is valid for
+the group you get by reflecting G in a vertical line.  A beaming B is
+valid for beam group G if and only if B is valid for the group you get
+by reflecting G in the middle staff line.  Thus, if all the stems go the
+same direction, we only have to consider beaming of groups where all
+stems go (say) up and with an upward or horizontal beam slant.
+
+If there is more than one note in a cluster, then the note that is closest
+to the beams determine beam direction and slant.  Thus, we only have to
+consider beam groups where each cluster has only one note. 
+
+The thickness of a beam is 1/2 of the staff line distance. 
+
+When we measure stem lengths, we count in multiples of staff line
+distances from the center of the notehead to the end of the stem.  These
+multiples are always an integral number of quarters of staff line
+distances.  The distance between a beam and a notehead is counted from
+the center of the notehead to the edge of the beam that is furthest away
+from the notehead.  Stems are conceptually considered as traversing the
+beam.  The distance between a notehead and the closest beam is never
+shorter than 2 1/2 times the staff line distance.  Since this distance
+includes half of the notehead and the entire beam (both of which are 1/2
+time a staff line distance), this means that the space between the
+notehead and the beam can be as little as 1 1/2 space, but no less. 
+
+Beams never slant more than about 18 degrees.  It is considered
+unprofessional to slant more than that. 
+
+The end of a beam either sits on a staff line (or a ledger line), hangs
+under it, or straddles it.  This means that stems come in lengths that
+are multiples of 1/4 of a staff line distance.  The difference between
+the two endpoints of a beam never exceeds 2 times a staff line distance,
+and it is rare that it goes beyond 1 1/4 staff line distance. 
+
+The beam that is furthest from the noteheads (again assuming that all
+stems go the same way) is called the primary beam.  Beams that are not
+primary are called secondary. 
+
+Assuming we limit ourselves to stems going up, primary beam can not be
+positioned too far down.  At most, each of the endpoints hangs the
+middle staff line.  A secondary beam can not be positioned too far down
+either.  At most, each of the endpoints straddles (double beams) or sits
+on (tripple beams and higher) the second line from the bottom.  So even
+if all notes are below some considerable number of ledger lines, the
+beams never reach below the second staff line from the bottom. 
+
+When some secondary beams are partial, i.e. when they do not stretch
+from the leftmost cluster to the rightmost cluster in the group, we have a
+big problem.  Since the horizontal distances between the clusters are
+determined by the spacing algorithm before beaming is considered, the
+difference in vertical position between two ends of such a partial
+secondary beam may not be an integral multiple of 1/4 times the staff
+line distance.  There is therefore a considerable risk that such a
+secondary partial beam will end not on a staff line, but in a space.
+When the secondary beam is outside the staff, this is not a problem, but
+when it is inside, it is a problem.  The solution is to restrict the
+slant of such groups to be less than or equal to 1/2 times the staff
+line distance.  In that case, every beam will be permanently attached to
+one single staff line, i.e. at every horizontal location, such a beam is
+traversed by a staff line, and it is one and the same staff line on the
+entire beam.  So if in this case, we compute beam positions as if all
+beams were full-size, and then simply draw only the parts of the partial
+secondary beams that we were told, then those partial secondary beams
+will also, at every horizontal location, be traversed by a staff
+line, and it will be the same staff line for the entire partial beam. 
+
+With fractional beams we can be somewhat more liberal.  Since beam slant
+is restricted to about 18 degrees, we can be sure that an upward
+fractional beam that either straddles or hangs a staff line will still
+be attached to that same staff line by the time it ends.
+
+A slant of 3/4 is never used for a beam inside of a staff.  Using such a
+space would create an instance of "the wedge problem" [Ross].  For the
+same reason, a slant of 1/2 is only used (for upward beams again) if the
+left side hangs and the right side sits on the staff line.
+
+It is always possible to find a valid beaming.  In the worst case, we
+can always make a horizontal beam with sufficiently long stems.  
+
+
+For each beam slant (assuming horizontal or upward beams), here are the
+possible constellations:
+
+      Slant         Left side       Right side
+      -----         ---------       ----------
+        
+        0               St              St
+        0               S               S
+        0               H               H
+        1/4             St              S
+        1/4             H               St
+        1/2             H               S
+        1               St              St
+        1               S               S
+        1               H               H
+        1 1/4           St              S
+        1 1/4           H               St
+        1 1/2           H               S
+        1 1/2           S               H
+        1 3/4           S               St
+        1 3/4           St              H
+        2               St              St
+        2               S               S
+        2               H               H
+
+For double beams, there is an additional restriction.  The distance
+between the upper edge of the two beams is 3/4 times the staff line
+distance.  If again we assume stems up and upward slant of the beams,
+then either the primary beam straddles the staff line in which case the
+secondary beam sits on the next one down, or the primary beam hangs on
+the staff line and the secondary beam straddles the next one. The list
+becomes (secondary beam in parenthesis)
+
+      Slant         Left side        Right side
+      -----         ---------       ----------
+        
+        0               St (S)          St (S)
+        0               H  (St)         H  (St)
+        1/4             H  (St)         St (S)
+        1               St (S)          St (S)
+        1               H  (St)         H  (St)
+        1 1/4           H  (St)         St (S)
+        1 3/4           St (S)          H  (St)
+        2               St (S)          St (S)
+        2               H  (St)         H  (St)
+
+For triple beams, the additional restriction is that the primary beam
+must hang, the first secondary must straddle, and the second secondary
+must sit, so we get 
+
+      Slant         Left side        Right side
+      -----         ---------       ----------
+        
+        0               H  (St) (S)     H  (St) (S)
+        1               H  (St) (S)     H  (St) (S)
+        2               H  (St) (S)     H  (St) (S)
+
+
+For quadruple (and beyond) beams, the distance between two adjacent
+beams is stretched from 3/4 so that for n beams 
+
+        (n - 1) * d = n - 3/2
+
+where d is the distance between two adjacent beams.  Notice that with n
+= 3, we get d = 3/4 which is the normal distance.  For n = 4 we get d =
+5/6, for n = 5, we get d = 7/8 etc.  Again only integral slants can be
+used.
+
+Again, if the beams are outside the staff, then we can be more liberal. 
+No stretching is necessary and we can use slants other than integral
+ones. 
+
+
+Since most of the restrictions apply only when the beams are inside the
+staff, it may seem like we still have an infinite number of
+possibilities, but such is not the case.  If the beams are entirely
+outside the staff (with stems necessarily pointing towards the staff in
+this case), then if all stems are longer than 3 1/2 times the staff line
+distance, then we can always shorten all stems until the innermost beam
+touches the staff, or until at least one stem is 3 1/2 time the staff
+line distance or shorter.  The new solution is better than the original
+one. 
+
+So far, we have considered only the case when all stems point the same
+direction.  Also, we have assumed the automatic procedure always comes
+up with the optimal solution.  Unfortunately, it is very hard to find an
+optimal solution in all cases.  We therefore suggest that manual
+intervention be possible.  For a cluster, the user can choose whether the
+stem should be up, down, or auto, where auto means that the user accepts
+the choice of the automatic algorithm.  With this possibility, we can
+leave all strange cases to the user.  The algorithm can assume that all
+stems should go the same way unless specifically indicated.  Fine tuning
+of the beam slant can be accomplished by allowing the user to specify
+stem height, or leaving it auto.  Specific stem heights will be
+respected only for the extreme clusters.

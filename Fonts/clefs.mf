@@ -1,0 +1,3 @@
+input g_clef;
+input f_clef;
+input c_clef;

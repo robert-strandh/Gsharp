@@ -1,0 +1,374 @@
+\documentclass{article}
+\title{Incremental Page Layout in Interactive Score Editors}
+\author{Robert Strandh}
+
+\begin{document}
+
+\begin{abstract}
+
+We describe an incremental algorithm for computing page breaks and
+line breaks in an interactive score editor.  The algorithm must be
+fast in the most common case where only minor updates to the score
+have been made between two layout computations.
+
+Since the layout of a score is a global property, we cannot avoid a
+linear-time worst-case behavior of any good layout algorithm, but our
+technique makes it possible to keep the constant factor of the linear
+algorithm small enough that we reasonable performance also for very
+large scores.
+
+The basis of our technique is an ordinary dynamic programming
+algorithm, but special care must be taken to avoid costly penalties
+for certain line breaks.
+
+\end{abstract}
+
+\section{Introduction}
+
+Computing the layout of a musical score is in many ways more difficult
+than the equivalent task for a text.  A score often has constraints
+that one does not find in text layout, such as the necessity for the
+material to entirely fill up the last page, of for the material to be
+presented on exactly $N$ pages. 
+
+In many of those cases, it is not possible to compute page breaks and
+line breaks from start to end.  Material appearing arbitrarily far
+after some point may influence the page layout at the point.
+This property makes it extremely hard to design an efficient algorithm
+for computing line breaks and page layouts. 
+
+It would thus seem hard or impossible to design an interactive score
+editor with a high-quality incremental page layout algorithm.  One
+could of course abandon the idea altogether and provide the user with
+a command to recompute the score whenever a precise layout is desired,
+and only present a rough approximation in most cases.  We do not think
+that solution is desirable.  
+
+Since material in one part of the score can influence any other point
+in the score, we cannot avoid a linear algorithm.  Our solution is to
+make the linear part of the algorithm sufficiently fast that even very
+large scores can be handled efficiently, and limit expensive
+operations to sub-linear parts of the algorithm.
+
+\section{General Context}
+
+To understand the problem we are trying to solve, we give an overview
+of the kind of score editor we are designing.  
+
+In general, the user will edit one or more \emph{buffers} containing
+music material.  Each buffer contains a piece of music or a movement
+of a piece of music.  Several windows can simultaneously display
+different parts of the same buffer or parts of different buffers.  For
+the purpose of this paper, the fact that several buffers may exist
+does not influence our algorithm, but the existance of several windows
+displaying different parts of a buffer does. 
+
+In order to limit effects on editing operations to a neighborhood
+close to the place where such operations take place, and to provide
+additional structure of the score to the user, we divide the buffer
+into a sequence of segments.  A segment roughly corresponds to a
+musical phrase and is typically 8 or 16 measures long.
+
+To simplify programming and to improve performance of macros, most
+operations accessible to the user modify an internal, abstract,
+representation of the score.  A \emph{redisplay} algorithm is invoked
+at the end of each user interaction.  The redisplay algorithm is
+responsible for recomputing the entire layout of each buffer, and
+finally to display the contents of each visible window. 
+
+For modularity reasons, as little information as possible is
+communicated from the abstract internal representation to the
+redisplay algorithm.  In our case, each segment has a \emph{modified}
+flag that informs redisplay that the measures of the segment must be
+recomputed.  
+
+Recomputing the measures of a segment is a complicated operation.
+First music events that occur simultaneously must be grouped together
+into \emph{timelines}.  Then the spacing between timelines must be
+computed.  Such spacing is a monotonically increason function of the
+temporal distance, but the function is usually not linear. 
+
+Based on the spacing between timelines, measures are then grouped into
+\emph{lines} in a way that spacing looks as good as possible, even if
+the line needs to be stretched or compressed somewhat to fit the page
+width. 
+
+Finally, lines are grouped into pages respecting the constraints such
+as page height, number of pages, etc. 
+
+\section{The Looks of a Line}
+
+In [Lime] XX discussed a method for computing the layout of a line of
+music, given the line breaks.  In that paper, a formula for computing
+the spacing between timelines was given, as well as a method for
+distributing extra space, or on the contrary diminishing existing
+space, in order for the material to fit. 
+
+While their formula seems quite reasonable, we have chosen one that
+has the same good properties, plus some others that we need in order
+for our algorithm to work.
+
+In professionally engraved musical scores, the spacing $s$ between
+timelines with a temporal distance $d$ is constant within a line of
+material, but not between different lines [ross].  Instead, within a
+line the distance between the two timelines that are temporally
+closest together (with temporal distance $d_{min}) is fixed to a
+parameter for the entire score that we call $s_{min}$.  The value of
+$s_{min}$ determines whether the score is dense or sparse.  All other
+distances between timelines of a line are computed as $s_{min}$
+multiplied by a factor which is a monotonically increasing function
+applied to $d / d_{min}$.  
+
+In Lime, this formula is XXXXXXXXXX.
+
+In our system, for reasons that we will explain shortly, we have
+chosen the function $(d / d_{min})^k$, where $0 \le k \le 1$.  With $k
+= 0$ we obtain constant spacing, i.e., all timelines have the same
+distance.  With $k = 1$ we obtain proportional spacin, i.e., the space
+between timelines is proportional to their temporal distance.  In
+general $k = 0.5$ is a reasonable choice.
+
+To compute optimal line breaks, we need to introduce some criteria for
+the looks of a line.
+
+The \emph{natural width} of a timeline with temporal distance $d$ to
+the next timeline (or to the end of the measure) in a line on which
+the smallest temporal distance is $d_{min}$ is defined as 
+$s_{min} (d / d_min) ^ k$.
+
+The \emph{natural width} of a measure is the sum of the natural widths
+of each timeline of the measure plus $s_min$.  The reason for the
+additional term is that this much space must be inserted before the
+first timeline of the measure.
+
+The \emph{natural width} of a line is the sum of the natural widths of
+each of the measures of the line.
+
+The \emph{compression factor} of a line is the quotient between the
+natural width of a line and the text width available to music
+material.  Thus, the compression factor indicates how much the line
+must be compressed in order to fit the line.  A compression factor
+less than $1$ indicates that the line must be stretched instead. 
+
+The \emph{penalty} of a line is the maximum of the compression factor
+and the inverse of the compression factor.  It is thus always greater
+than or equal to $1$.   The penalty is a good indicator of how bad the
+line will look. 
+
+It would seem that in order to compute the compression factor (and
+thereby the penalty) of a line, we would first have to determine
+$d_{min}$ for the line, then compute the natural width of each
+timeline, add them up into measureas and finally into lines.
+Fortunately, we can do better as is expressed in the following
+definitions. 
+
+The \emph{normalized width} of a timeline is defined to be $s_{min} (d
+^ k)$.
+
+The \emph{normalized width} of a measure is defined to be the the sum of
+the normalized widths of each timeline in the measure.
+
+The \emph{normalized width} of a line is defined to be the the sum of
+the normalized widths of each measure on the line.
+
+Notice that we can now compute the natural width of a line as the
+normalized width time a factor $(1/d_{min})^k$ plus a term resulting
+from the additional space at the beginning of each measure $n s_{min}$
+where $n$ is the number of measures on the line. 
+
+The advantage of using normalized widths is twofold.  First, the
+normalized with of a measure is independent of $d_{min}$, so it is a
+property intrinsic to the measure and not dependendt on the line on
+which it is located.  This information can be computed once and for
+all when a measure is recomputed by redisplay.  Second, as redisplay
+accumulates measures into potential lines, the sum of the normalized
+widths can be kept in an accumulator as opposed to having to be
+recomputed by a loop over all measures of the line so far.  
+
+Similarly, the smallest temporal distance can be computed for a
+measure as it is recomputed by redisplay.  
+
+If modification information is kept on a segment by segment basis,
+we typically only have to recompute the measures within a segment at
+each invocation of redisplay.  Thus, even for arbitrarily large
+scores, we are able to obtain a sequence of mesures each with its
+normalized width and its $d_{min}$ in a time proportional to the
+size of a segment. 
+
+In the next section, we show how to use this information to compute a
+global layout of the score. 
+
+
+\section{The Looks of a Page}
+
+Combining lines into pages is much less difficult that combining
+timelines and measures into lines.  The important difference is that
+the height of a line is not influenced by the contents of other lines
+on the page. 
+
+To compute the penalty of a page, we can use an idea similar to the
+one we used to compute the penalty of a line.  Thus, we determine a
+\emph{natural height}, compare it to the height of part of the page
+available for music material and compute the penalty as the maximum of
+the compression factor and the stretch factor. 
+
+To compute the natural hieght of a page, several methods can be used.
+The simplest is to consider a line to take up space proportional to
+the number of staves, lyric lines and other components, and to add the
+space taken up by each line to obtain the natural height of the page. 
+
+A more sophisticated approach can be imagined.  A 2-dimensional
+vertically convex \emph{profile} of a measure can be computed.  Such a
+profile would reflect how much vertial space is required by material
+in the measure.  In the simplest case, such a profile can be two
+constants indicating how much space is needed above and below the
+measure respectively.  Even more sophisticated methods can be
+imageined, such as a sequence of line segments defining the profile,
+which would then have to be scaled according to real width of the
+measure. 
+
+We will not discuss page layout further in this paper.  Instead we
+consider a simplified version of our algorithm that does not take
+pages into account. 
+
+\section{Global Layout}
+
+In the previous sections, we showed how we are able to reduce the
+layout problem to combining values of precomputed measures.  A measure
+is a much more managable unit than a timeline, as there are typically
+an order of magnitude more timelines than measures in a typical score.
+The number of measures in a very large score is smaller than about
+10000.  Even scores substantially smaller than that are usually
+divided into movements. 
+
+Our task, then, is to divide a score of about 10000 measures at most
+into lines and pages. 
+
+The ultimate goal of our system is to provide serveral different
+styles of page layout.  We briefly mentioned one style in which the
+number of pages might be fixed (so that the score would fit on a large
+sheet folded once, for instance).  Another style might not fix the
+number of pages, but instead the number of pages modulo some constant
+that depends on how sheets are turned into pages in the printing
+process.  A third style that might be useful in the initial editing
+phase might be to fill all pages except the last.
+
+For the purpose of this paper, and to simplify our discussion, we
+consider a style for which we have no pages, but instead a roll of
+paper divided into lines. 
+
+An algorithm for such a style can be based on dynamic programming [].
+Let us first consider a nonincremental version of our algorithm and
+then explain how to make it incremental.
+
+The input to the algorithm is a sequence of measures, each having its
+normalized width and $d_{min}$ precomputed.  The algorithm iterates
+for each border between two measures and in each iteration it computes
+the lowest penalty for a line break at that border considering only
+line breaks from the beginning of the sequence.  For each iteration, a
+second loop considers penalties of line breaks preceding the one to be
+computed.  To determine the penalty for the current line break, the
+algorithm somehow combines the penalty of the previous line break and
+the penalty of the current line.  The optimal line break is the one
+for which the combined penalty is the lowest.  The optimal line break
+is indicated as a penalty and a small number indicating the number of
+measures on the last line.
+
+Several ways of combining penalties are possible, but it should always
+be possible to represent combined penalties with a bounded amount of
+information, and to compute combined penalties as a simple combination
+of previous combined penalty and the penalty for the last page.  In
+our system, we have chosen to compute combined penalties for a
+sequence of lines as the maximum of the penalties for each line.  The
+computation is simple and the result is acceptable. 
+
+Although it may seem that the algorithm above is quadratic, since it
+contains two nested loops, in fact, the inner loop does not have to go
+all the way back to the beginning of the sequence of measures.  We can
+stop when the compression factor (not the penalty) of the last line is
+greater than the best value obtained for the penalty so far.  The
+reason is that adding more material to a line increases its
+compression factor, and thereby the penalty for the line break.
+
+When the algorithm stops, we have the optimal number of measures in
+the last line.  We can then trace our way back to the prevous line
+break, find the number of measures in the next to last line, etc all
+the way to the beginning.  
+
+The inner loop of the algorithm uses the accumulation of normalized
+measure widths discussed in previous sections.  It is rare that the
+inner loop takes more than around 10 iterations, since usually the
+number of measures on a line is considerably smaller than that.
+
+\section{Making the Algorithm Incremental}
+
+In the previous section, we discussed a nonincremental version of our
+algorithm.  In this section, we show how to make the algorithm
+incremental in most commonly occuring cases.  As pointed out, even in
+cases where the algorithm must be completely executed, its running
+time is not excessive. 
+
+To make the algorithm incremental, we first make some crucial
+observations.
+
+The first observation is that usually a very small number of changes
+will have been made between two calls to redisplay.  These changes are
+made with respect to a \emph{cursor} into the abstract data
+structure.  Optimal line breaks computed from the start of the score
+to the first modified measure are not effected so can be maintained
+between two calls to redisplay.
+
+The second observation is that, since the last line is filled, the
+computation of optimal line breaks can be made from the end instead of
+from the beginning, yielding the same result. 
+
+Our approach is to apply the nonincremental algorithm from both ends
+to the point where modifications have occured.  The two compuations
+need to overlap somewhat, so that the best optimal line break is sure
+to be detected.  
+
+With this method, line breaks need to be recomputed only for a small
+number of measures that have been modified between two calls to
+redisplay. 
+
+Now, if we had a system in which there is at most one window into
+each score, that would be the end of the algorithm.  Repainting the
+window could be based on information around the point of update.  With
+the possibility of several windows, we still need to iterate from the
+update point to the ends so that windows displaying other parts of the
+buffer can be repainted with updated line-break information. 
+
+While this last loop is linear in the number of measures in the score,
+it is very fast, since almost no work needs to be done.  The large
+part of the work, i.e., computing the optimal line breaks based on the
+contents of measures, is now usually a small, constant amount of
+work. 
+
+Naturally, if the operation the user executed changes large parts of
+the score, we still need to recompute all of the line breaks.  But the
+user is more likely to accept short pauses for complicated
+operations.  For all simple operations such as insertion or deletion
+of a single note, our computation is very fast.
+
+\section{Conclusions and Futur Work}
+
+We have described an incremental method for computing optimal line
+breaks in an interactive editor for musical scores.  While it should
+be obvious that our method is possible to implement very efficiently,
+we still have to show that our method can be generalized in several
+ways.
+
+First, paper rolls are interesting, but an algorithm capable of
+handling page breaks as well as line breaks is necessary.  Optimal
+page breaks can be incrementally computed in a similar way to optimal
+line breaks.  The problem is to compute the optimal penalty of a
+page.  We can't use the same method as was used for the entire score,
+since a page has a limited amount of space.  
+
+Second, while we may be convinced that we can incrementally compute
+optimal line and page breaks, we still have to compute the page layout
+for all the windows currently on display.  In order for the system to
+be acceptable, the combined computation must be possible to make in a
+few milliseconds in most cases.
+
+\end{document}

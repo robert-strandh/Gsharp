@@ -1,0 +1,148 @@
+\chapter{The user model of {\gs}}
+\label{user-model}
+
+In order to be an effective user of {\gs}, you need to understand its
+\emph{user model} \index{user model}, i.e., the way the user is
+supposed to think about the structure of the score being created.
+
+\section{Buffer}
+\label{model-buffer}
+
+The basic abstraction of {\gs} is that of a \emph{buffer}
+\index{buffer}.  The buffer is the in-memory representation of an
+entire musical score.  {\gs} can have several buffers simultaneously
+in memory.\unimp{It is not hard to implement, but it just has not
+  been done yet --RS 2003-08-16}.  
+
+Loading a {\gs} file into the editor creates a new buffer, and a
+buffer can be saved either to the file from which it was initially
+loaded, or to some other file.  A new buffer can be created (which
+would then not yet be associated with a file).  
+
+The page layout algorithm of {\gs} has been designed to be able to
+cope with very large buffers, while still updating the display in real
+time.  Several hundreds of pages should not be a problem.  Though, if
+you change some global parameter which effects the complete layout of
+the entire score, such as the spacing style, and you have a very large
+buffer, you might have to wait a while before {\gs} has completed the
+calculation of the new page layout.  Ordinary local changes that do
+not impact page layout elsewhere only require a very small amount of
+work for {\gs}, so updating the screen should be immediate. 
+
+\section{Segment}
+\label{model-segment}
+
+A buffer is divided into smaller pieces known as \emph{segments}
+\index{segment}.  A segment roughly corresponds to a musical phrase.
+Segments do not overlap, or only slightly.  {\gs} contains a number of
+useful commands that operate on an entire segment.  You can copy a
+segment or listen to it played as a {\midifile}.
+
+\section{Layer}
+
+A segment can have several \emph{layers}\index{layer}.  The layers of
+a segment are temporally superimposed.  You might think of a layer as
+corresponding roughly to a \emph{voice} \index{voice} or a \emph{part}
+\index{part} of the music.  
+
+The difference between a layer and a part ({gs} does not know about
+parts) is that a layer has a particular \emph{instrument}
+\index{instrument} assigned to it, whereas a part can have several
+different instruments, for instance when the same musician plays
+several instruments (though not simultaneously).  This different poses
+no problem, because it is possible to organize {\gs} layers so that
+their musical material does not overlap in time, even though layers
+conceptually do. 
+
+\section{Slice}
+
+Each layer has exactly three parts, referred to as \emph{slices}
+\index{slice}, the \emph{head slice}\index{head slice}
+\index{slice!head|)}, the \emph{body slice}\index{body slice}
+\index{slice!body|)}, and the \emph{tail slice}\index{tail slice}
+\index{slice!tail|)}. \unimp{We only use the body slice at the moment,
+  which of course is the most important one.  However, the head slice
+  is important for [and I do not know what this is called in English]
+  the few notes that might logically belong to a phrase, but that
+  temporally precedes it.  I have no idea, though, what the tail slice
+  might be useful for. --RS 2003-08-16}
+
+\section{Element}
+
+Each slice is a sequence of \emph{elements}\index{element}.  There are
+different kinds of element, \emph{clusters}\index{cluster},
+\emph{silences}\index{silence}, and \emph{measure bars}\index{measure
+bar}.  For the remainder of this section, we ignore the possibility of
+an element being a measure bar, since a measure bar does not have any
+interesting properties such as duration.
+
+In the body slice, the first element starts at time zero from the
+beginning of the slice, and each subsequent element starts when the
+preceding one ends.  The same thing is true for the tail
+slice. \unimp{We do not yet have a tail slice} The head slice is
+different, in that it is aligned from the \emph{end of the preceding
+slice}.  \unimp{We do not yet have a head slice}.
+
+Each element (except the measure bar) has a particular \emph{duration}
+\index{duration}.  The duration is indicated by a \emph{notehead}
+\index{notehead} and a \emph{number of dots}. \index{number of dots}
+\index{dots!number of|)} Notice that the notehead property exists even
+if the element is a silence.  It is used to indicate what kind of
+character to use for the silence.
+
+
+\section{Cluster}
+
+A \emph{cluster}\index{cluster} is roughly equivalent to a chord, in
+that it contains all the notes that should be played simultaneously
+within a layer.  In addition to the properties inherited from the
+element, each cluster has a \emph{stem direction} \index{stem
+direction} \index{direction!of stem|)}.
+
+Clusters have zero or more \emph{notes}.  When there are zero notes in
+the cluster, it is not displayed at all, but the layout algorithm
+takes it into account with its ordinary duration.  This allows the
+user to introduce spaces in the music that are not filled with
+explicit silence. 
+
+The stem direction indicated in the cluster may or may not be
+respected by the layout algorithm.  First, if the stem direction is
+\emph{auto}, the layout algorithm will use its knowledge about music
+engraving to display the cluster either with the stem up or with the
+stem down.  When the stem direction is \emph{down} or \emph{up} as
+chosen by the user, the layout algorithm always respects this choice
+when the cluster is not part of a beam group.  Currently, all the
+stems of a beam group are displayed in the same direction (we will
+change this in the future, at least for beam groups where the elements
+are on different staves).  Thus, when the cluster is part of a beam
+group the stem directions used are determined by the first element of
+the group.  When the first element of the group has stem direction
+\emph{auto}, then {\gs} will compute the best stem direction for all
+the elements of the group.  When the stem direction of the first
+element is either \emph{down} or \emph{up}, {\gs} will honor that
+choice.  Obviously, in this case, stem directions of the other
+elements are ignored. 
+
+\section{Silence}
+
+A silence is an other example of an element.  Although always
+displayed with the traditional characters, a silence still has a
+notehead, which is used in this case to compute the duration of the
+silence, and thus what character to use to display it and to determine
+spacing. 
+
+\section{Measure bar}
+
+A measure bar is another kind of element.  It has no interesting
+properties in itself.  Apart from being displayed, it is used to align
+musical material in different layers.  Thus, {\gs} does not bother to
+verify that each layer has the same duration between two measure
+bars.  It simply lines up every measure bar in every layer.  If some
+layer has a measure that has a shorter duration than the corresponding
+measure in a different layer, the shorter one will be padded by empty
+space so that they line up. 
+
+Also, {\gs} does not verify that there is the same number of measure
+bars in each layer.  When a layer runs out of measure bars, the
+remaining ones are lined up without taking into account the layer that
+ran out. 

@@ -1,0 +1,151 @@
+%
+%                    xa  xb             
+%                      ||
+%                      ||  xc         xf
+%                      ||  |          |
+%    (0, top) *********  **        ****************
+%             *********  **      ********************
+%             *********  **     ****     |   **********
+%             *********  **    ***       |      ********
+%             *********  **    ***      (xg,yg)   *******
+%             *********  **    *****              ********
+%             *********  **    *******            ********
+%             *********  **    ********           ********
+%             *********  **    ********           ********
+%             *********  **   | ******            ********
+%             *********  **   |   **___yd         ********
+%             *********  **   xd                  ********
+%             *********  **            (xj,yj)--  ********
+%             *********  **                       ********
+%             *********  **        (xe,ye)        ********
+%             *********  **         |             ********--(xk,yk)
+%             *********  **         **            ********
+%             *********  **        ****           ********
+%             *********  **        ****   (xh,yh) ********
+%             *********  **       ******    |    *******
+%             *********  **       *******   |   ******
+%             *********  **      ***** *************
+%             *********  **      **** |_____       
+%             *********  **   ******        (xl,yl)
+%      (0, 0) *********  ***********--xi
+%             *********  ***********  
+%             *********  **   *******   
+%             *********  **      ****   
+%             *********  **      ***** *************
+%             *********  **       *******       ******
+%             *********  **       ******         *******
+%             *********  **        ****           ********
+%             *********  **        ****           ********
+%             *********  **         **            ********
+%             *********  **                       ********
+%             *********  **                       ********
+%             *********  **                       ********
+%             *********  **                       ********
+%             *********  **       **              ********
+%             *********  **     ******            ********
+%             *********  **    ********           ********
+%             *********  **    ********           ********
+%             *********  **    *******            ********
+%             *********  **    *****              ********
+%             *********  **    ***                *******
+%             *********  **    ***              ********
+%             *********  **     ****         **********
+%             *********  **      ********************
+%             *********  **        ****************
+
+
+begingroup
+ 
+ % The x coordinate of the reference point is always on the left edge 
+ % of the character.  The y coordinate of the reference point is the 
+ % top edge of the staff line on which the character sits.
+
+ % since the character is symmetric around the staff line, we only 
+ % have to define the upper curve, then we draw it both unmodified and
+ % reflected + shifted the thickness of the staff line.
+
+ %%% define some x coordinates
+ 
+   local_variable(numeric)(xa)
+     (ceiling(0.5 * staff_line_distance));
+   local_variable(numeric)(xb)
+     (xa + max(2, round(0.25 * staff_line_distance)));
+   local_variable(numeric)(xc)
+     (xb + max(1, round(0.20 * staff_line_distance)));
+   local_variable(numeric)(xd)
+     (xc + max(2, round(0.25 * staff_line_distance)));
+   local_variable(numeric)(dot_width)
+     (floor(0.5 * staff_line_distance));
+   local_variable(numeric)(xe)(xd + round(0.5 * dot_width));
+   local_variable(numeric)(xf)(xd + dot_width);
+   local_variable(numeric)(xg)(xd + 1.5 * dot_width);
+   local_variable(numeric)(xj)(xd + staff_line_distance);
+   local_variable(numeric)(xh)(0.5 * (xe + xj));
+   local_variable(numeric)(xi)(xe);
+   local_variable(numeric)(xk)
+     (xj + ceiling(0.5 * staff_line_distance));
+   local_variable(numeric)(xl)
+     (xe + round(staff_line_thickness));
+
+ %%% define some y coordinates
+
+   local_variable(numeric)(top)(2 * staff_line_distance);
+   local_variable(numeric)(yd)
+     (staff_line_distance + max(1, round(0.1 * staff_line_distance)));
+   local_variable(numeric)(ye)(staff_line_distance);
+   local_variable(numeric)(yg)(top - 2 * staff_line_thickness);
+   local_variable(numeric)(yh)(round(0.4 * staff_line_distance));
+   local_variable(numeric)(yj)(ye);
+   local_variable(numeric)(yk)(yj);
+   local_variable(numeric)(yl)(yh);
+
+ local_variable(path)(p)
+   ((xc, 0){(2, 1)} .. {(1, 2)}(xe, ye) &
+    (xe, ye) -- (xe + 1, ye) &
+    (xe + 1, ye){(1, -2)} .. (xh, yh){right} .. (xj,yj){up} .. 
+    (xg, yg){left} .. 
+    (xd + 0.5 * dot_width, yd + dot_width){(-1, -2)} &
+    (xd + 0.5 * dot_width, yd + dot_width){right} ..
+    (xd + dot_width, yd + 0.5 * dot_width){down} ..
+    (xd + 0.5 * dot_width, yd){left} ..
+    (xd, yd + 0.5 * dot_width){up} .. (xf, top){right} ..
+    (xk, yk){down} .. (xh, yh - staff_line_thickness) ..
+    (xl, yl) & (xl, yl) .. (xi, 0){down});
+ local_variable(path)(q)
+   (p yscaled -1 shifted (0, -staff_line_thickness));
+    
+ local_variable(path)(r)
+   (p & (xi, 0) -- (xi, -staff_line_thickness) &
+    reverse(q) & (xc, -staff_line_thickness) -- (xc, 0) .. cycle);
+
+ begin_character(c_clef)
+
+   fill (0, top) -- (xa, top) -- 
+   (xa, -top - staff_line_thickness) -- (0, -top - staff_line_thickness) --
+   cycle scaled magnification;
+
+   fill (xb, top) -- (xc, top) -- 
+   (xc, -top - staff_line_thickness) -- (xb, -top - staff_line_thickness) --
+   cycle scaled magnification;
+
+   fill r shifted (0,staff_line_thickness) scaled magnification;
+
+ end_character;
+
+ begin_character(c_clef_light)
+
+   fill (0, top) -- (xa, top) -- 
+   (xa, -top - staff_line_thickness) -- (0, -top - staff_line_thickness) --
+   cycle scaled magnification;
+
+   fill (xb, top) -- (xc, top) -- 
+   (xc, -top - staff_line_thickness) -- (xb, -top - staff_line_thickness) --
+   cycle scaled magnification;
+
+   fill r shifted (0,staff_line_thickness) scaled magnification;
+
+   stripes(4,3);
+
+ end_character;
+
+endgroup;

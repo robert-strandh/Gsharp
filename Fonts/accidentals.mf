@@ -1,0 +1,12 @@
+% The Sharp and Natural signs are sloped so that if the
+% thick line falls on a staff line, then the upper edge of
+% the left end touches the lower edge of the staff line, and
+% the lower edge of the right part touches the upper edge of
+% the same staff line.  The thickness of the thick line is
+% the same as the diameter of a dot.
+
+input sharp;
+input natural;
+input flat;
+input double-flat;
+input double-sharp;

@@ -1,0 +1,123 @@
+\chapter{Development history}
+
+The idea of {\gs} can be traced back to 1994, when {\rs} proposed a
+DESS project \footnote{A DESS is an obsolete degree (obtained after
+five years of study at the university) of the French educational
+system which has since been replaced by a \emph{Master} degree}.
+This project was conducted by {\kerhoas} (and ...), and resulted
+in the first real prototype of {\gs}.  The main features of this
+prototype was that it was written in {\tcl}, and that its \emph{user
+  model} (see chapter \ref{user-model}) was quite different from the
+current one. 
+
+As a summer internship, what-is his-name continued working on the
+project.  This work was important in that it revealed some severe
+problems with the user model.
+
+Although {\kerhoas} had determined that {\tcl} was a good choice (I
+don't think he would say that today), I (i.e., {\rs}) was unsatisfied
+with this solution.
+
+{\rms} had already (correctly, in my opinion) determined that (so
+called) scripting languages posed a problem because although they were
+supposed to be used as \emph{glued} between modules written in a more
+efficient language such as C, and that their implementation was
+usually to slow for implementing basic functionality, users preferred
+them to the lower-level language.  This created two major problems:
+first, applications written in the scripting language were slow
+(because of the poor implementation of the scripting language), and
+second, the part of the applications written using the scripting
+language was unmaintainable (due to the poor abstraction capabilities
+of the scripting language).  For that reason, he used a
+Lisp-derivative (Emacs Lisp) to create Emacs.  
+
+Emacs Lisp was created at a time when there were many, substantially
+different Lisp dialects.  The choice was not obvious to {\rms}, so he
+created his own dialect, which was a reasonable solution at the time. 
+
+In 1994, there were two main dialects of Lisp remaining, {\commonlisp} and
+{\scheme}.  At the time, I thought {\scheme} was more modern and that
+{\commonlisp} was going to lose, so I opted for {\scheme}.
+
+The problem was that {\scheme} did not have any standard library for
+graphic user interfaces (determined essential for {\gs}); in fact it
+did not have any standard library for anything higher level at all.
+It was thus necessary to choose not only a language, but an
+implementation of a language.  Based on my knowledge at the time, I
+choose {\elk}.  It had a library for interfacing to {\xwin} which was
+determined essential to {\gs}.
+
+As it turned out, {\elk} had exactly the problems {\rms} had
+predicted: it was too slow to use for the main parts of the system, so
+one ended up writing major parts in C, which was too low level for
+this kind of software. 
+
+At about this time, the {\gnu} project started promoting {\guile}, 
+a new {\scheme} dialect to be used in {\gnu} projects.  The main idea
+of {\guile} was that, since it was a dialect of {\scheme}, and that
+{\scheme} is strictly more powerful that most other languages (mainly
+due to its first-class continuations), it would be possible to
+translate other languages (such as {\tcl}) in a fairly
+straight-forward way to {\guile}, and thus allow for any less powerful
+scripting language to be used as extension language for any future
+{\gnu} application. 
+
+I jumped on the {\guile} bandwagon and converted {\gs} to Guile in
+around 1995 (with the help of some students, as usual of course).
+Unfortunately, the {\guile} project made some very unfortunate
+choices, such as basing it on Aubrey Jaffer's {\scm}.  Although {\scm}
+was one of the fastest known interpreters for {\scheme} it was still
+an interpreter.  And after the {\guile} team had added essentials
+(like classes and such) to {\scm} to obtain {\guile}, it was no longer
+very fast.  In addition, {\guile} turned out to be a moving target for
+years to come, and often obliged me to rewrite parts of {\gs} that I
+thought were done.  I did spend some effort on this, though, writing a
+library for accessing {\xwin} and some other important
+infrastructure.  Ultimately, {\guile} turned out to be too hard to
+track, and it was not clear that it was going to be fast enough to
+write an application in, nor that it would ever be stable enough for
+me. 
+
+For a while I was stuck and lost interest.  After spending a
+sabbatical year in Austin (working with the RScheme research group), I
+realized that I had been distracted from the obvious choice of
+language many years before.  I started looking into {\commonlisp} for the
+first time after having been mainly into {\scheme} since around 1985.
+It turned out that {\commonlisp} was the perfect choice for several reasons:
+it had a standard (ANSI); it had good, fast implementations that were
+free (in the {\gnu} sense of the term); it had a semi-standard
+interface to {\xwin}; it did not lack any fundamental features such as
+classes and exceptions. 
+
+So, I re-implemented {\gs} in {\commonlisp} starting late 1998.  I now no
+longer had to worry about tracking a ``standard'' or whether my
+language implementation was going to be fast enough.  And, I could
+safely use techniques from object-oriented programming without
+worrying whether my language implementation would support them. 
+
+But even this solution had a major problem.  The interface to {\xwin},
+although very good, was not high level enough.  I needed a real
+library for graphic user interfaces.  Many such libraries existed,
+though not for {\commonlisp} at least not freely available.  In fact {\commonlisp} had
+(and still does have) a semi-standard library called {\clim} (Common
+Lisp Interface Manager) which turns out to be an order of magnitude
+more advanced than such libraries for other languages, and which has a
+public specification.  The only (major) problem was that it had no
+freely available implementation.  {\commonlisp} vendors had versions that they
+charged an arm an a leg for, and which would be unacceptable to {\gs}
+anyway, since not freely available.  
+
+I therefore decided to put the {\gs} project on hold in order to write
+a freely available implementation of {\clim}.  To make a long story
+short \footnote{This story is told in great detail in the McCLIM
+  documentation, part of the McCLIM software distribution}, it took a
+little more than three years, and lots of help from other
+contributors, to get the freely available implementation of {\clim} to a
+state where it would be good enough to implement Gsharp. 
+
+Starting in 2002, I gradually integrated {\gs} with {\clim}.  Arnaud
+Rouaned worked on it for a while, but it was not until August of 2003
+that I finally had time to spend time on it myself again.  During the
+first two weeks of August, I re-implemented anti-aliased fonts, an
+improved version of the Obseq library, and a new system for graphics
+output based on {\clim} recording streams. 

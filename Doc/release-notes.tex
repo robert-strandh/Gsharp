@@ -1,0 +1,151 @@
+\chapter{Release notes}
+
+\section{Release 0.2 (2003-09-06)}
+
+\subsection{Features added from 0.1}
+
+\begin{itemize}
+\item The command for inserting a bar line (\kbd{|}) now works
+  correctlhy in that it insert the bar line where the cursor is and
+  not right before the next bar line.
+\item Erasing and deleting a bar line now works as announced.
+\item Rests get inserted on the current staff line. 
+\item It is now possible to move rests vertically on their staff
+  lines. 
+\item Multiple staves.
+\item Key signatures.
+\item A new note inserted inherits the accidentals of the staff line
+  it is initially placed on.  This avoid for the user to have to
+  constantly add accidentals to newly inserted notes in key signatures
+  with many sharps or flats.
+\item Reading and writing {\gs} files is better organized so that it
+  will be easier to bump the file version while maintaining backward
+  compatibility.  I do not intend to maintain the ability to write
+  older version files, which unfortunately makes {\gs} behave like
+  commercial products with planned obsolescence, the difference being
+  that the upgrade of {\gs} can be had for free.
+\item Much improved cursor display.  The cursor now reflects the
+  current staff as well as the interval used to add new notes.
+\item Double buffering of output to avoid flickering.
+\item The reference manual now has a list of commands with associated
+  keys. 
+\end{itemize}
+
+\subsection{Bug fixes from 0.1}
+\begin{itemize}
+\item Creating a new buffer did not erase the old input state, in
+  particular the staff of the old input state. 
+\item There was a bug in the beaming algorithm that created stems of
+  abnormal length. 
+\item Fixed a bug in the computation of the dominating note of a
+  cluster that made stems to short in beamed multi-note clusters with
+  stems down.
+\item Empty clusters are now displayed correctly (i.e., not at all)
+  without signaling a condition. 
+\end{itemize}
+
+\section{Release 0.1 (2003-08-24)}
+
+\subsection{What works}
+
+\subsubsection{Basic music notation}
+
+\begin{itemize}
+\item Noteheads
+\item Stems with the right dimensions and the right position
+  calculated automatically, 
+\item Augmentation dots, though placed a bit too close to the
+  notehead. 
+\item A single main beam with the correct placement and slant for all
+  cases. 
+\item Correct placement of all noteheads and accidentals in
+  arbitrarily complicated clusters. 
+\item Automatic generation of as many ledger lines as called for.
+\item Barlines, though currently drawn as lines rather than as
+  rectangles. 
+\item Rests.
+\end{itemize}
+
+\subsubsection{Implementation issues}
+
+\begin{itemize}
+\item The {\obseq} library is in pretty good condition.
+\item The (fairly complicated) beaming algorithm for a single beam is very satisfactory.
+\item The (fairly simple) algorithm for determining when a note should
+  be suspended seems to work. 
+\item The algorithm for placing accidentals in complicated clusters is
+  also very satisfactory.
+\end{itemize}
+
+\subsubsection{User interface}
+
+\begin{itemize}
+\item Most of the basic user interface is in place.
+\end{itemize}
+
+\subsection{What does not work}
+
+\subsubsection{Basic music notation}
+
+As the reader can tell, most of the basic music notation is still
+missing.  Here is a (probably incomplete) list from Ross:
+
+\begin{itemize}
+\item Augmentation dots in the presence of suspended notes 
+\item Multiple beams.  This is not particularly hard to put in.  
+\item Multiple staves.
+\item Staves do not have time signatures yet.  This is a problem,
+  because the file format must be changed to include that.
+\item Most accents. 
+\item Slurs and ties.  I don't even know how to do it at this point. 
+\item Repeat bars
+\item Key changes in the middle of a slice. 
+\item Brackets and braces.
+\item Some minor spacing decisions are wrong (beginning of the line to
+  clef, clef to first note, etc)
+\item Triplets and generalizations thereof.
+\item Lyrics
+\item Fermata
+\item Dynamics
+\item Cue notes and grace notes
+\item Passing tones
+\item Ending signs
+\item Fingering
+\item Trill
+\item Glissando
+\item Arpeggio signs
+\item Tremolo
+\item Bowing and stroking marks
+\item Pedal marks
+\item Repeat signs
+\item Octaves
+\item Pause
+\end{itemize}
+
+\subsubsection{Implementation issues}
+
+\begin{itemize}
+\item Reorganizing output records to substitute different glyphs. 
+\item Need to implement the Lime algorithm for distributing space (or
+  lack thereof) on a line.  Currently clusters with complicated stacks
+  of accidentals will overlap preceding clusters. 
+\item We need to present a consistent interface to the combination of 
+  buffer module and the cursor module, and then write all primitives
+  in terms of that interface.  This would be the interface that is
+  presented to the extension writer.  Using this interface, it should
+  not be possible to break any of the invariants of the other
+  interfaces, such as numbering of all entities and maintaining
+  modified flags for redisplay.  In particular, this interface does
+  not contain the concept of a 'bar', which should remain internal to
+  the buffer module.  
+\end{itemize}
+
+\subsubsection{User interface}
+
+\begin{itemize}
+\item It would be nice to mark the current note in the score pane as
+  opposed to in a separate pane.  Idea: draw a yellow square
+  background under the current note.  It may be possible to get rid of
+  the current element pane altogether. 
+\end{itemize}
+

@@ -1,0 +1,24 @@
+begingroup
+
+  begin_character(whole_rest)
+
+    fill unitsquare shifted (-0.5, -1)
+                    xscaled notehead_width
+                    yscaled (0.5 * staff_line_distance)
+                    shifted (xoffset, yoffset)
+                    scaled magnification;
+
+  end_character;
+
+  begin_character(whole_rest_light)
+
+    fill unitsquare shifted (-0.5, -1)
+                    xscaled notehead_width
+                    yscaled (0.5 * staff_line_distance)
+                    shifted (xoffset, yoffset)
+                    scaled magnification;
+
+    stripes(1,1);
+  end_character;
+
+endgroup;

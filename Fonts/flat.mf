@@ -1,0 +1,67 @@
+% The flat sign is composed of a straight line the thickness
+% of a stem, and the curved part.
+% The curved part is drawn as two half circles that are then
+% slanted. 
+
+begingroup
+
+  begin_character(flat)
+
+    local_variable(path)(outer)
+      (halfcircle shifted (-0.5, 0)
+                  scaled (staff_line_distance)
+                  yscaled 1.2);
+    local_variable(path)(inner)
+      (halfcircle shifted (-0.6, 0)
+                  scaled (0.8 * staff_line_distance)
+                  yscaled 1.0);
+  
+    fill outer -- reverse inner -- cycle 
+      slanted -0.6 rotated -90 
+      shifted (round(-0.2 * staff_line_distance), 
+               -0.5 * staff_line_distance)
+      scaled magnification;
+
+    pickup penrazor scaled stem_thickness
+                    scaled magnification;
+ 
+    draw ((round(-0.2 * staff_line_distance) - 0.5 stem_thickness,
+           1.5 * staff_line_distance)
+          --
+          (round(-0.2 * staff_line_distance) - 0.5 stem_thickness,
+           -0.5 * staff_line_distance))
+         scaled magnification;
+
+  end_character;
+
+  begin_character(flat_light)
+
+    local_variable(path)(outer)
+      (halfcircle shifted (-0.5, 0)
+                  scaled (staff_line_distance)
+                  yscaled 1.2);
+    local_variable(path)(inner)
+      (halfcircle shifted (-0.6, 0)
+                  scaled (0.8 * staff_line_distance)
+                  yscaled 1.0);
+  
+    fill outer -- reverse inner -- cycle 
+      slanted -0.6 rotated -90 
+      shifted (round(-0.2 * staff_line_distance), 
+               -0.5 * staff_line_distance)
+      scaled magnification;
+
+    pickup penrazor scaled stem_thickness
+                    scaled magnification;
+ 
+    draw ((round(-0.2 * staff_line_distance) - 0.5 stem_thickness,
+           1.5 * staff_line_distance)
+          --
+          (round(-0.2 * staff_line_distance) - 0.5 stem_thickness,
+           -0.5 * staff_line_distance))
+         scaled magnification;
+
+    stripes(1,2);	 
+  end_character;
+
+endgroup;

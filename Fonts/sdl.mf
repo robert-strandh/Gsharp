@@ -1,0 +1,152 @@
+input macros;
+input charmap;
+
+% Run metafont like this: 
+%
+%    mf "\sld=d; mag=m; input scodel;"
+%
+% where d is to be replaced by the staff line distance you want
+% and m is to be replaced by the magnification you want. 
+%
+% The staff line distance should always be an even number and greater
+% than or equal to 6. 
+%
+% The magnification should be 1 for postscript fonts and 4 for 
+% gray-scale X fonts.
+
+  % An integer value indicating how many non-white pixels are 
+  % used to draw a staff line.
+  numeric staff_line_thickness; 
+
+  % The distance in pixels between the upper edge of two 
+  % adjacent staff lines. 
+  numeric staff_line_distance;
+
+  % An integer that is going to be used as a compression factor
+  % for anti-aliasing
+  numeric magnification;
+
+  staff_line_distance = sld;
+  staff_line_thickness = round(sld/10);
+  magnification = mag;
+
+
+  % The thickness of a stem.  For now, make it the same as
+  % that of a staff line.
+  numeric stem_thickness;
+  stem_thickness = round(sld/12);
+
+% The width of filled and half-note noteheads is always 1.5 times the
+% staff line distance.  Since the staff line distance is an even
+% number, this width is always an integer.  This is important, because
+% we need to position stems very precisely with respect to noteheads.
+% and we want the left and right edges of noteheads to fall on integer
+% pixel borders. Moreover, by having a fixed proportion, these
+% noteheads will have the same proportional width no matter what the
+% staff line distance is, which makes the characters look similar at
+% different sizes.  However, this means that we cannot make the
+% heights of these characters integers.  That is OK, though, since we
+% count on anti-aliasing to give the impression of proportional
+% sizes.
+
+  global_variable(numeric)(notehead_width)(1.5 * staff_line_distance);
+
+% While the rule above guarantees that the width of noteheads is an
+% integer, it sometimes creates an even integer and sometimes an odd
+% integer.  When the width is even, the x-coordinate of the middle of
+% the character is between two pixels, which is fine because that is
+% how the MetaFont coordinate system works.  When it is odd, however,
+% the middle of the character is in the middle of a pixel.  If we were
+% to leave it like that, the left and right edges of the character
+% would be in the middle of a pixel, which defeats the purpose.  For
+% that reason, when the width is odd, we put the reference point of
+% the character one half pixel to the left of its middle.
+%
+% A similar rule holds for vertical reference points.  For instance,
+% the reference point of a staff line is the middle of the line if its
+% thickness is even and one half pixel below that if it is odd. 
+%  
+% We do this consistently for stems, staff lines, etc.  Thus, the
+% client program can pretend that the reference point is always in the
+% middle of the object.  When the object has an odd size the effect is
+% simply that everything appears to be off by half a pixel.  We just
+% have to watch out with attach points between stems and noteheads.
+% In fact, in general, the noteheads may have a different distance
+% from the reference point to the left attach point from the distance
+% from the reference point to the right attach point.  
+
+% Characters are positioned vertically in multiples of half a staff
+% line distance.  An even multiple indicates that the symbol will be
+% placed ON A STAFF LINE, and an odd multiple a symbol BETWEEN TWO
+% STAFF LINES.  The bottom staff line of a staff has a multiple of
+% zero, and the multiple is positive towards the upper edge of the
+% page and negative towards the lower edge of the page. 
+%
+% When the staff line thickness is even, the reference point for
+% placing characters is the middle of the staff line or half way
+% between two adjacent middles of staff lines.  When the staff line
+% thickness is odd, the reference point is located half a pixel lower
+% down.  
+
+% A certain number of characters are rotationally symmetric.  But the
+% center of the character is usually not the reference point.  Since
+% the reference point is (0, 0), we must draw these characters at an
+% offset.
+
+  % The vertical offset from the reference point to the middle of the
+  % staff line.  This is zero for even staff line thicknesses and 0.5
+  % otherwise.
+  global_variable(numeric)(yoffset)(0);
+  if odd(staff_line_thickness):
+    yoffset := 0.5;
+  fi;
+
+  if(odd(round(1.5 * staff_line_distance))):
+    global_variable(numeric)(xoffset)(0.5);
+  else:
+    global_variable(numeric)(xoffset)(0);
+  fi;
+ 
+% For characters that must be horizontally aligned, we need
+% to know the horzontal offset from the reference point to
+% the center of the character.  This offset can be either
+% 0.5 or 0. If it is 0.5, then the width of such characters
+% is odd, otherwise it is even.  The character that is most
+% sensitive to this decision is the dot.  It is important
+% that the dot be a reasonable hight with respect to the
+% staff distance, and that it be as wide as it is tall.
+
+  % According to Ross, the dot is about a third of the staff
+  % line distance.  In addition, there must be at least one
+  % pixel between the dot and the surrounding staff lines. 
+  global_variable(numeric)(dot_diameter)
+    (min(staff_line_distance - staff_line_thickness - 2,
+         round(staff_line_distance / 3)));
+
+  % Now we can figure out how to round any calculated width to one
+  % that is acceptable to the dot diameter that we figured out. Also
+  % we can figure out the x offset from the reference point to 
+  % the center of the character
+  if odd(dot_diameter):
+     char_xoffset = 0.5;
+     def width_round(expr x) = (2 * (round(0.5 * (1 + x))) - 1) enddef;
+  else:
+     char_xoffset = 0;
+     def width_round(expr x) = (2 * (round(0.5 * x))) enddef;
+  fi;
+
+  def stripes(expr xmax, ymax) =
+    for y = -ymax * magnification * staff_line_distance step 2 until
+      ymax * magnification * staff_line_distance:
+      erase fill ((-1,y) -- (-1,y+1) -- (1,y+1) -- (1,y) -- cycle)
+      xscaled (xmax * magnification * staff_line_distance);
+    endfor;
+  enddef;
+
+input noteheads;
+input accidentals;
+input rests
+input clefs;
+input accents
+input flags
+bye

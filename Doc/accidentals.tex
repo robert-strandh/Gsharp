@@ -1,0 +1,135 @@
+\chapter{Placement of accidentals}
+
+The rules of Ross essentially boil down to the following: 
+
+\begin{itemize}
+\item If there are no suspended notes with accidentals on the right
+  side of the stem, place all the accidentals in the order of the
+  topmost one that can be placed closest to the stem.
+\item If there are suspended notes with accidentals on the right side
+  of the stem (stem is up and there is an interval of a second), start
+  by placing the accidental of the topmost suspended note with an
+  accidental as close as possible to the stem, then place the other
+  notes according to the previous rule.
+\end{itemize}
+
+To implement this algorithm, we keep a table of smallest distances
+between accidentals and between accidentals and notehead.  It is a
+tree-dimensional table indexed by the object (note or accidental)
+already in place, by the accidental to place, and the vertical
+distance between the two (which is a number between -6 (the object
+placed is below the object to place) and 6 the object placed is above
+the object to place) inclusive).  The entry in the table indicates how
+much further to the left (in staff positions, i.e, half staff-line
+distances) the object to place needs to be from the object already
+placed.
+
+Here is a plausible table:
+
+Object already placed is a notehead:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &   0 &   0 &   0 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 &   1 &   0\\
+\hline
+  flat &   0 &   0 &   0 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 &   1 &   0\\
+\hline
+   nat &   0 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 &   1 &   1 &   0\\
+\hline
+   shp &   0 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 &   1 &   1 &   0\\
+\hline
+ d shp &   0 &   0 &   0 & 3.5 & 3.5 & 3.5 & 3.5 & 3.5 &   0 &   0 &   0\\
+\hline
+\end{tabular}}
+
+Object already placed is a double flat:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &  3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &  3 &  3 &  0\\
+\hline
+  flat &  3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &  3 &  3 &  0\\
+\hline
+   nat &  3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &  3 &  3 &  0\\
+\hline
+   shp &    4 &  4 &  4 &  4 &  4 &  4 &  4 &  4 &  4 &3.5 &  0\\
+\hline
+ d shp & 3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &3.8 &  0 &  0 &  0\\
+\hline
+\end{tabular}}
+
+Object already placed is a flat:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &   2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &  1 &  0\\
+\hline
+  flat &   2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &  1 &  0\\
+\hline
+   nat &   2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &  1 &  0\\
+\hline
+   shp & 2.4 & 2.4 & 2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &1.5 &  0\\
+\hline
+ d shp &  2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &  0 &  0 &  0\\
+\hline
+\end{tabular}}
+
+Object already placed is a nat:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &    2 &  2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &1.5\\
+\hline
+  flat &    2 &  2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &1.5\\
+\hline
+   nat &    2 &  2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &1.5 &1.5\\
+\hline
+   shp &    2 &  2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &   2 &   2\\
+\hline
+ d shp &    2 &  2 &   2 &   2 &   2 &   2 &   2 &   2 &  1 &  1 &  1\\
+\hline
+\end{tabular}}
+
+Object already placed is a shp:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &    0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.0 &1.5 &1.0\\
+\hline
+  flat &    0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.0 &1.5 &1.0\\
+\hline
+   nat &  2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.0 &1.5 &1.0\\
+\hline
+   shp &  2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.0 &2.0\\
+\hline
+ d shp &    0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &  0 &  0\\
+\hline
+\end{tabular}}
+
+Object already placed is a double shp:
+
+{\small\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ To pl &  -5 &  -4 &  -3 &  -2 &  -1 &   0 &   1 &   2 &   3 &   4 &   5\\
+\hline
+ d flt &    0 &  0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &  2 &  1 &  0\\
+\hline
+  flat &    0 &  0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &  2 &  1 &  0\\
+\hline
+   nat &    0 &  0 &2.4 &2.4 &2.4 &2.4 &2.4 &2.4 &  2 &  1 &  0\\
+\hline
+   shp &    0 &2.8 &2.8 &2.8 &2.8 &2.8 &2.8 &2.8 &2.8 &2.8 &  0\\
+\hline
+ d shp &    0 &  0 &  0 &2.8 &2.8 &2.8 &2.8 &2.8 &  0 &  0 &  0\\
+\hline
+\end{tabular}}

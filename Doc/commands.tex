@@ -1,0 +1,176 @@
+\chapter{Summary of commands}
+
+\section{Altering the input state}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key & Command name & Description\\
+\hline
+\kbd{L}   & Lower          & Decrement the interval of pitch of\\
+          &                & the input state by one octave\\
+\kbd{H}   & Higher         & Increment  the interval of pitch of\\
+          &                & the input state by one octave\\
+\kbd{i.}  & More Dots      & Add another dot\\
+\kbd{ix.} & Fewer Dots     & Remove a dot\\
+\kbd{i]}  & More Rbeams    & Add another beam to the right\\
+\kbd{ix]} & Fewer Rbeams   & Remove a beam to the right\\
+\kbd{i[}  & More Lbeams    & Add another beam to the left\\
+\kbd{ix[} & Fewer Lbeams   & Remove a beam to the left\\
+\kbd{ih}  & Rotate Notehead & Change the notehead \\
+\kbd{is}  & Rotate Stem Direction & Change the stem direction \\
+\hline
+\end{tabular}
+
+\section{Moving the cursor}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key             & Command name & Description\\
+\hline
+\kbd{Control-f} & Forward element & Move the cursor forward one element\\
+\kbd{Control-b} & Backward element & Move the cursor backward one element\\
+\hline
+\end{tabular}
+
+\section{Inserting and adding notes, rests and elements}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key       & Command name & Description\\
+\hline
+\kbd{c}   & Insert Note C  & Insert a new cluster having a\\
+          &                & single note C in it\\
+\kbd{d}   & Insert Note D  & Insert a new cluster having a\\
+          &                & single note D in it\\
+\kbd{e}   & Insert Note E  & Insert a new cluster having a\\
+          &                & single note E in it\\
+\kbd{f}   & Insert Note F  & Insert a new cluster having a\\
+          &                & single note F in it\\
+\kbd{g}   & Insert Note G  & Insert a new cluster having a\\
+          &                & single note G in it\\
+\kbd{a}   & Insert Note A  & Insert a new cluster having a\\
+          &                & single note A in it\\
+\kbd{b}   & Insert Note B  & Insert a new cluster having a\\
+          &                & single note B in it\\
+\kbd{,}   & Insert Rest    & Insert a new rest element\\
+\kbd{|}   & Insert Measure Bar & Insert a measure bar\\
+\kbd{SPC} & Insert Empty Cluster & Insert a new cluster with no notes\\
+\kbd{C}   & Add Note C     & Add the note C to the current cluster\\
+\kbd{D}   & Add Note D     & Add the note D to the current cluster\\
+\kbd{E}   & Add Note E     & Add the note E to the current cluster\\
+\kbd{F}   & Add Note F     & Add the note F to the current cluster\\
+\kbd{G}   & Add Note G     & Add the note G to the current cluster\\
+\kbd{A}   & Add Note A     & Add the note A to the current cluster\\
+\kbd{B}   & Add Note B     & Add the note B to the current cluster\\
+\hline
+\end{tabular}
+
+\section{Deleting and erasing elements}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key       & Command name & Description\\
+\kbd{Control-d} & Delete Element & Remove the element to the right\\
+                &                & of the cursor\\
+\kbd{Control-h} & Erase Element & Remove the element to the left\\
+                &                & of the cursor\\
+\hline
+\end{tabular}
+
+
+\section{Operations on the current element}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+\kbd{Meta-h} & Rotate Notehead & Modify the notehead\\
+             &                 & (whole -- half -- filled --)\\
+\kbd{Meta-s} & Rotate Stem Direction & Modify the stem direction\\
+             &                       & (up -- down -- auto --)\\
+\kbd{.}      & More Dots  & Add another dot\\
+\kbd{x.}     & Fewer Dots  & Remove a dot\\
+\kbd{]}      & More Rbeams & Add another beam to the right\\
+\kbd{x]}     & Fewer Rbeams & Remove a beam to the right\\
+\kbd{[}      & More Lbeams & Add another beam to the left\\
+\kbd{x[}     & Fewer Lbeams & Remove a beam to the left\\
+\kbd{Meta-u} & Up           & Move rest to a highter staff line\\
+\kbd{Meta-d} & Down         & Move rest to a lower staff line\\
+\hline
+\end{tabular}
+
+\section{Operations on the current note}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+\kbd{p}      & Current Increment & Change the current note\\
+\kbd{n}      & Current Decrement & Change the current note\\
+\kbd{\#}      & Sharper      & Make the note sharper \\
+\kbd{@}      & Flatter      & Make the note flatter \\
+\kbd{Meta-u} & Up           & Increase pitch of note\\
+\kbd{Meta-d} & Down         & Decrease pitch of note\\
+\hline
+\end{tabular}
+
+\section{Operations on the current layer}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+\kbd{Meta-n} & Next Layer & Make the next layer current\\
+\kbd{Meta-p} & Previous Layer & Make the previous layer current\\
+             & Insert Layer After & Insert new layer after current\\
+             & Insert Layer Before & Insert new layer before current\\
+             & Delete Layer    & Delete the current layer\\
+             & Add Layer Staff & Adds a new staff to the layer\\
+             &                 & (promts for a name of an existing staff)\\
+             & Delete Layer Staff & Deletes a staff from the layer\\
+             &                 & (promts for a name of an existing staff)\\
+\hline
+\end{tabular}
+
+\section{Operations on staves}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+             & Add Staff    & Add a new staff (promts for a name)\\
+             & Delete Staff & Delete a staff (promts for a name)\\
+             & Rename Staff & Rename current staff (prompts for a new name)\\
+             & Set clef & Set the clef of the current staff\\
+             &          & (promts for name of clef and line number)\\
+\kbd{Meta-\#} & More Sharps & removes a flat or adds a sharp to the key signature\\            
+\kbd{Meta-@} & More Flats & removes a sharp or adds a flat to the key signature\\            
+\hline
+\end{tabular}
+
+\section{Playing as MIDI}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+             & Play Segment & Play the current segment\\
+             & Play Layer & Play the current layer\\
+\hline
+\end{tabular}
+
+\section{File operations and quitting}
+
+\begin{tabular}{|l|l|l|}
+\hline
+Key          & Command name & Description\\
+\hline
+             & Quit         & Quit {\gs}\\
+             & Load File    & Load a {\gs} file into a new buffer\\
+             &              & (prompts for the name of a file\\
+             & Save Buffer As & Save the buffer into a file\\
+             &              & (prompts for the name of a file\\
+             & New Buffer  & Create a new buffer \\
+             &             & (currently wipes the current buffer)\\
+\hline
+\end{tabular}

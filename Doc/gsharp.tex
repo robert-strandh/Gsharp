@@ -1,0 +1,804 @@
+\documentclass[11pt]{book}
+\newcommand{\Comment}[1]{\begin{center}\tt #1 \end{center}}
+% \usepackage{doublespace}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{alltt}
+\usepackage{moreverb}
+\usepackage{epsfig}
+\usepackage{makeidx}
+
+\setlength{\parskip}{0.3cm}
+\setlength{\parindent}{0cm}
+
+\def\lispout#1{\underline{#1}}
+\def\commonlisp{Common Lisp}
+\def\scheme{Scheme}
+\def\gs{Gsharp}
+\def\midifile{Midifile}
+\def\midi{MIDI}
+\def\obseq{Obseq}
+\def\clos{CLOS}
+\def\clim{CLIM}
+\def\rs{Robert Strandh}
+\def\kerhoas{Laurent Kerhoas}
+\def\rms{Richard Stallman}
+\def\lisp{Lisp}
+\def\tcl{Tcl}
+\def\elk{Elk}
+\def\gnu{GNU}
+\def\guile{Guile}
+\def\scm{SCM}
+\def\xwin{the X Window System}
+\def\freetype{FreeType}
+\def\metafont{METAFONT}
+\def\bs{$\backslash$}
+\def\lispobj#1{\textsl{#1}}
+\def\lispobjindex#1{\lispobj{#1}\index{#1@\lispobj{#1}}}
+\def\syntax#1{\texttt{#1}}
+\def\metavar#1{\textit{#1}}
+\def\unimp#1{\footnote{This feature is not yet implemented.  #1}}
+
+\def\kbd#1{`#1'}
+\def\command#1{``#1''}
+
+\def\inputfig#1{\input #1}
+\def\inputtex#1{\input #1}
+
+\newenvironment{itemize0}{
+\begin{itemize}
+\setlength{\parskip}{0cm}%
+}
+{\end{itemize}}
+
+\newenvironment{enumerate0}{
+\begin{enumerate}
+\setlength{\parskip}{0cm}%
+}
+{\end{enumerate}}
+
+\newenvironment{smalltt}{
+\begin{alltt}
+\small
+}
+{\end{alltt}}
+
+\inputtex{spec-macros.tex}
+
+\title{{\Huge {\gs}}\\{\huge The Extensible, Interactive Score Editor}}
+
+\author{{\Large Robert Strandh}}
+
+\date{September 2003}
+
+\makeindex
+\begin{document}
+\pagenumbering{roman}
+
+\maketitle
+
+\newpage
+
+\vspace*{\fill}
+\copyright{} 2003, Robert Strandh
+
+I intend to distribute this document according to some kind of free
+license, such as the GNU Free Documentation License, but I have not
+had the time to figure out how it works yet. 
+
+\newpage
+
+{\setlength{\parskip}{0cm}
+\tableofcontents}
+
+\inputtex{intro.tex}
+
+% ***********************************************************
+\part{Getting started}
+
+%======================================================
+\chapter{Installing and running {\gs}}
+
+\section{Installing {\gs}}
+
+We have not worked on the installation procedure at all, and in fact,
+we have not decided exactly in what form the releases will be made
+available to the public.  
+
+For now, you have to use CMUCL (perhaps SBCL will work as well, but it
+has not been tested) with a core image that contains {\clim} and
+MK:DEFSYSTEM.  Start {\lisp}, load the file \texttt{system.lisp} into
+the running {\lisp} image and then type: 
+
+\texttt{(operate-on-system :gsharp :compile)}
+
+which will compile and load all the files. To start {\gs} type 
+
+\texttt{(gsharp::run-gsharp)}
+
+\section{The different editing panes}
+
+You should be seeing a main window (known as a \emph{frame}) with a
+menu bar and four sub-windows, known as \emph{panes}.  
+
+The largest pane is the \emph{score pane}\index{score
+  pane}\index{pane!score|)} where you will do most of the editing, 
+
+The pane at the bottom is a {\clim} \emph{command pane}\index{command
+  pane}\index{pane!command|)}.  In it, you can type
+commands that do not have keyboard shortcuts.
+
+In the upper-right corner, you will see a the pane that determines the
+\emph{input state}\index{input state}\index{pane!input state|)}
+The input state shows a stylized version of a notehead, possibly with
+a stem, augmentation dots, and beaming information.  If the stem is
+down, all the new clusters entered will have their stems down.  If the
+stem is up, all the new clusters entered will have their stems up.  If
+the input state shows both a stem up and a stem down, all new
+clusters will have a stem direction of \emph{auto}, indicating that
+{\gs} will determine stem direction based on position of the notes on
+the staff and beaming information. 
+
+In the lower-right corner, you will see a pane that gives more detail
+about \emph{current element}\index{current
+  element}\index{element!current|)}, i.e., the element (if any)
+immediately to the left of the cursor), namely the \emph{current
+  element pane}\index{current element pane}\index{pane!current
+  element|)}. (We may eliminate this pane in the
+future if we can figure out a way to display this information in a not
+to disturbing way directly in the score pane).
+
+\section{The cursor}
+
+In the score pane, you will see a yellow vertical line across the
+single staff on display and two parallel vertical red lines that are
+usually near the yellow line.  This is the {\gs}
+\emph{cursor}\index{cursor} where all editing takes place.
+
+The cursor is either before all the elements, after all the elements,
+or between two element.  Newly created elements will be inserted
+immediately to the left of the cursor (which will make the newly
+inserted element the \emph{current} one. 
+
+The yellow line indicates the staff to which newly inserted elements
+will belong.  The red lines indicate the interval of pitches that will
+be used for newly inserted notes.  This interval is centered around
+the last note that was inserted.  You can change this interval by
+moving it up or down one octave using the commands \kbd{L} (Lower) and
+\kbd{H} (Higher). 
+
+\chapter{Basic editing and cursor motion}
+
+\section{Entering single-note elements}
+
+To enter single-note elements, you use the keyboard and type names of
+notes such as \kbd{c}, \kbd{d}, \kbd{e}, \kbd{f}, \kbd{g}, \kbd{a}, or
+\kbd{b} (in lower case).  Each time you type the name of a note, a new
+single-note element will be inserted to the left of the cursor.
+
+{\gs} will try to guess which octave you want from the previous note
+you typed, so that the pitch distance between the two is minimized.
+If this choice is not right, you can type a capital \kbd{L} (for
+\command{Lower}) in order to tell {\gs} to decrease its idea of what
+notes to enter next by one octave, or \kbd{H} (for \command{Higher})
+in order to tell {\gs} to increase its idea of what notes to enter
+next by one octave.
+
+The visible cursor will indicate what interval {\gs} thinks is the
+best for the next inserted note with two parallel vertical red lines. 
+
+\section{Adding notes to existing elements}
+
+In order to add a new note to the current element, you type the note
+name with a capital letter such as \kbd{C}, \kbd{D}, \kbd{E}, \kbd{F},
+\kbd{G}, \kbd{A}, or \kbd{B}.
+
+Again, {\gs} will try to guess which octave you want from the previous
+note you typed, so that the pitch distance between the two is
+minimized.
+
+Currently, there is no way to remove a single note from an element
+(though we may implement that in the future).  For now, if you add a
+note by mistake, the only way you can fix it is by erasing the entire
+element and start over. 
+
+\section{Adding a rest}
+
+A rest is another kind of element.  You enter a rest by typing \kbd{,}
+\command{Insert Rest}.  Conceptually, every rest has a notehead as
+well as rbeams and lbeams in addition to augmentation dots.  These are
+used to determine the duration and what kind of rest to display.
+
+\section{Deleting elements}
+
+To erase the current element, type \kbd{Control-h} (\command{Erase
+Element}), i.e. hold the \kbd{control} key down while hitting the
+\kbd{h} key.
+
+It is also possible to delete the next element after the cursor by
+typing \kbd{Control-d} (\command{Delete Element}. 
+
+In general, we speak about \emph{erasing}\index{erasing} when the
+material removed is to the left of the cursor, and
+\emph{deleting}\index{deleting} when it is to the right. 
+
+\section{Moving by element}
+
+To move backward and forward over the elements that you have typed,
+you can type \kbd{Control-b} (for \command{Backward Element}) or
+\kbd{Control-f} (\command{Forward Element}). 
+
+\section{Adding and removing augmentation dots}
+
+If you would like to add an augmentation dot to the current element,
+or more generally, to add another dot to the ones already there, you
+type \kbd{.} (\command{More Dots}).  To erase one of the dots, type
+\kbd{x.} (\command{Fewer Dots}).
+
+The key \kbd{x} can be used in many other situations as a prefix to
+indicate the opposite command from the one indicated without the
+\kbd{x} prefix.
+
+\section{Adding and removing beaming and flags}
+
+{\gs} maintains beaming information for each element in the following
+way.  Each element has a number of right beams (or \emph{rbeams} for
+short) and a number of left beams (or \emph{lbeams} for short). 
+
+If the element has neither lbeams nor rbeams, the element is
+considered as having neither flags nor beams.  Its duration as far as
+layout is concerned will then be determined by the notehead and the
+augmentation dots.  The duration of the element will be determined by
+the maximum number of lbeams and rbeams.  As usual, the value of the
+notehead is divided by two for each beam (and then increased by any
+augmentation dots).
+
+If the element has rbeams or lbeams, but neither the element to its
+left has any rbeams nor does the element to its right have any lbeams,
+the element will be displayed with a number of flags corresponding to
+the maximum of its lbeams and rbeams.
+
+If the element has lbeams and the element to the left has rbeams, then
+a beam will be displayed between the two elements.  The number of
+beams that will be displayed is the minimum of the rbeams of the
+element to the left and the lbeams of the element itself.  Remaining
+beams are displayed as fractional beams \unimp{We only show a single
+  beam at the moment}.  The symmetric rule holds for the element to
+the right. 
+
+To increase the number of rbeams of the current element, type \kbd{]}
+  (\command{More Rbeams}).  To decrease the number or rbeams of the
+  current element, type \kbd{x]} (\command{Fewer Rbeams}).  The
+  corresponding commands for the lbeams are \kbd{[} (\command{More
+  Lbeams}) and \kbd{x[} (\command{Fewer Lbeams}). 
+
+Thus, to obtain a two-element beam group, the first with a C and the
+second with a D, you would type the sequence \kbd{c]d[} (think of it
+as ``c, beam right, d, beam left'').  
+
+\section{Changing the notehead}
+
+In order to change the notehead of the current element, you type
+\kbd{Meta-h} (\command{Rotate Notehead}).  If the notehead of the current
+element is \emph{whole}, it will change to \emph{half}, if it is
+\emph{half}, it will change to \emph{filled}, and if it is
+\emph{filled}, it will change to \emph{whole}.  
+
+When the notehead is \emph{whole}, no stem, flags or beams will be
+displayed, nor taken into account to compute the duration of the
+element.  The information will not be removed if present, however, so
+that if you change the notehead from \emph{filled} to \emph{whole} and
+then back to \emph{filled}, you will be back to the original element. 
+
+When the notehead is \emph{half}, a stem will be displayed, but no
+beams or flags.  Again, the information is not erased, in case you
+would like to change back to a \emph{filled} notehead. 
+
+\chapter{Changing individual notes in an element}
+
+{\gs} maintains a concept of a \emph{current note}\index{current
+  note}\index{note!current|)} of the current cluster.  A note that has
+just been inserted or added to an existing element becomes the
+current note.  Several commands act upon the current note. 
+
+To add a pitch alteration to the current note, you can type \kbd{\#}
+(\command{sharper}) to make the key sharper (if you repeat this
+command again, it will become double sharp) or \kbd{@}
+(\command{flatter}).  Whether or not this operation results in an
+accidental being displayed, depends on the key signature of the staff.
+You can change the key signature of the staff by using the command
+\kbd{Meta-\#} (More Sharps) to add another sharp sign to (or to remove
+a flat sign from) the signature or the command \kbd{Meta-@} (More
+Flats) to add another flat sign to (or to remove a sharp sign from)
+the signature. 
+
+To change the pitch of the current note, you can type \kbd{Meta-u}
+(Up) to increase it or \kbd{Meta-d} (Down) to decrease it.  Notice
+that {\gs} does not allow for two different notes having the same
+pitch in a cluster.  An attempt to move the pitch of the current note
+so that it ends up on top of an existing one, will remove one of the
+notes.
+
+The commands \kbd{Meta-u} and \kbd{Meta-d} can also be used on a rest,
+in which case they change the vertical staff position of the rest.
+This is useful if you have several voices on one staff and you would
+like to have one voice higher on the staff than the other.  In the
+future, we will implement the possibility for a voice to have a
+default staff line for rests. 
+
+In a multi-notehead cluster, you will have to change the current
+note.  You can do this by typing \kbd{p} to make the note with the next
+higher pitch the current one, or \kbd{n} to make the note with the
+next lower pitch the current one.  
+
+Occasionally, you might want to display an accidental even though the
+layout engine decided it was not necessary because the staff position
+of the note has the same pitch alteration inherited from the key
+signature.  \unimp{This is a matter of adding another slot to a
+note}. 
+
+\chapter{Changing the input state}
+
+If you have a long sequence of elements, each with (say) three flags
+to type, you would not want to enter these flags for each element,
+since you would have to type something like
+\kbd{c]]]d]]]e]]]f]]]g]]]}.  A better idea would be to change the
+input state (or istate for short) so that each new element has three
+rbeams and then just to type \kbd{cdefg}.
+
+Changes to the input state are made in the score pane, but they have
+an immediate effect on the presentation in the input state pane. 
+
+Commands to change input state mimic those of changes to the current
+element, except prefixed by \kbd{i}.  Thus, to add in rbeam to the
+input state, you would type \kbd{i]}, and to erase one rbeam you would
+  type \kbd{ix]}.  Adding and removing lbeams and dots work in the
+    analogous way. 
+
+Similarly, in order to change the notehead of the input state, you
+type \kbd{in} (\command{Istate Rotate Notehead}).  If the notehead of
+the input state is \emph{whole}, it will change to \emph{half}, if
+it is \emph{half}, it will change to \emph{filled}, and if it is
+\emph{filled}, it will change to \emph{whole}.
+
+\chapter{Operations on measures}
+
+You add a measure bar at the cursor location by typing \kbd{|}.  As
+  with other element, the cursor will be positioned right after the
+  newly created measure bar.  In fact, a measure bar is just like any
+  other element as far as editing operations are concerned.
+
+Thus, to delete a measure bar, you simply use the ordinary commands
+for erasing or deleting elements.
+
+\chapter{Operations on layers}
+
+To change the current layer, you can type \kbd{Meta-p}
+(\command{Previous Layer}) or \kbd{Meta-n} (\command{Next Layer}. 
+
+To insert a new layer, you have to go to the command pane and type the
+full command, either \command{Insert Layer After} or \command{Insert
+  Layer Before} according to whether you would like the new layer to
+be ordered before or after the current one.  The order between layers
+only affects the order in which they are presented to you with the
+\command{Next Layer} and \command{Previous Layer} commands.  You will
+be  prompted for the name of a staff to use for displaying material in
+this layer.  Later, you can modify the relation between layers and
+staves. 
+
+To delete the current layer, you have to use the command pane (since
+this is an operation that is presumably rare).  The command to use is
+\command{Delete Layer}.
+
+A layer can be displayed on one or several \emph{staves}.  Most layers
+will have a single staff associated with them, but is occasionally
+useful to have two or more.  Clusters within such a layer with notes
+in different staves will have their stems span those staves.  At other
+times, it is useful simply to have some elements of the layer
+displayed on one staff and some other elements on a different
+staff.
+
+A layer can have a preferred stem direction for all clusters in
+it\unimp{It is not hard to do, though}.  The user can override this
+stem direction for individual elements, but if the stem direction of
+the cluster is \emph{auto}\index{auto!stem direction|)}, then it will
+be displayed with the stem direction determined by the layer.  If the
+stem direction of the layer is also \emph{auto}, the layout engine
+will determine the stem direction. 
+
+\chapter{Operations on staves}
+
+To add a new staff, use the command \command{Add Staff}.  You will be prompted
+for the name of the new staff.
+
+To delete a staff, use the command \command{Delete Staff}.  Again, you
+will be prompted for the name of the staff to delete.
+
+To add a staff to the current layer (so that material in that layer
+can be displayed on that staff), use the command \command{Add Layer
+  Staff}.  You will be prompted for the name of a staff to add.
+
+To delete a staff from the current layer, use the command
+\command{Delete Layer Staff}.  You will be prompted for the name of a
+staff. 
+
+To alter the key signature of a staff, use the commands \kbd{Meta-\#}
+\command{More Sharps} and \kbd{Meta-@} \command{More Flats}. 
+
+% ***********************************************************
+\part{Reference manual}
+\inputtex{model.tex}
+\inputtex{commands.tex}
+
+% ***********************************************************
+\part{Internals}
+
+%======================================================
+\chapter{Implementation of the user model}
+
+The implementation of the user model pretty much reflects the model
+itself, except that the implementation of the \emph{slice} is not a
+simple sequence of elements.
+
+Instead, a \emph{slice} is a sequences of a user-invisible type called
+a \emph{bar}.  We introduced this additional type to simplify the
+layout algorithm.  A bar contains all the non-measure-bar elements
+between two measure bars.  The layout algorithm therefore does not
+have to start by finding the measure bars in the sequence, but can
+directly line up the material between measure bars.
+
+The implementation of the model is actually spread out in three
+different files:
+
+\begin{itemize} 
+\item \texttt{buffer.lisp}: This file is the one that most immediately
+  corresponds to the user model.  Generic functions allow insertion
+  and deletion of the different types used to implement the model.
+  Currently, the implementation of various sequences is in the form of
+  simple Lisp lists.  We might change that one day for performance
+  reasons, but then again, it may not be necessary. 
+\item \texttt{numbering.lisp}: This file observes the action (through
+  :before, :after, and :around methods) of the basic operations in
+  order to number different instances of the basic types.  This allows
+  us to know at any point in time whether an instance precedes another
+  in a sequence.  The implementation of the numbering scheme is not
+  very efficient at the moment, but it might not matter since
+  sequences are fairly short in general.
+\item \texttt{cursor.lisp}: This file implements cursor operations.
+  It observes operations in the preceding two files in order to move
+  around cursors.  
+\end{itemize}
+
+A cursor has two slots, a bar in which it is located, and the position
+within the bar.  Cursors are inserted on most of the model types (bar,
+slice, segment, buffer) so that when one of those elements is deleted,
+the cursor can be moved accordingly.  Things get complicated because
+we want to allow for an arbitrary number of cursors, each attached to
+a different window, though we do not currently take advantage of that
+possibility.
+
+%======================================================
+\chapter{The Layout algorithm}
+
+\section{Purpose}
+
+The purpose of the layout algorithm is to divide the entire score into
+displayed units.  Currently, these units are \emph{lines}, where a
+line is the part of system displayed in sequence from left to right.
+In the future, it will be possible to use \emph{pages} as units which
+will make things a bit more realistic.  Since we currently do not have
+pages, our display is mostly in the form of a ``roll of paper''.
+
+\section{What it needs to recompute}
+
+The layout algorithm is invoked after each keystroke.  But in order to
+do its work correctly, it has to know what has been damaged between
+two invocations.  The user can have executed some arbitrary code
+between two such invocations, and in order not to have to recompute
+the entire score each time, it preserves the result of its calculation
+between invocations and only recompute what is necessary. 
+
+To know what has been damaged, the layout algorithm (in the file
+\texttt{measure.lisp}) installs a different set of \texttt{:before},
+\texttt{:after}, and \texttt{:around} methods to observe the
+operations on the fundamental implementation of the user model.
+Currently, it does its work in a very crude way.  Whenever the
+structure has been modified in any way, the entire segment is marked
+as modified and will be totally recomputed at the next invocation. 
+
+Recomputing the layout involves computing, for each segment, a
+sequence of \emph{measures}\index{measure}.  This is a user-invisible
+type that corresponds to the superimposition of simultaneous bars in
+overlapping layers.  We could be more careful about marking things as
+damaged, and preserve measures that contain bars that have not been
+modified.  We might do that if performance requires it.  At the
+moment, we have no reason to believe that it will be necessary.  
+
+\section{The importance of segments}
+
+The importance of the concept of a segment should now be clear.
+If the user deletes a measure bar, all measures to the right of the
+point of deletion \emph{within the same segment} must be recomputed,
+since the musical material will no longer line up the same way.  Had
+the score been a single segment, we would have had to potentially
+recompute the entire score in such situations.  In addition, it would
+be pretty annoying to the user not to be able to count on finished
+material far from the cursor to remain intact.  Thus, the concept of a
+segment both helps the user organize his material and helps the
+implementor limit the damage that needs to be repaired by the layout
+algorithm. 
+
+\section{Head and tail slices}
+
+There is a slight problem with \emph{head slices} and \emph{tail
+slices} which is why they are not implemented yet.  While
+conceptually these slices below to the segment of their
+corresponding layer, the layout algorithm must align them with the
+last measure of the previous segment and the first measure of the
+next segment.  To make it impossible for those slices to stick out
+arbitrarily far, we do not allow for head and tail slices to contain
+measure bars.  This limits the stick-out to the previous and the
+next segments.  We have not yet decided how to manage these slices.
+Probably, a modification would have to mark the previous or the next
+segment as damaged, or at least the last measure or the first measure
+in these segments.  
+
+\section{The concept of a measure}
+
+A measure, as far as the layout algorithm is concerned, only contains
+some very limited amount of information about its bars so that it will
+know how much room the measure will take up on a given line of musical
+material. 
+
+The main problem we need to address is the fact that a measure takes
+up a different amount of space according to the contents of the other
+measures of the same line.  The remainder of this section will discuss
+how we solve that problem.
+
+First, let us introduce the concept of a \emph{time line}\index{time
+line}. A time line represents a moment in time in a given measure such
+that the measure has some event (like notes) that start at that moment
+in time.  The \emph{duration}\index{duration!of a time line|)} of the
+time line is the temporal distance between it and the following one in
+the measure, or, if it is the last one, the duration of the longest
+lasting event that starts at the moment in time. 
+
+From the art of music engraving, we know that a longer temporal
+distance requires a longer geographic distance on the score as well,
+but that is not all there is to it.  In fact, we also know that
+\emph{on a given line}, the smallest geographic distance possible (a
+global parameter of the score that determines denseness and that we
+will call $w_min$) is assigned to the shortest temporal distance on
+that line, \emph{independently of the absolute value of that temporal
+distance}. The other geographic distances are adjusted accordingly.
+Thus, a measure can take up a lot more space on a line if other
+measures on the same line have shorter minimal temporal distances
+between time lines than itself.
+
+From the articles published about the Lime score editor, we use the
+following formula relating the ratio between the geographic distance
+of two time lines to the ratio of their durations:
+
+$w_2 / w_1 = {(d_2 / d_1)}^k$
+
+where $w_1$ and $w_2$ are the ``widths'', i.e. geographic distances of
+the two time lines, and $d_1$ and $d_2$ are their durations. The
+parameter $k$ takes on values between $0$ and $1$, where $0$ gives
+constant spacing (space is independent of duration) and $1$ gives
+proportional spacing.  A good value for $k$ seems to be around $0.6$. 
+
+On a given line, with a smallest temporal distance $d_{min}$ between
+any adjacent time lines, we can express the geographic distance
+$w$ following any time line with duration $d$ as:
+
+$w = w_{min} {(d / d_{min})}^k$
+
+Let us now define the \emph{natural width} of a measure as:
+
+$W_{nm} = \sum_i w_{min} {(d_i / d_{min})}^k$
+
+where $d_i$ is the duration of the $i$th time line of the measure, and
+the \emph{natural width} of a line $W_{nl}$ as the sum of the natural
+widths of the measures of the line.  
+
+We can rewrite the formula above as:
+
+$W_{nm} = {(1 / d_{min})}^k w_{min}  \sum_i {d_i}^k$
+
+Where $w_{min}  \sum_i {d_i}^k$ is a property of a measure that
+remains constant as long as the two global parameters $w_{min}$ and
+$k$ do not change.  We shall call this property the \emph{measure
+coefficient}.  To get the natural width of the measure, it suffices to
+multiply its coefficient with ${(1 / d_{min})}^k$, which varies
+between different lines.  Thus, we can compute the coefficient for a
+measure once and for all (again as long as the global parameters stay
+the same). 
+
+To compute the natural width of a line, we have to compute the sum of
+the coefficients of the measures on the line and the minimum of their
+respective minimal time line durations.  This is a constant time
+operation that does not require looping over individual measures of
+the line.  
+
+Now that we know how to compute the natural width of a line, we need
+to divide the score into lines in such a way that we have the best
+possible layout.  For that, we need to define the \emph{cost} of a
+line.so that we can compare two different suggested lines.  In {\gs}
+we currently use the amount we have to stretch or compress it compared
+to its natural width in order for it to fit on a line.  Let us define
+the \emph{compress factor} of the line as the quotient between the
+natural width of the line and the width of the page.  We then define
+the \emph{cost} of a line as the maximum between the compress factor
+and the its inverse.  That is not the only way to do it.  We might
+imagine penalizing compressions more than stretches, as it might be
+much harder to fit the musical material on the line when it needs to
+be compressed. 
+
+Our definition of the natural width of a measure does not take into
+account extra material such as accidental that need more room.  We
+could do a more precise job by adding in some extra room for such
+material and count it toward the natural width of the line only if the
+measure does not need to be stretched (i.e. only if the minimum
+duration of the line is the same as that of the measure).  This would
+only slightly complicate the method of combining measure parameters
+into line parameters and it might give a considerably better result. 
+
+However, it might not be very important to improve this calculation.
+The result of the calculation is only used to divide the score into
+lines and pages.  Once we display the few visible pages of the score,
+we have great freedom to reorganize the material on the page.  Dense
+measures might have to borrow space from less dense ones on the same
+line.  As I recall, the article on the Lime music editor describes how
+to do this in great detail, although it is not yet implemented in
+{\gs}.  Since usually even under very crowded conditions, space can be
+reorganized within the line, the only risk we run of not having a very
+precise calculation of the natural width of a line is that one line
+might look slightly denser than another one on the same page, because
+we did not take into account all of its accidentals. 
+
+\section{Breaking measures into lines}
+
+Breaking the sequence of all measures in the score into subsequences
+corresponding to lines is done by an algorithm that is similar to
+\emph{dynamic programming}.  Essentially, we compute all possible line
+breaks and choose the best one, but thanks to dynamic programming we
+avoid a possibly exponential complexity.  
+
+But even the cubic complexity of dynamic programming would be
+unacceptable for our purposes.  We transform that complexity from
+cubic to constant by a series of tricks, which are documented in a
+separate (unpublished) article in the same directory as this one. 
+
+%======================================================
+\chapter{{\gs} as a {\clim} application}
+
+%======================================================
+\chapter{The {\obseq} library}
+
+%======================================================
+\chapter{Fonts}
+\label{chap-fonts}
+
+In order for {\gs} to have a nice appearance on the screen, it was
+determined essential to use anti-aliased fonts.  The problem is that
+{\xwin} does not have such fonts in the standard.  There is an
+extension to the XFree86 server for {\xwin} which uses anti-aliased
+fonts, but it is not an official standard for {\xwin}.  In addition,
+this extension requires the \emph{client} to convert glyphs to
+rasters, which traditionally has been the responsibility of the server
+of {\xwin}.  Gilbert Baumann has created a new server for {\xwin} that
+is capable of anti-aliased fonts, but again, this is not available in
+all servers for {\xwin}.
+
+As mentioned above, in recent extensions to {\xwin}, converting the
+glyph to a raster is a client-side operation.  Usually, this operation
+is done by a library such as {\freetype}, which can use font of type
+TrueType or PostScript Type 1.  Each of these systems has its own
+method for rendering low-resolution fonts.  
+
+I decided that if converting glyphs to rasters were to be a
+client-side operation, I might as well have full control over it, and
+use the {\metafont} program for this purpose.  {\metafont} is a
+universal programming language that does not suffer from the
+limitations of the \emph{hints}\index{hints} in systems such as
+PostScript Type 1.  Using {\metafont}, it would even be possible to
+create fonts specifically useful for anti-aliasing.
+
+The font used by {\gs} (called SDL, for Score Drawing Library), is
+created by a {\metafont} program that generates glyphs that are
+magnified a factor four.  The resulting \texttt{gf} filed is parsed by
+a {\commonlisp} library that creates a {\clim} pixmap which contains an
+anti-aliased version of the glyph.  
+
+The difference between this solution and the (more general) one based
+on a library such as {\freetype}, is that {\freetype} (together with
+the \emph{render}-extension of {\xwin}) provides \emph{transparency}
+(also known as an \emph{alpha}-channel), which greatly simplifies
+high-quality output, whereas using pixmaps makes it necessary to
+display musical output in a certain order, and to do a certain amount
+of cheating.
+
+The great advantage of the {\gs} solution, though, is that it will
+work with any basic server for {\xwin}, and that it is very fast. 
+
+The main problem with our solution (and this is why cheating is
+necessary) is that glyphs can partly overlap on the page.  In
+particular, this occurs in stacks of noteheads that may or may not
+belong to the same cluster (they could come from different layers,
+only be placed a staff step apart), but also trivially between any
+music character and the staff lines.  When that happens with ordinary
+fonts, no problem results, but when gray-scale fonts are used, they do
+not combine very well.  
+
+For staff lines, stems, and ledger lines, we solve the problem easily
+by imposing that these characters always be pixel aligned (and thus
+completely black).  It then suffices to draw these characters
+\emph{after} the ones they overlap with.  
+
+For stacks of noteheads, the problem is greater.  We solve it by
+substituting different glyphs that correspond to combinations of
+noteheads in a stack.  To avoid having an unbounded number of such
+combinations, we have one glyph for the lower half of a notehead, one
+for the upper half, and one for the combination of the upper half of
+one notehead and the lower half of the one on top of it.  All these
+glyphs are properly anti-aliased and their bounding boxes do not
+overlap so combining them does not create any problems \unimp{We still
+need to use the {\clim} output recording mechanism to remember
+positions of noteheads and to substitute these alternative glyphs}. 
+
+The way we are planning to substitute alternative glyphs is by using
+the \emph{output recording} mechanism of {\clim}.  This mechanism is
+responsible for repainting windows that have had their contents
+partially lost due to being covered or invisible.  It work by
+capturing output and storing output records in the pane.  We plan to
+use it to introduce a new kind of output record that guarantees that
+repainting  will be done in the right order, and that alternative
+glyphs will be substituted. 
+
+%======================================================
+\chapter{Beam drawing}
+
+It might seem like drawing beams would be trivial.  {\xwin} provides
+adequate primitives to draw filled polygons that would be
+generalizations of beams in a score.  As with fonts (see chapter
+\ref{chap-fonts}) the problem is that anti-aliasing is called for in
+order for the visual appearance to be acceptable, and that {\xwin}
+does not provide for anti-aliasing in the basic protocol.  
+
+A possibility would be to treat beams as any other character glyphs
+and to write a {\metafont} program for creating beams.  The problem
+with this solution is that there is a large number of different beam
+slopes possible, and that a font would have to include a very large
+number of them.  Furthermore, beams having fairly small slopes, turn
+out to use only a small fraction of the 16 different gray-levels that
+we would like to use for anti-aliasing. 
+
+For that reason, we generate beams on an as-needed basis.  A beam is
+divided into segments, each with a $\Delta y$ of $1$ (but each
+possibly with a different $\Delta x$.  Each segment is drawn as a
+central black rectangle surrounded by two pixmaps, each of height $1$
+and the length of the segment.  One of the pixmaps provides
+gray-levels from black to white and the other one from white to
+black.  This method gives a smoother impression than if polygon
+drawing were used.  Each new segment is similar to the previous one
+(its length might vary a little) and positioned one position higher or
+lower than the previous one.
+
+% ***********************************************************
+\part{Appendices}
+\appendix
+
+\inputtex{history.tex}
+\inputtex{beaming-algo.tex}
+\inputtex{accidentals.tex}
+\inputtex{release-notes.tex}
+\inputtex{plans.tex}
+
+%======================================================
+\chapter{{\clim} terminology}
+\label{clim-terminology}
+
+Talk about frames, panes, streams, etc.
+
+\printindex
+\end{document}

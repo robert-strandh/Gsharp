@@ -1,0 +1,161 @@
+\chapter{Introduction}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+% ------------------------------------------
+\section{Purpose and goals of {\gs}}
+
+{\gs} is an interactive editor for musical scores.  It is interactive
+in the sense that the entire score is reformatted after each keystroke
+on the part of the user.  There is no special button to click or
+command to type in order for the final layout to appear; the final
+layout is always the one that is presented. 
+
+One of the main goal of {\gs} is to provide a program that can produce
+high-quality scores.  For that reason, we have put in some effort to
+respect at least one set of rules of musical typography (or
+\emph{engraving}\index{engraving}).  But music engraving is hard and
+littered with very complex rules that do not necessarily cover all
+cases.  For that reason, {\gs} also provides \unimp{We ultimately
+  intend to provide a large spectrum of ways for the user to tweak the
+  layout decisions, but for now, only automatic layout exists.} a
+number of ways in which the user can help the layout engine make the
+right decision. 
+
+We wanted {\gs} to be extensible at a number of level.  The ordinary
+end-user should be able to add and redefine keystrokes, to create
+macros, and to alter global parameters that affect the end result.
+The more advanced end-user should be able to write more complex
+extensions.  Usually, programs that permit this use a {\gs} scripting
+language, which is usually different from the programming language
+that was used to implement the basic functionality of the program.
+{\gs} has a different approach.  The entire program is written in
+{\commonlisp} which both is as fast as a lower-level language and provides the
+ability to dynamically replace any part of the program.  
+
+Since {\gs} makes extensive use of graphics and related functionality,
+we needed a good library for providing such functionality.  While the
+{\commonlisp} standard does not talk about such libraries, there as been a
+semi-standard library available for many years and which only recently
+exists in a freely distributable version, namely {\clim}\index{\clim},
+which stands for the Common Lisp Interface Manager.  Many of the basic
+functions of {\gs} are due to {\clim}, and the advances {\gs} user can
+take advantage of this fact in order to improve the program. 
+
+We deliberately did not try commercial score editors so as not to be
+influenced by their view of the editing task.  This fact has both
+positive and negative consequences.  On the positive side, {\gs} (we
+hope) provides novel ideas concerning user interaction.  We are also
+hoping to avoid being sued by having a program that looks like a copy
+of some commercial one.  On the negative side, users familiar with
+existing commercial editors will not be able to take advantage of this
+knowledge when using {\gs}.  Also, some commercial editors probably
+have some very good ideas that would have been interesting to take
+advantage of in {\gs}, which because of this policy will not be
+possible. 
+
+{\gs} is intended to be ``user friendly'', but since people do not
+agree on a definition of the term, this is what we mean here (largely
+inspired by Cooper).  We do not try to cater to new or casual users.
+Instead we try to make the average user with at least a few days of
+experience as efficient as possible.  This might mean that the user
+has to occasionally read the manual in order to figure out how to
+operate {\gs}.  We think that is a reasonable price to pay in order to
+be efficient. 
+% ------------------------------------------
+\section{{\gs} is free software}
+
+By ``free software'', we mean that {\gs} can be used, redistributed,
+and improved by anyone.  Technically, the main parts of {\gs} are
+distributed according to the GNU General Public License (GPL).
+Without going into detail here, this means that improvements to the
+software must (if distributed at all) also be distributed according to
+the GPL.  Ordinary users are not affected by the license, which covers
+only improvements and redistribution.  
+
+Some parts of {\gs} are distributed according to the GNU Lesser
+General Public License (LGPL).  Again, without going into detail, this
+license is used for more general-purpose code such as extensions to
+{\clim}, and allows a user to distribute it as part of commercial
+software.  As with the GPL, contributions to this code must be
+redistributed according to the same license. 
+
+%% % ------------------------------------------
+%% \section{Public}
+
+% ------------------------------------------
+\section{Conventions}
+
+This manual mostly reflects the current state of things.  Occasionally,
+we documented a feature that is not yet implemented, so that you would
+have an idea what it would be like.  In that case, we added a footnote
+to indicate that the feature is not yet implemented. 
+
+% ------------------------------------------
+\section{Releases and release numbering}
+
+Releases are numbered A.B, where A is the major release number and B
+is the minor release number or version number.  The first release is
+0.1.  We will increase the minor release number with at least one for
+each new version of the program made available to the public.  The
+major release number is incremented only when a major overhaul has
+been done, or when large chunks of code have been added.  
+
+Major release 0 is not intended for prime time, but only for end users
+who want to get an idea of the direction we are heading.  Release 1.0
+will be declared when the program is usable and stable enough for
+general use. 
+
+There is no upper bound on the minor release number.
+
+% ------------------------------------------
+\section{Contributions}
+
+We accept contributions in the form of bug fixes, improvements to the
+existing code, and new code.  Since {\gs} is distributed according to
+the GPL, nothing prevents any user to add new code and distribute the
+result.  We hope that this will not happen immediately, since we would
+like to guarantee some consistency of the program, both regarding its
+external appearance and its internal organization.  For that reason,
+it would be preferable to discuss with us before contributing some
+code. 
+
+Contributors must have a reasonable level of knowledge of {\commonlisp}.  As
+with any language, it is possible to write poor code with {\commonlisp}.  It
+is our goal to try to keep the code at a reasonably good level.  For
+that reason, contributors are encouraged to put some effort into the
+quality of the code, to make sure it compiles without warnings (as
+much as possible) and to make sure it works.
+
+We also accept contributions to this document.  We intend to use some
+kind of free license for this document, probably the GNU Free
+Documentation License, but we have not had time to figure out how it
+works yet. 
+% ------------------------------------------
+\section{Organization of this document}
+
+This document is organized in several \emph{parts}.  
+
+The \emph{getting started} part is intended for users who look at
+{\gs} for the first time, and who want to know how to use the most
+fundamental aspects of it, in particular the basic architecture of the
+program.  It is not intended to be a complete user's guide, but
+instead structured around a few typical use cases encountered by
+users. 
+
+The \emph{reference manual} is the part that is most useful to the
+user that has graduated beyond the first impression, and who want to
+know more about the features of {\gs}.  The structure of this part is
+not meant to be pedagogical, but instead a complete enumeration of the
+features of {\gs} that a moderately experienced users needs to know. 
+
+The \emph{internals} part is intended for advanced users who need to
+know how to customize {\gs} in non-trivial ways, as well as for the
+programmer who would like to extend or modify {\gs}.
+
+Finally, the \emph{appendices} part provides information on topics
+that are neither related to the user of {\gs}, nor to the programmer
+who wants to extend it, but to readers who simply want to know more
+about music engraving or about how {\gs} was created, and why it was
+created that way. 
+

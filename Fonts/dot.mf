@@ -1,0 +1,47 @@
+% The dot is complicated, because there are several contradicting
+% constraints that it must satisfy.  For one thing, it is rotationally
+% symmetric.  For that reason, we cannot use a different xoffset and
+% yoffset for the dot.  Also, the dot is used for several different
+% purposes.  When used in a dotted note, it is aligned in the middle
+% of the space between two staff lines, and must thus be aligned
+% vertically the same way as a notehead is.  But it is also used as a
+% staccato dot, in which case it must be horizontally aligned the same
+% way as the noteheads are.  This restriction is more important the
+% lower the resolution is.  
+
+% Let us see how this works.  For a staff line distance of 6 (the
+% smallest), vertical and horizontal alignments are the same: the
+% space between staff lines is 5 pixels and the note is 9 pixels wide;
+% both odd values.  For a staff line distance of 8, it does not work.
+% The space is 7 pixels, so odd, but noteheads are 12 pixels wide so
+% even.  We think it is more important that the dot be aligned
+% vertically, and that half a pixel of horizontal offset is not a
+% problem for the staccato dot.  We thus use yoffset for the alignment
+% both vertically and horizontally. 
+
+% Ross says the dot should be roughly a third of the staff line
+% distance.  We count on anti aliasing to save us from too ugly a
+% result when the edges do not fall on pixel boundaries. 
+
+begingroup
+
+  begin_character(dot)
+
+    local_variable(numeric)(diameter)(0.33 * staff_line_distance);
+
+    fill fullcircle scaled diameter
+                    shifted (yoffset, yoffset)
+                    scaled magnification;
+  end_character;
+
+  begin_character(dot_light)
+
+    local_variable(numeric)(diameter)(0.33 * staff_line_distance);
+
+    fill fullcircle scaled diameter
+                    shifted (yoffset, yoffset)
+                    scaled magnification;
+    stripes(1,1);
+  end_character;
+
+endgroup;
