@@ -114,21 +114,23 @@ Key          & Command name & Description\\
 \hline
 \end{tabular}
 
-\section{Operations on the current layer}
+\section{Operations on layers}
 
 \begin{tabular}{|l|l|l|}
 \hline
 Key          & Command name & Description\\
 \hline
-\kbd{Meta-n} & Next Layer & Make the next layer current\\
-\kbd{Meta-p} & Previous Layer & Make the previous layer current\\
-             & Insert Layer After & Insert new layer after current\\
-             & Insert Layer Before & Insert new layer before current\\
-             & Delete Layer    & Delete the current layer\\
-             & Add Layer Staff & Adds a new staff to the layer\\
-             &                 & (promts for a name of an existing staff)\\
-             & Delete Layer Staff & Deletes a staff from the layer\\
-             &                 & (promts for a name of an existing staff)\\
+             & Select Layer & Prompts for a new current lsyer\\
+             & Rename Layer & Prompts for a layer and a new name\\
+             & Add Layer    & Prompts for a name and an initial\\
+             &              & staff for the new layer. The type\\
+             &              & of the new layer is determined by\\
+             &              & the type of the initial staff.\\
+             & Delete Layer    & Prompts for a layer to delete\\
+             & Rotate Staves & If they layer is displayed on \\
+             &              & multiple staves, rotate them so\\
+             &              & that a different one becomes the\\
+             &              & current one.\\
 \hline
 \end{tabular}
 
@@ -136,22 +138,22 @@ Key          & Command name & Description\\
 
 \begin{tabular}{|l|l|l|}
 \hline
-Key          & Command name & Description\\
+Key    & Command name & Description\\
 \hline
-             & Add Staff After  & Add a new staff after an existing one\\
-             &                  & (prompts for the existing staff, \\
-             &                  & for the name and the type of the new staff, \\
-             &                  & and a clef and a line for the clef\\
-             &                  & if type is \texttt{fiveline})\\
-             & Add Staff Before  & Add a new before after an existing one\\
-             &                  & (prompts for the existing staff, \\
-             &                  & for the name and the type of the new staff, \\
-             &                  & and a clef and a line for the clef\\
-             &                  & if type is \texttt{fiveline})\\
-             & Delete Staff & Delete a staff (promts for staff to delete)\\
-             & Rename Staff & Rename current staff (prompts for a new name)\\
-             & Set clef & Set the clef of the current staff\\
-             &          & (promts for name of clef and line number)\\
+       & Insert Staff After  & Add a new staff after an existing one\\
+       &                  & (prompts for the existing staff, \\
+       &                  & for the name and the type of the new staff, \\
+       &                  & and a clef and a line for the clef\\
+       &                  & if type is \texttt{fiveline})\\
+       & Insert Staff Before  & Add a new before after an existing one\\
+       &                  & (prompts for the existing staff, \\
+       &                  & for the name and the type of the new staff, \\
+       &                  & and a clef and a line for the clef\\
+       &                  & if type is \texttt{fiveline})\\
+       & Delete Staff & Delete a staff (promts for staff to delete)\\
+       & Rename Staff & Rename current staff (prompts for a new name)\\
+       & Set clef & Set the clef of the current staff\\
+       &          & (promts for name of clef and line number)\\
 \kbd{Meta-\#} & More Sharps & removes a flat or adds a sharp to the key signature\\            
 \kbd{Meta-@} & More Flats & removes a sharp or adds a flat to the key signature\\            
 \hline

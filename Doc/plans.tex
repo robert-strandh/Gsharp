@@ -27,8 +27,6 @@ There are tons of minor issues to fix.  Here is a partial list.
 \item Playing as MIDI should create a temporary file with a unique
   name in \texttt{/tmp} as opposed a file in the current directory
   with a name that can clash with others. 
-\item Someone who knows how pathnames work needs to find out how to
-  use them in place of strings for filenames. 
 \end{itemize}
 
 \section{Major issues}
@@ -170,12 +168,6 @@ would be inserted into a line having the same min-dist as the measure
 itself.  Such space would include space for lyrics, accidentals of
 complicated clusters, etc. 
 
-\subsection{Menu items with arguments}
-
-This is a {\clim} project.  Currently {\clim} does not know how to
-read arguments when a command has been invoked from a menu item.
-Consequently, we are restricted to menu items that have no arguments. 
-
 \subsection{Layout by page}
 
 We need to have a more sophisticated layout algorithm that divides the
@@ -223,7 +215,8 @@ instance:
 \subsection{Other major projects}
 
 \begin{itemize}
-\item presentations everywhere (note heads, clusters, beam groups). 
+\item presentations everywhere (note heads, clusters, beam groups).
+  Currently, McCLIM is a bit to slow for this.  
 \item context menus on notes, etc
 \item allow mouse-based input of new notes by making staff steps
   around cursor into presentations.  Move pointer to horizontal

@@ -25,6 +25,43 @@ measures with empty clusters.
   arguments now prompt for existing staves as opposed to just names of
   staves. 
 \item Added completion for clef types and staff types. 
+\item Added completion for names of staves and of layers. 
+\item Naming a layer or a staff requires the user to give a unique
+  name. 
+\item Added beginning of support for lyrics. Lyrics are ultimately
+  going to be Unicode strings, but only a subset of ASCII (letters,
+  digits) is currently handled.
+\item Layers are no longer ordered.  Commands related to this ordering
+  (Next Layer, Previous Layer, Insert Layer After, etc) were removed.
+  New commands were added: Select Layer prompts for a layer and makes
+  it the current one. Rename Layer prompts for a layer and a new name
+  (that must be unique). Add Layer prompts for a unique name and an
+  initial staff for the layer.  The type of the staff determines what
+  type of layer is created.  Delete Layer prompts for a layer 
+  deletes the layer, and automatically inserts a new one if the last
+  one was deleted. 
+\item Commands for manipulating staves are now: Insert Staff Before,
+  which prompts for a staff after which the new one is to be inserted,
+  for the unique name of the new staff, for the type of the new staff
+  (currently fiveline or lyrics), for the type of clef to be used on
+  the new staff, and for a line number on which the clef is to be
+  placed.  Insert Staff After is like Insert Staff Before, except that
+  the new staff is inserted before an existing one.  Delete Staff
+  prompts for a staff to delete. Rename Staff prompts for a staff to
+  rename and a new unique name. 
+\item Each layer contains a list of staves on which music material
+  from the layer can be presented.  There is usually just one staff in
+  the list, but sometimes two (for piano music).  Add Staff To Layer
+  is a command that prompts for an existing staff to add, and for an 
+  existing layer to which to add the staff, and adds the staff to the
+  list managed by the layer.  The new staff is made the current one
+  for the layer. 
+\item Each layer now has its own current staff.  When returning to a
+  multi-staff layer after having edited some other layer, the user now
+  finds that the last staff that was used in that layer is the current
+  one. 
+\item Added a `Staves' menu in the menu bar for mouse access to the
+  staff commands. 
 \end{itemize}
 
 \subsection{Bug fixes from 0.2}

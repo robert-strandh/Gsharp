@@ -121,12 +121,41 @@ which will compile and load all the files. To start {\gs} type
 You should be seeing a main window (known as a \emph{frame}) with a
 menu bar and four sub-windows, known as \emph{panes}.  
 
+\subsection{The score pane}
+\label{sec-score-pane}
+
 The largest pane is the \emph{score pane}\index{score
-  pane}\index{pane!score|)} where you will do most of the editing, 
+  pane}\index{pane!score|)} where you will do most of the editing,
+
+When prompted for some item on display in the score pane, you can
+usually click on it.  For instance, if you have issued a command that
+operates on a particular staff, you can usually click on a visual
+representation of the staff in the score pane to satisfy the request
+for the staff. 
+
+\subsection{The command pane}
+label{sec-command-pane}
 
 The pane at the bottom is a {\clim} \emph{command pane}\index{command
   pane}\index{pane!command|)}.  In it, you can type
-commands that do not have keyboard shortcuts.
+commands that do not have keyboard shortcuts. 
+
+The command pane is also where you get prompted for arguments to
+various {\gs} commands.  In those cases, you usually have a choice
+between clicking on a visual representation of the argument you would
+like to supply as mentioned in section \ref{sec-score-pane}, or to
+type some textual representation of it directly at the prompt. 
+
+When typing some textual representation of some existing object, such
+as the name of a layer or of a staff, you can usually use
+\emph{completion}\index{completion}, which means that you can type a
+unique prefix of the text and then use the \kbd{TAB} key to get {\gs}
+to fill in the rest.  Using completion after having issued a command
+in the command pane is usually faster (provided you have some idea of
+what the textual representation is) than to grab the mouse and click
+on the object in the score pane. 
+
+\subsection{Other panes}
 
 In the upper-right corner, you will see a the pane that determines the
 \emph{input state}\index{input state}\index{pane!input state|)}
@@ -364,31 +393,177 @@ it is \emph{half}, it will change to \emph{filled}, and if it is
 \chapter{Operations on measures}
 
 You add a measure bar at the cursor location by typing \kbd{|}.  As
-  with other element, the cursor will be positioned right after the
-  newly created measure bar.  In fact, a measure bar is just like any
-  other element as far as editing operations are concerned.
+with other element, the cursor will be positioned right after the
+newly created measure bar.  In fact, a measure bar is just like any
+other element as far as editing operations are concerned.
 
 Thus, to delete a measure bar, you simply use the ordinary commands
 for erasing or deleting elements.
 
+\chapter{Operations on staves}
+\label{chap-op-staves}
+
+Initially, when {\gs} starts up, there is a single staff on display.
+It is a standard five-line staff with a treble clef on staff step 2
+(we count the bottom line of the staff as staff step 0).
+
+\section{Renaming and existing staff}
+
+Staves have unique names in {\gs}.  Initially, the name of the first
+staff on display is some default name such as ``default staff''.  You
+typically want to use names of staves that suggest the kind of musical
+material displayed on it, such as ``Trumpets'' or ``Piano right
+hand'', etc. 
+
+You can give a different name to an existing staff by issuing the
+command \command{Rename Staff}, either from a menu or form the command
+pane.  This command prompts for a staff to rename and a new name for
+the staff.  At the prompt for the staff to rename, you have a choice
+of clicking on a staff on display as indicated in section
+\ref{sec-score-pane}, or typing its name in the command pane possibly
+with \emph{completion}\index{completion} as indicated in section
+\ref{sec-score-pane}.  Renaming a staff is such an infrequent
+operation that there is no keyboard shortcut for it.
+
+\section{Inserting a new staff}
+\label{sec-inserting-staff}
+
+Unless you are writing some very simple music, or a part for a
+monophonic instrument, you probably want to be able to add new staves
+to the score. Because adding new staves are done fairly infrequently,
+there is no keyboard shortcut for doing it.  Instead, you have to
+issue one of the commands for doing this either by typing it (with
+completion, see \ref{sec-command-pane}) in the command pane or using
+the mouse to select one from a menu.  
+
+{\gs} imposes an \emph{order} on the staves of a score.  This order is
+the one used to display the staves from top to bottom.  There are two
+commands available for inserting new staves, \command{Insert Staff
+  After} to insert a staff \emph{after} an existing one, and \command{Insert
+  Staff Before} to insert a staff \emph{before} an existing one. 
+
+In both cases, you will be prompted for some required information, in
+order for {\gs} to be able to create the new staff.  First, you will
+be prompted for an existing staff after which (in the case of
+\command{Insert Staff After} or before which (in the case of
+\command{Insert Staff Before} you would like to insert the new staff.
+As usual, you can either click on a visual representation of the staff
+in the score pane (see section \ref{sec-score-pane}) or type its name
+in the command pane with completion (see section
+\ref{sec-command-pane}). 
+
+Next, you are prompted for the type of the staff to create.  There are
+currently two types of staves, namely `fiveline' and `lyrics'.  At the
+moment, the only way to answer this question is to type it in the
+command pane (again, completion is available). 
+
+If you requested a five-line staff to be created, you will also be
+prompted for the type of clef you would like the staff to have.  There
+are three possible choices `treble', `bass', and `c', which you have
+to type in the command pane at the prompt.  You will also be prompted
+for a `line' number on which the clef is to be placed.  Recall that
+the lines are numbered with even numbers starting with `0' for the
+bottom line of the staff.  The normal place for a treble clef is thus
+`2' and the normal place for a bass clef is `6'.  For the c clef it
+varies. 
+
+If instead you requested a lyrics staff to be created, there is no
+more information to supply.
+
+\section{Deleting a staff}
+
+To delete an existing staff, you issue the \command{Delete Staff}
+command, either from a menu or in the command pane.  Deleting an
+existing staff is such an infrequent operation that no keyboard
+shortcut is provided. 
+
+The command prompts for a staff to be deleted.  As usual, you can
+either satisfy the request by clicking on the visual representation of
+a staff in the score pane (see section \ref{sec-score-pane}) or typing
+a response in the command pane (see section \ref{sec-command-pane}). 
+
+\section{Changing the key signature}
+
+To alter the key signature of a staff, use the commands \kbd{Meta-\#}
+\command{More Sharps} and \kbd{Meta-@} \command{More Flats}. 
+
 \chapter{Operations on layers}
 
-To change the current layer, you can type \kbd{Meta-p}
-(\command{Previous Layer}) or \kbd{Meta-n} (\command{Next Layer}. 
+{\gs} organizes musical material into \emph{layers}\index{layer}.  A
+{\gs} layer corresponds roughly to a \emph{void}\index{voice} in
+traditional music terminology.  The reason a different term was chosen
+is that there might be some notations that require a voice to be split
+into several layers.  Each layer can be displayed on one or more
+staves, one of which is always the \emph{current}\index{current staff}
+one. 
 
-To insert a new layer, you have to go to the command pane and type the
-full command, either \command{Insert Layer After} or \command{Insert
-  Layer Before} according to whether you would like the new layer to
-be ordered before or after the current one.  The order between layers
-only affects the order in which they are presented to you with the
-\command{Next Layer} and \command{Previous Layer} commands.  You will
-be  prompted for the name of a staff to use for displaying material in
-this layer.  Later, you can modify the relation between layers and
-staves. 
+In {\gs}, layers have unique names.  Initially, when {\gs} starts up,
+it has a single layer with some default name such as ``default
+layer''. It has a single staff on which it is displayed, namely the
+default staff (see chapter \ref{chap-op-staves}).  
+
+You typically want to choose names for layers that suggest the kind of
+music material that is contained in it.  Since a layer has (or will
+have) a unique \emph{instrument}\index{instrument} associated with it,
+we advice you not to mix material for different instruments in a
+layer.  Therefore, when a part plays several instruments (presumably
+not simultaneously) we advice you to use a different layer for each
+instrument in the part.  Typically, then, a layer name would be the
+name of an instruments playing a single part, such as ``First Violin''
+or ``Solo Guitar''.  
+
+\section{Renaming an existing layer}
+
+You can rename any layer by issuing the command \command{Rename
+Layer}, either in the command pane (see section
+\ref{sec-command-pane}) or from a menu.
+
+You will first be prompted for a layer to rename.  Currently the only
+way to satisfy this request is by typing the name of the layer to the
+prompt in the command pane. Completion is possible as usual (see
+section \ref{sec-command-pane}). 
+ 
+Next, you will be prompted for a new name of the layer.  To satisfy
+the request, you type any string at the prompts.  Notice that names
+must be unique.  If you type the name of an existing layer, your
+entire command will be rejected. 
+
+\section{Selecting a layer}
+
+{\gs} has the concept of a \emph{current layer}\index{current layer}
+which receives all music material typed in the score pane, such as
+notes, rests, etc. 
+
+To change the current layer, issue the \command{Select Layer} either
+from a menu or in the command pane.  
+
+You will be prompted for a layer to be used as the current one.  At
+the moment, the only way to satisfy this request is to type its unique
+name (with completion, see \ref{sec-command-pane}) at the prompt in
+the command pane. 
+
+\section{Adding a new layer}
+
+Before adding a new layer, make sure you have created one of the
+staves on which you would its material to be displayed (see section
+\ref{sec-inserting-staff}).  
+
+Adding a new layer is done by issuing the command \command{Add
+  Layer}.  You will be prompted for a unique name of the new layer,
+and for an existing staff to use as the initial staff of the layer. 
+
+The type of the layer that is created as a result of this command
+depends on the type of the initial staff.  If the initial staff is an
+ordinary five-line staff, then a melody layer is created.  If instead
+the initial staff is a lyrics staff, a lyrics layer is created. 
+
+\section{Deleting a layer}
 
 To delete the current layer, you have to use the command pane (since
 this is an operation that is presumably rare).  The command to use is
-\command{Delete Layer}.
+\command{Delete Layer}. You will be prompted for a layer to delete. 
+
+\section{Adding an existing staff to a layer}
 
 A layer can be displayed on one or several \emph{staves}.  Most layers
 will have a single staff associated with them, but is occasionally
@@ -398,6 +573,12 @@ times, it is useful simply to have some elements of the layer
 displayed on one staff and some other elements on a different
 staff.
 
+To add a staff to the possible staves of a layer, use the command
+\command{Add Staff To Layer}.  You will be prompted for a staff to add
+and a layer to add it to.  
+
+\section{Stem direction of a layer}
+
 A layer can have a preferred stem direction for all clusters in
 it\unimp{It is not hard to do, though}.  The user can override this
 stem direction for individual elements, but if the stem direction of
@@ -405,25 +586,6 @@ the cluster is \emph{auto}\index{auto!stem direction|)}, then it will
 be displayed with the stem direction determined by the layer.  If the
 stem direction of the layer is also \emph{auto}, the layout engine
 will determine the stem direction. 
-
-\chapter{Operations on staves}
-
-To add a new staff, use the command \command{Add Staff}.  You will be prompted
-for the name of the new staff.
-
-To delete a staff, use the command \command{Delete Staff}.  Again, you
-will be prompted for the name of the staff to delete.
-
-To add a staff to the current layer (so that material in that layer
-can be displayed on that staff), use the command \command{Add Layer
-  Staff}.  You will be prompted for the name of a staff to add.
-
-To delete a staff from the current layer, use the command
-\command{Delete Layer Staff}.  You will be prompted for the name of a
-staff. 
-
-To alter the key signature of a staff, use the commands \kbd{Meta-\#}
-\command{More Sharps} and \kbd{Meta-@} \command{More Flats}. 
 
 % ***********************************************************
 \part{Reference manual}
