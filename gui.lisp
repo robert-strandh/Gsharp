@@ -998,74 +998,113 @@
 ;;;
 ;;; Adding, deleting, and modifying staves
 
+(define-condition no-such-staff (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "No such staff"))))
+
+(define-presentation-method accept
+    ((type score-pane:staff) stream (view textual-view) &key)
+  (multiple-value-bind (staff success string)
+      (handler-case (complete-input stream
+				    (lambda (so-far mode)
+				      (complete-from-possibilities
+				       so-far
+				       (staves (buffer *gsharp-frame*))
+				       '()
+				       :action mode
+				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :name-key #'name
+				       :value-key #'identity)))
+	(simple-parse-error () (error 'no-such-staff)))
+    (declare (ignore string))
+    (if success staff (error 'no-such-staff))))
+
 (define-presentation-method accept
     ((type fiveline-staff) stream (view textual-view) &key)
   (multiple-value-bind (staff success string)
-      (complete-input stream
-		      (lambda (so-far mode)
-			(complete-from-possibilities
-			 so-far
-			 (staves (buffer *gsharp-frame*))
-			 '()
-			 :action mode
-			 :predicate (lambda (obj) (typep obj 'fiveline-staff))
-			 :name-key #'name
-			 :value-key #'identity)))
+      (handler-case (complete-input stream
+				    (lambda (so-far mode)
+				      (complete-from-possibilities
+				       so-far
+				       (staves (buffer *gsharp-frame*))
+				       '()
+				       :action mode
+				       :predicate (lambda (obj) (typep obj 'fiveline-staff))
+				       :name-key #'name
+				       :value-key #'identity)))
+	(simple-parse-error () (error 'no-such-staff)))
     (declare (ignore string))
-    (if success
-	staff
-	(error "no such staff name")))) ; FIXME add a gsharp error here. 
+    (if success staff (error 'no-such-staff))))
 
 (defun symbol-name-lowcase (symbol)
   (string-downcase (symbol-name symbol)))
 
 (define-presentation-type staff-type ())
 
+(define-condition no-such-staff-type (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "No such staff type"))))
+
 (define-presentation-method accept
     ((type staff-type) stream (view textual-view) &key)
   (multiple-value-bind (type success string)
-      (complete-input stream
-		      (lambda (so-far mode)
-			(complete-from-possibilities
-			 so-far
-			 '(:fiveline)
-			 '()
-			 :action mode
-			 :predicate (lambda (obj) (declare (ignore obj)) t)
-			 :name-key #'symbol-name-lowcase
-			 :value-key #'identity)))
+      (handler-case (complete-input stream
+				    (lambda (so-far mode)
+				      (complete-from-possibilities
+				       so-far
+				       '(:fiveline)
+				       '()
+				       :action mode
+				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :name-key #'symbol-name-lowcase
+				       :value-key #'identity)))
+	(simple-completion-error () (error 'no-such-staff-type)))
     (declare (ignore string))
-    (if success
-	type
-	(error "no such staff type"))))
+    (if success	type (error 'no-such-staff-type))))
 
 (define-presentation-type clef-type ())
 
 (define-presentation-method accept
     ((type clef-type) stream (view textual-view) &key)
   (multiple-value-bind (type success string)
-      (complete-input stream
-		      (lambda (so-far mode)
-			(complete-from-possibilities
-			 so-far
-			 '(:treble :bass :c :percussion)
-			 '()
-			 :action mode
-			 :predicate (lambda (obj) (declare (ignore obj)) t)
-			 :name-key #'symbol-name-lowcase
-			 :value-key #'identity)))
+      (handler-case (complete-input stream
+				    (lambda (so-far mode)
+				      (complete-from-possibilities
+				       so-far
+				       '(:treble :bass :c :percussion)
+				       '()
+				       :action mode
+				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :name-key #'symbol-name-lowcase
+				       :value-key #'identity)))
+	(simple-completion-error () (error 'no-such-staff-type)))
     (declare (ignore string))
     (if success
 	type
 	(error "no such staff type"))))
 
+(define-condition staff-name-not-unique (gsharp-condition) ()
+  (:report
+   (lambda (condition stream)
+     (declare (ignore condition))
+     (format stream "Staff name already exists"))))
+
+(defun acquire-unique-staff-name ()
+  (let ((name (accept 'string :prompt "Staff name")))
+    (assert (not (member name (staves (buffer *gsharp-frame*)) :test #'string= :key #'name))
+	    () `staff-name-not-unique)
+    name))
+
 (defun acquire-new-staff ()
-  (let ((name (accept 'string :prompt "Staff name"))
-	(type (accept 'staff-type :prompt "Type")))
-    (ecase type
+  (let ((name (acquire-unique-staff-name)))
+    (ecase (accept 'staff-type :prompt "Type")
       (:fiveline (let ((clef (accept 'clef-type :prompt "Clef"))
 		       (line (accept 'integer :prompt "Line")))
-		   (make-fiveline-staff name (make-clef clef line)))))))	  
+		   (make-fiveline-staff name (make-clef clef line)))))))
 
 (define-gsharp-command (com-add-staff-before :name t) ()
   (add-staff-before-staff (accept 'score-pane:staff :prompt "Before staff")
@@ -1081,13 +1120,14 @@
   (remove-staff-from-buffer (accept 'score-pane:staff :prompt "Staff")
 			    (buffer *gsharp-frame*)))
 
-(define-gsharp-command (com-rename-staff :name t) ((name 'string))
-  (let ((buffer (buffer *gsharp-frame*))
-	(state (input-state *gsharp-frame*)))
-    (rename-staff name (staff state) buffer)))
+(define-gsharp-command (com-rename-staff :name t) ()
+  (let* ((staff (accept 'score-pane:staff :prompt "Staff"))
+	 (name (acquire-unique-staff-name))
+	 (buffer (buffer *gsharp-frame*)))
+    (rename-staff name staff buffer)))
 
-(define-gsharp-command (com-add-layer-staff :name t) ((name 'string))
-  (let ((staff (find-staff name (buffer *gsharp-frame*)))
+(define-gsharp-command (com-add-layer-staff :name t) ()
+  (let ((staff (accept 'score-pane:staff :prompt "Staff"))
 	(layer (layer (slice (bar (cursor *gsharp-frame*))))))
     (add-staff-to-layer staff layer)))
 
