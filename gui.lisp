@@ -17,8 +17,8 @@
 (defparameter *last-character* nil)
 
 (defmethod dispatch-event :around ((pane score-pane:score-pane) (event key-press-event))
-  (when (keyboard-event-character event)
-    (let ((key (list (keyboard-event-character event)
+  (when (or (keyboard-event-character event) (keyboard-event-key-name event))
+    (let ((key (list (or (keyboard-event-character event) (keyboard-event-key-name event))
 		     (event-modifier-state event))))
       (setf *accumulated-keys* (append *accumulated-keys* (list key)))
       (setf *last-character* (char-to-unicode (car key)))
@@ -289,7 +289,8 @@
     (setf (buffer *gsharp-frame*) buffer
 	  (input-state *gsharp-frame*) input-state
 	  (cursor *gsharp-frame*) cursor)
-    (number-all (buffer *gsharp-frame*))))
+    (number-all (buffer *gsharp-frame*))
+    (select-layer cursor (car (layers (segment (cursor *gsharp-frame*)))))))
 
 (define-gsharp-command (com-save-buffer-as :name t) ()
   (let* ((stream (frame-standard-input *gsharp-frame*))
