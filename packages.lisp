@@ -34,6 +34,7 @@
 
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities)
+  (:shadow #:rest)
   (:export #:clef #:make-clef #:name #:lineno
 	   #:staff #:make-staff #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:cluster #:note
@@ -66,6 +67,8 @@
 
 (defpackage :gsharp-numbering
   (:use :gsharp-utilities :gsharp-buffer :clim-lisp)
+  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:shadow #:number)
   (:export #:number #:number-all))
 
 (defpackage :obseq
@@ -78,7 +81,9 @@
 	   #:cost-less #:obseq-solve #:obseq-interval))
 
 (defpackage :gsharp-measure
-  (:use :common-lisp :gsharp-buffer :gsharp-utilities :obseq)
+  (:use :common-lisp :gsharp-numbering :gsharp-buffer :gsharp-utilities :obseq)
+  (:shadowing-import-from :gsharp-numbering #:number)
+  (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:mark-modified #:modified-p #:duration #:measure
 	   #:measure-min-dist #:measure-coeff #:measure-start-times
 	   #:measure-bar-pos #:measure-seg-pos #:measure-bars #:measures
@@ -116,6 +121,7 @@
 
 (defpackage :score-pane
   (:use :clim :clim-extensions :clim-lisp :sdl :gsharp-buffer)
+  (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:draw-staff #:draw-stem #:draw-right-stem #:draw-left-stem 
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
@@ -130,6 +136,8 @@
   (:export #:beaming-single #:beaming-double))
 
 (defpackage :gsharp-cursor
+  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:shadowing-import-from :gsharp-numbering #:number)
   (:use :gsharp-utilities :gsharp-buffer :gsharp-numbering :clim-lisp)
   (:export #:gsharp-cursor #:make-cursor #:end-of-bar-p #:beginning-of-bar-p
 	   #:insert-element #:delete-element 
@@ -156,6 +164,7 @@
 (defpackage :gsharp-drawing
   (:use :clim :clim-lisp :gsharp-buffer :gsharp-measure :gsharp-cursor
 	:gsharp-utilities :sdl :score-pane :gsharp-beaming :obseq)
+  (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:draw-buffer))
 
 (defpackage :midi
@@ -176,4 +185,18 @@
 (defpackage :gsharp
   (:use :clim :clim-lisp
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
-	:gsharp-measure :score-pane :sdl :midi))
+	:gsharp-measure :score-pane :sdl :midi)
+  (:shadowing-import-from :gsharp-numbering #:number)
+  (:shadowing-import-from :gsharp-buffer #:rest))
+
+(in-package :gsharp-numbering)
+(deftype number () 'cl:number)
+(setf (find-class 'number) (find-class 'cl:number))
+
+(in-package :gsharp-buffer)
+(defun rest (list)
+  (cl:rest list))
+(define-compiler-macro rest (list)
+  `(cl:rest ,list))
+(define-setf-expander rest (list &environment env)
+  (get-setf-expansion `(cl:rest ,list) env))
