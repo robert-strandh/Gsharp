@@ -1,5 +1,9 @@
 (in-package :sdl)
 
+(defvar *fonts-directory*
+  (merge-pathnames (make-pathname :directory '(relative "Fonts"))
+		   (make-pathname :directory (pathname-directory *load-truename*))))
+
 (defgeneric glyph (font glyph-no))
 (defgeneric glyph-offsets (font glyph-no))
 (defgeneric staff-line-distance (font))
@@ -113,7 +117,7 @@
 					:element-type '(unsigned-byte 8)
 					:initial-element 16))
 	(loop for r from 0 below (car (array-dimensions matrix))
-	      for y from (gf-char-max-n gf-char) by -1 do
+	      for y downfrom (gf-char-max-n gf-char) by 1 do
 	      (loop for c from 0 below (cadr (array-dimensions matrix))
 		    for x from (gf-char-min-m gf-char) do
 		    (decf (aref pixmap
@@ -159,7 +163,9 @@
     (- notehead-right-x-offset notehead-left-x-offset)))
 
 (defun load-font (staff-line-distance)
-  (let* ((gf-font (parse-gf-file (format nil "Fonts/sdl~a.gf" staff-line-distance)))
+  (let* ((gf-font (parse-gf-file (merge-pathnames
+				  (format nil "sdl~a.gf" staff-line-distance)
+				  *fonts-directory*)))
 	 (maxchar (reduce #'max (gf-font-chars gf-font) :key #'gf-char-no))
 	 (glyphs (make-array (list (1+ maxchar)) :initial-element nil)))
     (loop for char in (gf-font-chars gf-font) do
