@@ -96,17 +96,10 @@ sequence was inserted using INSERT."))
 (defgeneric (setf element>) (object cursor)
   (:documentation "Replaces the element immediately after the cursor."))
 
-(defclass standard-cursorchain (cursorchain standard-flexichain)
+(defclass standard-cursorchain
+    (weak-pointer-container-mixin cursorchain standard-flexichain)
   ((cursors :initform '()))
   (:documentation "The standard instantiable subclass of CURSORCHAIN"))
-
-(defun make-wp (value)
-  #+sbcl (sb-ext:make-weak-pointer value)
-  #+cmu  (ext:make-weak-pointer value))
-
-(defun wp-value (wp)
-  #+sbcl (sb-ext:weak-pointer-value wp)
-  #+cmu  (ext:weak-pointer-value wp))
 
 (defclass standard-flexicursor (flexicursor)
   ((chain :reader chain :initarg :chain)
@@ -123,7 +116,7 @@ sequence was inserted using INSERT."))
   (with-slots (index chain) cursor
      (setf index (position-index chain (1- position)))
      (with-slots (cursors) chain
-	(push (make-wp cursor) cursors))))
+	(push (make-weak-pointer cursor chain) cursors))))
 
 (defmethod initialize-instance :after ((cursor right-sticky-flexicursor)
 				       &rest initargs &key (position 0))
@@ -131,30 +124,32 @@ sequence was inserted using INSERT."))
   (with-slots (index chain) cursor
      (setf index (position-index chain position))
      (with-slots (cursors) chain
-	(push (make-wp cursor) cursors))))
+	(push (make-weak-pointer cursor chain) cursors))))
 
-(defun adjust-cursors (cursors start end increment)
+(defun adjust-cursors (chain cursors start end increment)
   (let ((acc '()))
-    (loop while cursors
-	  do (cond ((null (wp-value (car cursors)))
-		    (pop cursors))
-		   ((<= start (flexicursor-index (wp-value (car cursors))) end)
-		    (incf (flexicursor-index (wp-value (car cursors))) increment)
+    (loop
+       for cursor = (and cursors (weak-pointer-value (car cursors) chain))
+       while cursors
+       do (cond ((null cursor)
+		 (pop cursors))
+		((<= start (flexicursor-index cursor) end)
+		    (incf (flexicursor-index cursor) increment)
 		    (let ((rest (cdr cursors)))
 		      (setf (cdr cursors) acc
 			    acc cursors
 			    cursors rest)))
-		   (t
-		    (let ((rest (cdr cursors)))
-		      (setf (cdr cursors) acc
-			    acc cursors
-			    cursors rest)))))
+		(t
+		 (let ((rest (cdr cursors)))
+		   (setf (cdr cursors) acc
+			 acc cursors
+			 cursors rest)))))
     acc))
 
 (defmethod move-elements :after ((cc standard-cursorchain) to from start1 start2 end2)
   (declare (ignore to from))
   (with-slots (cursors) cc
-     (setf cursors (adjust-cursors cursors start2 (1- end2) (- start1 start2)))))
+     (setf cursors (adjust-cursors cc cursors start2 (1- end2) (- start1 start2)))))
 
 (defmethod clone-cursor ((cursor standard-flexicursor))
   (make-instance (class-of cursor)
@@ -200,7 +195,7 @@ sequence was inserted using INSERT."))
   (with-slots (cursors) chain
      (let* ((old-index (position-index chain position)))
        (loop for cursor-wp in cursors
-	     as cursor = (wp-value cursor-wp)
+	     as cursor = (weak-pointer-value cursor-wp chain)
 	     when (and cursor (= old-index (flexicursor-index cursor)))
 	       do (typecase cursor
 		    (right-sticky-flexicursor (incf (cursor-pos cursor)))

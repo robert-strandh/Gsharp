@@ -34,17 +34,52 @@ indicating whether an element was found or not."
         (values nil nil)
         (values (elt sequence position) t))))
 
-(defun make-weak-pointer (object)
-  "Returns a weak pointer to OBJECT."
-  #+cmu (extensions:make-weak-pointer object)
-  #+sbcl (sb-ext:make-weak-pointer object)
-  #-(or cmu sbcl) (error "MAKE-WEAK-POINTER not implemented."))
+;;; CMUCL and SBCL have direct support for weak pointers. In OpenMCL weak
+;;; references are only supported via weak hash tables. This class provides
+;;; the means for other classes to manage their weak references.
+;;;
+;;; TODO: check other CL implementations behavior wrt. return values
+(defclass weak-pointer-container-mixin ()
+  #+openmcl
+  ((weak-hash :initform (make-hash-table :test #'eq :weak :value)))
+  (:documentation "Support for weak references, if needed"))
 
-(defun weak-pointer-value (weak-pointer)
-  ;; TODO: check other CL implementations behavior wrt. return values
-  "Returns the object pointed to by WEAK-POINTER or NIL if the pointer
-is broken."
+(defgeneric make-weak-pointer (object container))
+
+#+(or sbcl cmu)
+(defmethod make-weak-pointer (object container)
+  (declare (ignore container))
+    #+cmu (extensions:make-weak-pointer object)
+    #+sbcl (sb-ext:make-weak-pointer object))
+
+#+openmcl
+(defmethod make-weak-pointer (object (container weak-pointer-container-mixin))
+  (let ((key (cons nil nil)))
+    (setf (gethash key (slot-value container 'weak-hash)) object)
+    key))
+
+(defgeneric weak-pointer-value (weak-pointer container))
+
+#+(or sbcl cmu)
+(defmethod weak-pointer-value (weak-pointer container)
+  (declare (ignore container))
   #+cmu (extensions:weak-pointer-value weak-pointer)
-  #+sbcl (sb-ext:weak-pointer-value weak-pointer)
-  #-(or cmu sbcl) (error "WEAK-POINTER-VALUE not implemented."))
+  #+sbcl (sb-ext:weak-pointer-value weak-pointer))
 
+#+openmcl
+(defmethod weak-pointer-value
+    (weak-pointer (container weak-pointer-container-mixin))
+  (gethash weak-pointer (slot-value container 'weak-hash) nil))
+
+#-(or sbcl cmu openmcl)
+(progn
+  (eval-when (:evaluate :compile-toplevel :load-toplevel)
+    (warning "No support for weak pointers in this implementation. Things may
+get big and slow")
+    )
+  (defmethod make-weak-pointer (object container)
+    (declare (ignore container))
+    object)
+  (defmethod weak-pointer-value (weak-pointer container)
+    (declare (ignore container))
+    weak-pointer))
