@@ -101,38 +101,42 @@ sequence was inserted using INSERT>."))
   (:documentation "Replaces the element immediately after the cursor."))
 
 (defclass standard-cursorchain (cursorchain standard-flexichain)
-  ((cursors :accessor cursorchain-cursors)
-   (temp-cursors :initform nil))
+  ((cursors :initform (make-instance 'skiplist) :accessor cursorchain-cursors))
   (:documentation "The standard instantiable subclass of CURSORCHAIN"))
 
-(defmethod initialize-instance :after ((cc standard-cursorchain) &rest args)
-  (declare (ignore args))
-  (with-slots (buffer cursors) cc
-     (setf cursors (make-array (length buffer) :initial-element '()))))
+(defun make-wp (value)
+  +sbcl (sb-ext:make-weak-pointer value)
+  +cmu  (ext:make-wadk-pointer value))
 
-(defmethod resize-buffer :around ((cc standard-cursorchain) new-buffer-size)
-  (with-slots (cursors temp-cursors) cc
-     (setf temp-cursors (make-array new-buffer-size :initial-element '()))
-     (call-next-method)
-     (setf cursors temp-cursors
-	   temp-cursors nil)))
+(defun wp-value (wp)
+  +sbcl (sb-ext:weak-pointer-value wp)
+  +cmu  (ext:weak-pointer-value wp))
 
 (defmethod move-elements :after ((cc standard-cursorchain) to from start1 start2 end2)
   (declare (ignore to from))
-  (with-slots (cursors temp-cursors) cc
-     (let ((destination (or temp-cursors cursors)))
-       (replace destination cursors :start1 start1 :start2 start2 :end2 end2)
-       (loop for i from start1 below (+ start1 (- end2 start2))
-	     do (setf (aref destination i)
-		      (loop for cursor-wp in (aref destination i)
-			    as cursor = (weak-pointer-value cursor-wp)
-			    when cursor
-			      do (setf (flexicursor-index cursor) i)
-			      and collect cursor-wp))))))
-
-(defmethod fill-gap :after ((cc standard-cursorchain) start end)
-  (with-slots (cursors) cc
-     (fill cursors '() :start start :end end)))  
+  (let ((addfun (lambda (key wp-cursors)
+		  (let ((increment (- start1 start2)))
+		    (loop for wp in wp-cursors
+			  as cursor = (wp-value wp)
+			  unless (null cursor)
+			    do (incf (flexicursor-index cursor) increment))
+		    (+ key increment)))))
+    (with-slots (cursors gap-start gap-end) cc
+       (cond ((= start1 start2) nil)
+	     ((= gap-start gap-end)
+	      (skiplist-slide-keys cursors start2 (1- end2) addfun))
+	     ((< e s)
+	      (cond ((and (= end2 gap-start) (> start1 start2))
+		     (skiplist-slide-keys cursors start2 (1- end2) addfun))
+		    ((= end2 gap-start)
+		     (skiplist-rotate-suffix cursors start2 addfun))
+		    (t skiplist-rotate-prefix cursors (1- end2) addfun)))
+	     ((plusp gap-start)
+	      (skiplist-slide-keys cursors start2 (1- end2) addfun))
+	     ((= start2 gap-end)
+	      (skiplist-slide-keys cursors start2 (1- end2) addfun))
+	     (t
+	      (skiplist-rotate-suffix cursors start2 addfun))))))
 
 (defclass standard-flexicursor (flexicursor)
   ((chain :reader chain :initarg :chain)
@@ -149,8 +153,7 @@ sequence was inserted using INSERT>."))
   (with-slots (index chain) cursor
      (setf index (slot-value chain 'data-start))
      (with-slots (cursors) chain
-	(push (make-weak-pointer cursor)
-	      (aref cursors (slot-value chain 'data-start))))))
+	(push (make-wp cursor) (skiplist-find cursors index)))))
 
 (defmethod initialize-instance :after ((cursor right-sticky-flexicursor)
 				       &rest initargs)
@@ -158,17 +161,16 @@ sequence was inserted using INSERT>."))
   (with-slots (index chain) cursor
      (setf index (position-index chain 0))
      (with-slots (cursors) chain
-	(push (make-weak-pointer cursor)
-	      (aref cursors (position-index chain 0))))))
+	(push (make-wp cursor) (skilist-find cursors index)))))
 
 (defmethod clone-cursor ((cursor standard-flexicursor))
-  (let ((result (make-instance (class-of cursor)
-		   :chain (chain cursor))))
-    (setf (slot-value result 'index) (slot-value cursor 'index))
-    (with-slots (cursors) (chain cursor)
-       (push (make-weak-pointer result)
-	     (aref cursors (slot-value cursor 'index))))
-    result))
+  (with-slots (index) cursor
+     (let ((result (make-instance (class-of cursor)
+		      :chain (chain cursor))))
+       (setf (slot-value result 'index) index)
+       (with-slots (cursors) (chain cursor)
+	  (push (make-wp result) (skiplist-find cursors index)))
+       result)))
 
 (defmethod cursor-pos ((cursor left-sticky-flexicursor))
   (1+ (index-position (chain cursor) (slot-value cursor 'index))))
@@ -202,13 +204,11 @@ sequence was inserted using INSERT>."))
 		     'at-end-error :cursor cursor)
 	     (with-slots (cursors) (chain cursor)
 		(with-slots (index) cursor
-		   (setf (aref cursors index)
-			 (delete cursor (aref cursors index)
-				 :test #'eq
-				 :key #'weak-pointer-value))
+		   (setf (skiplist-find cursors index)
+			 (delete index (skiplist-find cursors index)
+				 :key #'wp-value :test #'eq))
 		   (setf (cursor-pos cursor) (+ cursor-pos n))
-		   (push (make-weak-pointer cursor)
-			 (aref cursors index))))))))
+		   (push (make-wp cursor) (skiplist-find cursors index))))))))
 
 (defmethod move< ((cursor standard-flexicursor) &optional (n 1))
   (cond ((minusp n) (move> cursor (- n)))
@@ -218,13 +218,11 @@ sequence was inserted using INSERT>."))
 		     'at-beginning-error :cursor cursor)
 	     (with-slots (cursors) (chain cursor)
 		(with-slots (index) cursor
-		   (setf (aref cursors index)
-			 (delete cursor (aref cursors index)
-				 :test #'eq
-				 :key #'weak-pointer-value))
+		   (setf (skiplist-find cursors index)
+			 (delete index (skiplist-find cursors index)
+				 :key #'wp-value :test #'eq))
 		   (setf (cursor-pos cursor) (- cursor-pos n))
-		   (push (make-weak-pointer cursor)
-			 (aref cursors index))))))))
+		   (push (make-wp cursor) (skiplist-find cursors index))))))))
 
 (defmethod insert ((cursor standard-flexicursor) object)
   (insert* (chain cursor) (cursor-pos cursor) object))
@@ -237,14 +235,15 @@ sequence was inserted using INSERT>."))
 
 (defmethod delete* :around ((chain standard-cursorchain) position)
   (with-slots (cursors) chain
-     (let ((save (aref cursors (position-index chain position))))
+     (let* ((old-index (position-index chain position))
+	    (cursors (skiplist-find cursors old-index)))
+       (skiplist-delete cursors index)
        (call-next-method)
        (loop for cursor-wp in save
-	     as cursor = (weak-pointer-value cursor-wp)
+	     as cursor = (wp-value cursor-wp)
 	     when cursor
 	       do (setf (cursor-pos cursor) position)
-	       and do  (push cursor-wp
-			     (aref cursors (flexicursor-index cursor)))))))
+	       and do  (push cursor-wp (skiplist-find cursors (flexicursor-index cursor)))))))
 
 (defmethod delete> ((cursor standard-flexicursor) &optional (n 1))
   (let ((chain (chain cursor))
