@@ -362,8 +362,7 @@
     (message "Saved buffer to ~A~%" filename)))
 
 (define-gsharp-command (com-quit :name t) ()
-  #+cmu (unix::unix-exit)
-  #+sbcl (frame-exit *application-frame*))
+  (frame-exit *application-frame*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
