@@ -24,9 +24,15 @@
 
 (in-package #:flexichain-system)
 
+;; The tester is not included, for it depends on clim.  The stupid
+;; implementation has also been left out, since it seems mostly useful
+;; for testing.
 (defsystem flexichain
   :name "flexichain"
-  :components ((:file "package")
-               (:file "utilities" :depends-on ("package"))
+  :components ((:file "skiplist-package")
+               (:file "skiplist" :depends-on ("skiplist-package"))
+               (:file "flexichain-package" :depends-on ("skiplist-package"))
+               (:file "utilities" :depends-on ("flexichain-package"))
                (:file "flexichain" :depends-on ("utilities"))
                (:file "flexicursor" :depends-on ("flexichain"))))
+
