@@ -40,8 +40,8 @@ indicating whether an element was found or not."
 ;;;
 ;;; TODO: check other CL implementations behavior wrt. return values
 (defclass weak-pointer-container-mixin ()
-  #+openmcl
-  ((weak-hash :initform (make-hash-table :test #'eq :weak :value)))
+  (#+openmcl
+   (weak-hash :initform (make-hash-table :test #'eq :weak :value)))
   (:documentation "Support for weak references, if needed"))
 
 (defgeneric make-weak-pointer (object container))
