@@ -385,15 +385,20 @@ on both ends of the buffer."
      (when (and (<= start2 data-start) (< data-start end2))
        (incf data-start (- start1 start2)))))
 
+(defgeneric fill-gap (standard-flexichain start end)
+  (:documentation "fill part of gap with the fill element"))
+
+(defmethod fill-gap ((fc standard-flexichain) start end)
+  (with-slots (buffer fill-element) fc
+     (fill buffer fill-element :start start :end end)))  
+
 (defun push-elements-left (chain count)
   "Pushes the COUNT elements of CHAIN at the right of the gap,
 to the beginning of the gap. The gap must be continuous. Example:
 PUSH-ELEMENTS-LEFT abcd-----efghijklm 2  => abcdef-----ghijklm"
-  (with-slots (buffer gap-start gap-end fill-element) chain
+  (with-slots (buffer gap-start gap-end) chain
     (move-elements chain buffer buffer gap-start gap-end (+ gap-end count))
-    (fill buffer fill-element
-          :start (max gap-end (+ gap-start count))
-          :end (+ gap-end count))
+    (fill-gap chain (max gap-end (+ gap-start count)) (+ gap-end count))
     (incf gap-start count)
     (incf gap-end count)
     (normalize-indices chain)))
@@ -402,14 +407,12 @@ PUSH-ELEMENTS-LEFT abcd-----efghijklm 2  => abcdef-----ghijklm"
   "Pushes the COUNT elements of CHAIN at the left of the gap,
 to the end of the gap. The gap must be continuous. Example:
 PUSH-ELEMENTS-RIGHT abcd-----efghijklm 2  =>  ab-----cdefghijklm"
-  (with-slots (buffer gap-start gap-end fill-element) chain
+  (with-slots (buffer gap-start gap-end) chain
     (let* ((buffer-size (length buffer))
            (rotated-gap-end (if (zerop gap-end) buffer-size gap-end)))
       (move-elements chain buffer buffer
 		     (- rotated-gap-end count) (- gap-start count) gap-start)
-      (fill buffer fill-element
-            :start (- gap-start count)
-            :end (min gap-start (- rotated-gap-end count)))
+      (fill-gap chain (- gap-start count) (min gap-start (- rotated-gap-end count)))
       (decf gap-start count)
       (setf gap-end (- rotated-gap-end count))
       (normalize-indices chain))))
@@ -418,13 +421,12 @@ PUSH-ELEMENTS-RIGHT abcd-----efghijklm 2  =>  ab-----cdefghijklm"
   "Moves the COUNT rightmost elements to the end of the gap,
 on the left of the data. Example:
 HOP-ELEMENTS-LEFT ---abcdefghijklm--- 2  =>  -lmabcdefghijk-----"
-  (with-slots (buffer gap-start gap-end fill-element) chain
+  (with-slots (buffer gap-start gap-end) chain
     (let* ((buffer-size (length buffer))
            (rotated-gap-start (if (zerop gap-start) buffer-size gap-start)))
       (move-elements chain buffer buffer
 		     (- gap-end count) (- rotated-gap-start count) rotated-gap-start)
-      (fill buffer fill-element
-            :start (- rotated-gap-start count) :end rotated-gap-start)
+      (fill-gap chain (- rotated-gap-start count) rotated-gap-start)
       (setf gap-start (- rotated-gap-start count))
       (decf gap-end count)
       (normalize-indices chain))))
@@ -433,9 +435,9 @@ HOP-ELEMENTS-LEFT ---abcdefghijklm--- 2  =>  -lmabcdefghijk-----"
   "Moves the COUNT leftmost elements to the beginning of the gap,
 on the right of the data. Example:
 HOP-ELEMENTS-RIGHT ---abcdefghijklm--- 2  =>  -----cdefghijklmab-"
-  (with-slots (buffer gap-start gap-end fill-element) chain
+  (with-slots (buffer gap-start gap-end) chain
     (move-elements chain buffer buffer gap-start gap-end (+ gap-end count))
-    (fill buffer fill-element :start gap-end :end (+ gap-end count))
+    (fill-gap chain gap-end (+ gap-end count))
     (incf gap-start count)
     (incf gap-end count)
     (normalize-indices chain)))
@@ -446,31 +448,34 @@ HOP-ELEMENTS-RIGHT ---abcdefghijklm--- 2  =>  -----cdefghijklmab-"
 (defun decrease-buffer-size (chain)
   (resize-buffer chain (required-space chain (nb-elements chain))))
 
-(defun resize-buffer (chain new-buffer-size)
+(defgeneric resize-buffer (standard-flexichain new-buffer-size)
+  (:documentation "allocate a new buffer with the size indicated"))
+
+(defmethod resize-buffer ((fc standard-flexichain) new-buffer-size)
   (with-slots (buffer gap-start gap-end
-               fill-element element-type expand-factor) chain
+               fill-element element-type expand-factor) fc
     (let ((buffer-size (length buffer))
           (buffer-after (make-array new-buffer-size
                                     :element-type element-type
                                     :initial-element fill-element)))
-      (case (gap-location chain)
+      (case (gap-location fc)
         ((:gap-empty :gap-middle)
-         (move-elements chain buffer-after buffer 0 0 gap-start)
+         (move-elements fc buffer-after buffer 0 0 gap-start)
          (let ((gap-end-after (- new-buffer-size (- buffer-size gap-end))))
-           (move-elements chain buffer-after buffer gap-end-after gap-end buffer-size)
+           (move-elements fc buffer-after buffer gap-end-after gap-end buffer-size)
            (setf gap-end gap-end-after)))
         (:gap-right
-         (move-elements chain buffer-after buffer 0 0 gap-start))
+         (move-elements fc buffer-after buffer 0 0 gap-start))
         (:gap-left
-         (let ((gap-end-after (- new-buffer-size (nb-elements chain))))
-           (move-elements chain buffer-after buffer gap-end-after gap-end buffer-size)
+         (let ((gap-end-after (- new-buffer-size (nb-elements fc))))
+           (move-elements fc buffer-after buffer gap-end-after gap-end buffer-size)
            (setf gap-end gap-end-after)))
         (:gap-non-contiguous
-         (move-elements chain buffer-after buffer 0 gap-end gap-start)
+         (move-elements fc buffer-after buffer 0 gap-end gap-start)
          (decf gap-start gap-end)
          (setf gap-end 0)))
       (setf buffer buffer-after)))
-  (normalize-indices chain))
+  (normalize-indices fc))
 
 (defun normalize-indices (chain)
   "Sets gap limits to 0 if they are at the end of the buffer."

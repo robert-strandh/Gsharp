@@ -526,12 +526,18 @@ object are updated accordingly.
 
 \subsection{Performance}
 
-We assume that the number of cursors of a particular chain is
-relatively small.  Although under normal circumstances simple
-operations like insert and delete will not take a time proportional to
-the number of cursors, it is possible that cursors need to be
-updated from time to time.  We do not promise any bound on complexity
-for a large number of cursors.
+There can be a very large number of cursors in a chain without any
+negative impact on performance.  In particular, a sequence of insert
+operations is not affected by the number of cursors of the chain.
+For insert operations, we maintain the complexity proportional to the
+distance between two consecutive positions.  
+
+A delete operation takes time proportional to the number of
+left-sticky cursors to the right of the element to delete plus the
+number of right-sticky cursors to the left of it. 
+
+The only bad case is thus a delete operation of an element with an
+unbounded number of cursors sticking to it. 
 
 \subsection{Protocol classes and functions}
 
@@ -683,7 +689,9 @@ signaled.
 \section{Implementation of the \texttt{flexicursor} protocol}
 
 Cursors are stored as lists of weak references so that they can be
-recycled when no longer referenced by client code. 
+recycled when no longer referenced by client code.  A vector that
+parallels the one holding elements of the flexichain holds per-element
+lists of cursors that stick to that element. 
 
 A cursor contains its \textit{index in the vector} as opposed to its
 \textit{position in the sequence}.  This method avoids most updates of
@@ -693,11 +701,12 @@ the index of $p-1$, where $p$ is the position of the cursor.  For
 right-sticky cursors, we store $p$ itself. 
 
 After a delete operation, cursors with indexes equal to the old value
-of \texttt{gap-end} need to be updated to the new value of
-\texttt{gap-end}, including the cursor that was used in the call.
+of \texttt{gap-end} need to be updated.  Right-sticky cursors will be
+attached to the index corresponding to the new value of
+\texttt{gap-end}, whereas left-sticky cursors get attached to the
+position immediately preceding \texttt{gap-start}. 
 
-After an insert operation, only the cursor used in the call needs to
-be incremented.  All other cursors remain the same.
+Insert operations do not affect cursors at all. 
 
 Mixing of \texttt{flexicursor} and \texttt{flexichain} editing
 operations is possible thanks to an internal protocol for moving the

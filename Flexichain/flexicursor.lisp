@@ -101,41 +101,74 @@ sequence was inserted using INSERT>."))
   (:documentation "Replaces the element immediately after the cursor."))
 
 (defclass standard-cursorchain (cursorchain standard-flexichain)
-  ((cursors :accessor cursorchain-cursors :initform '()))
+  ((cursors :accessor cursorchain-cursors)
+   (temp-cursors :initform nil))
   (:documentation "The standard instantiable subclass of CURSORCHAIN"))
+
+(defmethod initialize-instance :after ((cc standard-cursorchain) &rest args)
+  (declare (ignore args))
+  (with-slots (buffer cursors) cc
+     (setf cursors (make-array (length buffer) :initial-element '()))))
+
+(defmethod resize-buffer :around ((cc standard-cursorchain) new-buffer-size)
+  (with-slots (cursors temp-cursors) cc
+     (setf temp-cursors (make-array new-buffer-size :initial-element '()))
+     (call-next-method)
+     (setf cursors temp-cursors
+	   temp-cursors nil)))
+
+(defmethod move-elements :after ((cc standard-cursorchain) to from start1 start2 end2)
+  (declare (ignore to from))
+  (with-slots (cursors temp-cursors) cc
+     (let ((destination (or temp-cursors cursors)))
+       (replace destination cursors :start1 start1 :start2 start2 :end2 end2)
+       (loop for i from start1 below (+ start1 (- end2 start2))
+	     do (setf (aref destination i)
+		      (loop for cursor-wp in (aref destination i)
+			    as cursor = (weak-pointer-value cursor-wp)
+			    when cursor
+			      do (setf (flexicursor-index cursor) i)
+			      and collect cursor-wp))))))
+
+(defmethod fill-gap :after ((cc standard-cursorchain) start end)
+  (with-slots (cursors) cc
+     (fill cursors '() :start start :end end)))  
 
 (defclass standard-flexicursor (flexicursor)
   ((chain :reader chain :initarg :chain)
-   (index :accessor flexicursor-index :initarg :index))
+   (index :accessor flexicursor-index))
   (:documentation "The standard instantiable subclass of FLEXICURSOR"))
 
 (defclass left-sticky-flexicursor (standard-flexicursor) ())
 
 (defclass right-sticky-flexicursor (standard-flexicursor) ())
 
-(defmethod initialize-instance :after ((cursor standard-flexicursor)
-                                       &rest initargs)
-  (declare (ignore initargs))
-  (with-slots (chain) cursor
-    (push (make-weak-pointer cursor)
-          (cursorchain-cursors chain))))
-
 (defmethod initialize-instance :after ((cursor left-sticky-flexicursor)
 				       &rest initargs)
   (declare (ignore initargs))
   (with-slots (index chain) cursor
-     (setf index (slot-value chain 'data-start))))
+     (setf index (slot-value chain 'data-start))
+     (with-slots (cursors) chain
+	(push (make-weak-pointer cursor)
+	      (aref cursors (slot-value chain 'data-start))))))
 
 (defmethod initialize-instance :after ((cursor right-sticky-flexicursor)
 				       &rest initargs)
   (declare (ignore initargs))
   (with-slots (index chain) cursor
-     (setf index (position-index chain 0))))
+     (setf index (position-index chain 0))
+     (with-slots (cursors) chain
+	(push (make-weak-pointer cursor)
+	      (aref cursors (position-index chain 0))))))
 
 (defmethod clone-cursor ((cursor standard-flexicursor))
   (let ((result (make-instance (class-of cursor)
 		   :chain (chain cursor))))
-    (setf (slot-value result 'index) (slot-value cursor 'index))))
+    (setf (slot-value result 'index) (slot-value cursor 'index))
+    (with-slots (cursors) (chain cursor)
+       (push (make-weak-pointer result)
+	     (aref cursors (slot-value cursor 'index))))
+    result))
 
 (defmethod cursor-pos ((cursor left-sticky-flexicursor))
   (1+ (index-position (chain cursor) (slot-value cursor 'index))))
@@ -167,7 +200,15 @@ sequence was inserted using INSERT>."))
 	(t (let ((cursor-pos (cursor-pos cursor)))
 	     (assert (<= (+ n cursor-pos) (nb-elements (chain cursor))) ()
 		     'at-end-error :cursor cursor)
-	     (setf (cursor-pos cursor) (+ cursor-pos n))))))
+	     (with-slots (cursors) (chain cursor)
+		(with-slots (index) cursor
+		   (setf (aref cursors index)
+			 (delete cursor (aref cursors index)
+				 :test #'eq
+				 :key #'weak-pointer-value))
+		   (setf (cursor-pos cursor) (+ cursor-pos n))
+		   (push (make-weak-pointer cursor)
+			 (aref cursors index))))))))
 
 (defmethod move< ((cursor standard-flexicursor) &optional (n 1))
   (cond ((minusp n) (move> cursor (- n)))
@@ -175,15 +216,15 @@ sequence was inserted using INSERT>."))
 	(t (let ((cursor-pos (cursor-pos cursor)))
 	     (assert (>= cursor-pos n) ()
 		     'at-beginning-error :cursor cursor)
-	     (setf (cursor-pos cursor) (- cursor-pos n))))))
-
-(defmethod move-elements :after ((cc standard-cursorchain) to from start1 start2 end2)
-  (loop for cursor-wp in (cursorchain-cursors cc)
-	as cursor = (weak-pointer-value cursor-wp)
-	do (when cursor
-	     (with-slots (index) cursor
-		(when (and (<= start2 index) (< index end2))
-		  (incf index (- start1 start2)))))))
+	     (with-slots (cursors) (chain cursor)
+		(with-slots (index) cursor
+		   (setf (aref cursors index)
+			 (delete cursor (aref cursors index)
+				 :test #'eq
+				 :key #'weak-pointer-value))
+		   (setf (cursor-pos cursor) (- cursor-pos n))
+		   (push (make-weak-pointer cursor)
+			 (aref cursors index))))))))
 
 (defmethod insert ((cursor standard-flexicursor) object)
   (insert* (chain cursor) (cursor-pos cursor) object))
@@ -194,16 +235,16 @@ sequence was inserted using INSERT>."))
 	 (insert cursor object))
        sequence))
 
-(defmethod delete* :around ((chain standard-flexichain) position)
+(defmethod delete* :around ((chain standard-cursorchain) position)
   (with-slots (cursors) chain
-     (let* ((index (position-index chain position))
-	    (save (loop for cursor-wp in cursors
-			as cursor = (weak-pointer-value cursor-wp)
-			when (and cursor (= (slot-value cursor 'index) index))
-			  collect cursor)))
+     (let ((save (aref cursors (position-index chain position))))
        (call-next-method)
-       (loop for cursor in save
-	     do (setf (cursor-pos cursor) position)))))
+       (loop for cursor-wp in save
+	     as cursor = (weak-pointer-value cursor-wp)
+	     when cursor
+	       do (setf (cursor-pos cursor) position)
+	       and do  (push cursor-wp
+			     (aref cursors (flexicursor-index cursor)))))))
 
 (defmethod delete> ((cursor standard-flexicursor) &optional (n 1))
   (let ((chain (chain cursor))
