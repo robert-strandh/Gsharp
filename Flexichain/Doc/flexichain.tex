@@ -663,7 +663,7 @@ invocation.  Other cursors of the underlying chain are updated only
 after the last operation has been completed, thus making it more
 efficient to use this macro than to use individual editing operations.
 
-\Defgeneric {elemement<} {cursor}
+\Defgeneric {element<} {cursor}
 
 Return the element immediately before the cursor.  If the cursor is
 at the beginning, an at-beginning condition will be signaled. 
@@ -674,7 +674,7 @@ Replace the element immediately before the cursor by the object given
 as argument.  If the cursor is at the beginning, an at-beginning
 condition will be signaled.
 
-\Defgeneric {elemement>} {cursor}
+\Defgeneric {element>} {cursor}
 
 Return the element immediately after the cursor.  If the cursor is
 at the end, an at-end condition will be signaled. 
