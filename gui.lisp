@@ -94,7 +94,7 @@
 
 (defmethod redisplay-gsharp-panes (frame &key force-p)
   (loop for pane in (frame-current-panes frame)
-	do (when (typep pane 'score-pane)
+	do (when (typep pane 'score-pane:score-pane)
 	     (redisplay-frame-pane frame pane :force-p force-p))))
 
 (defvar *gsharp-frame*)
@@ -102,7 +102,7 @@
 (defparameter *kbd-macro-recording-p* nil)
 (defparameter *kbd-macro-funs* '())
 
-(defmethod dispatch-event :around ((pane score-pane) (event key-press-event))
+(defmethod dispatch-event :around ((pane score-pane:score-pane) (event key-press-event))
   (when (keyboard-event-character event)
     (let* ((key (list (keyboard-event-character event)
 		      (event-modifier-state event)))
@@ -126,16 +126,16 @@
   (:menu-bar menubar-command-table :height 25)
   (:pointer-documentation t)
   (:panes
-   (score (make-pane 'score-pane
+   (score (make-pane 'score-pane:score-pane
 		     :width 700 :height 900
 		     :name "score"
 		     :display-time :no-clear
 		     :display-function 'display-score))
-   (state (make-pane 'score-pane
+   (state (make-pane 'score-pane:score-pane
 		     :width 50 :height 200
 		     :name "state"
 		     :display-function 'display-state))
-   (element (make-pane 'score-pane
+   (element (make-pane 'score-pane:score-pane
 		       :width 50 :height 700
 		       :min-height 100 :max-height 20000
 		       :name "element"
@@ -161,43 +161,43 @@
 
 (defmethod display-state ((frame gsharp) pane)
   (let ((state (input-state *gsharp-frame*)))
-    (with-score-pane pane
-      (with-staff-size 10
-	(with-vertical-score-position (pane 800)
+    (score-pane:with-score-pane pane
+      (score-pane:with-staff-size 10
+	(score-pane:with-vertical-score-position (pane 800)
 	  (let ((xpos 30))
-	    (draw-notehead pane (notehead state) xpos 4)
+	    (score-pane:draw-notehead pane (notehead state) xpos 4)
 	    (when (not (eq (notehead state) :whole))
 	      (when (or (eq (stem-direction state) :auto)
 			(eq (stem-direction state) :down))
 		(when (eq (notehead state) :filled)
-		  (with-notehead-left-offsets (left down)
+		  (score-pane:with-notehead-left-offsets (left down)
 		    (declare (ignore down))
 		    (let ((x (+ xpos left)))
 		      (loop repeat (rbeams state)
 			    for staff-step from -4 by 2 do
-			    (draw-beam pane x staff-step 0 (+ x 10) staff-step 0))
+			    (score-pane:draw-beam pane x staff-step 0 (+ x 10) staff-step 0))
 		      (loop repeat (lbeams state)
 			    for staff-step from -4 by 2 do
-			    (draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
-		(draw-left-stem pane xpos (staff-step 4) (staff-step -4)))
+			    (score-pane:draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
+		(score-pane:draw-left-stem pane xpos (score-pane:staff-step 4) (score-pane:staff-step -4)))
 	      (when (or (eq (stem-direction state) :auto)
 			(eq (stem-direction state) :up))
 		(when (eq (notehead state) :filled)
-		  (with-notehead-right-offsets (right up)
+		  (score-pane:with-notehead-right-offsets (right up)
 		    (declare (ignore up))
 		    (let ((x (+ xpos right)))
 		      (loop repeat (rbeams state)
 			    for staff-step downfrom 12 by 2 do
-			    (draw-beam pane x staff-step 0 (+ x 10) staff-step 0))
+			    (score-pane:draw-beam pane x staff-step 0 (+ x 10) staff-step 0))
 		      (loop repeat (lbeams state)
 			    for staff-step downfrom 12 by 2 do
-			    (draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
-		(draw-right-stem pane xpos (staff-step 4) (staff-step 12))))
-	    (with-notehead-right-offsets (right up)
+			    (score-pane:draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
+		(score-pane:draw-right-stem pane xpos (score-pane:staff-step 4) (score-pane:staff-step 12))))
+	    (score-pane:with-notehead-right-offsets (right up)
 	      (declare (ignore up))
 	      (loop repeat (dots state)
 		    for dx from (+ right 5) by 5 do
-		    (draw-dot pane (+ xpos dx) 4)))))))))
+		    (score-pane:draw-dot pane (+ xpos dx) 4)))))))))
 
 (defun draw-the-cursor (pane x)
   (let* ((state (input-state *gsharp-frame*))
@@ -206,24 +206,24 @@
 	 (clef (clef staff))
 	 (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
 			 (lineno clef)))
-	 (lnote-offset (staff-step (- (last-note state) bottom-line))))
+	 (lnote-offset (score-pane:staff-step (- (last-note state) bottom-line))))
     (draw-line* pane
-		x (+ (staff-step 12) yoffset)
-		x (+ (staff-step -4) yoffset)
+		x (+ (score-pane:staff-step 12) yoffset)
+		x (+ (score-pane:staff-step -4) yoffset)
 		:ink +yellow+)
     (draw-line* pane
-		(- x 1) (+ (staff-step -3.4) yoffset lnote-offset)
-		(- x 1) (+ (staff-step 3.6) yoffset lnote-offset)
+		(- x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
+		(- x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
 		:ink +red+)
     (draw-line* pane
-		(+ x 1) (+ (staff-step -3.4) yoffset lnote-offset)
-		(+ x 1) (+ (staff-step 3.6) yoffset lnote-offset)
+		(+ x 1) (+ (score-pane:staff-step -3.4) yoffset lnote-offset)
+		(+ x 1) (+ (score-pane:staff-step 3.6) yoffset lnote-offset)
 		:ink +red+)))
 
 (defmethod display-score ((frame gsharp) pane)
   (let* ((buffer (buffer frame)))
     (recompute-measures buffer)
-    (with-score-pane pane
+    (score-pane:with-score-pane pane
       (flet ((draw-cursor (x) (draw-the-cursor pane x)))
 	(draw-buffer pane buffer (cursor *gsharp-frame*)
 		     (left-margin buffer) 800 #'draw-cursor)))))
@@ -241,9 +241,9 @@
 (defmethod display-element ((frame gsharp) pane)
   (when (handler-case (cur-cluster)
 	  (gsharp-condition () nil))
-    (with-score-pane pane
-      (with-staff-size 10
-	(with-vertical-score-position (pane 500)
+    (score-pane:with-score-pane pane
+      (score-pane:with-staff-size 10
+	(score-pane:with-vertical-score-position (pane 500)
 	  (let* ((xpos 30)
 		 (cluster (cur-cluster))
 		 (notehead (notehead cluster))
@@ -256,9 +256,9 @@
 	    (declare (ignore stem-direction stem-length notehead lbeams rbeams dots))
 	    (loop for note in notes do
 		  (draw-ellipse* pane xpos (* 15 (note-position note)) 7 0 0 7)
-		  (draw-accidental pane (accidentals note)
-				   (- xpos (if (oddp (note-position note)) 15 25))
-				   (* 3 (note-position note))))
+		  (score-pane:draw-accidental pane (accidentals note)
+						   (- xpos (if (oddp (note-position note)) 15 25))
+						   (* 3 (note-position note))))
 	    (when notes
 	      (draw-ellipse* pane xpos (* 15 (note-position (cur-note)))
 			     7 0 0 7 :ink +red+))
@@ -447,7 +447,7 @@
 
 (define-gsharp-command (com-insert-layer-after :name t) ()
   (let ((cursor (cursor *gsharp-frame*))
-	(staff (accept 'staff :prompt "Staff")))
+	(staff (accept 'score-pane:staff :prompt "Staff")))
 ;;;	(staff (find-staff staff-name (buffer *gsharp-frame*))))
     (if (not staff)
 	(message "No such staff in buffer~%")
@@ -1068,17 +1068,17 @@
 		   (make-fiveline-staff name (make-clef clef line)))))))	  
 
 (define-gsharp-command (com-add-staff-before :name t) ()
-  (add-staff-before-staff (accept 'staff :prompt "Before staff")
+  (add-staff-before-staff (accept 'score-pane:staff :prompt "Before staff")
 			  (acquire-new-staff)
 			  (buffer *gsharp-frame*)))
 
 (define-gsharp-command (com-add-staff-after :name t) ()
-  (add-staff-after-staff (accept 'staff :prompt "After staff")
+  (add-staff-after-staff (accept 'score-pane:staff :prompt "After staff")
 			 (acquire-new-staff)
 			 (buffer *gsharp-frame*)))
 
 (define-gsharp-command (com-delete-staff :name t) ()
-  (remove-staff-from-buffer (accept 'staff :prompt "Staff")
+  (remove-staff-from-buffer (accept 'score-pane:staff :prompt "Staff")
 			    (buffer *gsharp-frame*)))
 
 (define-gsharp-command (com-rename-staff :name t) ((name 'string))

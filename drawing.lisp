@@ -10,31 +10,43 @@
    (accidental-position :initform nil :accessor accidental-position)))
 
 (define-presentation-method present
-    (staff (type staff) stream (view textual-view) &key)
-  (format stream "[staff ~a]" (name staff)))
+    (object (type score-pane:clef) stream (view textual-view) &key)
+  (format stream "[~a clef on staff step ~a]" (name object) (lineno object)))
+
+(define-presentation-method present
+    (object (type score-pane:staff) stream (view textual-view) &key)
+   (format stream "[staff ~a]" (name object)))
 
 (defmethod draw-staff-and-clef (pane (staff staff) x1 x2)
   (when (clef staff)
-    (draw-clef pane (name (clef staff)) (+ x1 10) (lineno (clef staff)))
+    (present (clef staff)
+	     `((score-pane:clef)
+	       :name ,(name (clef staff))
+	       :x ,(+ x1 10)
+	       :staff-step ,(lineno (clef staff)))
+	     :stream pane)
     (let ((yoffset (ecase (name (clef staff))
 		     (:bass (- (lineno (clef staff)) 4))
 		     (:treble (+ (lineno (clef staff)) 2))
 		     (:c (- (lineno (clef staff))) 1))))
       (loop for pitch in '(6 2 5 1 4 0 3)
 	    for line in '(0 3 -1 2 -2 1 -3)
-	    for x from (+ x1 10 (staff-step 8)) by (staff-step 2)
+	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2)
 	    while (eq (aref (keysig staff) pitch) :flat)
-	    do (draw-accidental pane :flat x (+ line yoffset))))
+	    do (score-pane:draw-accidental pane :flat x (+ line yoffset))))
     (let ((yoffset (ecase (name (clef staff))
 		     (:bass (lineno (clef staff)))
 		     (:treble (+ (lineno (clef staff)) 6))
 		     (:c (+ (lineno (clef staff))) 3))))
       (loop for pitch in '(3 0 4 1 5 2 6)
 	    for line in '(0 -3 1 -2 -5 -1 -4)
-	    for x from (+ x1 10 (staff-step 8)) by (staff-step 2.5)
+	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2.5)
 	    while (eq (aref (keysig staff) pitch) :sharp)
-	    do (draw-accidental pane :sharp x (+ line yoffset)))))
-  (draw-staff staff pane x1 x2))
+	    do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))
+  (present staff
+	   `((score-pane:staff)
+	     :x1 ,x1 :x2 ,x2)
+	   :stream pane))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
@@ -85,7 +97,7 @@
     (loop for bar in (measure-bars measure) do
 	  (if (gsharp-cursor::cursors (slice bar))
 	      (draw-bar pane bar x width time-alist draw-cursor)
-	      (with-light-glyphs pane (draw-bar pane bar x width time-alist draw-cursor))))))
+	      (score-pane:with-light-glyphs pane (draw-bar pane bar x width time-alist draw-cursor))))))
 
 (defun draw-system (pane measures x widths method staves draw-cursor)
   (let ((compress (compute-compress-factor measures method))
@@ -94,17 +106,17 @@
 	  for width in widths do
 	  (draw-measure pane measure min-dist compress x method draw-cursor)
 	  (incf x width)
-	  (draw-bar-line pane x
-			 (staff-step 8)
-			 (staff-yoffset (car (last staves)))))))
+	  (score-pane:draw-bar-line pane x
+					 (score-pane:staff-step 8)
+					 (staff-yoffset (car (last staves)))))))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y draw-cursor)
-  (with-staff-size 6
+  (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
-	   (timesig-offset (max (* (staff-step 2)
+	   (timesig-offset (max (* (score-pane:staff-step 2)
 				   (loop for staff in staves
 					 maximize (count :flat (keysig staff))))
-				(* (staff-step 2.5)
+				(* (score-pane:staff-step 2.5)
 				   (loop for staff in staves
 					 maximize (count :sharp (keysig staff))))))
 	   (method (let ((old-method (buffer-cost-method buffer)))
@@ -119,17 +131,17 @@
 	(gsharp-measure::new-map-over-obseq-subsequences
 	 (lambda (measures)
 	   (let ((widths (compute-widths measures method)))
-	     (with-vertical-score-position (pane yy)
+	     (score-pane:with-vertical-score-position (pane yy)
 	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
 			    widths method staves draw-cursor)
-	       (draw-bar-line pane x
-			      (staff-step 8)
-			      (staff-yoffset (car (last staves)))))
+	       (score-pane:draw-bar-line pane x
+					 (score-pane:staff-step 8)
+					 (staff-yoffset (car (last staves)))))
 	     (loop for staff in staves do
-		   (with-vertical-score-position (pane yy)
+		   (score-pane:with-vertical-score-position (pane yy)
 		     (if (member staff (staves (layer (slice (bar *cursor*)))))
 			 (draw-staff-and-clef pane staff x right-edge)
-			 (with-light-glyphs pane
+			 (score-pane:with-light-glyphs pane
 			   (draw-staff-and-clef pane staff x right-edge))))
 		   (decf yy 90))))
 	 buffer)))))
@@ -250,7 +262,9 @@
 	(start-time 0))
     (mapc (lambda (element)
 	    (setf (element-xpos element)
-		  (+ x (staff-step (xoffset element)) (cdr (assoc start-time time-alist))))
+		  (+ x
+		     (score-pane:staff-step (xoffset element))
+		     (cdr (assoc start-time time-alist))))
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
@@ -296,7 +310,7 @@
 				      (if (eq stem-direction :up) -1000 1000)))
 				dominating-notes))
 	     (x-positions (mapcar (lambda (element)
-				    (/ (element-xpos element) (staff-step 1)))
+				    (/ (element-xpos element) (score-pane:staff-step 1)))
 				  elements))
 	     (beaming (beaming-single (mapcar #'list positions x-positions) stem-direction)))
 	(loop for element in elements do
@@ -318,23 +332,23 @@
 			    (+ y1 (* slope (- (element-xpos element) x1))))
 		      (setf (final-stem-yoffset element)
 			    (staff-yoffset dominating-staff)))))
-	  (with-vertical-score-position (pane (staff-yoffset dominating-staff))
+	  (score-pane:with-vertical-score-position (pane (staff-yoffset dominating-staff))
 	    (if (eq stem-direction :up)
-		(with-notehead-right-offsets (right up)
+		(score-pane:with-notehead-right-offsets (right up)
 		  (declare (ignore up))
-		  (draw-beam pane
-			     (+ (element-xpos (car elements)) right) ss1 offset1
-			     (+ (element-xpos (car (last elements))) right) ss2 offset2))
-		(with-notehead-left-offsets (left down)
+		  (score-pane:draw-beam pane
+					(+ (element-xpos (car elements)) right) ss1 offset1
+					(+ (element-xpos (car (last elements))) right) ss2 offset2))
+		(score-pane:with-notehead-left-offsets (left down)
 		  (declare (ignore down))
-		  (draw-beam pane
-			     (+ (element-xpos (car elements)) left) ss1 offset1
-			     (+ (element-xpos (car (last elements))) left) ss2 offset2))))
+		  (score-pane:draw-beam pane
+					(+ (element-xpos (car elements)) left) ss1 offset1
+					(+ (element-xpos (car (last elements))) left) ss2 offset2))))
 	  (loop for element in elements do
 		(draw-element pane element (element-xpos element) nil))))))
 
 (defun draw-cursor (pane x)
-  (draw-line* pane x (staff-step -4) x (staff-step 12) :ink +red+))
+  (draw-line* pane x (score-pane:staff-step -4) x (score-pane:staff-step 12) :ink +red+))
 
 (defmethod draw-bar (pane (bar bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
@@ -376,38 +390,38 @@
        (lineno clef))))
 
 (defun draw-ledger-lines (pane x notes)
-  (with-vertical-score-position (pane (staff-yoffset (staff (car notes))))
+  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff (car notes))))
     (let* ((positions (mapcar #'note-position notes))
 	   (max-pos (reduce #'max positions))
 	   (min-pos (reduce #'min positions)))
       (loop for pos from 10 to max-pos by 2
-	    do (draw-ledger-line pane x pos))
+	    do (score-pane:draw-ledger-line pane x pos))
       (loop for pos from -2 downto min-pos by 2
-	    do (draw-ledger-line pane x pos)))))
+	    do (score-pane:draw-ledger-line pane x pos)))))
 
 (defun draw-flags (pane element x direction pos)
   (let ((nb (max (rbeams element) (lbeams element))))
     (when (and (> nb 0) (eq (notehead element) :filled))
       (if (eq direction :up)
-	  (with-notehead-right-offsets (right up)
+	  (score-pane:with-notehead-right-offsets (right up)
 	    (declare (ignore up))
-	    (draw-flags-down pane nb (+ x right) pos))
-	  (with-notehead-left-offsets (left down)
+	    (score-pane:draw-flags-down pane nb (+ x right) pos))
+	  (score-pane:with-notehead-left-offsets (left down)
 	    (declare (ignore down))
-	    (draw-flags-up pane nb (+ x left) pos))))))
+	    (score-pane:draw-flags-up pane nb (+ x left) pos))))))
   
 (defun draw-dots (pane nb-dots x pos)
-  (let ((staff-step (staff-step 1)))
+  (let ((staff-step (score-pane:staff-step 1)))
     (loop with dotpos = (if (evenp pos) (1+ pos) pos)
 	  repeat nb-dots
 	  for xx from (+ x (* 2 staff-step)) by staff-step do
-	  (draw-dot pane xx dotpos))))
+	  (score-pane:draw-dot pane xx dotpos))))
 
 (defun draw-note (pane note notehead nb-dots x pos)
-  (with-vertical-score-position (pane (staff-yoffset (staff note)))
-    (draw-notehead pane notehead x pos)
+  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff note)))
+    (score-pane:draw-notehead pane notehead x pos)
     (when (final-accidental note)
-      (draw-accidental pane (final-accidental note) (accidental-position note) pos))
+      (score-pane:draw-accidental pane (final-accidental note) (accidental-position note) pos))
     (draw-dots pane nb-dots x pos)))
 
 (defun draw-notes (pane notes dots notehead)
@@ -419,7 +433,7 @@
 		    (if (eq direction :up)
 			(lambda (x y) (< (note-position x) (note-position y)))
 			(lambda (x y) (> (note-position x) (note-position y))))))
-  (with-suspended-note-offset offset
+  (score-pane:with-suspended-note-offset offset
     (setf (final-xposition (car group)) x)
     (when (eq direction :down) (setf offset (- offset)))
     (loop for note in (cdr group)
@@ -519,7 +533,7 @@
 	  notes-with-accidentals))  
 
 (defun compute-final-accidental-positions (notes x final-stem-direction)
-  (let* ((staff-step (staff-step 1))
+  (let* ((staff-step (score-pane:staff-step 1))
 	 (notes (sort (copy-list notes)
 		      (lambda (x y) (> (note-position x) (note-position y)))))
 	 (notes-with-accidentals (remove-if-not #'final-accidental notes)))
@@ -559,7 +573,7 @@
 	  (stem-yoffset (final-stem-yoffset element))
 	  (groups (group-notes-by-staff (notes element))))
       (when flags
-	(with-vertical-score-position (pane stem-yoffset)
+	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
       (loop for group in groups do 
 	    (compute-final-xpositions group x direction)
@@ -569,12 +583,12 @@
 	    (draw-ledger-lines pane x group))
       (unless (eq (notehead element) :whole)
 	(if (eq direction :up)
-	    (draw-right-stem pane x
-			     (+ (staff-step min-pos) min-yoffset)
-			     (+ (staff-step stem-pos) stem-yoffset))
-	    (draw-left-stem pane x
-			    (+ (staff-step max-pos) max-yoffset)
-			    (+ (staff-step stem-pos) stem-yoffset)))))))
+	    (score-pane:draw-right-stem pane x
+					(+ (score-pane:staff-step min-pos) min-yoffset)
+					(+ (score-pane:staff-step stem-pos) stem-yoffset))
+	    (score-pane:draw-left-stem pane x
+				       (+ (score-pane:staff-step max-pos) max-yoffset)
+				       (+ (score-pane:staff-step stem-pos) stem-yoffset)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -582,7 +596,7 @@
 
 (defmethod draw-element (pane (element rest) x &optional (flags t))
   (declare (ignore flags))
-  (with-vertical-score-position (pane (staff-yoffset (staff element)))
-    (draw-rest pane (notehead-duration element) x (staff-pos element))
+  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
+    (score-pane:draw-rest pane (notehead-duration element) x (staff-pos element))
     (draw-dots pane (dots element) x (1+ (staff-pos element)))))
 

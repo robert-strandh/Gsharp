@@ -120,8 +120,8 @@
 	   #:128th-rest #:measure-rest #:double-whole-rest))
 
 (defpackage :score-pane
-  (:use :clim :clim-extensions :clim-lisp :sdl :gsharp-buffer)
-  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:use :clim :clim-extensions :clim-lisp :sdl)
+  (:shadow #:rest)
   (:export #:draw-staff #:draw-stem #:draw-right-stem #:draw-left-stem 
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
@@ -129,7 +129,8 @@
 	   #:with-score-pane #:with-vertical-score-position
 	   #:with-staff-size #:with-notehead-right-offsets
 	   #:with-suspended-note-offset
-	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane ))
+	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
+	   #:clef #:staff #:notehead))
 
 (defpackage :gsharp-beaming
   (:use :common-lisp)
@@ -163,7 +164,7 @@
 
 (defpackage :gsharp-drawing
   (:use :clim :clim-lisp :gsharp-buffer :gsharp-measure :gsharp-cursor
-	:gsharp-utilities :sdl :score-pane :gsharp-beaming :obseq)
+	:gsharp-utilities :sdl :gsharp-beaming :obseq)
   (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:draw-buffer))
 
@@ -185,7 +186,7 @@
 (defpackage :gsharp
   (:use :clim :clim-lisp
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
-	:gsharp-measure :score-pane :sdl :midi)
+	:gsharp-measure :sdl :midi)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest))
 

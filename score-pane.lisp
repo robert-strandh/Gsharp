@@ -1,11 +1,17 @@
 (in-package :score-pane)
 
+(defclass score-view (view) ())  
+
 (defclass score-pane (application-pane)
   ((pixmaps :initform (make-hash-table :test #'eq) :reader pane-pixmaps)
    (darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
 			     :reader darker-gray-progressions)
    (lighter-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
 			      :reader lighter-gray-progressions)))
+
+(defmethod initialize-instance :after ((pane score-pane) &rest args)
+  (declare (ignore args))
+  (setf (stream-default-view pane) (make-instance 'score-view)))
 
 (defmethod dispatch-event :before ((pane score-pane) (event pointer-enter-event))
   (let ((port (port pane)))
@@ -233,6 +239,13 @@
       (:half +glyph-half+)
       (:filled +glyph-filled+)))
 
+(define-presentation-type notehead () :options (name x staff-step))
+
+(define-presentation-method present
+    (object (type notehead) stream (view score-view) &key)
+  (with-output-as-presentation (stream object 'notehead)
+    (draw-notehead stream name x staff-step)))
+
 ;;;;;;;;;;;;;;;;;; accidental
 
 (define-pixmap-recording (accidental-output-record medium-draw-accidental draw-accidental (name))
@@ -250,6 +263,13 @@
       (:treble +glyph-g-clef+)
       (:bass +glyph-f-clef+)
       (:c +glyph-c-clef+)))
+
+(define-presentation-type clef () :options (name x staff-step))
+
+(define-presentation-method present
+    (object (type clef) stream (view score-view) &key)
+  (with-output-as-presentation (stream object 'clef)
+    (draw-clef stream name x staff-step)))
 
 ;;;;;;;;;;;;;;;;;; rest
 
@@ -323,18 +343,6 @@
 	    (y2 (+ (staff-step staff-step) up)))
 	(medium-draw-staff-line pane x1 y1 x2 y2))))
 			     
-(defclass staff-line ()
-  ((x1 :initarg :x1)
-   (staff-step :initarg :staff-step)
-   (x2 :initarg :x2)))
-
-(define-presentation-type staff-line ())
-
-(define-presentation-method present (line (type staff-line) stream view &key)
-  (declare (ignore view))
-  (with-slots (x1 staff-step x2) line
-    (draw-staff-line stream x1 staff-step x2)))
-
 (defclass staff-output-record (output-record)
   ((parent :initarg :parent :initform nil :accessor output-record-parent)
    (x :initarg :x1 :initarg :x-position)
@@ -407,16 +415,18 @@
   (loop for staff-line in (slot-value record 'staff-lines)
 	do (replay-output-record staff-line stream region x-offset y-offset)))
 
-(define-presentation-method present
-    (staff (type staff) stream (view textual-view) &key)
-  (format stream "[staff ~a]" (name staff)))
+(define-presentation-type staff () :options (x1 x2))
 
-(defun draw-staff (staff pane x1 x2)
-  (with-output-as-presentation (pane staff 'staff)
-    (multiple-value-bind (left right) (bar-line-offsets *font*)
-      (loop for staff-step from 0 by 2
-	    repeat 5
-	    do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right))))))
+(defun draw-staff (pane x1 x2)
+  (multiple-value-bind (left right) (bar-line-offsets *font*)
+    (loop for staff-step from 0 by 2
+	  repeat 5
+	  do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right)))))
+
+(define-presentation-method present
+    (object (type staff) stream (view score-view) &key)
+  (with-output-as-presentation (stream object 'staff)
+    (draw-staff stream x1 x2)))
 
 ;;;;;;;;;;;;;;;;;; stem
 
