@@ -11,6 +11,7 @@
 (defparameter *x-command-table* (make-hash-table :test #'equal))
 (defparameter *i-command-table* (make-hash-table :test #'equal))
 (defparameter *ix-command-table* (make-hash-table :test #'equal))
+(defparameter *c-x-command-table* (make-hash-table :test #'equal))
 (defparameter *commands* *global-command-table*)
 
 (defun add-command (gesture command table)
@@ -64,6 +65,7 @@
 (add-command '(#\n :meta) 'com-next-layer *global-command-table*)
 (add-command '(#\x) *x-command-table* *global-command-table*)
 (add-command '(#\i) *i-command-table* *global-command-table*)
+(add-command '(#\x :control) *c-x-command-table* *global-command-table*)
 
 ;;; i command table
 (add-command '(#\.) 'com-istate-more-dots *i-command-table*)
@@ -83,6 +85,13 @@
 (add-command '(#\[) 'com-fewer-lbeams *x-command-table*)
 (add-command '(#\]) 'com-fewer-rbeams *x-command-table*)
 
+;;; c-x-command-table
+(add-command '(#\( :shift) 'com-start-kbd-macro *c-x-command-table*)
+(add-command '(#\() 'com-start-kbd-macro *c-x-command-table*)
+(add-command '(#\) :shift) 'com-end-kbd-macro *c-x-command-table*)
+(add-command '(#\)) 'com-end-kbd-macro *c-x-command-table*)
+(add-command '(#\e) 'com-call-last-kbd-macro *c-x-command-table*)
+
 (defmethod redisplay-gsharp-panes (frame &key force-p)
   (loop for pane in (frame-current-panes frame)
 	do (when (typep pane 'score-pane)
@@ -90,18 +99,24 @@
 
 (defvar *gsharp-frame*)
 
+(defparameter *kbd-macro-recording-p* nil)
+(defparameter *kbd-macro-keys* '())
+
 (defmethod dispatch-event :around ((pane score-pane) (event key-press-event))
   (when (keyboard-event-character event)
     (let* ((key (list (keyboard-event-character event)
 		      (event-modifier-state event)))
 	   (command (gethash key *commands*)))
+      (when *kbd-macro-recording-p* (push key *kbd-macro-keys*))
       (cond ((hash-table-p command) (setf *commands* command))
 	    ((fboundp command)
 	     (handler-case (funcall command)
 	       (gsharp-condition (condition) (format *error-output* "~a~%" condition)))
 	     (setf *commands* *global-command-table*))
 	    (t (format *error-output* "no command for ~a~%" key)
-	       (setf *commands* *global-command-table*)))
+	       (setf *commands* *global-command-table*)
+	       (when *kbd-macro-recording-p* (setf *kbd-macro-keys* '()
+						   *kbd-macro-recording-p* nil))))
       (redisplay-gsharp-panes *gsharp-frame* :force-p t))))
 	    
 (define-application-frame gsharp ()
@@ -1038,3 +1053,24 @@
 	  ((eq (aref keysig 4) :natural) (setf (aref keysig 4) :flat))
 	  ((eq (aref keysig 0) :natural) (setf (aref keysig 0) :flat))
 	  ((eq (aref keysig 3) :natural) (setf (aref keysig 3) :flat)))))
+
+;;; macro processing
+(define-gsharp-command com-start-kbd-macro ()
+  (message "defining keyboad macro~%")
+  (setf *kbd-macro-recording-p* t
+	*kbd-macro-keys* '()))  
+
+(define-gsharp-command com-end-kbd-macro ()
+  (message "keyboad macro defined~%")
+  (setf *kbd-macro-recording-p* nil
+	*kbd-macro-keys* (nreverse *kbd-macro-keys*)))
+
+(define-gsharp-command com-call-last-kbd-macro ()
+  (loop with commands = *global-command-table*
+	for key in *kbd-macro-keys* do
+	(let ((command (gethash key commands)))
+	  (cond ((hash-table-p command) (setf commands command))
+		((fboundp command)
+		 (handler-case (funcall command)
+		   (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
+		(t (message "no command for ~a~%" key))))))
