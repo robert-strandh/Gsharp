@@ -1,0 +1,138 @@
+\chapter{Buffer protocols}
+
+%===================================================================
+\section{The clef protocol}
+
+%-------------------------------------------------------------------
+\subsection{Description}
+
+A \emph{clef}\index{clef} is an object associated with a \emph{staff},
+indicating where (on which staff step) notes are to be rendered on the
+staff.  The \emph{name}\index{clef!name of|}\index{name!of a clef|} of
+the clef is one of \lispobj{:treble}, \lispobj{:bass}, \lispobj{:c},
+and \lispobj{:percussion}.  The \emph{line number}\index{clef!line
+  number of|}\index{line number!of a clef|} of the clef indicates what
+staff line on which the clef should be rendered. 
+
+The name of the clef (except \lispobj{:percussion}) corresponds to a
+certain pitch.  Notes of that pitch will be rendered on the line of
+the clef.  Each different type of clef (as indicated by the name) has
+a line by default which is assigned to the clef at creation if no
+argument is given
+
+Here is a table of pitches and default line numbers of the different
+clefs:
+
+\begin{tabular}{|l|l|l|}
+\hline
+Name                   & Pitch        & Default line \\
+\hline\hline
+\lispobj{:treble}      & G (octave??) & 2 \\
+\lispobj{:bass}        & F (octave??) & 6 \\
+\lispobj{:c}           & C (octave??) & 4 \\
+\lispobj{:percussion}  & -            & 3 \\
+\hline
+\end{tabular}
+
+%-------------------------------------------------------------------
+\subsection{Protocol classes and functions}
+
+\Defclass {clef}
+
+\Definitarg {:name}
+
+\Definitarg {:lineno}
+
+\Defun {make-clef} {name \optional (lineno \cl{nil})}
+
+Create a clef with the name and line numbers given.  Line numbers
+default to the values in the table above. 
+
+\Defgeneric {name} {clef}
+
+Return the name of the clef given as argument.
+
+\Defgeneric {lineno} {clef}
+
+Return the line number of the clef given as argument. 
+
+%-------------------------------------------------------------------
+\subsection{External representation}
+
+A clef is printed (by \lispobj{print-object}) like this in version 3
+of the external representation :
+
+\texttt{[K :name \textit{name} :lineno \textit{lineno} ]}
+
+The reader accepts this syntax, except that the slots can come in any
+arbitrary order. 
+
+In version 2 of the external representation, a clef was written like
+this :
+
+\texttt{[K \textit{name} \textit{lineno} ]}
+
+%===================================================================
+\section{The staff protocol}
+
+%-------------------------------------------------------------------
+\subsection{Description}
+
+%-------------------------------------------------------------------
+\subsection{Protocol classes and functions}
+
+\Defclass {staff}
+
+\Definitarg {:name}
+
+The default value for this initarg is \lispobj{"default"}. 
+
+\Definitarg {:clef}
+
+This value must always be supplied. 
+
+\Definitarg {:keysig}
+
+The default value for this initarg is a vector with seven elements,
+each begin the object \lispobj{:natural}.
+
+\Defun {make-staff} {\optional (clef \texttt(make-clef :treble))}
+
+\Defgeneric {name} {staff}
+
+Return the name of the staff.  With \lispobj{setf}, change the name of
+the staff.
+
+\Defgeneric {clef} {staff}
+
+Return the clef of the staff.  With \lispobj{setf}, change the clef of
+the staff.
+
+\Defgeneric {keysig} {staff}
+
+Return the key signature of the staff.  With \lispobj{setf}, change
+the key signature of the staff. 
+
+%-------------------------------------------------------------------
+\subsection{External representation}
+
+A staff is printed (by \lispobj{print-object}) like this in version 3
+of the external representation:
+
+\texttt{[= :name \textit{name} :clef \textit{clef} :keysig \textit{keysig} ]}
+
+The reader accepts this syntax, except that the slots can come in any
+arbitrary order. 
+
+In version 2 of the external representation, a staff was written like
+this :
+
+\texttt{[= \textit{clef} \textit{keysig} ]}
+
+%===================================================================
+\section{The keysig protocol}
+
+There is no keysig protocol yet.  But I would like to create one.  A
+keysig would be a read-only object.  
+
+%===================================================================
