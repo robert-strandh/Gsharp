@@ -5,8 +5,9 @@
 \subsection{Features added from 0.2}
 
 \begin{itemize}
-\item right edge of staff is no longer hard wired.
-\item left margin is now a parameter of the buffer (and on disk).
+\item An Emacs-style keyboard macro facility has been added. 
+\item Right edge of staff is no longer hard wired.
+\item Left margin is now a parameter of the buffer (and on disk).
 \item x-position of first measure on line now depends on the size of
   the key signature.  This means that wide key signatures no longer
   overlap with notes of the first measure on the line.
@@ -23,6 +24,9 @@ measures with empty clusters.
 \subsection{Bug fixes from 0.2}
 
 \begin{itemize}
+\item fixed pathname-related problems for MIDI and fonts. 
+\item fixed annoying bug that ruined the spacing of unevenly timed
+  music. 
 \item last sharp sign in key signature with seven sharp signs is now
   drawn. 
 \item fixed conformance bugs in some \texttt{loop} constructs (thanks to
