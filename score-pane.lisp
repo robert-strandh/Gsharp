@@ -249,7 +249,7 @@
     (ecase name
       (:treble +glyph-g-clef+)
       (:bass +glyph-f-clef+)
-      (:c +glyph-f-clef+)))
+      (:c +glyph-c-clef+)))
 
 ;;;;;;;;;;;;;;;;;; rest
 
