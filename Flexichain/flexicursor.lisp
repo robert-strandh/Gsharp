@@ -144,29 +144,25 @@ sequence was inserted using INSERT."))
 (defclass right-sticky-flexicursor (standard-flexicursor) ())
 
 (defmethod initialize-instance :after ((cursor left-sticky-flexicursor)
-				       &rest initargs)
+				       &rest initargs &key (position 0))
   (declare (ignore initargs))
   (with-slots (index chain) cursor
-     (setf index (slot-value chain 'data-start))
+     (setf index (position-index chain (1- position)))
      (with-slots (cursors) chain
 	(push (make-wp cursor) (skiplist-find cursors index)))))
 
 (defmethod initialize-instance :after ((cursor right-sticky-flexicursor)
-				       &rest initargs)
+				       &rest initargs &key (position 0))
   (declare (ignore initargs))
   (with-slots (index chain) cursor
-     (setf index (position-index chain 0))
+     (setf index (position-index chain position))
      (with-slots (cursors) chain
 	(push (make-wp cursor) (skiplist-find cursors index)))))
 
 (defmethod clone-cursor ((cursor standard-flexicursor))
-  (with-slots (index) cursor
-     (let ((result (make-instance (class-of cursor)
-		      :chain (chain cursor))))
-       (setf (slot-value result 'index) index)
-       (with-slots (cursors) (chain cursor)
-	  (push (make-wp result) (skiplist-find cursors index)))
-       result)))
+  (make-instance (class-of cursor)
+     :chain (chain cursor)
+     :position (cursor-pos cursor)))
 
 (defmethod cursor-pos ((cursor left-sticky-flexicursor))
   (1+ (index-position (chain cursor) (slot-value cursor 'index))))
@@ -274,7 +270,7 @@ sequence was inserted using INSERT."))
           'at-beginning-error :cursor cursor)
   (element* (chain cursor) (1- (cursor-pos cursor))))
 
-(defmethod (setf element>) (object (cursor standard-flexicursor))
+(defmethod (setf element<) (object (cursor standard-flexicursor))
   (assert (not (at-beginning-p cursor)) ()
           'at-beginning-error :cursor cursor)
   (setf (element* (chain cursor) (1- (cursor-pos cursor)))
