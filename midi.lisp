@@ -105,16 +105,18 @@ works only if the chars are coded in ASCII]"
     (write-fixed-length-quantity (ash quantity -8) (1- nb-bytes))
     (write-bytes (logand quantity #xff))))
 
-(defmacro with-midi-input (filename &body body)
-  "execute body with *midi-input* assigned to a stream from filename"
-  `(with-open-file (*midi-input* ,filename
-		    :direction :input :element-type '(unsigned-byte 8))
+(defmacro with-midi-input ((pathname &rest open-args &key &allow-other-keys) &body body)
+  "execute body with *midi-input* assigned to a stream from pathname"
+  `(with-open-file (*midi-input* ,pathname
+		    :direction :input :element-type '(unsigned-byte 8)
+		    ,@open-args)
     ,@body))
 
-(defmacro with-midi-output (filename &body body)
-  "execute body with *midi-output* assigned to a stream from filename"
-  `(with-open-file (*midi-output* ,filename
-		    :direction :output :element-type '(unsigned-byte 8))
+(defmacro with-midi-output ((pathname &rest open-args &key &allow-other-keys) &body body)
+  "execute body with *midi-output* assigned to a stream from pathname"
+  `(with-open-file (*midi-output* ,pathname
+		    :direction :output :element-type '(unsigned-byte 8)
+		    ,@open-args)
     ,@body))
 
 (defun read-variable-length-quantity ()
@@ -225,7 +227,7 @@ works only if the chars are coded in ASCII]"
 (defun read-midi-file (filename)
   "read an entire Midifile from the file with name given as argument"
   (setf *time* 0)
-  (with-midi-input filename
+  (with-midi-input (filename)
     (let ((type (read-fixed-length-quantity 4))
 	  (length (read-fixed-length-quantity 4))
 	  (format (read-fixed-length-quantity  2))
@@ -241,7 +243,7 @@ works only if the chars are coded in ASCII]"
 		      collect (read-track))))))
 
 (defun write-midi-file (midifile filename)
-  (with-midi-output filename
+  (with-midi-output (filename :if-exists :supersede)
     (write-fixed-length-quantity +header-mthd+ 4)
     (write-fixed-length-quantity  +header-mthd-length+ 4)
     (with-slots (format division tracks) midifile
