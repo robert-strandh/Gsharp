@@ -327,7 +327,9 @@
       (complete-input stream
 		      (lambda (so-far mode)
 			(complete-from-possibilities
-			 so-far (ext:ambiguous-files so-far) '()
+			 so-far
+			 #+cmu (ext:ambiguous-files so-far) #-cmu
+			 '()
 			 :action mode
 			 :predicate (lambda (obj) (declare (ignore obj)) t)
 			 :name-key #'namestring
