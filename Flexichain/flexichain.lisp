@@ -196,7 +196,7 @@ at position 0 is now at position N."))
   (with-virtual-gap (bl ds gs ge) chain
     (- bl (- ge gs) 2)))
 
-(defmethod empty-p ((chain standard-flexichain))
+(defmethod flexi-empty-p ((chain standard-flexichain))
   (zerop (nb-elements chain)))
 
 (defgeneric insert-object (chain position object)

@@ -54,6 +54,9 @@ as the one given as argument."))
 (defgeneric cursor-pos (cursor)
   (:documentation "Returns the position of the cursor."))
 
+(defgeneric (setf cursor-pos) (posistion cursor)
+  (:documentation "Set the position of the cursor."))
+
 (defgeneric at-beginning-p (cursor)
   (:documentation "Returns true if the cursor is at the beginning
 of the chain."))
@@ -68,19 +71,12 @@ of the chain."))
 (defgeneric move< (cursor &optional n)
   (:documentation "Moves the cursor backward N positions."))
 
-(defgeneric insert< (cursor object)
-  (:documentation "Inserts an object before the cursor."))
+(defgeneric insert (cursor object)
+  (:documentation "Inserts an object at the cursor."))
 
-(defgeneric insert> (cursor object)
-  (:documentation "Inserts an object after the cursor."))
-
-(defgeneric insert-sequence< (cursor sequence)
+(defgeneric insert-sequence (cursor sequence)
   (:documentation "The effect is the same as if each element of the
-sequence was inserted using INSERT<."))
-
-(defgeneric insert-sequence> (cursor sequence)
-  (:documentation "The effect is the same as if each element of the
-sequence was inserted using INSERT>."))
+sequence was inserted using INSERT."))
 
 (defgeneric delete< (cursor &optional n)
   (:documentation "Deletes N objects before the cursor."))
@@ -105,12 +101,12 @@ sequence was inserted using INSERT>."))
   (:documentation "The standard instantiable subclass of CURSORCHAIN"))
 
 (defun make-wp (value)
-  +sbcl (sb-ext:make-weak-pointer value)
-  +cmu  (ext:make-wadk-pointer value))
+  #+sbcl (sb-ext:make-weak-pointer value)
+  #+cmu  (ext:make-weak-pointer value))
 
 (defun wp-value (wp)
-  +sbcl (sb-ext:weak-pointer-value wp)
-  +cmu  (ext:weak-pointer-value wp))
+  #+sbcl (sb-ext:weak-pointer-value wp)
+  #+cmu  (ext:weak-pointer-value wp))
 
 (defmethod move-elements :after ((cc standard-cursorchain) to from start1 start2 end2)
   (declare (ignore to from))
@@ -125,12 +121,12 @@ sequence was inserted using INSERT>."))
        (cond ((= start1 start2) nil)
 	     ((= gap-start gap-end)
 	      (skiplist-slide-keys cursors start2 (1- end2) addfun))
-	     ((< e s)
+	     ((< gap-end gap-start)
 	      (cond ((and (= end2 gap-start) (> start1 start2))
 		     (skiplist-slide-keys cursors start2 (1- end2) addfun))
 		    ((= end2 gap-start)
 		     (skiplist-rotate-suffix cursors start2 addfun))
-		    (t skiplist-rotate-prefix cursors (1- end2) addfun)))
+		    (t (skiplist-rotate-prefix cursors (1- end2) addfun))))
 	     ((plusp gap-start)
 	      (skiplist-slide-keys cursors start2 (1- end2) addfun))
 	     ((= start2 gap-end)
@@ -161,7 +157,7 @@ sequence was inserted using INSERT>."))
   (with-slots (index chain) cursor
      (setf index (position-index chain 0))
      (with-slots (cursors) chain
-	(push (make-wp cursor) (skilist-find cursors index)))))
+	(push (make-wp cursor) (skiplist-find cursors index)))))
 
 (defmethod clone-cursor ((cursor standard-flexicursor))
   (with-slots (index) cursor
@@ -236,10 +232,11 @@ sequence was inserted using INSERT>."))
 (defmethod delete* :around ((chain standard-cursorchain) position)
   (with-slots (cursors) chain
      (let* ((old-index (position-index chain position))
-	    (cursors (skiplist-find cursors old-index)))
-       (skiplist-delete cursors index)
+	    (cursors-to-adjust (skiplist-find cursors old-index)))
+       (when cursors-to-adjust
+	 (skiplist-delete cursors old-index))
        (call-next-method)
-       (loop for cursor-wp in save
+       (loop for cursor-wp in cursors-to-adjust
 	     as cursor = (wp-value cursor-wp)
 	     when cursor
 	       do (setf (cursor-pos cursor) position)
