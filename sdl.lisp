@@ -168,9 +168,9 @@
 				  *fonts-directory*)))
 	 (maxchar (reduce #'max (gf-font-chars gf-font) :key #'gf-char-no))
 	 (glyphs (make-array (list (1+ maxchar)) :initial-element nil)))
-    (loop for char in (gf-font-chars gf-font) do
-	  (setf (aref glyphs (gf-char-no char))
-		(make-instance 'glyph :gf-char char)))
+    (loop for char in (gf-font-chars gf-font)
+	  do (setf (aref glyphs (gf-char-no char))
+		   (make-instance 'glyph :gf-char char)))
     (make-instance 'font
       :staff-line-distance staff-line-distance
       :gf-font gf-font

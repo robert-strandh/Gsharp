@@ -78,9 +78,10 @@
   (paint-command d))
 
 (defun boc-command (char-no prev-char min-m max-m min-n max-n)
-  (declare (ignore prev-char))
   (push (make-instance 'gf-char
-	  :char-no char-no
+	  :char-no (if (= prev-char -1)
+		       char-no
+		       (+ 256 (gf-char-no (find char-no *chars* :key #'gf-char-no))))
 	  :min-m min-m :max-m max-m :min-n min-n :max-n max-n)
 	*chars*)
   (setf *current-matrix* (make-array `(,(1+ (- max-n min-n)) ,(1+ (- max-m min-m)))
@@ -178,10 +179,10 @@
 (defun parse-gf-stream (*gf-stream*)
   (let ((*current-font* nil)
 	(*chars* '()))
-    (loop for command-code = (u1) then (u1) do
-	  (cond ((<= command-code 63) (paint-command command-code))
-		((<= 74 command-code 238) (new-row-command command-code))
-		(t (funcall (aref *commands* command-code))))
+    (loop for command-code = (u1) then (u1)
+	  do (cond ((<= command-code 63) (paint-command command-code))
+		   ((<= 74 command-code 238) (new-row-command command-code))
+		   (t (funcall (aref *commands* command-code))))
 	  until (= command-code 249)
 	  finally (return *current-font*))))
 
