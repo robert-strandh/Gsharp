@@ -467,7 +467,7 @@ HOP-ELEMENTS-RIGHT ---abcdefghijklm--- 2  =>  -----cdefghijklmab-"
         (:gap-right
          (move-elements fc buffer-after buffer 0 0 gap-start))
         (:gap-left
-         (let ((gap-end-after (- new-buffer-size (nb-elements fc))))
+         (let ((gap-end-after (- new-buffer-size (+ 2 (nb-elements fc)))))
            (move-elements fc buffer-after buffer gap-end-after gap-end buffer-size)
            (setf gap-end gap-end-after)))
         (:gap-non-contiguous
