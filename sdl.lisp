@@ -1,7 +1,7 @@
 (in-package :sdl)
 
 (defvar *fonts-directory*
-  (merge-pathnames (make-pathname :directory '(relative "Fonts"))
+  (merge-pathnames (make-pathname :directory '(:relative "Fonts"))
 		   (make-pathname :directory (pathname-directory *load-truename*))))
 
 (defgeneric glyph (font glyph-no))
