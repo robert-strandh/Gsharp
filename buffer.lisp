@@ -1,9 +1,7 @@
 (in-package :gsharp-buffer)
 
-(defparameter *gsharp-readtable-v2* (copy-readtable))
 (defparameter *gsharp-readtable-v3* (copy-readtable))
 
-(make-dispatch-macro-character #\[ nil *gsharp-readtable-v2*)
 (make-dispatch-macro-character #\[ nil *gsharp-readtable-v3*)
 
 (defun skip-until-close-bracket (stream)
@@ -54,17 +52,6 @@
 			       (:c 4)
 			       (:percussion 3)))))
 
-(defun read-clef-v2 (stream char n)
-  (declare (ignore char n))
-  (let ((name (read stream nil nil t))
-	(lineno (read stream nil nil t)))
-    (skip-until-close-bracket stream)
-    (make-instance 'clef :name name :lineno lineno)))
-
-(set-dispatch-macro-character #\[ #\K
-  #'read-clef-v2
-  *gsharp-readtable-v2*)
-
 (defun read-clef-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'clef (read-delimited-list #\] stream t)))
@@ -96,17 +83,6 @@
 
 (defun make-fiveline-staff (name &optional (clef (make-clef :treble)))
   (make-instance 'fiveline-staff :name name :clef clef))
-
-(defun read-fiveline-staff-v2 (stream char n)
-  (declare (ignore char n))
-  (let ((clef (read stream nil nil t))
-	(keysig (read stream nil nil t)))
-    (skip-until-close-bracket stream)
-    (make-instance 'fiveline-staff :clef clef :keysig keysig)))
-
-(set-dispatch-macro-character #\[ #\=
-  #'read-fiveline-staff-v2
-  *gsharp-readtable-v2*)
 
 (defun read-fiveline-staff-v3 (stream char n)
   (declare (ignore char n))
@@ -203,16 +179,12 @@
       :pitch pitch :staff staff
       :head head :accidentals accidentals :dots dots))
 		 
-(defun read-note-v2 (stream char n)
+(defun read-note-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'note (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\N
-  #'read-note-v2
-  *gsharp-readtable-v2*)
-
-(set-dispatch-macro-character #\[ #\N
-  #'read-note-v2
+  #'read-note-v3
   *gsharp-readtable-v3*)
 
 ;;; Return true if note1 is considered less than note2.
@@ -252,7 +224,7 @@
 (defgeneric (setf dots) (dots element))
 
 (defclass element (gsharp-object)
-  ((bar :initform nil :initarg :bar :reader bar)
+  ((bar :initform nil :initarg :bar :accessor bar)
    (notehead :initarg :notehead :accessor notehead)
    (rbeams :initarg :rbeams :accessor rbeams)
    (lbeams :initarg :lbeams :accessor lbeams)
@@ -312,6 +284,11 @@
    (stem-direction :initarg :stem-direction :accessor stem-direction)
    (stem-length :initform nil :initarg :stem-length :accessor stem-length)))
 
+(defmethod initialize-instance :after ((c cluster) &rest args)
+  (declare (ignore args))
+  (loop for note in (notes c)
+	do (setf (cluster note) c)))
+
 (defmethod print-object :after ((c cluster) stream)
   (with-slots (stem-direction notes) c
     (format stream ":stem-direction ~W :notes ~W " stem-direction notes)))
@@ -321,19 +298,12 @@
 		 :rbeams rbeams :lbeams lbeams :dots dots
 		 :notehead notehead :stem-direction stem-direction))
 
-(defun read-cluster-v2 (stream char n)
+(defun read-cluster-v3 (stream char n)
   (declare (ignore char n))
-  (let ((cluster (apply #'make-instance 'cluster (read-delimited-list #\] stream t))))
-    (loop for note in (notes cluster) do
-	  (setf (slot-value note 'cluster) cluster))
-    cluster))
+  (apply #'make-instance 'cluster (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\%
-  #'read-cluster-v2
-  *gsharp-readtable-v2*)
-
-(set-dispatch-macro-character #\[ #\%
-  #'read-cluster-v2
+  #'read-cluster-v3
   *gsharp-readtable-v3*)
 
 (define-condition gsharp-condition (error) ())
@@ -386,24 +356,6 @@
   (make-instance 'rest
 		 :rbeams rbeams :lbeams lbeams :dots dots
 		 :notehead notehead :staff staff))
-
-(defun read-rest-v2 (stream char n)
-  (declare (ignore char n))
-  (let ((notehead (read stream nil nil t))
-	(rbeams (read stream nil nil t))
-	(lbeams (read stream nil nil t))
-	(dots (read stream nil nil t))
-	(staff (read stream nil nil t))
-	(staff-pos (read stream nil nil t)))
-    (skip-until-close-bracket stream)
-    (make-instance 'rest
-      :rbeams rbeams :lbeams lbeams
-      :dots dots :notehead  notehead
-      :staff staff :staff-pos staff-pos)))
-
-(set-dispatch-macro-character #\[ #\-
-  #'read-rest-v2
-  *gsharp-readtable-v2*)
 
 (defun read-rest-v3 (stream char n)
   (declare (ignore char n))
@@ -484,8 +436,13 @@
 (defgeneric remove-element (element))
 
 (defclass bar (gsharp-object)
-  ((slice :initform nil :initarg :slice :reader slice)
-   (elements :initform '() :initarg :elements :reader elements)))
+  ((slice :initform nil :initarg :slice :accessor slice)
+   (elements :initform '() :initarg :elements :accessor elements)))
+
+(defmethod initialize-instance :after ((b bar) &rest args)
+  (declare (ignore args))
+  (loop for element in (elements b)
+	do (setf (bar element) b)))
 
 (defmethod print-object :after ((b bar) stream)
   (format stream ":elements ~W " (elements b)))
@@ -529,26 +486,9 @@
 (defun make-melody-bar ()
   (make-instance 'melody-bar))
 
-(defun read-melody-bar-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((elements (read stream nil nil t))
-	 (bar (make-instance 'melody-bar :elements elements)))
-    (loop for element in elements do
-	  (setf (slot-value element 'bar) bar))
-    (skip-until-close-bracket stream)
-    bar))
-
-(set-dispatch-macro-character #\[ #\|
-  #'read-melody-bar-v2
-  *gsharp-readtable-v2*)
-
 (defun read-melody-bar-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (bar (apply #'make-instance 'melody-bar rest)))
-    (loop for element in (elements bar) do
-	  (setf (slot-value element 'bar) bar))
-    bar))
+  (apply #'make-instance 'melody-bar (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\|
   #'read-melody-bar-v3
@@ -562,11 +502,7 @@
 
 (defun read-lyrics-bar-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (bar (apply #'make-instance 'lyrics-bar rest)))
-    (loop for element in (elements bar) do
-	  (setf (slot-value element 'bar) bar))
-    bar))
+  (apply #'make-instance 'lyrics-bar (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\C
   #'read-lyrics-bar-v3
@@ -596,8 +532,13 @@
 
 (defclass slice (gsharp-object)
   ((print-character :allocation :class :initform #\/)
-   (layer :initform nil :initarg :layer :reader layer)
-   (bars :initform '() :initarg :bars :reader bars)))
+   (layer :initform nil :initarg :layer :accessor layer)
+   (bars :initform '() :initarg :bars :accessor bars)))
+
+(defmethod initialize-instance :after ((s slice) &rest args)
+  (declare (ignore args))
+  (loop for bar in (bars s)
+	do (setf (slice bar) s)))
 
 (defmethod print-object :after ((s slice) stream)
   (format stream ":bars ~W " (bars s)))
@@ -605,26 +546,9 @@
 (defun make-empty-slice ()
   (make-instance 'slice))
 
-(defun read-slice-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((bars (read stream nil nil t))
-	 (slice (make-instance 'slice :bars bars)))
-    (loop for bar in bars do
-	  (setf (slot-value bar 'slice) slice))
-    (skip-until-close-bracket stream)
-    slice))
-
-(set-dispatch-macro-character #\[ #\/
-  #'read-slice-v2
-  *gsharp-readtable-v2*)
-
 (defun read-slice-v3 (stream char n)
   (declare (ignore char n))
-  (let* ((rest (read-delimited-list #\] stream t))
-	 (slice (apply #'make-instance 'slice rest)))
-    (loop for bar in (bars slice) do
-	  (setf (slot-value bar 'slice) slice))
-    slice))
+  (apply #'make-instance 'slice (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\/
   #'read-slice-v3
@@ -705,7 +629,7 @@
 (defgeneric tail (layer))
 
 (defclass layer (gsharp-object name-mixin)
-  ((segment :initform nil :initarg :segment :reader segment)
+  ((segment :initform nil :initarg :segment :accessor segment)
    (staves :initarg :staves :accessor staves)
    (head :initarg :head :accessor head)
    (body :initarg :body :accessor body)
@@ -738,24 +662,6 @@
 	    (slot-value tail 'layer) result)
       result)))
   
-(defun read-melody-layer-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((staves (read stream nil nil t))
-	 (head (read stream nil nil t))
-	 (body (read stream nil nil t))
-	 (tail (read stream nil nil t))
-	 (layer (make-instance 'melody-layer
-		   :staves staves :head head :body body :tail tail)))
-    (setf (slot-value head 'layer) layer
-	  (slot-value body 'layer) layer
-	  (slot-value tail 'layer) layer)
-    (skip-until-close-bracket stream)
-    layer))
-
-(set-dispatch-macro-character #\[ #\_
-  #'read-melody-layer-v2
-  *gsharp-readtable-v2*)
-
 (defun read-melody-layer-v3 (stream char n)
   (declare (ignore char n))
   (let* ((rest (read-delimited-list #\] stream t))
@@ -875,8 +781,8 @@
 
 (defclass segment (gsharp-object)
   ((print-character :allocation :class :initform #\S)
-   (buffer :initform nil :initarg :buffer :reader buffer)
-   (layers :initform '() :initarg :layers :reader layers)))
+   (buffer :initform nil :initarg :buffer :accessor buffer)
+   (layers :initform '() :initarg :layers :accessor layers)))
 
 (defmethod print-object :after ((s segment) stream)
   (format stream ":layers ~W " (layers s)))
@@ -888,19 +794,6 @@
   (let ((segment (make-empty-segment)))
     (add-layer (make-layer "Default layer" staff) segment)
     segment))
-
-(defun read-segment-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((layers (read stream nil nil t))
-	 (segment (make-instance 'segment :layers layers)))
-    (loop for layer in layers do
-	  (setf (slot-value layer 'segment) segment))
-    (skip-until-close-bracket stream)
-    segment))
-
-(set-dispatch-macro-character #\[ #\S
-  #'read-segment-v2
-  *gsharp-readtable-v2*)
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))
@@ -1011,20 +904,6 @@
   (let ((buffer (make-empty-buffer)))
     (add-segment (make-initialized-segment (car (staves buffer))) buffer 0)
     buffer))
-
-(defun read-buffer-v2 (stream char n)
-  (declare (ignore char n))
-  (let* ((staves (read stream nil nil t))
-	 (segments (read stream nil nil t))
-	 (buffer (make-instance 'buffer :staves staves :segments segments)))
-    (loop for segment in segments do
-	  (setf (slot-value segment 'buffer) buffer))
-    (skip-until-close-bracket stream)
-    buffer))
-
-(set-dispatch-macro-character #\[ #\B
-  #'read-buffer-v2
-  *gsharp-readtable-v2*)
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))
@@ -1148,8 +1027,7 @@
      (format stream "Unknown file version"))))
 
 (defparameter *readtables*
-  `(("G#V2" . ,*gsharp-readtable-v2*)
-    ("G#V3" . ,*gsharp-readtable-v3*)))
+  `(("G#V3" . ,*gsharp-readtable-v3*)))
 
 (defun read-everything (filename)
   (assert (probe-file filename) () 'file-does-not-exist)
