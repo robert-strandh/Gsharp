@@ -64,38 +64,40 @@
 ;;;
 ;;; Staff
 
-(defgeneric clef (staff))
-
 (defclass staff ()
-  ((name :accessor name :initarg :name :initform "default")
-   (clef :accessor clef :initarg :clef :initform nil)
+  ((name :accessor name :initarg :name :initform "default")))
+
+(defgeneric clef (fiveline-staff))
+
+(defclass fiveline-staff (staff)
+  ((clef :accessor clef :initarg :clef :initform nil)
    (keysig :accessor keysig :initarg :keysig
 	   :initform (make-array 7 :initial-element :natural))))
 	   
-(defmethod print-object ((s staff) stream)
+(defmethod print-object ((s fiveline-staff) stream)
   (with-slots (name clef keysig) s
     (format stream "[= :name ~W :clef ~W :keysig ~W ] " name clef keysig)))
 
-(defun make-staff (&optional (clef (make-clef :treble)))
-  (make-instance 'staff :clef clef))
+(defun make-fiveline-staff (name &optional (clef (make-clef :treble)))
+  (make-instance 'fiveline-staff :name name :clef clef))
 
-(defun read-staff-v2 (stream char n)
+(defun read-fiveline-staff-v2 (stream char n)
   (declare (ignore char n))
   (let ((clef (read stream nil nil t))
 	(keysig (read stream nil nil t)))
     (skip-until-close-bracket stream)
-    (make-instance 'staff :clef clef :keysig keysig)))
+    (make-instance 'fiveline-staff :clef clef :keysig keysig)))
 
 (set-dispatch-macro-character #\[ #\=
-  #'read-staff-v2
+  #'read-fiveline-staff-v2
   *gsharp-readtable-v2*)
 
-(defun read-staff-v3 (stream char n)
+(defun read-fiveline-staff-v3 (stream char n)
   (declare (ignore char n))
-  (apply #'make-instance 'staff (read-delimited-list #\] stream t)))
+  (apply #'make-instance 'fiveline-staff (read-delimited-list #\] stream t)))
 
 (set-dispatch-macro-character #\[ #\=
-  #'read-staff-v3
+  #'read-fiveline-staff-v3
   *gsharp-readtable-v3*)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -830,7 +832,7 @@
 
 (defclass buffer ()
   ((segments :initform '() :initarg :segments :accessor segments)
-   (staves :initform (list (make-staff)) :initarg :staves :accessor staves)
+   (staves :initform (list (make-fiveline-staff "default")) :initarg :staves :accessor staves)
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
@@ -930,13 +932,25 @@
     (when errorp (assert staff () 'staff-not-in-buffer))
     staff))
 
-(defmethod add-new-staff-to-buffer (staff-name (buffer buffer))
-  (assert (not (find-staff staff-name buffer nil)) () 'staff-already-in-buffer)
-  (setf (staves buffer)
-	(append (staves buffer) (list (make-instance 'staff
-					:clef (make-clef :treble)
-					:name staff-name)))))
+(defun add-staff-before (newstaff staff staves)
+  (assert (not (null staves)))
+  (if (eq staff (car staves))
+      (cons newstaff staves)
+      (cons (car staves) (add-staff-before newstaff staff (cdr staves)))))
 
+(defmethod add-staff-before-staff (staff newstaff (buffer buffer))
+  (setf (staves buffer)
+	(add-staff-before newstaff staff (staves buffer))))
+  
+(defun add-staff-after (newstaff staff staves)
+  (assert (not (null staves)))  
+  (if (eq staff (car staves))
+      (push newstaff (cdr staves))
+      (add-staff-after newstaff staff (cdr staves))))
+
+(defmethod add-staff-after-staff (staff newstaff (buffer buffer))
+  (add-staff-after newstaff staff (staves buffer)))
+  
 (defmethod rename-staff (staff-name (staff staff) (buffer buffer))
   (assert (not (find-staff staff-name buffer nil)) () 'staff-already-in-buffer)
   (setf (name staff) staff-name))
@@ -947,16 +961,15 @@
      (declare (ignore condition))
      (format stream "Staff in use"))))
 
-(defmethod remove-staff-from-buffer (staff-name (buffer buffer))
-  (let ((staff (find-staff staff-name buffer)))
-    (assert (notany (lambda (segment)
-		      (some (lambda (layer)
-			      (member staff (staves layer)))
-			    (layers segment)))
-		    (segments buffer))
-	    () 'staff-in-use)
-    (setf (staves buffer)
-	  (delete staff (staves buffer) :test #'eq))))
+(defmethod remove-staff-from-buffer (staff (buffer buffer))
+  (assert (notany (lambda (segment)
+		    (some (lambda (layer)
+			    (member staff (staves layer)))
+			  (layers segment)))
+		  (segments buffer))
+	  () 'staff-in-use)
+  (setf (staves buffer)
+	(delete staff (staves buffer) :test #'eq)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

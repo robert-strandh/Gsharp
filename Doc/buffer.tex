@@ -83,9 +83,18 @@ this :
 
 \Defclass {staff}
 
+The protocol class for all staves. 
+
 \Definitarg {:name}
 
 The default value for this initarg is \lispobj{"default"}. 
+
+\Defgeneric {name} {staff}
+
+Return the name of the staff.  With \lispobj{setf}, change the name of
+the staff.
+
+\Defclass {fiveline-staff}
 
 \Definitarg {:clef}
 
@@ -96,19 +105,14 @@ This value must always be supplied.
 The default value for this initarg is a vector with seven elements,
 each begin the object \lispobj{:natural}.
 
-\Defun {make-staff} {\optional (clef \texttt(make-clef :treble))}
+\Defun {make-fiveline-staff} {name \optional (clef \texttt(make-clef :treble))}
 
-\Defgeneric {name} {staff}
-
-Return the name of the staff.  With \lispobj{setf}, change the name of
-the staff.
-
-\Defgeneric {clef} {staff}
+\Defgeneric {clef} {fiveline-staff}
 
 Return the clef of the staff.  With \lispobj{setf}, change the clef of
 the staff.
 
-\Defgeneric {keysig} {staff}
+\Defgeneric {keysig} {fiveline-staff}
 
 Return the key signature of the staff.  With \lispobj{setf}, change
 the key signature of the staff. 
@@ -116,8 +120,8 @@ the key signature of the staff.
 %-------------------------------------------------------------------
 \subsection{External representation}
 
-A staff is printed (by \lispobj{print-object}) like this in version 3
-of the external representation:
+A fiveline staff is printed (by \lispobj{print-object}) like this in
+version 3 of the external representation:
 
 \texttt{[= :name \textit{name} :clef \textit{clef} :keysig \textit{keysig} ]}
 

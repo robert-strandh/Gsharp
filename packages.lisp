@@ -36,7 +36,7 @@
   (:use :common-lisp :gsharp-utilities)
   (:shadow #:rest)
   (:export #:clef #:make-clef #:name #:lineno
-	   #:staff #:make-staff #:gsharp-condition
+	   #:staff #:fiveline-staff #:make-fiveline-staff #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:cluster #:note
 	   #:make-note #:note-less #:note-equal #:bar
 	   #:notehead #:rbeams #:lbeams #:dots #:element #:notes
@@ -54,7 +54,7 @@
 	   #:make-empty-segment #:make-initialized-segment
 	   #:segments #:nb-segments #:segmentno #:staves
 	   #:find-staff #:add-segment #:remove-segment
-	   #:add-new-staff-to-buffer
+	   #:add-staff-before-staff #:add-staff-after-staff
 	   #:remove-staff-from-buffer
 	   #:rename-staff
 	   #:add-staff-to-layer

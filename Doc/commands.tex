@@ -94,7 +94,7 @@ Key          & Command name & Description\\
 \kbd{x]}     & Fewer Rbeams & Remove a beam to the right\\
 \kbd{[}      & More Lbeams & Add another beam to the left\\
 \kbd{x[}     & Fewer Lbeams & Remove a beam to the left\\
-\kbd{Meta-u} & Up           & Move rest to a highter staff line\\
+\kbd{Meta-u} & Up           & Move rest to a higher staff line\\
 \kbd{Meta-d} & Down         & Move rest to a lower staff line\\
 \hline
 \end{tabular}
@@ -138,8 +138,17 @@ Key          & Command name & Description\\
 \hline
 Key          & Command name & Description\\
 \hline
-             & Add Staff    & Add a new staff (promts for a name)\\
-             & Delete Staff & Delete a staff (promts for a name)\\
+             & Add Staff After  & Add a new staff after an existing one\\
+             &                  & (prompts for the existing staff, \\
+             &                  & for the name and the type of the new staff, \\
+             &                  & and a clef and a line for the clef\\
+             &                  & if type is \texttt{fiveline})\\
+             & Add Staff Before  & Add a new before after an existing one\\
+             &                  & (prompts for the existing staff, \\
+             &                  & for the name and the type of the new staff, \\
+             &                  & and a clef and a line for the clef\\
+             &                  & if type is \texttt{fiveline})\\
+             & Delete Staff & Delete a staff (promts for staff to delete)\\
              & Rename Staff & Rename current staff (prompts for a new name)\\
              & Set clef & Set the clef of the current staff\\
              &          & (promts for name of clef and line number)\\

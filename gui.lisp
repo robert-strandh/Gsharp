@@ -998,11 +998,88 @@
 ;;;
 ;;; Adding, deleting, and modifying staves
 
-(define-gsharp-command (com-add-staff :name t) ((name 'string))
-  (add-new-staff-to-buffer name (buffer *gsharp-frame*)))
+(define-presentation-method accept
+    ((type fiveline-staff) stream (view textual-view) &key)
+  (multiple-value-bind (staff success string)
+      (complete-input stream
+		      (lambda (so-far mode)
+			(complete-from-possibilities
+			 so-far
+			 (staves (buffer *gsharp-frame*))
+			 '()
+			 :action mode
+			 :predicate (lambda (obj) (typep obj 'fiveline-staff))
+			 :name-key #'name
+			 :value-key #'identity)))
+    (declare (ignore string))
+    (if success
+	staff
+	(error "no such staff name")))) ; FIXME add a gsharp error here. 
 
-(define-gsharp-command (com-delete-staff :name t) ((name 'string))
-  (remove-staff-from-buffer name (buffer *gsharp-frame*)))
+(defun symbol-name-lowcase (symbol)
+  (string-downcase (symbol-name symbol)))
+
+(define-presentation-type staff-type ())
+
+(define-presentation-method accept
+    ((type staff-type) stream (view textual-view) &key)
+  (multiple-value-bind (type success string)
+      (complete-input stream
+		      (lambda (so-far mode)
+			(complete-from-possibilities
+			 so-far
+			 '(:fiveline)
+			 '()
+			 :action mode
+			 :predicate (lambda (obj) (declare (ignore obj)) t)
+			 :name-key #'symbol-name-lowcase
+			 :value-key #'identity)))
+    (declare (ignore string))
+    (if success
+	type
+	(error "no such staff type"))))
+
+(define-presentation-type clef-type ())
+
+(define-presentation-method accept
+    ((type clef-type) stream (view textual-view) &key)
+  (multiple-value-bind (type success string)
+      (complete-input stream
+		      (lambda (so-far mode)
+			(complete-from-possibilities
+			 so-far
+			 '(:treble :bass :c :percussion)
+			 '()
+			 :action mode
+			 :predicate (lambda (obj) (declare (ignore obj)) t)
+			 :name-key #'symbol-name-lowcase
+			 :value-key #'identity)))
+    (declare (ignore string))
+    (if success
+	type
+	(error "no such staff type"))))
+
+(defun acquire-new-staff ()
+  (let ((name (accept 'string :prompt "Staff name"))
+	(type (accept 'staff-type :prompt "Type")))
+    (ecase type
+      (:fiveline (let ((clef (accept 'clef-type :prompt "Clef"))
+		       (line (accept 'integer :prompt "Line")))
+		   (make-fiveline-staff name (make-clef clef line)))))))	  
+
+(define-gsharp-command (com-add-staff-before :name t) ()
+  (add-staff-before-staff (accept 'staff :prompt "Before staff")
+			  (acquire-new-staff)
+			  (buffer *gsharp-frame*)))
+
+(define-gsharp-command (com-add-staff-after :name t) ()
+  (add-staff-after-staff (accept 'staff :prompt "After staff")
+			 (acquire-new-staff)
+			 (buffer *gsharp-frame*)))
+
+(define-gsharp-command (com-delete-staff :name t) ()
+  (remove-staff-from-buffer (accept 'staff :prompt "Staff")
+			    (buffer *gsharp-frame*)))
 
 (define-gsharp-command (com-rename-staff :name t) ((name 'string))
   (let ((buffer (buffer *gsharp-frame*))
