@@ -220,7 +220,8 @@ works only if the chars are coded in ASCII]"
 		    (setf time (message-time message))))
 	1) ; the delta time of the end-of-track message
      4)
-    (mapc #'write-timed-message track)
+    (dolist (message track)
+      (write-timed-message message))
     (setf (message-time end-of-track-message) *time*)
     (write-timed-message end-of-track-message)))
 
@@ -230,7 +231,7 @@ works only if the chars are coded in ASCII]"
   (with-midi-input (filename)
     (let ((type (read-fixed-length-quantity 4))
 	  (length (read-fixed-length-quantity 4))
-	  (format (read-fixed-length-quantity  2))
+	  (format (read-fixed-length-quantity 2))
 	  (nb-tracks (read-fixed-length-quantity 2))
 	  (division (read-fixed-length-quantity 2)))
       (unless (and (= length +header-mthd-length+) (= type +header-mthd+)) 
@@ -245,7 +246,7 @@ works only if the chars are coded in ASCII]"
 (defun write-midi-file (midifile filename)
   (with-midi-output (filename :if-exists :supersede)
     (write-fixed-length-quantity +header-mthd+ 4)
-    (write-fixed-length-quantity  +header-mthd-length+ 4)
+    (write-fixed-length-quantity +header-mthd-length+ 4)
     (with-slots (format division tracks) midifile
       (write-fixed-length-quantity format 2)
       (write-fixed-length-quantity (length tracks) 2)
@@ -255,6 +256,44 @@ works only if the chars are coded in ASCII]"
 	      (setf *time* 0))
 	    (write-track track)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Conversion routines
+
+(defun format1-tracks-to-format0-tracks (tracks)
+  (list (reduce (lambda (t1 t2) (merge 'list t1 t2 #'< :key #'message-time))
+		(copy-tree tracks))))
+
+(defun format0-tracks-to-format1-tracks (tracks)
+  (assert (null (cdr tracks)))
+  (let (tempo-map track)
+    (dolist (message (car tracks) (list (nreverse tempo-map) (nreverse track)))
+      (if (typep message 'tempo-map-message)
+	  (push message tempo-map)
+	  (push message track)))))
+
+(defun change-to-format-0 (midifile)
+  (assert (= (midifile-format midifile) 1))
+  (setf (slot-value midifile 'format) 0
+	(slot-value midifile 'tracks) (format1-tracks-to-format0-tracks (midifile-tracks midifile))))
+
+(defun change-to-format-1 (midifile)
+  (assert (= (midifile-format midifile) 0))
+  (setf (slot-value midifile 'format) 1
+	(slot-value midifile 'tracks) (format0-tracks-to-format1-tracks (midifile-tracks midifile))))
+
+(defmethod (setf midifile-format) (new-value midifile)
+  (cond
+    ((= (midifile-format midifile) new-value) new-value)
+    ((and (= new-value 0) (= (midifile-format midifile) 1))
+     (change-to-format-0 midifile)
+     new-value)
+    ((and (= new-value 1) (= (midifile-format midifile) 0))
+     (change-to-format-1 midifile)
+     new-value)
+    (t (error "Unsupported conversion from format ~S to format ~S"
+	      (midifile-format midifile) new-value))))
+	  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Macro for defining midi messages
@@ -485,6 +524,8 @@ works only if the chars are coded in ASCII]"
 
 (define-midi-message system-message (message))
 
+(define-midi-message tempo-map-message (message))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; system common messages
@@ -579,7 +620,7 @@ works only if the chars are coded in ASCII]"
   :filler next-byte ; the first data byte which gives the type of meta message
   :writer (write-bytes data-min))
 
-(define-midi-message sequence-number-message (meta-message)
+(define-midi-message sequence-number-message (meta-message tempo-map-message)
   :data-min #x00 :data-max #x00
   :slots ((sequence))
   :filler (let ((data2 next-byte))
@@ -609,7 +650,7 @@ works only if the chars are coded in ASCII]"
 (define-midi-message copyright-message (text-message)
   :data-min #x02 :data-max #x02)
   
-(define-midi-message sequence/track-name-message (text-message)
+(define-midi-message sequence/track-name-message (text-message tempo-map-message)
   :data-min #x03 :data-max #x03)
   
 (define-midi-message instrument-message (text-message)
@@ -618,7 +659,7 @@ works only if the chars are coded in ASCII]"
 (define-midi-message lyric-message (text-message)
   :data-min #x05 :data-max #x05)
   
-(define-midi-message marker-message (text-message)
+(define-midi-message marker-message (text-message tempo-map-message)
   :data-min #x06 :data-max #x06)
   
 (define-midi-message cue-point-message (text-message)
@@ -651,14 +692,14 @@ works only if the chars are coded in ASCII]"
   :length 0
   :writer (write-bytes 0))
 
-(define-midi-message tempo-message (meta-message)
+(define-midi-message tempo-message (meta-message tempo-map-message)
   :data-min #x51 :data-max #x51
   :slots ((tempo :reader message-tempo))
   :filler (progn next-byte (setf tempo (read-fixed-length-quantity 3)))
   :length 3
   :writer (progn (write-bytes 3) (write-fixed-length-quantity tempo 3)))
 
-(define-midi-message smpte-offset-message (meta-message)
+(define-midi-message smpte-offset-message (meta-message tempo-map-message)
   :data-min #x54 :data-max #x54
   :slots ((hr) (mn) (se) (fr) (ff))
   :filler (progn next-byte (setf hr next-byte mn next-byte se next-byte
@@ -666,7 +707,7 @@ works only if the chars are coded in ASCII]"
   :length 5
   :writer (write-bytes 5 hr mn se fr ff))
 
-(define-midi-message time-signature-message (meta-message)
+(define-midi-message time-signature-message (meta-message tempo-map-message)
   :data-min #x58 :data-max #x58
   :slots ((nn :reader message-numerator) 
 	  (dd :reader message-denominator) 
@@ -686,7 +727,7 @@ works only if the chars are coded in ASCII]"
 					  temp-sf))
 				 mi next-byte))
   :length 2
-  :writer (write-bytes 2 sf mi))
+  :writer (write-bytes 2 (if (< sf 0) (+ sf 256) sf) mi))
 
 (define-midi-message proprietary-event (meta-message)
   :data-min #x7f :data-max #x7f
