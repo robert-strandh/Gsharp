@@ -9,25 +9,38 @@
 (defun skip-until-close-bracket (stream)
   (loop until (eql (read-char stream) #\])))
 
+(defclass gsharp-object () ())
+
+(defmethod print-object ((obj gsharp-object) stream)
+  nil)
+
+(defmethod print-object :around ((obj gsharp-object) stream)
+  (format stream "[~a " (slot-value obj 'print-character))
+  (call-next-method)
+  (format stream "] "))
+
+(defgeneric name (obj))
+
+(defclass name-mixin ()
+  ((name :initarg :name :accessor name)))
+
+(defmethod print-object :after ((obj name-mixin) stream)
+  (format stream ":name ~W " (name obj)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Clef
-
-;;; The name of a clef is one of :TREBLE, :BASS, 
-;;; :C, and :PERCUSSION
-(defgeneric name (clef))
 
 ;;; The line number on which the clef is located on the staff. 
 ;;; The bottom line of the staff is number 1. 
 (defgeneric lineno (clef))
 
-(defclass clef ()
-  ((name :reader name :initarg :name :initform nil)
+(defclass clef (gsharp-object name-mixin)
+  ((print-character :allocation :class :initform #\K)
    (lineno :reader lineno :initarg :lineno :initform nil)))
 
-(defmethod print-object ((c clef) stream)
-  (with-slots (name lineno) c
-    (format stream "[K :name ~W :lineno ~W ] " name lineno)))
+(defmethod print-object :after ((c clef) stream)
+  (format stream ":lineno ~W " (lineno c)))
 
 (defun make-clef (name &optional lineno)
   (declare (type (member :treble :bass :c :percussion) name)
@@ -64,21 +77,22 @@
 ;;;
 ;;; Staff
 
-(defclass staff ()
-  ((name :accessor name :initarg :name :initform "default staff")))
+(defclass staff (gsharp-object name-mixin)
+  ()
+  (:default-initargs :name "default staff"))
 
 ;;; fiveline
 
 (defgeneric clef (fiveline-staff))
 
 (defclass fiveline-staff (staff)
-  ((clef :accessor clef :initarg :clef :initform nil)
+  ((print-character :allocation :class :initform #\=)
+   (clef :accessor clef :initarg :clef :initform nil)
    (keysig :accessor keysig :initarg :keysig
 	   :initform (make-array 7 :initial-element :natural))))
 	   
-(defmethod print-object ((s fiveline-staff) stream)
-  (with-slots (name clef keysig) s
-    (format stream "[= :name ~W :clef ~W :keysig ~W ] " name clef keysig)))
+(defmethod print-object :after ((s fiveline-staff) stream)
+  (format stream ":clef ~W :keysig ~W " (clef s) (keysig s)))
 
 (defun make-fiveline-staff (name &optional (clef (make-clef :treble)))
   (make-instance 'fiveline-staff :name name :clef clef))
@@ -105,11 +119,7 @@
 ;;; lyric
 
 (defclass lyrics-staff (staff)
-  ())
-
-(defmethod print-object ((s lyrics-staff) stream)
-  (with-slots (name) s
-     (format stream "[L :name ~W ] " name)))
+  ((print-character :allocation :class :initform #\L)))
 
 (defun make-lyrics-staff (name)
   (make-instance 'lyrics-staff :name name))
@@ -146,18 +156,19 @@
 ;;; currently does not belong to any cluster. 
 (defgeneric cluster (note))
 
-(defclass note ()
-  ((cluster :initform nil :initarg :cluster :accessor cluster)
+(defclass note (gsharp-object)
+  ((print-character :allocation :class :initform #\N)
+   (cluster :initform nil :initarg :cluster :accessor cluster)
    (pitch :initarg :pitch :reader pitch)
    (staff :initarg :staff :reader staff)
    (head :initarg :head :reader head)
    (accidentals :initarg :accidentals :reader accidentals)
    (dots :initarg :dots :reader dots)))
 
-(defmethod print-object ((n note) stream)
+(defmethod print-object :after ((n note) stream)
   (with-slots (pitch staff head accidentals dots) n
     (format stream
-	    "[N :pitch ~W :staff ~W :head ~W :accidentals ~W :dots ~W ] "
+	    ":pitch ~W :staff ~W :head ~W :accidentals ~W :dots ~W "
 	    pitch staff head accidentals dots)))
 
 ;;; Make a note with the pitch and staff given.  
@@ -240,7 +251,7 @@
 (defgeneric dots (element))
 (defgeneric (setf dots) (dots element))
 
-(defclass element ()
+(defclass element (gsharp-object)
   ((bar :initform nil :initarg :bar :reader bar)
    (notehead :initarg :notehead :accessor notehead)
    (rbeams :initarg :rbeams :accessor rbeams)
@@ -248,6 +259,12 @@
    (dots :initarg :dots :accessor dots)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)))
    
+(defmethod print-object :after ((e element) stream)
+  (with-slots (notehead rbeams lbeams dots xoffset) e
+    (format stream
+	    ":notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W "
+	    notehead rbeams lbeams dots xoffset)))
+
 (defmethod notehead-duration ((element element))
   (ecase (notehead element)
     (:whole 1)
@@ -290,15 +307,14 @@
 (defgeneric remove-note (note))
 
 (defclass cluster (melody-element)
-  ((notes :initform '() :initarg :notes :accessor notes)
+  ((print-character :allocation :class :initform #\%)
+   (notes :initform '() :initarg :notes :accessor notes)
    (stem-direction :initarg :stem-direction :accessor stem-direction)
    (stem-length :initform nil :initarg :stem-length :accessor stem-length)))
 
-(defmethod print-object ((c cluster) stream)
-  (with-slots (notehead rbeams lbeams dots xoffset stem-direction notes) c
-    (format stream
-	    "[% :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :stem-direction ~W :notes ~W ] "
-	    notehead rbeams lbeams dots xoffset stem-direction notes)))
+(defmethod print-object :after ((c cluster) stream)
+  (with-slots (stem-direction notes) c
+    (format stream ":stem-direction ~W :notes ~W " stem-direction notes)))
 
 (defun make-cluster (rbeams lbeams dots notehead stem-direction)
   (make-instance 'cluster
@@ -358,14 +374,13 @@
 ;;; Rest
 
 (defclass rest (melody-element)
-  ((staff :initarg :staff :reader staff)
+  ((print-character :allocation :class :initform #\-)
+   (staff :initarg :staff :reader staff)
    (staff-pos :initarg :staff-pos :initform 4 :reader staff-pos)))
 
-(defmethod print-object ((s rest) stream)
-  (with-slots (notehead rbeams lbeams dots xoffset staff staff-pos) s
-    (format stream
-	    "[- :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :staff ~W :staff-pos ~W ] "
-	    notehead rbeams lbeams dots xoffset staff staff-pos)))
+(defmethod print-object :after ((s rest) stream)
+  (with-slots (staff staff-pos) s
+    (format stream ":staff ~W :staff-pos ~W " staff staff-pos)))
 
 (defun make-rest (rbeams lbeams dots notehead staff)
   (make-instance 'rest
@@ -403,7 +418,8 @@
 ;;; Lyrics element
 
 (defclass lyrics-element (element)
-  ((staff :initarg :staff :reader staff)
+  ((print-character :allocation :class :initform #\A)
+   (staff :initarg :staff :reader staff)
    (text :initarg :text
 	 :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
 	 :reader text)))
@@ -421,9 +437,9 @@
      :rbeams rbeams :lbeams lbeams :dots dots
      :notehead notehead :staff staff))
 
-(defmethod print-object ((elem lyrics-element) stream)
-  (with-slots (notehead rbeams lbeams dots xoffset staff text) elem
-     (format stream "[A :notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W :staff ~W :text ~W ] " notehead rbeams lbeams dots xoffset staff text)))
+(defmethod print-object :after ((elem lyrics-element) stream)
+  (with-slots (staff text) elem
+     (format stream ":staff ~W :text ~W " staff text)))
 
 (defun read-lyrics-element-v3 (stream char n)
   (declare (ignore char n))
@@ -467,9 +483,12 @@
 ;;; Delete an element from the bar to which it belongs. 
 (defgeneric remove-element (element))
 
-(defclass bar ()
+(defclass bar (gsharp-object)
   ((slice :initform nil :initarg :slice :reader slice)
    (elements :initform '() :initarg :elements :reader elements)))
+
+(defmethod print-object :after ((b bar) stream)
+  (format stream ":elements ~W " (elements b)))
 
 (defmethod nb-elements ((bar bar))
   (length (elements bar)))
@@ -504,10 +523,8 @@
       (setf elements (delete element elements :test #'eq)))
     (setf bar nil)))
 
-(defclass melody-bar (bar) ())
-
-(defmethod print-object ((b melody-bar) stream)
-  (format stream "[| :elements ~W ] " (elements b)))
+(defclass melody-bar (bar)
+  ((print-character :allocation :class :initform #\|)))
 
 (defun make-melody-bar ()
   (make-instance 'melody-bar))
@@ -537,10 +554,8 @@
   #'read-melody-bar-v3
   *gsharp-readtable-v3*)
 
-(defclass lyrics-bar (bar) ())
-
-(defmethod print-object ((b lyrics-bar) stream)
-  (format stream "[C :elements ~W ] " (elements b)))
+(defclass lyrics-bar (bar)
+  ((print-character :allocation :class :initform #\C)))
 
 (defun make-lyrics-bar ()
   (make-instance 'lyrics-bar))
@@ -579,12 +594,13 @@
 ;;; Delete a bar from the slice to which it belongs.
 (defgeneric remove-bar (bar))
 
-(defclass slice ()
-  ((layer :initform nil :initarg :layer :reader layer)
+(defclass slice (gsharp-object)
+  ((print-character :allocation :class :initform #\/)
+   (layer :initform nil :initarg :layer :reader layer)
    (bars :initform '() :initarg :bars :reader bars)))
 
-(defmethod print-object ((s slice) stream)
-  (format stream "[/ :bars ~W ] " (bars s)))
+(defmethod print-object :after ((s slice) stream)
+  (format stream ":bars ~W " (bars s)))
 
 (defun make-empty-slice ()
   (make-instance 'slice))
@@ -688,17 +704,23 @@
 ;;; Return the tail slice of the layer
 (defgeneric tail (layer))
 
-(defclass layer ()
-  ((name :initform "default layer" :initarg :name :accessor name)
-   (segment :initform nil :initarg :segment :reader segment)
+(defclass layer (gsharp-object name-mixin)
+  ((segment :initform nil :initarg :segment :reader segment)
    (staves :initarg :staves :accessor staves)
    (head :initarg :head :accessor head)
    (body :initarg :body :accessor body)
-   (tail :initarg :tail :accessor tail)))
+   (tail :initarg :tail :accessor tail))
+  (:default-initargs :name "default layer"))
+
+(defmethod print-object :after ((l layer) stream)
+  (with-slots (head body tail staves) l
+    (format stream ":staves ~W :head ~W :body ~W :tail ~W "
+	    staves head body tail)))
 
 ;;; melody layer
 
-(defclass melody-layer (layer) ())
+(defclass melody-layer (layer)
+  ((print-character :allocation :class :initform #\_)))
 
 (defmethod make-layer (name (initial-staff fiveline-staff))
   (flet ((make-initialized-slice ()
@@ -716,11 +738,6 @@
 	    (slot-value tail 'layer) result)
       result)))
   
-(defmethod print-object ((l melody-layer) stream)
-  (with-slots (head body tail name staves) l
-    (format stream "[_ :name ~W :staves ~W :head ~W :body ~W :tail ~W ] "
-	    name staves head body tail)))
-
 (defun read-melody-layer-v2 (stream char n)
   (declare (ignore char n))
   (let* ((staves (read stream nil nil t))
@@ -754,7 +771,8 @@
 
 ;;; lyrics layer
 
-(defclass lyrics-layer (layer) ())
+(defclass lyrics-layer (layer)
+  ((print-character :allocation :class :initform #\M)))
 
 (defmethod make-layer (name (initial-staff lyrics-staff))
   (flet ((make-initialized-slice ()
@@ -771,11 +789,6 @@
 	    (slot-value body 'layer) result
 	    (slot-value tail 'layer) result)
       result)))
-
-(defmethod print-object ((l lyrics-layer) stream)
-  (with-slots (head body tail name staves) l
-    (format stream "[M :name ~W :staves ~W :head ~W :body ~W :tail ~W ] "
-	    name staves head body tail)))
 
 (defun read-lyrics-layer-v3 (stream char n)
   (declare (ignore char n))
@@ -860,12 +873,13 @@
 ;;; Delete a layer from the segment to which it belongs
 (defgeneric remove-layer (layer))
 
-(defclass segment ()
-  ((buffer :initform nil :initarg :buffer :reader buffer)
+(defclass segment (gsharp-object)
+  ((print-character :allocation :class :initform #\S)
+   (buffer :initform nil :initarg :buffer :reader buffer)
    (layers :initform '() :initarg :layers :reader layers)))
 
-(defmethod print-object ((s segment) stream)
-  (format stream "[S :layers ~W ] " (layers s)))
+(defmethod print-object :after ((s segment) stream)
+  (format stream ":layers ~W " (layers s)))
 
 (defun make-empty-segment ()
   (make-instance 'segment))
@@ -974,8 +988,9 @@
 (defvar *default-left-offset* 30)
 (defvar *default-left-margin* 20)
 
-(defclass buffer ()
-  ((segments :initform '() :initarg :segments :accessor segments)
+(defclass buffer (gsharp-object)
+  ((print-character :allocation :class :initform #\B)
+   (segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff "default staff"))
 	   :initarg :staves :accessor staves)
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
@@ -984,9 +999,9 @@
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
    (left-margin :initform *default-left-margin* :initarg :left-margin :accessor left-margin)))
 
-(defmethod print-object ((b buffer) stream)
+(defmethod print-object :after ((b buffer) stream)
   (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
-    (format stream "[B :staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W ] "
+    (format stream ":staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W "
 	    staves segments min-width spacing-style right-edge left-offset left-margin)))
 
 (defun make-empty-buffer ()
