@@ -2,7 +2,7 @@ MFFILES= sdl.mf macros.mf charmap.mf noteheads.mf clefs.mf g_clef.mf\
          f_clef.mf c_clef.mf accents.mf dot.mf accidentals.mf sharp.mf\
 	 double-sharp.mf double-flat.mf flat.mf natural.mf flags.mf\
 	 rests.mf whole_rest.mf half_rest.mf quarter_rest.mf\
-	  eighth_rest.mf beams.mf
+	  eighth_rest.mf ties.mf
 
 all: sdl6.gf sdl8.gf sdl10.gf sdl12.gf
 

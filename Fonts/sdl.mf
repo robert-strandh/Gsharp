@@ -143,10 +143,11 @@ input charmap;
     endfor;
   enddef;
 
-input noteheads;
-input accidentals;
+input noteheads
+input accidentals
 input rests
-input clefs;
+input clefs
 input accents
 input flags
+input ties
 bye

@@ -1,0 +1,252 @@
+begingroup
+
+  local_variable(numeric)(tie_thickness)
+    (round(0.33 * staff_line_distance));
+  local_variable(numeric)(top)
+    (round(0.33 * staff_line_distance)-1);
+  local_variable(numeric)(bot)
+    (round(0.33 * staff_line_distance));
+  local_variable(numeric)(small_tie_height)
+    (round(0.5 * staff_line_distance));
+
+  begin_character(small_tie_one_up)
+    local_variable(numeric)(width)
+      (round(0.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_two_up)
+    local_variable(numeric)(width)
+      (round(0.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_three_up)
+    local_variable(numeric)(width)
+      (round(1.0 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_four_up)
+    local_variable(numeric)(width)
+      (round(1.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_five_up)
+    local_variable(numeric)(width)
+      (round(1.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_six_up)
+    local_variable(numeric)(width)
+      (round(2.0 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_seven_up)
+    local_variable(numeric)(width)
+      (round(2.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_eight_up)
+    local_variable(numeric)(width)
+      (round(2.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, top){right} ..
+       (width, top-small_tie_height) --
+       (width-1, top-small_tie_height) ..
+       (0.5*width, top-tie_thickness) ..
+       (0, top-tie_thickness) ..
+       (-0.5*width, top-tie_thickness) ..
+       (-(width-1), top-small_tie_height) --
+       (-width, top-small_tie_height) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_one_down)
+    local_variable(numeric)(width)
+      (round(0.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_two_down)
+    local_variable(numeric)(width)
+      (round(0.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_three_down)
+    local_variable(numeric)(width)
+      (round(1.0 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_four_down)
+    local_variable(numeric)(width)
+      (round(1.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_five_down)
+    local_variable(numeric)(width)
+      (round(1.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_six_down)
+    local_variable(numeric)(width)
+      (round(2.0 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_seven_down)
+    local_variable(numeric)(width)
+      (round(2.33 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+  begin_character(small_tie_eight_down)
+    local_variable(numeric)(width)
+      (round(2.67 * staff_line_distance));
+    local_variable(path)(tie)
+      ((0, -bot){right} ..
+       (width, small_tie_height-bot) --
+       (width-1, small_tie_height-bot) ..
+       (0.5*width, tie_thickness-bot) ..
+       (0, tie_thickness-bot) ..
+       (-0.5*width, tie_thickness-bot) ..
+       (-(width-1), small_tie_height-bot) --
+       (-width, small_tie_height-bot) .. cycle);
+    fill tie scaled magnification;
+  end_character;
+
+endgroup;
