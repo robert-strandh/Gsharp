@@ -7,7 +7,7 @@
 	 (bar (barno slice 0)))
   (make-cursor bar 0)))
 
-(defvar *gsharp-frame*)
+(defvar *gsharp-frame* nil)
 
 (defparameter *kbd-macro-recording-p* nil)
 (defparameter *kbd-macro-funs* '())
@@ -261,19 +261,73 @@
      (declare (ignore condition))
      (format stream "File nont found"))))
 
+(defun filename-completer (so-far mode)
+  (flet ((remove-trail (s)
+	   (subseq s 0 (let ((pos (position #\/ s :from-end t)))
+			 (if pos (1+ pos) 0)))))
+    (let* ((directory-prefix
+	    (if (and (plusp (length so-far)) (eql (aref so-far 0) #\/))
+		""
+		(namestring #+sbcl (car (directory ".")) #+cmu (ext:default-directory))))
+	   (full-so-far (concatenate 'string directory-prefix so-far))
+	   (pathnames
+	    (loop with length = (length full-so-far)
+		  for path in (directory (concatenate 'string
+						       (remove-trail so-far)
+						      "*.*"))
+		  when (let ((mismatch (mismatch (namestring path) full-so-far)))
+			 (or (null mismatch) (= mismatch length)))
+		    collect path))
+	   (strings (mapcar #'namestring pathnames))
+	   (first-string (car strings))
+	   (length-common-prefix nil)
+	   (completed-string nil)
+	   (full-completed-string nil))
+      (unless (null pathnames)
+	(setf length-common-prefix
+	      (loop with length = (length first-string)
+		    for string in (cdr strings)
+		    do (setf length (min length (or (mismatch string first-string) length)))
+		    finally (return length))))
+      (unless (null pathnames)
+	(setf completed-string
+	      (subseq first-string (length directory-prefix)
+		      (if (null (cdr pathnames)) nil length-common-prefix)))
+	(setf full-completed-string
+	      (concatenate 'string directory-prefix completed-string)))
+      (case mode
+	((:complete-limited :complete-maximal)
+	 (cond ((null pathnames)
+		(values so-far nil nil 0 nil))
+	       ((null (cdr pathnames))
+		(values completed-string t (car pathnames) 1 nil))
+	       (t
+		(values completed-string nil nil (length pathnames) nil))))
+	(:complete
+	 (cond ((null pathnames)
+		(values so-far nil nil 0 nil))
+	       ((null (cdr pathnames))
+		(values completed-string t (car pathnames) 1 nil))
+	       ((find full-completed-string strings :test #'string-equal)
+		(let ((pos (position full-completed-string strings :test #'string-equal)))
+		  (values completed-string
+			  t (elt pathnames pos) (length pathnames) nil)))
+	       (t
+		(values completed-string nil nil (length pathnames) nil))))
+	(:possibilities
+	 (values nil nil nil (length pathnames)
+		 (loop with length = (length directory-prefix)
+		       for name in pathnames
+		       collect (list (subseq (namestring name) length nil)
+				     name))))))))
+
+
 (define-presentation-method accept
     ((type completable-pathname) stream (view textual-view) &key)
   (multiple-value-bind (pathname success string)
       (complete-input stream
-		      (lambda (so-far mode)
-			(complete-from-possibilities
-			 so-far
-			 #+cmu (ext:ambiguous-files so-far) #-cmu '()
-			 '()
-			 :action mode
-			 :predicate (lambda (obj) (declare (ignore obj)) t)
-			 :name-key #'namestring
-			 :value-key #'identity))
+		      #'filename-completer
+		      :partial-completers '(#\Space)
 		      :allow-any-input t)
     (declare (ignore success))
     (or pathname string)))
@@ -389,7 +443,7 @@
 				       (layers (segment (cursor *gsharp-frame*)))
 				       '()
 				       :action mode
-				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :predicate (constantly t)
 				       :name-key #'name
 				       :value-key #'identity)))
 	(simple-parse-error () (error 'no-such-layer)))
@@ -579,19 +633,31 @@
     (error "write compatibility layer for RUN-PROGRAM")))
 
 (defun run-gsharp ()
-  (loop for port in climi::*all-ports*
-	do (destroy-port port))
-  (setq climi::*all-ports* nil)
   (let* ((buffer (make-initialized-buffer))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state))
 	 (cursor (make-initial-cursor buffer)))
-    (setf *gsharp-frame* (make-application-frame 'gsharp
-						 :buffer buffer
-						 :input-state input-state
-						 :cursor cursor)
-	  (staves (car (layers (car (segments buffer))))) (list staff)))
-  (run-frame-top-level *gsharp-frame*))
+    (let ((*gsharp-frame* (make-application-frame 'gsharp
+						  :buffer buffer
+						  :input-state input-state
+						  :cursor cursor)))
+      (setf (staves (car (layers (car (segments buffer))))) (list staff))
+      (run-frame-top-level *gsharp-frame*))))
+
+;; (defun run-gsharp ()
+;;  (loop for port in climi::*all-ports*
+;; 	do (destroy-port port))
+;;  (setq climi::*all-ports* nil)
+;;   (let* ((buffer (make-initialized-buffer))
+;; 	 (staff (car (staves buffer)))
+;; 	 (input-state (make-input-state))
+;; 	 (cursor (make-initial-cursor buffer)))
+;;     (setf *gsharp-frame* (make-application-frame 'gsharp
+;; 						 :buffer buffer
+;; 						 :input-state input-state
+;; 						 :cursor cursor)
+;; 	  (staves (car (layers (car (segments buffer))))) (list staff)))
+;;   (run-frame-top-level *gsharp-frame*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -990,7 +1056,7 @@
 				       (staves (buffer *gsharp-frame*))
 				       '()
 				       :action mode
-				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :predicate (constantly t)
 				       :name-key #'name
 				       :value-key #'identity)))
 	(simple-parse-error () (error 'no-such-staff)))
@@ -1035,7 +1101,7 @@
 				       '(:fiveline :lyrics)
 				       '()
 				       :action mode
-				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :predicate (constantly t)
 				       :name-key #'symbol-name-lowcase
 				       :value-key #'identity)))
 	(simple-completion-error () (error 'no-such-staff-type)))
@@ -1054,7 +1120,7 @@
 				       '(:treble :bass :c :percussion)
 				       '()
 				       :action mode
-				       :predicate (lambda (obj) (declare (ignore obj)) t)
+				       :predicate (constantly t)
 				       :name-key #'symbol-name-lowcase
 				       :value-key #'identity)))
 	(simple-completion-error () (error 'no-such-staff-type)))

@@ -98,6 +98,13 @@
 ;;;
 ;;; Buffer
 
+(defnclass nbuffer buffer
+  ())
+
+(defmethod initialize-instance :after ((buffer nbuffer) &rest args)
+  (declare (ignore args))
+  (number-elements (segments buffer)))
+
 (defmethod add-segment :after ((segment nsegment) (buffer buffer) position)
   (declare (ignore position))
   (number-elements (segments buffer)))
