@@ -20,7 +20,7 @@
 						     :defaults *gsharp-directory*))
 			     collect `(:file ,(pathname-name p) :pathname ,p))))))
 
-(gsharp-defsystem (:gsharp)
+(gsharp-defsystem (:gsharp :depends-on (:mcclim))
    "packages"
    "sequence-dico"
    "utilities"
