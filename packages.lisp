@@ -1,8 +1,3 @@
-(defpackage :sequence-dico
-  (:use :clim-lisp)
-  (:export #:sequence-dico #:standard-sequence-dico
-	   #:make-sequence-dico #:dico-object))
-
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
   (:use :clim-lisp :clim-mop)
@@ -131,8 +126,19 @@
 	   #:quarter-rest #:8th-rest #:16th-rest #:32nd-rest #:64th-rest
 	   #:128th-rest #:measure-rest #:double-whole-rest))
 
+(defpackage :esa
+  (:use :clim-lisp :clim)
+  (:export #:minibuffer-pane #:display-message
+	   #:esa-pane-mixin #:previous-command
+	   #:info-pane #:master-pane
+	   #:esa-frame-mixin #:windows #:recordingp #:executingp
+	   #:*numeric-argument-p* #:*current-gesture*
+	   #:esa-top-level #:simple-command-loop
+	   #:global-esa-table #:keyboard-macro-table
+	   #:set-key))
+
 (defpackage :score-pane
-  (:use :clim :clim-extensions :clim-lisp :sdl)
+  (:use :clim :clim-extensions :clim-lisp :sdl :esa)
   (:shadow #:rest)
   (:export #:draw-fiveline-staff #:draw-lyrics-staff
 	   #:draw-stem #:draw-right-stem #:draw-left-stem 
@@ -196,7 +202,7 @@
 	   #:unknown-event #:status #:data-byte))
 
 (defpackage :gsharp
-  (:use :clim :clim-lisp :gsharp-utilities
+  (:use :clim :clim-lisp :gsharp-utilities :esa
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
 	:gsharp-measure :sdl :midi :sequence-dico)
   (:shadowing-import-from :gsharp-numbering #:number)

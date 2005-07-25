@@ -2,7 +2,7 @@
 
 (defclass score-view (view) ())  
 
-(defclass score-pane (application-pane)
+(defclass score-pane (esa-pane-mixin application-pane)
   ((pixmaps :initform (make-hash-table :test #'eq) :reader pane-pixmaps)
    (darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
 			     :reader darker-gray-progressions)

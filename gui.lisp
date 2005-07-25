@@ -9,81 +9,56 @@
 
 (defvar *gsharp-frame* nil)
 
-(defparameter *kbd-macro-recording-p* nil)
-(defparameter *kbd-macro-funs* '())
-
-(defparameter *accumulated-keys* '())
 (defparameter *modes* (list *melody-layer-mode-table* *global-mode-table*))
-(defparameter *last-character* nil)
 
-(defmethod dispatch-event :around ((pane score-pane:score-pane) (event key-press-event))
-  (when (or (keyboard-event-character event) (keyboard-event-key-name event))
-    (let ((key (list (or (keyboard-event-character event) (keyboard-event-key-name event))
-		     (event-modifier-state event))))
-      (setf *accumulated-keys* (append *accumulated-keys* (list key)))
-      (setf *last-character* (char-to-unicode (car key)))
-      (let (dico)
-	(cond ((and (setf dico (find t *modes*
-				     :key (lambda (x)
-					    (multiple-value-bind (value exists-p prefix-p)
-						(dico-object x *accumulated-keys*)
-					      (declare (ignore value prefix-p))
-					      exists-p))))
-		    (or (functionp (dico-object dico *accumulated-keys*))
-			(fboundp (dico-object dico *accumulated-keys*))))
-	       (let ((command (dico-object dico *accumulated-keys*)))
-		 (when *kbd-macro-recording-p* (push command *kbd-macro-funs*))
-		 (handler-case (funcall command)
-		   (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
-	       (setf *accumulated-keys* '()))
-	      ((setf dico (find-if (lambda (x)
-				     (multiple-value-bind (value exists-p prefix-p)
-					 (dico-object x *accumulated-keys*)
-				       (declare (ignore value exists-p))
-				       prefix-p))
-				   *modes*))
-	       nil)
-	      (t (format *error-output* "no command for ~a~%" *accumulated-keys*)
-		 (setf *accumulated-keys* '())
-		 (when *kbd-macro-recording-p* (setf *kbd-macro-funs* '()
-						     *kbd-macro-recording-p* nil)))))
-      (redisplay-frame-panes *gsharp-frame*))))
+(defclass gsharp-minibuffer-pane (minibuffer-pane)
+  ()
+  (:default-initargs
+      :height 20 :max-height 20 :min-height 20))
 
-(define-application-frame gsharp ()
+(define-command-table total-melody-table
+    :inherit-from (melody-table global-gsharp-table))
+
+(define-application-frame gsharp (standard-application-frame
+				  esa-frame-mixin)
   ((buffer :initarg :buffer :accessor buffer)
    (cursor :initarg :cursor :accessor cursor)
    (input-state :initarg :input-state :accessor input-state))
   (:menu-bar menubar-command-table :height 25)
   (:pointer-documentation t)
   (:panes
-   (score (make-pane 'score-pane:score-pane
-		     :width 700 :height 900
-		     :name "score"
-		     :display-time :no-clear
-		     :display-function 'display-score))
+   (score (let ((win (make-pane 'score-pane:score-pane
+				:width 400 :height 500
+				:name "score"
+				:display-time :no-clear
+				:display-function 'display-score
+				:command-table 'total-melody-table)))
+	    (setf (windows *application-frame*) (list win))
+	    win))
    (state (make-pane 'score-pane:score-pane
 		     :width 50 :height 200
 		     :name "state"
 		     :display-function 'display-state))
    (element (make-pane 'score-pane:score-pane
-		       :width 50 :height 700
+		       :width 50 :height 300
 		       :min-height 100 :max-height 20000
 		       :name "element"
 		       :display-function 'display-element))
-   (interactor :interactor :height 100 :min-height 50 :max-height 200))
+   (interactor (make-pane 'gsharp-minibuffer-pane :width 900)))
   (:layouts
    (default
      (vertically ()
        (horizontally ()
-	 (scrolling (:width 750 :height 900
+	 (scrolling (:width 750 :height 500
 		     :min-height 400 :max-height 20000)
 		    score)
 	 (vertically ()
 		     (scrolling (:width 80 :height 200) state)
-		     (scrolling (:width 80 :height 700
-				 :min-height 400 :max-height 20000)
+		     (scrolling (:width 80 :height 300
+				 :min-height 300 :max-height 20000)
 				element)))
-       interactor))))
+       interactor)))
+  (:top-level (esa-top-level)))
 
 (defmethod execute-frame-command :around ((frame gsharp) command)
   (handler-case (call-next-method)
@@ -632,7 +607,7 @@
     #-(or cmu sbcl)
     (error "write compatibility layer for RUN-PROGRAM")))
 
-(defun run-gsharp ()
+(defun run-gsharp (&key (width 900) (height 600))
   (let* ((buffer (make-initialized-buffer))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state))
@@ -640,7 +615,8 @@
     (let ((*gsharp-frame* (make-application-frame 'gsharp
 						  :buffer buffer
 						  :input-state input-state
-						  :cursor cursor)))
+						  :cursor cursor
+						  :width width :height height)))
       (setf (staves (car (layers (car (segments buffer))))) (list staff))
       (run-frame-top-level *gsharp-frame*))))
 
@@ -1213,21 +1189,6 @@
 	  ((eq (aref keysig 4) :natural) (setf (aref keysig 4) :flat))
 	  ((eq (aref keysig 0) :natural) (setf (aref keysig 0) :flat))
 	  ((eq (aref keysig 3) :natural) (setf (aref keysig 3) :flat)))))
-
-;;; macro processing
-(define-gsharp-command com-start-kbd-macro ()
-  (message "defining keyboad macro~%")
-  (setf *kbd-macro-recording-p* t
-	*kbd-macro-funs* '()))  
-
-(define-gsharp-command com-end-kbd-macro ()
-  (message "keyboad macro defined~%")
-  (setf *kbd-macro-recording-p* nil
-	*kbd-macro-funs* (nreverse (cdr *kbd-macro-funs*))))
-
-(define-gsharp-command com-call-last-kbd-macro ()
-  (handler-case (mapc #'funcall *kbd-macro-funs*)
-    (gsharp-condition (condition) (format *error-output* "~a~%" condition))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
