@@ -13,13 +13,14 @@
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))
 (set-key 'com-rotate-notehead 'global-gsharp-table '((#\r :control)))
+(set-key 'com-load-file 'global-gsharp-table '((#\x :control) (#\f :control)))
 
 ;;; melody table
 
 (define-command-table melody-table)
 
-(set-key 'com-lower 'melody-table '((#\L :shift)))
-(set-key 'com-higher 'melody-table '((#\H :shift)))
+(set-key 'com-lower 'melody-table '(#\L))
+(set-key 'com-higher 'melody-table '(#\H))
 (set-key 'com-insert-note-a 'melody-table '(#\a))
 (set-key 'com-insert-note-b 'melody-table '(#\b))
 (set-key 'com-insert-note-c 'melody-table '(#\c))

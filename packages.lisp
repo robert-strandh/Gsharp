@@ -204,7 +204,7 @@
 (defpackage :gsharp
   (:use :clim :clim-lisp :gsharp-utilities :esa
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
-	:gsharp-measure :sdl :midi :sequence-dico)
+	:gsharp-measure :sdl :midi)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest))
 

@@ -22,6 +22,7 @@
 
 (gsharp-defsystem (:gsharp :depends-on (:mcclim))
    "packages"
+   "esa"
    "utilities"
    "gf"
    "sdl"
@@ -39,5 +40,4 @@
    "input-state"
    "midi"
    "modes"
-   "esa"
    "gui")

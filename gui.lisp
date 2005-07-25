@@ -9,8 +9,6 @@
 
 (defvar *gsharp-frame* nil)
 
-(defparameter *modes* (list *melody-layer-mode-table* *global-mode-table*))
-
 (defclass gsharp-minibuffer-pane (minibuffer-pane)
   ()
   (:default-initargs
@@ -426,9 +424,8 @@
     (if success layer (error 'no-such-layer))))
 
 (defmethod select-layer :after (cursor (layer layer))
-  (setf *modes* (list (cond ((typep layer 'melody-layer) *melody-layer-mode-table*)
-			    ((typep layer 'lyrics-layer) *lyrics-layer-mode-table*))
-		      *global-mode-table*)))
+  ;; set the command tables here
+  )
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
