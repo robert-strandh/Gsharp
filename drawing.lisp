@@ -117,7 +117,7 @@
 	  (draw-measure pane measure min-dist compress x method draw-cursor)
 	  (incf x width)
 	  (score-pane:draw-bar-line pane x
-					 (score-pane:staff-step 8)
+					 (- (score-pane:staff-step 8))
 					 (staff-yoffset (car (last staves)))))))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y draw-cursor)
@@ -141,7 +141,8 @@
 					       (- (line-width old-method) timesig-offset))))
 	   (right-edge (right-edge buffer)))
       (loop for staff in staves
-	    for offset downfrom 0 by 90 do
+	    for offset from 0 by 90 do
+;;	    for offset downfrom 0 by 90 do
 	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
@@ -151,7 +152,7 @@
 	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
 			    widths method staves draw-cursor)
 	       (score-pane:draw-bar-line pane x
-					 (score-pane:staff-step 8)
+					 (- (score-pane:staff-step 8))
 					 (staff-yoffset (car (last staves)))))
 	     (loop for staff in staves do
 		   (score-pane:with-vertical-score-position (pane yy)
@@ -159,7 +160,7 @@
 			 (draw-staff-and-clef pane staff x right-edge)
 			 (score-pane:with-light-glyphs pane
 			   (draw-staff-and-clef pane staff x right-edge))))
-		   (decf yy 90))))
+		   (incf yy 90))))
 	 buffer)))))
 
 (define-added-mixin velement () melody-element
@@ -367,7 +368,7 @@
 		(draw-element pane element (element-xpos element) nil))))))
 
 (defun draw-cursor (pane x)
-  (draw-line* pane x (score-pane:staff-step -4) x (score-pane:staff-step 12) :ink +red+))
+  (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
 
 (defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
@@ -619,11 +620,11 @@
       (unless (eq (notehead element) :whole)
 	(if (eq direction :up)
 	    (score-pane:draw-right-stem pane x
-					(+ (score-pane:staff-step min-pos) min-yoffset)
-					(+ (score-pane:staff-step stem-pos) stem-yoffset))
+					(- min-yoffset (score-pane:staff-step min-pos))
+					(- stem-yoffset (score-pane:staff-step stem-pos)))
 	    (score-pane:draw-left-stem pane x
-				       (+ (score-pane:staff-step max-pos) max-yoffset)
-				       (+ (score-pane:staff-step stem-pos) stem-yoffset)))))))
+				       (- max-yoffset (score-pane:staff-step max-pos))
+				       (- stem-yoffset (score-pane:staff-step stem-pos))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

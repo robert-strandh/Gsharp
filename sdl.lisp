@@ -54,9 +54,9 @@
 	       notehead-left-y-offset) font
     (let ((staff-line-thickness (round (/ (staff-line-distance font) 10))))
       (setf staff-line-offset-down
-	    (- (floor (/ staff-line-thickness 2)))
+	    (floor (/ staff-line-thickness 2))
 	    staff-line-offset-up
-	    (+ staff-line-thickness staff-line-offset-down)))
+	    (- staff-line-thickness staff-line-offset-down)))
     (let ((stem-thickness (round (/ staff-line-distance 11.9))))
       (setf stem-offset-left
 	    (- (floor (/ stem-thickness 2)))
@@ -103,7 +103,7 @@
   (declare (ignore initargs))
   (with-slots (gf-char x-offset y-offset) glyph
     (setf x-offset (floor (gf-char-min-m gf-char) 4)
-	  y-offset (ceiling (1+ (gf-char-max-n gf-char)) 4))))
+	  y-offset (- (floor (1+ (gf-char-max-n gf-char)) 4)))))
 
 (defmethod glyph ((font font) glyph-no)
   (with-slots (gf-char pixmap) (aref (glyphs font) glyph-no)

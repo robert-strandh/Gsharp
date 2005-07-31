@@ -103,36 +103,6 @@
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (region-intersects-region-p region (make-rectangle* x1 y1 x2 y2))))
 
-;;;;;;;;;;;;;;;;;; rectangle output record
-
-(defclass rectangle-output-record (score-output-record)
-   ())
-
-(defmethod replay-output-record ((record rectangle-output-record) stream
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
-  (declare (ignore x-offset y-offset region))
-  (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (ink) record
-      (let ((medium (sheet-medium stream)))
-	(with-drawing-options (medium :ink ink)
-	  (medium-draw-rectangle* medium x1 y1 x2 y2 t))))))
-
-(defun make-rectangle-record (class medium x1 y1 x2 y2)
-  (multiple-value-bind (x1 y1)
-      (transform-position (medium-transformation medium) x1 y1)
-    (multiple-value-bind (x2 y2)
-	(transform-position (medium-transformation medium) x2 y2)
-      (make-instance class
-	:x1 (min x1 x2) :x2 (max x1 x2)
-	:y1 (min y1 y2) :y2 (max y1 y2)
-	:ink (medium-ink medium)))))
-
-(defun add-new-rectangle-record (class stream x1 y1 x2 y2)
-  (stream-add-output-record
-   stream (make-rectangle-record class (sheet-medium stream)
-				 x1 y1 x2 y2)))
-
 ;;;;;;;;;;;;;;;;;; pixmap output record
 
 (defclass pixmap-output-record (score-output-record)
@@ -229,7 +199,7 @@
 	     (matrix (glyph *font* (+ glyph-no extra)))
 	     (pixmap (pane-pixmap pane matrix)))
 	(multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
-	  (,medium-draw-name pane pixmap (+ x dx) (+ (staff-step staff-step) dy)))))))
+	  (,medium-draw-name pane pixmap (+ x dx) (- dy (staff-step staff-step))))))))
 
 ;;;;;;;;;;;;;;;;;; notehead
 
@@ -309,40 +279,14 @@
 (define-pixmap-recording (dot-output-record medium-draw-dot draw-dot ())
     +glyph-dot+)
 
-;;;;;;;;;;;;;;;;;; helper macro
-
-(defmacro define-rectangle-recording ((record-name medium-draw-name draw-name args) &body body)
-  `(progn
-    (defclass ,record-name (rectangle-output-record) ())
-    
-    (defgeneric ,medium-draw-name (medium x1 y1 x2 y2))
-
-    (defmethod ,medium-draw-name ((medium medium) x1 y1 x2 y2)
-      (medium-draw-rectangle* medium x1 y1 x2 y2 t))
-
-    (defmethod ,medium-draw-name ((sheet sheet) x1 y1 x2 y2)
-      (,medium-draw-name (sheet-medium sheet) x1 y1 x2 y2))
-
-    (defmethod ,medium-draw-name :around ((pane score-pane) x1 y1 x2 y2)
-      (when (stream-recording-p pane)
-	(add-new-rectangle-record ',record-name pane x1 y1 x2 y2))
-      (when (stream-drawing-p pane)
-	(,medium-draw-name (sheet-medium pane) x1 y1 x2 y2)))
-  
-    (defun ,draw-name (pane ,@args)
-      ,@body)))
-
 ;;;;;;;;;;;;;;;;;; staff line
 
-(define-rectangle-recording (staff-line-output-record
-			     medium-draw-staff-line
-			     draw-staff-line
-			     (x1 staff-step x2))
-    (multiple-value-bind (down up) (staff-line-offsets *font*)
-      (let ((y1 (+ (staff-step staff-step) down))
-	    (y2 (+ (staff-step staff-step) up)))
-	(medium-draw-staff-line pane x1 y1 x2 y2))))
-			     
+(defun draw-staff-line (pane x1 staff-step x2)
+  (multiple-value-bind (down up) (staff-line-offsets *font*)
+    (let ((y1 (- (- (staff-step staff-step)) up))
+	  (y2 (- (- (staff-step staff-step)) down)))
+      (draw-rectangle* pane x1 y1 x2 y2))))
+
 (defclass staff-output-record (output-record)
   ((parent :initarg :parent :initform nil :accessor output-record-parent)
    (x :initarg :x1 :initarg :x-position)
@@ -445,14 +389,11 @@
 
 ;;;;;;;;;;;;;;;;;; stem
 
-(define-rectangle-recording (stem-output-record
-			     medium-draw-stem
-			     draw-stem
-			     (x y1 y2))
-    (multiple-value-bind (left right) (stem-offsets *font*)
-      (let ((x1 (+ x left))
-	    (x2 (+ x right)))
-	(medium-draw-stem pane x1 y1 x2 y2))))
+(defun draw-stem (pane x y1 y2)
+  (multiple-value-bind (left right) (stem-offsets *font*)
+    (let ((x1 (+ x left))
+	  (x2 (+ x right)))
+      (draw-rectangle* pane x1 y1 x2 y2))))
 			     
 (defun draw-right-stem (pane x y1 y2)
   (multiple-value-bind (dx dy) (notehead-right-offsets *font*)
@@ -466,28 +407,23 @@
 
 ;;;;;;;;;;;;;;;;;; ledger line
 
-(define-rectangle-recording (ledger-line-output-record
-			     medium-draw-ledger-line
-			     draw-ledger-line
-			     (x staff-step))
-    (multiple-value-bind (down up) (ledger-line-y-offsets *font*)
-      (multiple-value-bind (left right) (ledger-line-x-offsets *font*)
-	(let ((x1 (+ x left))
-	      (y1 (+ (staff-step staff-step) down))
-	      (x2 (+ x right))
-	      (y2 (+ (staff-step staff-step) up)))
-	  (medium-draw-ledger-line pane x1 y1 x2 y2)))))
+(defun draw-ledger-line (pane x staff-step)
+  (multiple-value-bind (down up) (ledger-line-y-offsets *font*)
+    (multiple-value-bind (left right) (ledger-line-x-offsets *font*)
+      (let ((x1 (+ x left))
+	    (y1 (- (+ (staff-step staff-step) down)))
+	    (x2 (+ x right))
+	    (y2 (- (+ (staff-step staff-step) up))))
+	(draw-rectangle* pane x1 y1 x2 y2)))))
+
 			     
 ;;;;;;;;;;;;;;;;;; bar line
 
-(define-rectangle-recording (bar-line-output-record
-			     medium-draw-bar-line
-			     draw-bar-line
-			     (x y1 y2))
-    (multiple-value-bind (left right) (bar-line-offsets *font*)
-      (let ((x1 (+ x left))
-	    (x2 (+ x right)))
-	(medium-draw-bar-line pane x1 y1 x2 y2))))
+(defun draw-bar-line (pane x y1 y2)
+  (multiple-value-bind (left right) (bar-line-offsets *font*)
+    (let ((x1 (+ x left))
+	  (x2 (+ x right)))
+      (draw-rectangle* pane x1 y1 x2 y2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -496,15 +432,9 @@
 (defclass beam-output-record (score-output-record)
   ((thickness :initarg :thickness)))
 
-(defclass horizontal-beam-output-record (beam-output-record rectangle-output-record)
-  ())
-
 (defun draw-horizontal-beam (medium x1 y1 x2 thickness)
   (let ((y2 (- y1 thickness)))
-    (when (stream-recording-p *pane*)
-      (add-new-rectangle-record 'horizontal-beam-output-record *pane* x1 y1 x2 y2))
-    (when (stream-drawing-p *pane*)
-      (medium-draw-rectangle* medium x1 y1 x2 y2 t))))
+    (draw-rectangle* medium x1 y1 x2 y2)))
 
 (defvar *darker-gray-progressions*)
 (defvar *lighter-gray-progressions*)
@@ -604,10 +534,8 @@
 	  (with-drawing-options (medium :ink ink)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      ;; we replay with the identity tranformation, so
-	      ;; we have to draw the other way
-	      (draw-downward-beam medium x1 (1- y2) (1- (+ y1 thickness)) thickness
-				  (/ (- x2 x1) (- y2 y1 thickness))))))))))
+	      (draw-upward-beam medium x1 y1 y2 thickness
+					(/ (- x2 x1) (- y2 y1))))))))))
 
 (defclass downward-beam-output-record (beam-output-record)
   ())
@@ -623,22 +551,20 @@
 	  (with-drawing-options (medium :ink ink)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      ;; we replay with the identity tranformation, so
-	      ;; we have to draw the other way
-	      (draw-upward-beam medium x1 (1- (+ y1 thickness)) (1- y2) thickness
-				(/ (- x2 x1) (- y2 y1 thickness))))))))))
+	      (draw-downward-beam medium x1 y2 y1 thickness
+				  (/ (- x2 x1) (- y2 y1))))))))))
 
 (defun draw-sloped-beam (medium x1 y1 x2 y2 thickness inverse-slope)
   (let ((transformation (medium-transformation *pane*)))
     (cond ((< y1 y2)
 	   (when (stream-recording-p *pane*)
 	     (multiple-value-bind (xx1 yy1)
-		 (transform-position transformation x1 (- y1 thickness))
+		 (transform-position transformation x1 y1)
 	       (multiple-value-bind (xx2 yy2)
 		   (transform-position transformation x2 y2)
 		 (stream-add-output-record
 		  *pane* (make-instance 'upward-beam-output-record
-			   :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
+			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
 			   :thickness thickness :ink (medium-ink medium))))))
 	   (when (stream-drawing-p *pane*)
 	     (draw-upward-beam medium x1 y1 y2 thickness inverse-slope)))
@@ -647,7 +573,7 @@
 	     (multiple-value-bind (xx1 yy1)
 		 (transform-position transformation x1 y1)
 	       (multiple-value-bind (xx2 yy2)
-		   (transform-position transformation x2 (- y2 thickness))
+		   (transform-position transformation x2 y2)
 		 (stream-add-output-record
 		  *pane* (make-instance 'downward-beam-output-record
 			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
@@ -662,8 +588,8 @@
       (multiple-value-bind (left right) (stem-offsets *font*)
 	(let* ((xx1 (+ x1 left))
 	       (xx2 (+ x2 right))
-	       (y1 (floor (staff-step (+ staff-step-1 1/2 (* 1/2 offset1)))))
-	       (y2 (floor (staff-step (+ staff-step-2 1/2 (* 1/2 offset2)))))
+	       (y1 (- (floor (staff-step (+ staff-step-1 (* 1/2 offset1))))))
+	       (y2 (- (floor (staff-step (+ staff-step-2 (* 1/2 offset2))))))
 	       (slope (abs (/ (- y2 y1) (- xx2 xx1))))
 	       (thickness (/ (staff-line-distance *font*) 2))
 	       (medium (sheet-medium pane)))
@@ -696,14 +622,14 @@
 	    (*darker-gray-progressions* (darker-gray-progressions pane))
 	    (,pixmap (allocate-pixmap *pane* 800 900))
 	    (,mirror (sheet-direct-mirror *pane*)))
-      (draw-rectangle* ,pixmap 0 0 800 900 :filled t :ink +white+)
-      (setf (sheet-direct-mirror *pane*) (climi::pixmap-mirror ,pixmap))
-      (clear-output-record (stream-output-history *pane*))
-      (with-translation (pane 0 900)
-	(with-scaling (pane 1 -1)
-	  ,@body))
-      (setf (sheet-direct-mirror *pane*) ,mirror)
-      (copy-from-pixmap ,pixmap 0 0 800 900 *pane* 0 0)
+;;      (draw-rectangle* ,pixmap 0 0 800 900 :filled t :ink +white+)
+;;      (setf (sheet-direct-mirror *pane*) (climi::pixmap-mirror ,pixmap))
+;;      (clear-output-record (stream-output-history *pane*))
+;;      (with-translation (pane 0 900)
+;;	(with-scaling (pane 1 -1)
+	  ,@body ;;))
+;;      (setf (sheet-direct-mirror *pane*) ,mirror)
+;;      (copy-from-pixmap ,pixmap 0 0 800 900 *pane* 0 0)
       (deallocate-pixmap ,pixmap))))      
 
 (defmacro with-vertical-score-position ((pane yref) &body body)
