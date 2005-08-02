@@ -58,7 +58,7 @@
 
 (defmethod execute-frame-command :around ((frame gsharp) command)
   (handler-case (call-next-method)
-    (gsharp-condition (condition) (message "~a~%" condition))))
+    (gsharp-condition (condition) (beep) (display-message "~a" condition))))
 
 (defmethod display-state ((frame gsharp) pane)
   (let ((state (input-state *application-frame*)))
@@ -895,10 +895,11 @@
 ;;;
 ;;; motion by element
 
-(define-gsharp-command com-forward-element ()
-  (forward-element (cursor *application-frame*)))
+(define-gsharp-command com-forward-element ((count 'integer :prompt "Number of Elements"))
+  (loop repeat count
+	do (forward-element (cursor *application-frame*))))
 
-(define-gsharp-command com-backward-element ()
+(define-gsharp-command com-backward-element ((count 'integer :prompt "Number of Elements"))
   (backward-element (cursor *application-frame*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -925,15 +926,17 @@
 	  (insert-element element cursor)
 	  (forward-element cursor))))
 
-(define-gsharp-command com-delete-element ()
+(define-gsharp-command com-delete-element ((count 'integer :prompt "Number of Elements"))
   (let ((cursor (cursor *application-frame*)))
-    ;;; this will signal a condition if in last bar and
-    ;;; interrupt the execution of the command
-    (forward-element cursor)
-    (backward-element cursor)
-    (if (end-of-bar-p cursor)
-	(fuse-bar-with-next cursor)
-	(delete-element cursor))))
+    (loop repeat count
+	  do (progn
+	       ;; this will signal a condition if in last bar and
+	       ;; interrupt the execution of the command
+	       (forward-element cursor)
+	       (backward-element cursor)
+	       (if (end-of-bar-p cursor)
+		   (fuse-bar-with-next cursor)
+		   (delete-element cursor))))))
 
 (define-gsharp-command com-erase-element ()
   (let ((cursor (cursor *application-frame*)))

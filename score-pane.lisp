@@ -50,7 +50,12 @@
 ;;;
 ;;; output recording
 
-(defclass score-output-record (displayed-output-record)
+;;; we should not have to inherit from standard-boudning-rectangle,
+;;; but the implementation of incremental redisplay in McCLIM assumes
+;;; that this is the case for all output records participating in
+;;; incremental redisplay. 
+
+(defclass score-output-record (displayed-output-record standard-bounding-rectangle)
   ((parent :initarg :parent :initform nil :accessor output-record-parent)
    (x :initarg :x1 :initarg :x-position)
    (y :initarg :y1 :initarg :y-position)

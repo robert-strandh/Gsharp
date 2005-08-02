@@ -3,9 +3,9 @@
 (define-command-table global-gsharp-table
     :inherit-from (global-esa-table keyboard-macro-table))
 
-(set-key 'com-forward-element 'global-gsharp-table '((#\f :control)))
-(set-key 'com-backward-element 'global-gsharp-table '((#\b :control)))
-(set-key 'com-delete-element 'global-gsharp-table '((#\d :control)))
+(set-key `(com-forward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control)))
+(set-key `(com-backward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control)))
+(set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
 (set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
 (set-key 'com-more-dots 'global-gsharp-table '((#\.)))
 (set-key 'com-more-lbeams 'global-gsharp-table '((#\[)))

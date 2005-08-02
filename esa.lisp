@@ -145,12 +145,12 @@
   (let ((gesture (esa-read-gesture)))
     (cond ((event-matches-gesture-name-p
 	    gesture
-	    '(:keyboard #\u (make-modifier-state :control)))
+	    `(:keyboard #\u ,(make-modifier-state :control)))
 	   (let ((numarg 4))
 	     (loop for gesture = (esa-read-gesture)
 		   while (event-matches-gesture-name-p
 			  gesture
-			  '(:keyboard #\u (make-modifier-state :control)))
+			  `(:keyboard #\u ,(make-modifier-state :control)))
 		   do (setf numarg (* 4 numarg))
 		   finally (esa-unread-gesture gesture stream))
 	     (let ((gesture (esa-read-gesture)))
