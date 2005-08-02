@@ -105,10 +105,12 @@
 
 (defparameter *current-gesture* nil)
 
+(defparameter *meta-digit-table*
+  (loop for i from 0 to 9
+       collect (list :keyboard (digit-char i) (make-modifier-state :meta))))
+
 (defun meta-digit (gesture)
-  (position gesture
-	    '((#\0 :meta) (#\1 :meta) (#\2 :meta) (#\3 :meta) (#\4 :meta)
-	      (#\5 :meta) (#\6 :meta) (#\7 :meta) (#\8 :meta) (#\9 :meta))
+  (position gesture *meta-digit-table*
 	    :test #'event-matches-gesture-name-p))
 
 (defun esa-read-gesture ()
