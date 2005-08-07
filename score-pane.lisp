@@ -50,12 +50,7 @@
 ;;;
 ;;; output recording
 
-;;; we should not have to inherit from standard-boudning-rectangle,
-;;; but the implementation of incremental redisplay in McCLIM assumes
-;;; that this is the case for all output records participating in
-;;; incremental redisplay. 
-
-(defclass score-output-record (displayed-output-record standard-bounding-rectangle)
+(defclass score-output-record (displayed-output-record)
   ((parent :initarg :parent :initform nil :accessor output-record-parent)
    (x :initarg :x1 :initarg :x-position)
    (y :initarg :y1 :initarg :y-position)
@@ -108,34 +103,45 @@
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (region-intersects-region-p region (make-rectangle* x1 y1 x2 y2))))
 
-;;;;;;;;;;;;;;;;;; pixmap output record
+;;;;;;;;;;;;;;;;;; pixmap drawing
 
-(defclass pixmap-output-record (score-output-record)
-  ((pixmap :initarg :pixmap)))
+(climi::def-grecording draw-pixmap (() pixmap pm-x pm-y) ()
+  (climi::with-transformed-position ((medium-transformation medium) pm-x pm-y)
+    (setf (slot-value climi::graphic 'pm-x) pm-x
+	  (slot-value climi::graphic 'pm-y) pm-y)
+    (values pm-x pm-y (+ pm-x (pixmap-width pixmap)) (+ pm-y (pixmap-height pixmap)))))
 
-(defmethod replay-output-record ((record pixmap-output-record) stream
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
-  (declare (ignore x-offset y-offset region))
-  (multiple-value-bind (x y) (output-record-position record)
-    (with-slots (pixmap) record
-      (let ((medium (sheet-medium stream)))
-	(copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
-			  medium x y)))))
+(climi::def-graphic-op draw-pixmap (pixmap pm-x pm-y))
 
-(defun make-pixmap-record (class medium x1 y1 x2 y2 pixmap)
-  (multiple-value-bind (x1 y1)
-      (transform-position (medium-transformation medium) x1 y1)
-    (multiple-value-bind (x2 y2)
-	(transform-position (medium-transformation medium) x2 y2)
-      (make-instance class :x1 x1 :x2 x2 :y1 y1 :y2 y2 :pixmap pixmap))))
+(defmethod medium-draw-pixmap* ((medium clim:medium) pixmap pm-x pm-y)
+  (copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
+		    medium pm-x pm-y))
 
-(defun add-new-pixmap-record (class stream pixmap x y)
-  (let ((width (pixmap-width pixmap))
-	(height (pixmap-height pixmap)))
-    (stream-add-output-record
-     stream (make-pixmap-record class (sheet-medium stream)
-				x y (+ x width) (+ y height) pixmap))))
+(climi::defmethod* (setf output-record-position) :around
+    (nx ny (record draw-pixmap-output-record))
+    (climi::with-standard-rectangle* (:x1 x1 :y1 y1)
+	record
+      (with-slots (pm-x pm-y)
+	  record
+	(let ((dx (- nx x1))
+	      (dy (- ny y1)))
+	  (multiple-value-prog1
+	      (call-next-method)
+	    (incf pm-x dx)
+	    (incf pm-y dy))))))
+
+(climi::defrecord-predicate draw-pixmap-output-record (pm-x pm-y)
+  (and (climi::if-supplied (pm-x coordinate)
+	 (climi::coordinate= (slot-value climi::record 'pm-x) pm-x))
+       (climi::if-supplied (pm-y coordinate)
+	 (climi::coordinate= (slot-value climi::record 'pm-y) pm-y))))
+
+(defun draw-pixmap* (sheet pixmap x y
+			   &rest args
+			   &key clipping-region transformation)
+  (declare (ignore clipping-region transformation))
+  (climi::with-medium-options (sheet args)
+    (medium-draw-pixmap* medium pixmap x y)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -153,10 +159,7 @@
     (multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
       (let ((x1 (+ x dx))
 	    (y1 (+ (staff-step staff-step) dy)))
-	(when (stream-recording-p pane)
-	  (add-new-pixmap-record 'pixmap-output-record pane pixmap x1 y1))
-	(when (stream-drawing-p pane)
-	  (copy-from-pixmap pixmap 0 0 width height pane x1 y1))))))
+	(draw-pixmap* pane pixmap x1 y1)))))
 
 (defun draw-stack (pane glyph-lower glyph-upper glyph-two x staff-step how-many)
   (draw-antialiased-glyph pane glyph-lower x staff-step)
@@ -179,36 +182,18 @@
 
 ;;;;;;;;;;;;;;;;;; helper macro
 
-(defmacro define-pixmap-recording ((record-name medium-draw-name draw-name args) &body body)
-  `(progn
-    (defclass ,record-name (pixmap-output-record) ())
-    
-    (defgeneric ,medium-draw-name (medium pixmap x y))
-
-    (defmethod ,medium-draw-name ((medium medium) pixmap x y)
-      (copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
-			medium x y))
-
-    (defmethod ,medium-draw-name ((sheet sheet) pixmap x y)
-      (,medium-draw-name (sheet-medium sheet) pixmap x y))
-
-    (defmethod ,medium-draw-name :around ((pane score-pane) pixmap x y)
-      (when (stream-recording-p pane)
-	(add-new-pixmap-record ',record-name pane pixmap x y))
-      (when (stream-drawing-p pane)
-	(,medium-draw-name (sheet-medium pane) pixmap x y)))
-  
-    (defun ,draw-name (pane ,@args x staff-step)
-      (let* ((extra (if *light-glyph* 1 0))
-	     (glyph-no ,@body)
-	     (matrix (glyph *font* (+ glyph-no extra)))
-	     (pixmap (pane-pixmap pane matrix)))
-	(multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
-	  (,medium-draw-name pane pixmap (+ x dx) (- dy (staff-step staff-step))))))))
+(defmacro define-pixmap-recording ((draw-name args) &body body)
+  `(defun ,draw-name (pane ,@args x staff-step)
+     (let* ((extra (if *light-glyph* 1 0))
+	    (glyph-no ,@body)
+	    (matrix (glyph *font* (+ glyph-no extra)))
+	    (pixmap (pane-pixmap pane matrix)))
+       (multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
+	 (draw-pixmap* pane pixmap (+ x dx) (- dy (staff-step staff-step)))))))
 
 ;;;;;;;;;;;;;;;;;; notehead
 
-(define-pixmap-recording (notehead-output-record medium-draw-notehead draw-notehead (name))
+(define-pixmap-recording (draw-notehead (name))
     (ecase name
       (:whole +glyph-whole+)
       (:half +glyph-half+)
@@ -223,7 +208,7 @@
 
 ;;;;;;;;;;;;;;;;;; accidental
 
-(define-pixmap-recording (accidental-output-record medium-draw-accidental draw-accidental (name))
+(define-pixmap-recording (draw-accidental (name))
     (ecase name
       (:natural +glyph-natural+)
       (:flat +glyph-flat+)
@@ -233,7 +218,7 @@
 
 ;;;;;;;;;;;;;;;;;; clef
 
-(define-pixmap-recording (clef-output-record medium-draw-clef draw-clef (name))
+(define-pixmap-recording (draw-clef (name))
     (ecase name
       (:treble +glyph-g-clef+)
       (:bass +glyph-f-clef+)
@@ -248,7 +233,7 @@
 
 ;;;;;;;;;;;;;;;;;; rest
 
-(define-pixmap-recording (rest-output-record medium-draw-rest draw-rest (duration))
+(define-pixmap-recording (draw-rest (duration))
     (ecase duration
       (1 +glyph-whole-rest+)
       (1/2 +glyph-half-rest+)
@@ -261,7 +246,7 @@
 
 ;;;;;;;;;;;;;;;;;; flags down
 
-(define-pixmap-recording (flags-down-output-record medium-draw-flags-down draw-flags-down (nb))
+(define-pixmap-recording (draw-flags-down (nb))
     (ecase nb
       (1 +glyph-flags-down-one+)
       (2 +glyph-flags-down-two+)
@@ -271,7 +256,7 @@
 
 ;;;;;;;;;;;;;;;;;; flags up
 
-(define-pixmap-recording (flags-up-output-record medium-draw-flags-up draw-flags-up (nb))
+(define-pixmap-recording (draw-flags-up (nb))
     (ecase nb
       (1 +glyph-flags-up-one+)
       (2 +glyph-flags-up-two+)
@@ -281,7 +266,7 @@
 
 ;;;;;;;;;;;;;;;;;; dot
 
-(define-pixmap-recording (dot-output-record medium-draw-dot draw-dot ())
+(define-pixmap-recording (draw-dot ())
     +glyph-dot+)
 
 ;;;;;;;;;;;;;;;;;; staff line
@@ -505,42 +490,25 @@
 		      (- x2 x1) 1
 		      medium x1 (- y thickness))))
 
-(defun draw-upward-beam-segment (medium x1 y x2 thickness)
+(defun draw-downward-beam-segment (medium x1 y x2 thickness)
   (draw-segment medium x1 (1+ y) x2 thickness
 		*darker-gray-progressions* *lighter-gray-progressions*))
 
-(defun draw-downward-beam-segment (medium x1 y x2 thickness)
+(defun draw-upward-beam-segment (medium x1 y x2 thickness)
   (draw-segment medium x1 y x2 thickness
 		*lighter-gray-progressions* *darker-gray-progressions*))
 
-(defun draw-upward-beam (medium x1 y1 y2 thickness inverse-slope)
+(defun draw-downward-beam (medium x1 y1 y2 thickness inverse-slope)
   (loop for y from y1 below y2
 	for x from x1 by inverse-slope do
-	(draw-upward-beam-segment medium (round x) y
+	(draw-downward-beam-segment medium (round x) y
 				  (round (+ x inverse-slope)) thickness)))
 
-(defun draw-downward-beam (medium x1 y1 y2 thickness inverse-slope)
+(defun draw-upward-beam (medium x1 y1 y2 thickness inverse-slope)
   (loop for y from y1 above y2
 	for x from x1 by inverse-slope do
-	(draw-downward-beam-segment medium (round x) y
+	(draw-upward-beam-segment medium (round x) y
 				    (round (+ x inverse-slope)) thickness)))
-
-(defclass upward-beam-output-record (beam-output-record)
-  ())
-
-(defmethod replay-output-record ((record upward-beam-output-record) (stream score-pane)
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
-  (declare (ignore x-offset y-offset region))
-  (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink) record
-      (let ((medium (sheet-medium stream)))
-	(let ((*light-glyph* (not (eq ink +black+))))
-	  (with-drawing-options (medium :ink ink)
-	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
-		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      (draw-upward-beam medium x1 y1 y2 thickness
-					(/ (- x2 x1) (- y2 y1))))))))))
 
 (defclass downward-beam-output-record (beam-output-record)
   ())
@@ -556,7 +524,24 @@
 	  (with-drawing-options (medium :ink ink)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      (draw-downward-beam medium x1 y2 y1 thickness
+	      (draw-downward-beam medium x1 y1 y2 thickness
+					(/ (- x2 x1) (- y2 y1))))))))))
+
+(defclass upward-beam-output-record (beam-output-record)
+  ())
+
+(defmethod replay-output-record ((record upward-beam-output-record) (stream score-pane)
+				 &optional (region +everywhere+)
+				 (x-offset 0) (y-offset 0))
+  (declare (ignore x-offset y-offset region))
+  (with-bounding-rectangle* (x1 y1 x2 y2) record
+    (with-slots (thickness ink) record
+      (let ((medium (sheet-medium stream)))
+	(let ((*light-glyph* (not (eq ink +black+))))
+	  (with-drawing-options (medium :ink ink)
+	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
+		  (*darker-gray-progressions* (darker-gray-progressions stream)))
+	      (draw-upward-beam medium x1 y2 y1 thickness
 				  (/ (- x2 x1) (- y2 y1))))))))))
 
 (defun draw-sloped-beam (medium x1 y1 x2 y2 thickness inverse-slope)
@@ -568,11 +553,11 @@
 	       (multiple-value-bind (xx2 yy2)
 		   (transform-position transformation x2 y2)
 		 (stream-add-output-record
-		  *pane* (make-instance 'upward-beam-output-record
+		  *pane* (make-instance 'downward-beam-output-record
 			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
 			   :thickness thickness :ink (medium-ink medium))))))
 	   (when (stream-drawing-p *pane*)
-	     (draw-upward-beam medium x1 y1 y2 thickness inverse-slope)))
+	     (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
 	  (t
 	   (when (stream-recording-p *pane*)
 	     (multiple-value-bind (xx1 yy1)
@@ -580,11 +565,11 @@
 	       (multiple-value-bind (xx2 yy2)
 		   (transform-position transformation x2 y2)
 		 (stream-add-output-record
-		  *pane* (make-instance 'downward-beam-output-record
+		  *pane* (make-instance 'upward-beam-output-record
 			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
 			   :thickness thickness :ink (medium-ink medium))))))
 	   (when (stream-drawing-p *pane*)
-	     (draw-downward-beam medium x1 y1 y2 thickness inverse-slope))))))
+	     (draw-upward-beam medium x1 y1 y2 thickness inverse-slope))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
@@ -627,14 +612,12 @@
 	    (*darker-gray-progressions* (darker-gray-progressions pane))
 	    (,pixmap (allocate-pixmap *pane* 800 900))
 	    (,mirror (sheet-direct-mirror *pane*)))
-;;      (draw-rectangle* ,pixmap 0 0 800 900 :filled t :ink +white+)
-;;      (setf (sheet-direct-mirror *pane*) (climi::pixmap-mirror ,pixmap))
-;;      (clear-output-record (stream-output-history *pane*))
-;;      (with-translation (pane 0 900)
-;;	(with-scaling (pane 1 -1)
-	  ,@body ;;))
-;;      (setf (sheet-direct-mirror *pane*) ,mirror)
-;;      (copy-from-pixmap ,pixmap 0 0 800 900 *pane* 0 0)
+      (draw-rectangle* ,pixmap 0 0 800 900 :filled t :ink +white+)
+      (setf (sheet-direct-mirror *pane*) (climi::pixmap-mirror ,pixmap))
+      (clear-output-record (stream-output-history *pane*))
+       ,@body
+      (setf (sheet-direct-mirror *pane*) ,mirror)
+      (copy-from-pixmap ,pixmap 0 0 800 900 *pane* 0 0)
       (deallocate-pixmap ,pixmap))))      
 
 (defmacro with-vertical-score-position ((pane yref) &body body)

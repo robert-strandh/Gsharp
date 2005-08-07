@@ -26,7 +26,7 @@
    (score (let ((win (make-pane 'score-pane:score-pane
 				:width 400 :height 500
 				:name "score"
-;;				:display-time :no-clear
+				:display-time :no-clear
 				:display-function 'display-score
 				:command-table 'total-melody-table)))
 	    (setf (windows *application-frame*) (list win))
