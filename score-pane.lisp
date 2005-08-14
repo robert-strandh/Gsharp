@@ -420,7 +420,8 @@
 ;;; beam drawing
 
 (defclass beam-output-record (score-output-record)
-  ((thickness :initarg :thickness)))
+  ((light-glyph-p :initarg :light-glyph-p)
+   (thickness :initarg :thickness)))
 
 (defun draw-horizontal-beam (medium x1 y1 x2 thickness)
   (let ((y2 (- y1 thickness)))
@@ -518,9 +519,9 @@
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink) record
+    (with-slots (thickness ink light-glyph-p) record
       (let ((medium (sheet-medium stream)))
-	(let ((*light-glyph* (not (eq ink +black+))))
+	(let ((*light-glyph* light-glyph-p))
 	  (with-drawing-options (medium :ink ink)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
@@ -535,9 +536,9 @@
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink) record
+    (with-slots (thickness ink light-glyph-p) record
       (let ((medium (sheet-medium stream)))
-	(let ((*light-glyph* (not (eq ink +black+))))
+	(let ((*light-glyph* light-glyph-p))
 	  (with-drawing-options (medium :ink ink)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
@@ -555,6 +556,7 @@
 		 (stream-add-output-record
 		  *pane* (make-instance 'downward-beam-output-record
 			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
+                           :light-glyph-p *light-glyph*
 			   :thickness thickness :ink (medium-ink medium))))))
 	   (when (stream-drawing-p *pane*)
 	     (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
@@ -566,7 +568,8 @@
 		   (transform-position transformation x2 y2)
 		 (stream-add-output-record
 		  *pane* (make-instance 'upward-beam-output-record
-			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
+			   :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
+                           :light-glyph-p *light-glyph*
 			   :thickness thickness :ink (medium-ink medium))))))
 	   (when (stream-drawing-p *pane*)
 	     (draw-upward-beam medium x1 y1 y2 thickness inverse-slope))))))
