@@ -588,7 +588,7 @@
 	       (medium (sheet-medium pane)))
 	  (assert (< slope 1))
 	  (if (= y1 y2)
-	      (draw-horizontal-beam medium xx1 y1 xx2 thickness)
+	      (draw-horizontal-beam pane xx1 y1 xx2 thickness)
 	      (draw-sloped-beam medium xx1 y1 xx2 y2 thickness (/ slope)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
