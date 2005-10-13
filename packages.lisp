@@ -135,6 +135,7 @@
 	   #:*numeric-argument-p* #:*current-gesture*
 	   #:esa-top-level #:simple-command-loop
 	   #:global-esa-table #:keyboard-macro-table
+           #:help-table
 	   #:set-key))
 
 (defpackage :score-pane
