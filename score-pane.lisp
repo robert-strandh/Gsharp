@@ -13,15 +13,6 @@
   (declare (ignore args))
   (setf (stream-default-view pane) (make-instance 'score-view)))
 
-(defmethod dispatch-event :before ((pane score-pane) (event pointer-enter-event))
-  (let ((port (port pane)))
-    (setf (port-keyboard-input-focus port) pane)))
-
-(defmethod dispatch-event :after ((pane score-pane) (event pointer-exit-event))
-  (let ((port (port pane)))
-    (setf (port-keyboard-input-focus port)
-	  (frame-standard-input (pane-frame pane)))))
-
 (defparameter *pane* nil)
 (defparameter *light-glyph* nil)
 (defparameter *font* nil)
