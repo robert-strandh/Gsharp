@@ -106,7 +106,8 @@
 (defun draw-the-cursor (pane x)
   (let* ((state (input-state *application-frame*))
 	 (staff (car (staves (layer (cursor *application-frame*)))))
-	 (yoffset (gsharp-drawing::staff-yoffset staff)))
+         ;; Why (- STAFF-YOFFSET)?  dunno.  -- CSR, 2005-10-28
+	 (yoffset (- (gsharp-drawing::staff-yoffset staff))))
     (if (typep staff 'fiveline-staff)
 	(let* ((clef (clef staff))
 	       (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
