@@ -13,7 +13,9 @@
       :height 20 :max-height 20 :min-height 20))
 
 (define-command-table total-melody-table
-    :inherit-from (melody-table global-gsharp-table))
+    :inherit-from (melody-table global-gsharp-table gsharp))
+(define-command-table total-lyrics-table
+    :inherit-from (lyrics-table global-gsharp-table gsharp))
 
 (define-application-frame gsharp (standard-application-frame
 				  esa-frame-mixin)
@@ -423,8 +425,11 @@
     (if success layer (error 'no-such-layer))))
 
 (defmethod select-layer :after (cursor (layer layer))
-  ;; set the command tables here
-  )
+  (typecase layer
+    (lyrics-layer (setf (command-table (first (windows *application-frame*)))
+                        (find-command-table 'total-lyrics-table)))
+    (melody-layer (setf (command-table (first (windows *application-frame*)))
+                        (find-command-table 'total-melody-table)))))
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
