@@ -215,7 +215,8 @@
 	:gsharp-measure :sdl :midi
 	:gsharp-play)
   (:shadowing-import-from :gsharp-numbering #:number)
-  (:shadowing-import-from :gsharp-buffer #:rest))
+  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:export #:gsharp))
 
 (in-package :gsharp-numbering)
 (deftype number () 'cl:number)

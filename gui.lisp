@@ -538,18 +538,24 @@
 ;;;
 ;;; main entry point
 
-(defun run-gsharp (&key (width 900) (height 600))
+(defun gsharp (&key new-process (process-name "Gsharp")
+	       (width 900) (height 600))
+  "Start a Gsharp session" 
   (let* ((buffer (make-initialized-buffer))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state))
 	 (cursor (make-initial-cursor buffer)))
-    (let ((*application-frame* (make-application-frame 'gsharp
-						  :buffer buffer
-						  :input-state input-state
-						  :cursor cursor
-						  :width width :height height)))
-      (setf (staves (car (layers (car (segments buffer))))) (list staff))
-      (run-frame-top-level *application-frame*))))
+    (let ((frame (make-application-frame 'gsharp
+					 :buffer buffer
+					 :input-state input-state
+					 :cursor cursor
+					 :width width :height height)))
+      (flet ((run ()
+	       (run-frame-top-level frame)))
+	(setf (staves (car (layers (car (segments buffer))))) (list staff))
+	(if new-process
+	    (clim-sys:make-process #'run :name process-name)
+	    (run))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
