@@ -40,4 +40,5 @@
    "input-state"
    "midi"
    "modes"
+   "play"
    "gui")

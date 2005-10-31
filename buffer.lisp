@@ -237,7 +237,7 @@
 	    ":notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W "
 	    notehead rbeams lbeams dots xoffset)))
 
-(defmethod notehead-duration ((element element))
+(defmethod undotted-duration ((element element))
   (ecase (notehead element)
     (:whole 1)
     (:half 1/2)
@@ -245,7 +245,7 @@
 				  (lbeams element))))))))
 
 (defmethod element-duration ((element element))
-  (let ((duration (notehead-duration element)))
+  (let ((duration (undotted-duration element)))
     (do ((dot-duration (/ duration 2) (/ dot-duration 2))
 	 (nb-dots (dots element) (1- nb-dots)))
 	((zerop nb-dots))

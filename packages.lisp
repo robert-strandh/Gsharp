@@ -66,7 +66,7 @@
 	   #:rename-staff
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
-	   #:stem-direction #:stem-length #:notehead-duration #:element-duration
+	   #:stem-direction #:stem-length #:undotted-duration #:element-duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
@@ -202,10 +202,18 @@
 	   #:header #:header-type
 	   #:unknown-event #:status #:data-byte))
 
+(defpackage :gsharp-play
+  (:use :common-lisp :midi :gsharp-buffer)
+  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:export #:play-layer
+	   #:play-segment
+	   #:play-buffer))
+
 (defpackage :gsharp
   (:use :clim :clim-lisp :gsharp-utilities :esa
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
-	:gsharp-measure :sdl :midi)
+	:gsharp-measure :sdl :midi
+	:gsharp-play)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest))
 

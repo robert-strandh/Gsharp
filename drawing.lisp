@@ -633,7 +633,7 @@
 (defmethod draw-element (pane (element rest) x &optional (flags t))
   (declare (ignore flags))
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
-    (score-pane:draw-rest pane (notehead-duration element) x (staff-pos element))
+    (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
     (draw-dots pane (dots element) x (1+ (staff-pos element)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
