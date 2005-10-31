@@ -10,7 +10,7 @@
   (let ((durations (mapcar (lambda (slice)
 			     (mapcar (lambda (bar)
 				       (reduce #'+ (elements bar)
-					       :key #'element-duration))
+					       :key #'duration))
 				     (bars slice)))
 			   slices)))
     (loop while durations
@@ -27,7 +27,7 @@
 		    (notes element))
 	    (mapcar (lambda (note)
 		      (make-instance 'note-off-message
-				     :time (+ time (* 128 (element-duration element)))
+				     :time (+ time (* 128 (duration element)))
 				     :status (+ #x80 channel)
 				     :key (midi-pitch note) :velocity 100))
 		    (notes element)))))
@@ -35,7 +35,7 @@
 (defun events-from-bar (bar time channel)
   (mapcan (lambda (element)
 	    (prog1 (events-from-element element time channel)
-	      (incf time (* 128 (element-duration element)))))
+	      (incf time (* 128 (duration element)))))
 	  (elements bar)))
 
 (defun track-from-slice (slice channel durations)

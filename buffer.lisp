@@ -244,7 +244,7 @@
     (:filled (/ (expt 2 (+ 2 (max (rbeams element)
 				  (lbeams element))))))))
 
-(defmethod element-duration ((element element))
+(defmethod duration ((element element))
   (let ((duration (undotted-duration element)))
     (do ((dot-duration (/ duration 2) (/ dot-duration 2))
 	 (nb-dots (dots element) (1- nb-dots)))

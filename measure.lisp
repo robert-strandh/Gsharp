@@ -21,16 +21,17 @@
 ;;; a `duration' slot that contains the duration of the element. 
 ;;; It also makes sure that whenever the duration of an element
 ;;; is being asked for, the new value is computed should any 
-;;; modification to the element have taken placed in the meantime. 
+;;; modification to the element have taken place in the meantime. 
 
 (defrclass relement element
-  ((duration :initform nil :reader duration)))
+  ((duration :initform nil)))
 
-(defmethod duration :before ((element relement))
+(defmethod duration :around ((element relement))
   (with-slots (duration) element
     (when (or (modified-p element) (null duration))
-      (setf duration (element-duration element))
-      (setf (modified-p element) nil))))
+      (setf duration (call-next-method))
+      (setf (modified-p element) nil))
+    duration))
 
 (defmethod mark-modified ((element relement))
   (setf (modified-p element) t)

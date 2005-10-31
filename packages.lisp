@@ -66,7 +66,7 @@
 	   #:rename-staff
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
-	   #:stem-direction #:stem-length #:undotted-duration #:element-duration
+	   #:stem-direction #:stem-length #:undotted-duration #:duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
@@ -91,7 +91,7 @@
   (:use :common-lisp :gsharp-numbering :gsharp-buffer :gsharp-utilities :obseq)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest)
-  (:export #:mark-modified #:modified-p #:duration #:measure
+  (:export #:mark-modified #:modified-p #:measure
 	   #:measure-min-dist #:measure-coeff #:measure-start-times
 	   #:measure-bar-pos #:measure-seg-pos #:measure-bars #:measures
 	   #:nb-measures #:measureno
