@@ -37,7 +37,7 @@
   (:use :common-lisp :gsharp-utilities)
   (:shadow #:rest)
   (:export #:clef #:name #:lineno
-	   #:staff #:fiveline-staff #:make-fiveline-staff
+	   #:staff #:fiveline-staff
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note

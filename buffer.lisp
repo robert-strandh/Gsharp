@@ -75,15 +75,14 @@
 
 (defclass fiveline-staff (staff)
   ((print-character :allocation :class :initform #\=)
-   (clef :accessor clef :initarg :clef :initform nil)
+   (clef :accessor clef :initarg :clef :initform (make-instance 'clef :name :treble))
    (keysig :accessor keysig :initarg :keysig
-	   :initform (make-array 7 :initial-element :natural))))
+	   :initform (make-array 7 :initial-element :natural)))
+  (:default-initargs
+      :name "default staff"))
 	   
 (defmethod print-object :after ((s fiveline-staff) stream)
   (format stream ":clef ~W :keysig ~W " (clef s) (keysig s)))
-
-(defun make-fiveline-staff (name &optional (clef (make-instance 'clef :name :treble)))
-  (make-instance 'fiveline-staff :name name :clef clef))
 
 (defun read-fiveline-staff-v3 (stream char n)
   (declare (ignore char n))
@@ -874,7 +873,7 @@
 (defclass buffer (gsharp-object)
   ((print-character :allocation :class :initform #\B)
    (segments :initform '() :initarg :segments :accessor segments)
-   (staves :initform (list (make-fiveline-staff "default staff"))
+   (staves :initform (list (make-instance 'fiveline-staff))
 	   :initarg :staves :accessor staves)
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)

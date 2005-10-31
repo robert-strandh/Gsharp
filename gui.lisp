@@ -1050,9 +1050,10 @@
 (defun acquire-new-staff ()
   (let ((name (acquire-unique-staff-name "Name of new staff")))
     (ecase (accept 'staff-type :prompt "Type")
-      (:fiveline (let ((clef (accept 'clef-type :prompt "Clef type of new staff"))
-		       (line (accept 'integer :prompt "Line of clef")))
-		   (make-fiveline-staff name (make-instance 'clef :name clef :lineno line))))
+      (:fiveline (let* ((clef-name (accept 'clef-type :prompt "Clef type of new staff"))
+			(line (accept 'integer :prompt "Line of clef"))
+			(clef (make-instance 'clef :name clef-name :lineno line)))
+		   (make-instance 'fiveline-staff :name name :clef clef)))
       (:lyrics (make-lyrics-staff name)))))
 
 (define-gsharp-command (com-insert-staff-before :name t) ()
