@@ -45,7 +45,7 @@
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
 	   #:add-note #:find-note #:remove-note #:cluster
-	   #:rest #:lyrics-element #:make-lyrics-element
+	   #:rest #:lyrics-element
 	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
 	   #:remove-element #:bar #:make-bar
@@ -58,7 +58,7 @@
 	   #:make-empty-buffer #:make-initialized-buffer 
 	   #:layers #:nb-layers #:layerno
 	   #:add-layer #:remove-layer #:segment
-	   #:make-empty-segment #:make-initialized-segment
+	   #:make-initialized-segment
 	   #:segments #:nb-segments #:segmentno #:staves
 	   #:find-staff #:add-segment #:remove-segment
 	   #:add-staff-before-staff #:add-staff-after-staff

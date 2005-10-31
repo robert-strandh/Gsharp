@@ -1130,12 +1130,12 @@
 (defun insert-lyrics-element ()
   (let* ((state (input-state *application-frame*))
 	 (cursor (cursor *application-frame*))
-	 (element (make-lyrics-element
-		   (if (eq (notehead state) :filled) (rbeams state) 0)
-		   (if (eq (notehead state) :filled) (lbeams state) 0)
-		   (dots state)
-		   (notehead state)
-		   (car (staves (layer (cursor *application-frame*)))))))
+	 (element (make-instance 'lyrics-element
+		    :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
+		    :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
+		    :dots (dots state)
+		    :notehead (notehead state)
+		    :staff (car (staves (layer (cursor *application-frame*)))))))
     (insert-element element cursor)
     (forward-element cursor)
     element))

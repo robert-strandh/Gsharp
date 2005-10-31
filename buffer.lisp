@@ -363,11 +363,6 @@
 	 (setf text (make-array length :adjustable t :element-type 'fixnum
 				:fill-pointer length :initial-contents text))))))
 
-(defun make-lyrics-element (rbeams lbeams dots notehead staff)
-  (make-instance 'lyrics-element
-     :rbeams rbeams :lbeams lbeams :dots dots
-     :notehead notehead :staff staff))
-
 (defmethod print-object :after ((elem lyrics-element) stream)
   (with-slots (staff text) elem
      (format stream ":staff ~W :text ~W " staff text)))
@@ -462,9 +457,6 @@
 (defclass melody-bar (bar)
   ((print-character :allocation :class :initform #\|)))
 
-(defun make-melody-bar ()
-  (make-instance 'melody-bar))
-
 (defun read-melody-bar-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'melody-bar (read-delimited-list #\] stream t)))
@@ -475,9 +467,6 @@
 
 (defclass lyrics-bar (bar)
   ((print-character :allocation :class :initform #\C)))
-
-(defun make-lyrics-bar ()
-  (make-instance 'lyrics-bar))
 
 (defun read-lyrics-bar-v3 (stream char n)
   (declare (ignore char n))
@@ -521,9 +510,6 @@
 
 (defmethod print-object :after ((s slice) stream)
   (format stream ":bars ~W " (bars s)))
-
-(defun make-empty-slice ()
-  (make-instance 'slice))
 
 (defun read-slice-v3 (stream char n)
   (declare (ignore char n))
@@ -633,7 +619,7 @@
 
 (defmethod make-layer (name (initial-staff fiveline-staff))
   (flet ((make-initialized-slice ()
-	   (let ((slice (make-empty-slice)))
+	   (let ((slice (make-instance 'slice)))
 	     (add-bar (make-instance 'melody-bar) slice 0)
 	     slice)))
     (let* ((head (make-initialized-slice))
@@ -662,7 +648,7 @@
 
 (defmethod make-layer (name (initial-staff lyrics-staff))
   (flet ((make-initialized-slice ()
-	   (let ((slice (make-empty-slice)))
+	   (let ((slice (make-instance 'slice)))
 	     (add-bar (make-instance 'lyrics-bar) slice 0)
 	     slice)))
     (let* ((head (make-initialized-slice))
@@ -767,11 +753,8 @@
 (defmethod print-object :after ((s segment) stream)
   (format stream ":layers ~W " (layers s)))
 
-(defun make-empty-segment ()
-  (make-instance 'segment))
-
 (defun make-initialized-segment (staff)
-  (let ((segment (make-empty-segment)))
+  (let ((segment (make-instance 'segment)))
     (add-layer (make-layer "Default layer" staff) segment)
     segment))
 
