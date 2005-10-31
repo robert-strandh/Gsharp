@@ -67,11 +67,6 @@ of the external representation :
 The reader accepts this syntax, except that the slots can come in any
 arbitrary order. 
 
-In version 2 of the external representation, a clef was written like
-this :
-
-\texttt{[K \textit{name} \textit{lineno} ]}
-
 %===================================================================
 \section{The staff protocol}
 
@@ -100,13 +95,13 @@ the staff.
 
 \Defclass {fiveline-staff}
 
-This class is a subclass of \texttt{staff} and is used to represent an
+This class is a subclass of \lispobj{staff}, and is used to represent an
 ordinary five-line staff for displaying notes. 
 
 \Definitarg {:clef}
 
 This value must always be supplied, and must be an instance of the
-class \texttt{clef}.  The clef of a five-line staff indicates where
+class \lispobj{clef}.  The clef of a five-line staff indicates where
 on the staff notes are to be displayed.  
 
 \Definitarg {:keysig}
@@ -114,12 +109,12 @@ on the staff notes are to be displayed.
 This initarg is used to represent the key signature of the staff.  The
 value is a vector with seven elements, where each element corresponds
 to a note of the scale (C, D, E, F, G, A, B), and is a keyword
-(\texttt{:natural}, \texttt{:sharp}, or \texttt{:flat}) indicating
+(\lispobj{:natural}, \lispobj{:sharp}, or \lispobj{:flat}) indicating
 whether staff positions corresponding to that note of the scale should
 be altered.  The default value for this initarg is a vector with seven
 elements, each begin the object \lispobj{:natural}.
 
-\Defun {make-fiveline-staff} {name \optional (clef \texttt(make-clef :treble))}
+\Defun {make-fiveline-staff} {name \optional (clef \lispobj(make-clef :treble))}
 
 \Defgeneric {clef} {fiveline-staff}
 
@@ -130,6 +125,11 @@ the staff.
 
 Return the key signature of the staff.  With \lispobj{setf}, change
 the key signature of the staff. 
+
+\Defclass {lyrics-staff}
+
+This class is a subclass of \lispobj{staff}, and is used to represent a
+staff for displaying lyrics. 
 
 %-------------------------------------------------------------------
 \subsection{External representation}
@@ -142,10 +142,10 @@ version 3 of the external representation:
 The reader accepts this syntax, except that the slots can come in any
 arbitrary order. 
 
-In version 2 of the external representation, a staff was written like
-this :
+A lyrics staff is printed (by \lispobj{print-object}) like this in
+version 3 of the external representation:
 
-\texttt{[= \textit{clef} \textit{keysig} ]}
+\texttt{[L :name \textit{name} ]}
 
 %===================================================================
 \section{The keysig protocol}
@@ -154,3 +154,39 @@ There is no keysig protocol yet.  But I would like to create one.  A
 keysig would be a read-only object.  
 
 %===================================================================
+\section{The note protocol}
+
+%-------------------------------------------------------------------
+\subsection{Description}
+
+Notes are immutable objects.  For that reason, if you want to change
+some characteristics of a note in a cluster, you have to delete the
+note from the cluster and create one with the characteristics you
+would like. 
+
+%-------------------------------------------------------------------
+\subsection{Protocol classes and functions}
+
+\Defclass{note}
+
+The protocol class for notes. 
+
+
+%-------------------------------------------------------------------
+\subsection{External representation}
+
+A note is printed (by \lispobj{print-object}
+
+\Definitarg{:cluster}
+
+This initarg determines the cluster to which the note belongs.  The
+default value for this initarg is \lispobj{nil} indicating that the
+note currently does not belong to any cluster.
+
+\Definitarg{:pitch}
+
+This initarg is mandatory, and determines the pitch of the note.
+A pitch is indicated as an integer between 0 and 127, where 0 means a
+C in the lowest octave possible. 
+
+\Definitarg{:staff}
