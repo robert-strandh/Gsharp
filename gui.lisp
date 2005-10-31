@@ -1054,7 +1054,7 @@
 			(line (accept 'integer :prompt "Line of clef"))
 			(clef (make-instance 'clef :name clef-name :lineno line)))
 		   (make-instance 'fiveline-staff :name name :clef clef)))
-      (:lyrics (make-lyrics-staff name)))))
+      (:lyrics (make-instance 'lyrics-staff :name name)))))
 
 (define-gsharp-command (com-insert-staff-before :name t) ()
   (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")

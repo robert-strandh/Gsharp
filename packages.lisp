@@ -38,7 +38,7 @@
   (:shadow #:rest)
   (:export #:clef #:name #:lineno
 	   #:staff #:fiveline-staff
-	   #:lyrics-staff #:make-lyrics-staff
+	   #:lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note
 	   #:note-less #:note-equal #:bar

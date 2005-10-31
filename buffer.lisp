@@ -97,9 +97,6 @@
 (defclass lyrics-staff (staff)
   ((print-character :allocation :class :initform #\L)))
 
-(defun make-lyrics-staff (name)
-  (make-instance 'lyrics-staff :name name))
-
 (defun read-lyrics-staff-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'lyrics-staff (read-delimited-list #\] stream t)))
