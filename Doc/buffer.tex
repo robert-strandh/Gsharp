@@ -87,7 +87,11 @@ The protocol class for all staves.
 
 \Definitarg {:name}
 
-The default value for this initarg is \lispobj{"default"}. 
+This initarg indicates the name of the staff to be used.  The name of
+a staff must be unique and usually has some relationship to the
+instruments(s) displayed on it.  Examples of staff names would be
+``1st violin'', ``soprano & alto'', etc.  The default value for this
+initarg is \lispobj{"default staff"}.
 
 \Defgeneric {name} {staff}
 
@@ -96,14 +100,24 @@ the staff.
 
 \Defclass {fiveline-staff}
 
+This class is a subclass of \texttt{staff} and is used to represent an
+ordinary five-line staff for displaying notes. 
+
 \Definitarg {:clef}
 
-This value must always be supplied. 
+This value must always be supplied, and must be an instance of the
+class \texttt{clef}.  The clef of a five-line staff indicates where
+on the staff notes are to be displayed.  
 
 \Definitarg {:keysig}
 
-The default value for this initarg is a vector with seven elements,
-each begin the object \lispobj{:natural}.
+This initarg is used to represent the key signature of the staff.  The
+value is a vector with seven elements, where each element corresponds
+to a note of the scale (C, D, E, F, G, A, B), and is a keyword
+(\texttt{:natural}, \texttt{:sharp}, or \texttt{:flat}) indicating
+whether staff positions corresponding to that note of the scale should
+be altered.  The default value for this initarg is a vector with seven
+elements, each begin the object \lispobj{:natural}.
 
 \Defun {make-fiveline-staff} {name \optional (clef \texttt(make-clef :treble))}
 
