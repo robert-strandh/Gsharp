@@ -923,7 +923,7 @@
   (let ((staff (accept 'score-pane:fiveline-staff :prompt "Set clef of staff"))
 	(type (accept 'clef-type :prompt "Type of clef"))
 	(line (accept 'integer :prompt "Line of clef")))
-    (setf (clef staff) (make-clef type line))))
+    (setf (clef staff) (make-instance 'clef :name type :lineno line))))
 
 (define-gsharp-command com-higher ()
   (incf (last-note (input-state *application-frame*)) 7))
@@ -1052,7 +1052,7 @@
     (ecase (accept 'staff-type :prompt "Type")
       (:fiveline (let ((clef (accept 'clef-type :prompt "Clef type of new staff"))
 		       (line (accept 'integer :prompt "Line of clef")))
-		   (make-fiveline-staff name (make-clef clef line))))
+		   (make-fiveline-staff name (make-instance 'clef :name clef :lineno line))))
       (:lyrics (make-lyrics-staff name)))))
 
 (define-gsharp-command (com-insert-staff-before :name t) ()

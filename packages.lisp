@@ -36,7 +36,7 @@
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities)
   (:shadow #:rest)
-  (:export #:clef #:make-clef #:name #:lineno
+  (:export #:clef #:name #:lineno
 	   #:staff #:fiveline-staff #:make-fiveline-staff
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition

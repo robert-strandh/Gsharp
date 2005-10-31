@@ -35,22 +35,23 @@
 
 (defclass clef (gsharp-object name-mixin)
   ((print-character :allocation :class :initform #\K)
-   (lineno :reader lineno :initarg :lineno :initform nil)))
+   (lineno :reader lineno :initarg :lineno
+	   :type (or (integer 2 6) null))))
 
+(defmethod initialize-instance :after ((c clef) &rest args)
+  (declare (ignore args))
+  (with-slots (lineno name) c
+    (check-type name (member :treble :bass :c :percussion))
+    (unless (slot-boundp c 'lineno)
+      (setf lineno
+	    (ecase name
+	      (:treble 2)
+	      (:bass 6)
+	      (:c 4)
+	      (:percussion 3))))))
+  
 (defmethod print-object :after ((c clef) stream)
   (format stream ":lineno ~W " (lineno c)))
-
-(defun make-clef (name &optional lineno)
-  (declare (type (member :treble :bass :c :percussion) name)
-	   (type (or (integer 2 6) null) lineno))
-  (make-instance 'clef
-		 :name name
-		 :lineno (or lineno
-			     (ecase name
-			       (:treble 2)
-			       (:bass 6)
-			       (:c 4)
-			       (:percussion 3)))))
 
 (defun read-clef-v3 (stream char n)
   (declare (ignore char n))
@@ -81,7 +82,7 @@
 (defmethod print-object :after ((s fiveline-staff) stream)
   (format stream ":clef ~W :keysig ~W " (clef s) (keysig s)))
 
-(defun make-fiveline-staff (name &optional (clef (make-clef :treble)))
+(defun make-fiveline-staff (name &optional (clef (make-instance 'clef :name :treble)))
   (make-instance 'fiveline-staff :name name :clef clef))
 
 (defun read-fiveline-staff-v3 (stream char n)
