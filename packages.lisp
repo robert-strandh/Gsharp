@@ -44,8 +44,8 @@
 	   #:note-less #:note-equal #:bar
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
-	   #:add-note #:find-note #:remove-note #:cluster #:make-cluster
-	   #:rest #:make-rest #:lyrics-element #:make-lyrics-element
+	   #:add-note #:find-note #:remove-note #:cluster
+	   #:rest #:lyrics-element #:make-lyrics-element
 	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
 	   #:remove-element #:bar #:make-bar

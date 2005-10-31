@@ -282,11 +282,6 @@
   (with-slots (stem-direction notes) c
     (format stream ":stem-direction ~W :notes ~W " stem-direction notes)))
 
-(defun make-cluster (rbeams lbeams dots notehead stem-direction)
-  (make-instance 'cluster
-		 :rbeams rbeams :lbeams lbeams :dots dots
-		 :notehead notehead :stem-direction stem-direction))
-
 (defun read-cluster-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'cluster (read-delimited-list #\] stream t)))
@@ -340,11 +335,6 @@
 (defmethod print-object :after ((s rest) stream)
   (with-slots (staff staff-pos) s
     (format stream ":staff ~W :staff-pos ~W " staff staff-pos)))
-
-(defun make-rest (rbeams lbeams dots notehead staff)
-  (make-instance 'rest
-		 :rbeams rbeams :lbeams lbeams :dots dots
-		 :notehead notehead :staff staff))
 
 (defun read-rest-v3 (stream char n)
   (declare (ignore char n))
