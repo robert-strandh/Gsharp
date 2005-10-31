@@ -155,11 +155,15 @@
 (defclass note (gsharp-object)
   ((print-character :allocation :class :initform #\N)
    (cluster :initform nil :initarg :cluster :accessor cluster)
-   (pitch :initarg :pitch :reader pitch)
-   (staff :initarg :staff :reader staff)
-   (head :initform nil :initarg :head :reader head)
-   (accidentals :initform :natural :initarg :accidentals :reader accidentals)
-   (dots :initform nil :initarg :dots :reader dots)))
+   (pitch :initarg :pitch :reader pitch :type (integer 0 128))
+   (staff :initarg :staff :reader staff :type (or staff null))
+   (head :initform nil :initarg :head :reader head
+	 :type (or (member :whole :half :filled) null))
+   (accidentals :initform :natural :initarg :accidentals :reader accidentals
+		:type (member :natural :flat :double-flat
+			      :sharp :double-sharp))
+   (dots :initform nil :initarg :dots :reader dots
+	 :type (or integer null))))
 
 (defmethod print-object :after ((n note) stream)
   (with-slots (pitch staff head accidentals dots) n
