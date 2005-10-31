@@ -41,7 +41,7 @@
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note
-	   #:make-note #:note-less #:note-equal #:bar
+	   #:note-less #:note-equal #:bar
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
 	   #:add-note #:find-note #:remove-note #:cluster #:make-cluster

@@ -132,29 +132,12 @@
 ;;; currently does not belong to any cluster. 
 (defgeneric cluster (note))
 
-(defclass note (gsharp-object)
-  ((print-character :allocation :class :initform #\N)
-   (cluster :initform nil :initarg :cluster :accessor cluster)
-   (pitch :initarg :pitch :reader pitch)
-   (staff :initarg :staff :reader staff)
-   (head :initarg :head :reader head)
-   (accidentals :initarg :accidentals :reader accidentals)
-   (dots :initarg :dots :reader dots)))
-
-(defmethod print-object :after ((n note) stream)
-  (with-slots (pitch staff head accidentals dots) n
-    (format stream
-	    ":pitch ~W :staff ~W :head ~W :accidentals ~W :dots ~W "
-	    pitch staff head accidentals dots)))
-
-;;; Make a note with the pitch and staff given.  
-;;; 
 ;;; The pitch is a number from 0 to 128
 ;;; 
 ;;; The staff is a staff object. 
 ;;; 
 ;;; Head can be :whole, :half, :filled, or nil.  A value of nil means
-;;; that the note head is determined by that of the cluster to which the
+;;; that the notehead is determined by that of the cluster to which the
 ;;; note belongs. 
 ;;; 
 ;;; Accidentals can be :natural :flat :double-flat :sharp or :double-sharp.
@@ -163,22 +146,27 @@
 ;;; display style. 
 ;;; 
 ;;; The number of dots can be an integer or nil, meaning that the number
-;;; of dots is taken from the cluster. 
+;;; of dots is taken from the cluster.  The default value is nil.
 ;;; 
 ;;; The actual duration of the note is computed from the note head, the
 ;;; number of beams of the cluster to which the note belongs, and the
 ;;; number of dots in the usual way. 
-(defun make-note (pitch &optional staff
-		  (head nil) (accidentals :natural) (dots nil))
-  (declare (type (integer 0 128) pitch)
-	   (type (or staff null) staff)
-	   (type (or (member :whole :half :filled) null) head)
-	   (type (member :natural :flat :double-flat :sharp :double-sharp) accidentals)
-	   (type (or integer null) dots))
-    (make-instance 'note
-      :pitch pitch :staff staff
-      :head head :accidentals accidentals :dots dots))
-		 
+
+(defclass note (gsharp-object)
+  ((print-character :allocation :class :initform #\N)
+   (cluster :initform nil :initarg :cluster :accessor cluster)
+   (pitch :initarg :pitch :reader pitch)
+   (staff :initarg :staff :reader staff)
+   (head :initform nil :initarg :head :reader head)
+   (accidentals :initform :natural :initarg :accidentals :reader accidentals)
+   (dots :initform nil :initarg :dots :reader dots)))
+
+(defmethod print-object :after ((n note) stream)
+  (with-slots (pitch staff head accidentals dots) n
+    (format stream
+	    ":pitch ~W :staff ~W :head ~W :accidentals ~W :dots ~W "
+	    pitch staff head accidentals dots)))
+
 (defun read-note-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'note (read-delimited-list #\] stream t)))
