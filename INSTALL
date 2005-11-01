@@ -1,12 +1,13 @@
-;;; Load the system definition file
+;;; Load the gsharp.asd file or make sure the directory in which it
+;;; lives is in the asdf:*central-registry* list of directories
 
-(load "system.lisp")
+(load "gsharp.asd")
 
 ;;; Compile and load the system
 
-(operate-on-system :gsharp :compile)
-(operate-on-system :gsharp :load)
+(asdf:operate 'asdf:load-op :gsharp)
 
 ;;; Run Gsharp
 
-(gsharp::run-gsharp)
+(gsharp::gsharp)
+
