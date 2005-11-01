@@ -105,16 +105,22 @@ We have not worked on the installation procedure at all, and in fact,
 we have not decided exactly in what form the releases will be made
 available to the public.  
 
-For now, you have to use CMUCL (perhaps SBCL will work as well, but it
-has not been tested) with a core image that contains {\clim} and
-MK:DEFSYSTEM.  Start {\lisp}, load the file \texttt{system.lisp} into
-the running {\lisp} image and then type: 
+First make the fonts.  In the \texttt{Fonts} subdirectory, type
+\texttt{make}. 
 
-\texttt{(operate-on-system :gsharp :compile)}
+For now, you have to use a Lisp system that runs McCLIM comfortably
+(SBCL, CMUCL, OpenMCL) with a core image that contains {\clim} and
+ASDF.  Start {\lisp}, load the file \texttt{gsharp.asd} into
+the running {\lisp} image and then type:
+
+\texttt{(asdf:operate 'asdf:load-op :gsharp)}
 
 which will compile and load all the files. To start {\gs} type 
 
-\texttt{(gsharp::run-gsharp)}
+\texttt{(gsharp::gsharp)}
+
+Instead of loading the ASDF file manually, you could put it in a
+directory that is in the list \texttt{asdf:*central-registry*}. 
 
 \section{The different editing panes}
 
