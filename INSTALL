@@ -1,3 +1,9 @@
+;;; Compile the fonts
+
+$ (cd Fonts; make)
+
+;;; Start the lisp system
+
 ;;; Load the gsharp.asd file or make sure the directory in which it
 ;;; lives is in the asdf:*central-registry* list of directories
 
