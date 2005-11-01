@@ -55,10 +55,9 @@
 	   #:slice
 	   #:segment #:slices #:sliceno
 	   #:head #:body #:tail #:make-layer #:buffer
-	   #:make-empty-buffer #:make-initialized-buffer 
+	   #:make-initialized-buffer 
 	   #:layers #:nb-layers #:layerno
 	   #:add-layer #:remove-layer #:segment
-	   #:make-initialized-segment
 	   #:segments #:nb-segments #:segmentno #:staves
 	   #:find-staff #:add-segment #:remove-segment
 	   #:add-staff-before-staff #:add-staff-after-staff

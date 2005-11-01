@@ -745,18 +745,17 @@
    (buffer :initform nil :initarg :buffer :accessor buffer)
    (layers :initform '() :initarg :layers :accessor layers)))
 
-(defmethod initialize-instance :after ((s segment) &rest args)
+(defmethod initialize-instance :after ((s segment) &rest args &key staff)
   (declare (ignore args))
-  (loop for layer in (layers s)
-	do (setf (segment layer) s)))
+  (with-slots (layers) s
+    (when (null layers)
+      (assert (not (null staff)))
+      (push (make-layer "Default layer" staff) layers))
+    (loop for layer in layers
+	  do (setf (segment layer) s))))
 
 (defmethod print-object :after ((s segment) stream)
   (format stream ":layers ~W " (layers s)))
-
-(defun make-initialized-segment (staff)
-  (let ((segment (make-instance 'segment)))
-    (add-layer (make-layer "Default layer" staff) segment)
-    segment))
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))
@@ -861,12 +860,9 @@
     (format stream ":staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W "
 	    staves segments min-width spacing-style right-edge left-offset left-margin)))
 
-(defun make-empty-buffer ()
-  (make-instance 'buffer))
-
 (defun make-initialized-buffer ()
-  (let ((buffer (make-empty-buffer)))
-    (add-segment (make-initialized-segment (car (staves buffer))) buffer 0)
+  (let ((buffer (make-instance 'buffer)))
+    (add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)
     buffer))
 
 (defun read-buffer-v3 (stream char n)
@@ -911,7 +907,7 @@
       (setf segments (delete segment segments :test #'eq))
       ;; make sure there is one segment left
       (unless segments
-	(add-segment (make-initialized-segment (car (staves buffer))) buffer 0)))
+	(add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)))
     (setf buffer nil)))
 
 (define-condition staff-already-in-buffer (gsharp-condition) ()

@@ -367,13 +367,13 @@
 
 (define-gsharp-command (com-insert-segment-before :name t) ()
   (let ((cursor (cursor *application-frame*)))
-    (insert-segment-before (make-initialized-segment (car (staves (buffer *application-frame*))))
+    (insert-segment-before (make-instance 'segment :staff (car (staves (buffer *application-frame*))))
 			   cursor)
     (backward-segment cursor)))
 
 (define-gsharp-command (com-insert-segment-after :name t) ()
   (let ((cursor (cursor *application-frame*)))
-    (insert-segment-after (make-initialized-segment (car (staves (buffer *application-frame*))))
+    (insert-segment-after (make-instance 'segment :staff (car (staves (buffer *application-frame*))))
 			  cursor)
     (forward-segment cursor)))
 
