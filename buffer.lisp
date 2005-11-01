@@ -852,18 +852,16 @@
 
 (defmethod initialize-instance :after ((b buffer) &rest args)
   (declare (ignore args))
-  (loop for segment in (segments b)
-	do (setf (buffer segment) b)))
+  (with-slots (segments) b
+    (when (null segments)
+      (add-segment (make-instance 'segment :staff (car (staves b))) b 0))
+    (loop for segment in segments
+	  do (setf (buffer segment) b))))
 
 (defmethod print-object :after ((b buffer) stream)
   (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
     (format stream ":staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W "
 	    staves segments min-width spacing-style right-edge left-offset left-margin)))
-
-(defun make-initialized-buffer ()
-  (let ((buffer (make-instance 'buffer)))
-    (add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)
-    buffer))
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))

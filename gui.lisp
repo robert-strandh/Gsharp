@@ -218,7 +218,7 @@
 	 ("Quit" :command com-quit)))
 
 (define-gsharp-command (com-new-buffer :name t) ()
-  (let* ((buffer (make-initialized-buffer))
+  (let* ((buffer (make-instance 'buffer))
 	 (cursor (make-initial-cursor buffer))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state)))
@@ -541,7 +541,7 @@
 (defun gsharp (&key new-process (process-name "Gsharp")
 	       (width 900) (height 600))
   "Start a Gsharp session" 
-  (let* ((buffer (make-initialized-buffer))
+  (let* ((buffer (make-instance 'buffer))
 	 (staff (car (staves buffer)))
 	 (input-state (make-input-state))
 	 (cursor (make-initial-cursor buffer)))
