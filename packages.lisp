@@ -51,7 +51,8 @@
 	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
 	   #:remove-element #:bar #:make-bar
-	   #:melody-bar #:lyrics-bar
+	   #:melody-bar #:make-melody-bar
+	   #:lyrics-bar #:make-lyrics-bar
 	   #:layer #:lyrics-layer #:melody-layer
 	   #:bars #:nb-bars #:barno #:add-bar #:remove-bar
 	   #:slice

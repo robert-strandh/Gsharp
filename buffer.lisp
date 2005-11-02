@@ -406,6 +406,19 @@
 	 (setf text (make-array length :adjustable t :element-type 'fixnum
 				:fill-pointer length :initial-contents text))))))
 
+(defun make-lyrics-element (staff &rest args
+			    &key (notehead :filled) (lbeams 0) (rbeams 0)
+			    (dots 0) (xoffset 0))
+  (declare (type staff staff)
+	   (type (member :whole :half :filled) notehead)
+	   (type (integer 0 5) lbeams)
+	   (type (integer 0 5) rbeams)
+	   (type (integer 0 3) dots)
+	   (type number xoffset)
+	   (ignore notehead lbeams rbeams dots xoffset))
+  (apply #'make-instance 'lyrics-element
+	 :staff staff args))
+
 (defmethod print-object :after ((elem lyrics-element) stream)
   (with-slots (staff text) elem
      (format stream ":staff ~W :text ~W " staff text)))
@@ -500,6 +513,9 @@
 (defclass melody-bar (bar)
   ((print-character :allocation :class :initform #\|)))
 
+(defun make-melody-bar ()
+  (make-instance 'melody-bar))
+
 (defun read-melody-bar-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'melody-bar (read-delimited-list #\] stream t)))
@@ -510,6 +526,9 @@
 
 (defclass lyrics-bar (bar)
   ((print-character :allocation :class :initform #\C)))
+
+(defun make-lyrics-bar ()
+  (make-instance 'lyrics-bar))
 
 (defun read-lyrics-bar-v3 (stream char n)
   (declare (ignore char n))
@@ -594,7 +613,7 @@
       (setf bars (delete bar bars :test #'eq))
       (unless bars
 	;; make sure there is one bar left
-	(add-bar (make-instance 'melody-bar) slice 0)))
+	(add-bar (make-melody-bar) slice 0)))
     (setf slice nil)))
 
 (defmethod remove-bar ((bar lyrics-bar))
@@ -604,7 +623,7 @@
       (setf bars (delete bar bars :test #'eq))
       (unless bars
 	;; make sure there is one bar left
-	(add-bar (make-instance 'lyrics-bar) slice 0)))
+	(add-bar (make-lyrics-bar) slice 0)))
     (setf slice nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -663,7 +682,7 @@
 (defmethod make-layer (name (initial-staff fiveline-staff))
   (flet ((make-initialized-slice ()
 	   (let ((slice (make-instance 'slice)))
-	     (add-bar (make-instance 'melody-bar) slice 0)
+	     (add-bar (make-melody-bar) slice 0)
 	     slice)))
     (let* ((head (make-initialized-slice))
 	   (body (make-initialized-slice))
@@ -692,7 +711,7 @@
 (defmethod make-layer (name (initial-staff lyrics-staff))
   (flet ((make-initialized-slice ()
 	   (let ((slice (make-instance 'slice)))
-	     (add-bar (make-instance 'lyrics-bar) slice 0)
+	     (add-bar (make-lyrics-bar) slice 0)
 	     slice)))
     (let* ((head (make-initialized-slice))
 	   (body (make-initialized-slice))
