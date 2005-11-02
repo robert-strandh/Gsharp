@@ -38,18 +38,18 @@
    (lineno :reader lineno :initarg :lineno
 	   :type (or (integer 2 6) null))))
 
-(defmethod initialize-instance :after ((c clef) &rest args)
-  (declare (ignore args))
-  (with-slots (lineno name) c
-    (check-type name (member :treble :bass :c :percussion))
-    (unless (slot-boundp c 'lineno)
-      (setf lineno
-	    (ecase name
+(defun make-clef (name &key lineno)
+  (declare (type (member :treble :bass :c :percussion) name)
+	   (type (or (integer 2 6) null) lineno))
+  (when (null lineno)
+    (setf lineno
+	  (ecase name
 	      (:treble 2)
 	      (:bass 6)
 	      (:c 4)
-	      (:percussion 3))))))
-  
+	      (:percussion 3))))
+  (make-instance 'clef :name name :lineno lineno))
+
 (defmethod print-object :after ((c clef) stream)
   (format stream ":lineno ~W " (lineno c)))
 
@@ -75,12 +75,14 @@
 
 (defclass fiveline-staff (staff)
   ((print-character :allocation :class :initform #\=)
-   (clef :accessor clef :initarg :clef :initform (make-instance 'clef :name :treble))
+   (clef :accessor clef :initarg :clef :initform (make-clef :treble))
    (keysig :accessor keysig :initarg :keysig
-	   :initform (make-array 7 :initial-element :natural)))
-  (:default-initargs
-      :name "default staff"))
+	   :initform (make-array 7 :initial-element :natural))))
 	   
+(defun make-fiveline-staff (&rest args &key name clef keysig)
+  (declare (ignore name clef keysig))
+  (apply #'make-instance 'fiveline-staff args))
+
 (defmethod print-object :after ((s fiveline-staff) stream)
   (format stream ":clef ~W :keysig ~W " (clef s) (keysig s)))
 
@@ -96,6 +98,10 @@
 
 (defclass lyrics-staff (staff)
   ((print-character :allocation :class :initform #\L)))
+
+(defun make-lyrics-staff (&rest args &key name)
+  (declare (ignore name))
+  (apply #'make-instance 'lyrics-staff args))
 
 (defun read-lyrics-staff-v3 (stream char n)
   (declare (ignore char n))
@@ -152,15 +158,26 @@
 (defclass note (gsharp-object)
   ((print-character :allocation :class :initform #\N)
    (cluster :initform nil :initarg :cluster :accessor cluster)
-   (pitch :initarg :pitch :reader pitch :type (integer 0 128))
-   (staff :initarg :staff :reader staff :type (or staff null))
+   (pitch :initarg :pitch :reader pitch :type (integer 0 127))
+   (staff :initarg :staff :reader staff :type staff)
    (head :initform nil :initarg :head :reader head
 	 :type (or (member :whole :half :filled) null))
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
 		:type (member :natural :flat :double-flat
 			      :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
-	 :type (or integer null))))
+	 :type (or (integer 0 3) null))))
+
+(defun make-note (pitch staff &rest args &key head (accidentals :natural) dots)
+  (declare (type (integer 0 127) pitch)
+	   (type staff staff)
+	   (type (or (member :whole :half :filled) null) head)
+	   (type (member :natural :flat :double-flat
+			 :sharp :double-sharp)
+		 accidentals)
+	   (type (or (integer 0 3) null) dots)
+	   (ignore head accidentals dots))
+  (apply #'make-instance 'note :pitch pitch :staff staff args))
 
 (defmethod print-object :after ((n note) stream)
   (with-slots (pitch staff head accidentals dots) n
@@ -214,10 +231,10 @@
 
 (defclass element (gsharp-object)
   ((bar :initform nil :initarg :bar :accessor bar)
-   (notehead :initarg :notehead :accessor notehead)
-   (rbeams :initarg :rbeams :accessor rbeams)
-   (lbeams :initarg :lbeams :accessor lbeams)
-   (dots :initarg :dots :accessor dots)
+   (notehead :initform :whole :initarg :notehead :accessor notehead)
+   (rbeams :initform 0 :initarg :rbeams :accessor rbeams)
+   (lbeams :initform 0 :initarg :lbeams :accessor lbeams)
+   (dots :initform 0 :initarg :dots :accessor dots)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)))
    
 (defmethod print-object :after ((e element) stream)
@@ -270,13 +287,25 @@
 (defclass cluster (melody-element)
   ((print-character :allocation :class :initform #\%)
    (notes :initform '() :initarg :notes :accessor notes)
-   (stem-direction :initarg :stem-direction :accessor stem-direction)
-   (stem-length :initform nil :initarg :stem-length :accessor stem-length)))
+   (stem-direction :initform :auto :initarg :stem-direction :accessor stem-direction)))
 
 (defmethod initialize-instance :after ((c cluster) &rest args)
   (declare (ignore args))
   (loop for note in (notes c)
 	do (setf (cluster note) c)))
+
+(defun make-cluster (&rest args
+		     &key (notehead :filled) (lbeams 0) (rbeams 0) (dots 0)
+		     (xoffset 0) notes (stem-direction :auto))
+  (declare (type (member :whole :half :filled) notehead)
+	   (type (integer 0 5) lbeams)
+	   (type (integer 0 5) rbeams)
+	   (type (integer 0 3) dots)
+	   (type number xoffset)
+	   (type list notes)
+	   (type (member :up :down :auto) stem-direction)
+	   (ignore notehead lbeams rbeams dots xoffset notes stem-direction))
+  (apply #'make-instance 'cluster args))
 
 (defmethod print-object :after ((c cluster) stream)
   (with-slots (stem-direction notes) c
@@ -331,6 +360,20 @@
   ((print-character :allocation :class :initform #\-)
    (staff :initarg :staff :reader staff)
    (staff-pos :initarg :staff-pos :initform 4 :reader staff-pos)))
+
+(defun make-rest (staff &rest args
+		  &key (staff-pos 4) (notehead :filled) (lbeams 0) (rbeams 0)
+		  (dots 0) (xoffset 0))
+  (declare (type staff staff)
+	   (type integer staff-pos)
+	   (type (member :whole :half :filled) notehead)
+	   (type (integer 0 5) lbeams)
+	   (type (integer 0 5) rbeams)
+	   (type (integer 0 3) dots)
+	   (type number xoffset)
+	   (ignore staff-pos notehead lbeams rbeams dots xoffset))
+  (apply #'make-instance 'rest
+	 :staff staff args))
 
 (defmethod print-object :after ((s rest) stream)
   (with-slots (staff staff-pos) s
@@ -842,7 +885,7 @@
 (defclass buffer (gsharp-object)
   ((print-character :allocation :class :initform #\B)
    (segments :initform '() :initarg :segments :accessor segments)
-   (staves :initform (list (make-instance 'fiveline-staff))
+   (staves :initform (list (make-fiveline-staff))
 	   :initarg :staves :accessor staves)
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)

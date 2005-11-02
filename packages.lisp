@@ -36,16 +36,18 @@
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities)
   (:shadow #:rest)
-  (:export #:clef #:name #:lineno
-	   #:staff #:fiveline-staff
-	   #:lyrics-staff
+  (:export #:clef #:name #:lineno #:make-clef
+	   #:staff #:fiveline-staff #:make-fiveline-staff
+	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
-	   #:pitch #:accidentals #:dots #:note
+	   #:pitch #:accidentals #:dots #:note #:make-note
 	   #:note-less #:note-equal #:bar
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
-	   #:add-note #:find-note #:remove-note #:cluster
-	   #:rest #:lyrics-element
+	   #:add-note #:find-note #:remove-note
+	   #:cluster #:make-cluster
+	   #:rest #:make-rest
+	   #:lyrics-element #:make-lyrics-element
 	   #:slice #:elements
 	   #:nb-elements #:elementno #:add-element
 	   #:remove-element #:bar #:make-bar
@@ -64,7 +66,7 @@
 	   #:rename-staff
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
-	   #:stem-direction #:stem-length #:undotted-duration #:duration
+	   #:stem-direction #:undotted-duration #:duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char

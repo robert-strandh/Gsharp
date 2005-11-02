@@ -165,9 +165,8 @@
 		 (lbeams (lbeams cluster))
 		 (dots (dots cluster))
 		 (notes (notes cluster))
-		 (stem-direction (stem-direction cluster))
-		 (stem-length (stem-length cluster)))
-	    (declare (ignore stem-direction stem-length notehead lbeams rbeams dots))
+		 (stem-direction (stem-direction cluster)))
+	    (declare (ignore stem-direction notehead lbeams rbeams dots))
 	    (loop for note in notes do
 		  (draw-ellipse* pane xpos (* 15 (note-position note)) 7 0 0 7)
 		  (score-pane:draw-accidental pane (accidentals note)
@@ -564,12 +563,12 @@
 (defun insert-cluster ()
   (let* ((state (input-state *application-frame*))
 	 (cursor (cursor *application-frame*))
-	 (cluster (make-instance 'cluster
-		    :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
-		    :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
-		    :dots (dots state)
-		    :notehead (notehead state)
-		    :stem-direction (stem-direction state))))
+	 (cluster (make-cluster
+		   :notehead (notehead state)
+		   :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
+		   :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
+		   :dots (dots state)
+		   :stem-direction (stem-direction state))))
     (insert-element cluster cursor)
     (forward-element cursor)
     cluster))
@@ -580,9 +579,7 @@
 (defun insert-note (pitch cluster)
   (let* ((state (input-state *application-frame*))
 	 (staff (car (staves (layer (slice (bar cluster))))))
-	 (note (make-instance 'note
-		 :pitch pitch
-		 :staff staff
+	 (note (make-note pitch staff
 		 :head (notehead state)
 		 :accidentals (aref (keysig staff) (mod pitch 7))
 		 :dots (dots state))))
@@ -627,12 +624,11 @@
 (define-gsharp-command com-insert-rest ()
   (let* ((state (input-state *application-frame*))
 	 (cursor (cursor *application-frame*))
-	 (rest (make-instance 'rest
+	 (rest (make-rest (car (staves (layer (cursor *application-frame*))))
 		 :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
 		 :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
 		 :dots (dots state)
-		 :notehead (notehead state)
-		 :staff (car (staves (layer (cursor *application-frame*)))))))
+		 :notehead (notehead state))))
     (insert-element rest cursor)
     (forward-element cursor)
     rest))
@@ -735,9 +731,7 @@
   (let ((element (cur-element)))
     (if (typep element 'cluster)
 	(let* ((note (cur-note))
-	       (new-note (make-instance 'note
-			   :pitch (1- (pitch note))
-			   :staff (staff note)
+	       (new-note (make-note (1- (pitch note)) (staff note)
 			   :head (head note)
 			   :accidentals (accidentals note)
 			   :dots (dots note))))
@@ -753,10 +747,10 @@
 	      (cursor (cursor *application-frame*)))
 	  (backward-element cursor)
 	  (delete-element cursor)
-	  (insert-element (make-instance 'rest
+	  (insert-element (make-rest staff
+			    :staff-pos (- staff-pos 2)
 			    :notehead notehead :dots dots
-			    :rbeams rbeams :lbeams lbeams
-			    :staff staff :staff-pos (- staff-pos 2))
+			    :rbeams rbeams :lbeams lbeams)
 			  cursor)
 	  (forward-element cursor)))))
     
@@ -764,9 +758,7 @@
   (let ((element (cur-element)))
     (if (typep element 'cluster)
 	(let* ((note (cur-note))
-	       (new-note (make-instance 'note
-			   :pitch (1+ (pitch note))
-			   :staff (staff note)
+	       (new-note (make-note (1+ (pitch note)) (staff note)
 			   :head (head note)
 			   :accidentals (accidentals note)
 			   :dots (dots note))))
@@ -782,19 +774,17 @@
 	      (cursor (cursor *application-frame*)))
 	  (backward-element cursor)
 	  (delete-element cursor)
-	  (insert-element (make-instance 'rest
+	  (insert-element (make-rest staff
+			    :staff-pos (+ staff-pos 2)
 			    :notehead notehead :dots dots
-			    :rbeams rbeams :lbeams lbeams
-			    :staff staff :staff-pos (+ staff-pos 2))
+			    :rbeams rbeams :lbeams lbeams)
 			  cursor)
 	  (forward-element cursor)))))
 
 (define-gsharp-command com-sharper ()
   (let* ((cluster (cur-cluster))
 	 (note (cur-note))
-	 (new-note (make-instance 'note
-		     :pitch (pitch note)
-		     :staff (staff note)
+	 (new-note (make-note (pitch note) (staff note)
 		     :head (head note)
 		     :accidentals (ecase (accidentals note)
 				    (:double-sharp :double-sharp)
@@ -810,9 +800,7 @@
 (define-gsharp-command com-flatter ()
   (let* ((cluster (cur-cluster))
 	 (note (cur-note))
-	 (new-note (make-instance 'note
-		     :pitch (pitch note)
-		     :staff (staff note)
+	 (new-note (make-note (pitch note) (staff note)
 		     :head (head note)
 		     :accidentals (ecase (accidentals note)
 				    (:double-sharp :sharp)
@@ -925,7 +913,7 @@
   (let ((staff (accept 'score-pane:fiveline-staff :prompt "Set clef of staff"))
 	(type (accept 'clef-type :prompt "Type of clef"))
 	(line (accept 'integer :prompt "Line of clef")))
-    (setf (clef staff) (make-instance 'clef :name type :lineno line))))
+    (setf (clef staff) (make-clef type :lineno line))))
 
 (define-gsharp-command com-higher ()
   (incf (last-note (input-state *application-frame*)) 7))
@@ -1054,9 +1042,9 @@
     (ecase (accept 'staff-type :prompt "Type")
       (:fiveline (let* ((clef-name (accept 'clef-type :prompt "Clef type of new staff"))
 			(line (accept 'integer :prompt "Line of clef"))
-			(clef (make-instance 'clef :name clef-name :lineno line)))
-		   (make-instance 'fiveline-staff :name name :clef clef)))
-      (:lyrics (make-instance 'lyrics-staff :name name)))))
+			(clef (make-clef clef-name :lineno line)))
+		   (make-fiveline-staff :name name :clef clef)))
+      (:lyrics (make-lyrics-staff :name name)))))
 
 (define-gsharp-command (com-insert-staff-before :name t) ()
   (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")

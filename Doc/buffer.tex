@@ -39,10 +39,6 @@ Name                   & Pitch        & Default line \\
 
 \Defclass {clef}
 
-\Definitarg {:name}
-
-\Definitarg {:lineno}
-
 \Defun {make-clef} {name \optional (lineno \cl{nil})}
 
 Create a clef with the name and line numbers given.  Line numbers
@@ -80,41 +76,24 @@ arbitrary order.
 
 The protocol class for all staves. 
 
-\Definitarg {:name}
+\Defclass {fiveline-staff}
 
-This initarg indicates the name of the staff to be used.  The name of
-a staff must be unique and usually has some relationship to the
-instruments(s) displayed on it.  Examples of staff names would be
-``1st violin'', ``soprano \& alto'', etc.  The default value for this
-initarg is \lispobj{"default staff"}.
+This class is a subclass of \lispobj{staff}, and is used to represent an
+ordinary five-line staff for displaying notes. 
 
 \Defgeneric {name} {staff}
 
 Return the name of the staff.  With \lispobj{setf}, change the name of
 the staff.
 
-\Defclass {fiveline-staff}
+\Defun {make-fiveline-staff} {\key name clef keysig}
 
-This class is a subclass of \lispobj{staff}, and is used to represent an
-ordinary five-line staff for displaying notes. 
-
-\Definitarg {:clef}
-
-This value must always be supplied, and must be an instance of the
-class \lispobj{clef}.  The clef of a five-line staff indicates where
-on the staff notes are to be displayed.  
-
-\Definitarg {:keysig}
-
-This initarg is used to represent the key signature of the staff.  The
-value is a vector with seven elements, where each element corresponds
-to a note of the scale (C, D, E, F, G, A, B), and is a keyword
-(\lispobj{:natural}, \lispobj{:sharp}, or \lispobj{:flat}) indicating
-whether staff positions corresponding to that note of the scale should
-be altered.  The default value for this initarg is a vector with seven
-elements, each begin the object \lispobj{:natural}.
-
-\Defun {make-fiveline-staff} {name \optional (clef \lispobj(make-clef :treble))}
+Make a five-line staff with the name, the clef, and the key signature
+indicated.  The default value of the \lispobj{name} argument is the
+string \lispobj{"default staff"}.  The default value for the
+\lispobj{clef} argument is a newly created treble clef.  The default
+argument for the key signature is a key signature with no
+alterations. 
 
 \Defgeneric {clef} {fiveline-staff}
 
@@ -130,6 +109,11 @@ the key signature of the staff.
 
 This class is a subclass of \lispobj{staff}, and is used to represent a
 staff for displaying lyrics. 
+
+\Defun {make-lyrics-staff} (\key name)
+
+Make a lyrics staff with the name indicated.  The default value of the
+\lispobj{name} argument is the string \lispobj{"default staff"}.
 
 %-------------------------------------------------------------------
 \subsection{External representation}
@@ -171,22 +155,101 @@ would like.
 
 The protocol class for notes. 
 
+\Defun {make-note} (pitch staff \rest args \key head accidentals dots)
+
+Create a note as indicated.  The pitch represents the pitch of the
+note without any accidentals, and is an integer between 0 and 127,
+where 0 indicates a C in the lowest octave.  The staff is an instance
+of the class \lispobj{staff} and indicates what staff the note is to
+be displayed on.  
+
+The \lispobj{head} argument indicates what kind of note-head is wanted
+in the form of one of the keywords \lispobj{:whole}, \lispobj{:half},
+and \lispobj{:filled}, or nil, where nil means that the note-head is
+taken from the cluster to which the note belongs.
+
+The \lispobj{accidentals} argument indicates which, if any,
+accidentals the note should have, and is one of the keywords 
+\lispobj{:natural}, \lispobj{:flat}, \lispobj{:double-flat},
+\lispobj{:sharp}, or \lispobj{:double-sharp}.  The default value is
+\lispobj{:natural} meaning that this note does not have any
+accidentals. 
+
+The \lispobj{dots} argument indicates how many dots follow this note.
+It is an integer between 0 and 3 or nil, where nil means that the
+number of dots is taken  from the cluster to which the note belongs.
 
 %-------------------------------------------------------------------
 \subsection{External representation}
 
 A note is printed (by \lispobj{print-object}
 
-\Definitarg{:cluster}
+%===================================================================
+\section{The cluster protocol}
 
-This initarg determines the cluster to which the note belongs.  The
-default value for this initarg is \lispobj{nil} indicating that the
-note currently does not belong to any cluster.
+%-------------------------------------------------------------------
+\subsection{Description}
 
-\Definitarg{:pitch}
+A cluster is a roughly the same as a chord, in that it is a collection
+of notes that share a stem  (unless the note heads are whole note
+heads, in which case there is no stem at all).  
 
-This initarg is mandatory, and determines the pitch of the note.
-A pitch is indicated as an integer between 0 and 127, where 0 means a
-C in the lowest octave possible. 
+%-------------------------------------------------------------------
+\subsection{Protocol classes and functions}
 
-\Definitarg{:staff}
+\Defclass{cluster}
+
+\Defun {make-cluster} {&key (notehead :filled) (lbeams 0) (rbeams 0)
+		       (dots 0) (xoffset 0) notes (stem-direction :auto))}
+
+Create a cluster.
+
+The \lispobj{notehead} argument indicates the basic timing unit to be
+used for this cluster and is one of the keywords \lispobj{:whole},
+\lispobj{:half}, and \lispobj{:filled}.  A value of \lispobj{:whole}
+gives a \emph{basic duration} of $1$, a value of \lispobj{:half} gives $1
+\over 2$ and \lispobj{:filled} gives $1 \over 4$. 
+
+The \lispobj{lbeams} argument indicates by how many beams this cluster
+ties to the cluster immediately to its left.  It must be an integer
+between $0$ and $5$ inclusive. 
+
+The \lispobj{rbeams} argument indicates by how many beams this cluster
+ties to the cluster immediately to its right.  It must be an integer
+between $0$ and $5$ inclusive. 
+
+When the \lispobj{notehead} argument is \lispobj{:filled}, the
+\emph{basic duration} ($1 \over 4$) is divided by $2^n$ where $n$ is the max
+of the values of \lispobj{lbeams} and \lispobj{rbeams}, giving the
+\emph{beamed duration} of the cluster. 
+
+The \lispobj{dots} arguments indicates how many dots should follow
+notes of this cluster by default.  It must be an integer between $0$
+and $3$ inclusive.  The number of dots determines how the \emph{final
+duration} for the cluster is obtained from its \emph{beamed duration}.
+When the value is $0$, the final duration is the same as the beamed
+duration.  When the value is $1$, the final duration is the beamed
+duration multiplied by $3 \over 2$.  When the value is $2$, the final
+duration is the beamed duration multiplied by $7 \over 4$.  When the
+value is $3$, the final duration is the beamed duration multiplied by
+$15 \over 8$.
+
+The \lispobj{xoffset} arguments indicates by how much to the right of
+its nominal position this cluster should be displayed.  The unit is in
+\emph{staff-steps}. 
+
+The \lispobj{notes} argument is a list of initial notes for this
+cluster.
+
+The \lispobj{stem-direction} argument indicates the direction to be
+used for the stem of this cluster.  The value is one of the keywords
+\lispobj{:up}, \lispobj{:down} and \lispobj{:auto}, where
+\lispobj{:auto} means that the direction is determined by the layout
+algorithm.  The values \lispobj{:up} and \lispobj{:down} are typically
+used when two voices share a staff, and one voice has all the stems up
+and the other has all the stems down. 
+
+%-------------------------------------------------------------------
+\subsection{External representation}
+
+
