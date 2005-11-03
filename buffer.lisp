@@ -513,8 +513,10 @@
 (defclass melody-bar (bar)
   ((print-character :allocation :class :initform #\|)))
 
-(defun make-melody-bar ()
-  (make-instance 'melody-bar))
+(defun make-melody-bar (&rest args &key elements)
+  (declare (type list elements)
+	   (ignore elements))
+  (apply #'make-instance 'melody-bar args))
 
 (defun read-melody-bar-v3 (stream char n)
   (declare (ignore char n))
@@ -527,8 +529,10 @@
 (defclass lyrics-bar (bar)
   ((print-character :allocation :class :initform #\C)))
 
-(defun make-lyrics-bar ()
-  (make-instance 'lyrics-bar))
+(defun make-lyrics-bar (&rest args &key elements)
+  (declare (type list elements)
+	   (ignore elements))
+  (apply #'make-instance 'lyrics-bar args))
 
 (defun read-lyrics-bar-v3 (stream char n)
   (declare (ignore char n))
@@ -569,6 +573,11 @@
   (declare (ignore args))
   (loop for bar in (bars s)
 	do (setf (slice bar) s)))
+
+(defun make-slice (&rest args &key bars)
+  (declare (type list bars)
+	   (ignore bars))
+  (apply #'make-instance 'slice args))
 
 (defmethod print-object :after ((s slice) stream)
   (format stream ":bars ~W " (bars s)))
@@ -681,9 +690,7 @@
 
 (defmethod make-layer (name (initial-staff fiveline-staff))
   (flet ((make-initialized-slice ()
-	   (let ((slice (make-instance 'slice)))
-	     (add-bar (make-melody-bar) slice 0)
-	     slice)))
+	   (make-slice :bars (list (make-melody-bar)))))
     (let* ((head (make-initialized-slice))
 	   (body (make-initialized-slice))
 	   (tail (make-initialized-slice))
@@ -710,9 +717,7 @@
 
 (defmethod make-layer (name (initial-staff lyrics-staff))
   (flet ((make-initialized-slice ()
-	   (let ((slice (make-instance 'slice)))
-	     (add-bar (make-lyrics-bar) slice 0)
-	     slice)))
+	   (make-slice :bars (list (make-lyrics-bar)))))
     (let* ((head (make-initialized-slice))
 	   (body (make-initialized-slice))
 	   (tail (make-initialized-slice))

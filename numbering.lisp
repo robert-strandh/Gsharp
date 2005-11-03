@@ -57,6 +57,10 @@
   (number-elements (bars slice))
   (mapc #'number-all (bars slice)))
 
+(defmethod initialize-instance :after ((slice nslice) &rest args)
+  (declare (ignore args))
+  (number-elements (bars slice)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Layer
