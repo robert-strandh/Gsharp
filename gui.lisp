@@ -317,7 +317,6 @@
     (setf (buffer *application-frame*) buffer
 	  (input-state *application-frame*) input-state
 	  (cursor *application-frame*) cursor)
-    (number-all (buffer *application-frame*))
     (select-layer cursor (car (layers (segment (cursor *application-frame*)))))))
 
 (define-gsharp-command (com-save-buffer-as :name t) ()

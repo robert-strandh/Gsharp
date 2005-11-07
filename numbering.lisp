@@ -1,123 +1,20 @@
 (in-package :gsharp-numbering)
 
-(defmacro defnclass (name base slots)
-  `(progn 
-     (define-added-mixin ,name ,() ,base
-       ((number :accessor number)
-	,@slots))))
+(defmethod number ((element element))
+  (position element (elements (bar element))))
 
-(defun number-elements (list)
-  (loop for elem in list
-	and i from 0
-	do (setf (number elem) i)))
+(defmethod number ((bar bar))
+  (position bar (bars (slice bar))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Element
+(defmethod number ((slice slice))
+  (let ((layer (layer slice)))
+    (cond ((eq slice (head layer)) 0)
+	  ((eq slice (body layer)) 1)
+	  ((eq slice (tail layer)) 2))))
 
-(defnclass nelement element
-  ())
+(defmethod number ((layer layer))
+  (position layer (layers (segment layer))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Bar
+(defmethod number ((segment segment))
+  (position segment (segments (buffer segment))))
 
-(defnclass nbar bar
-  ())
-
-(defmethod add-element :after ((element nelement) (bar bar) position)
-  (declare (ignore position))
-  (number-elements (elements bar)))
-
-(defmethod remove-element :around ((element nelement))
-  (let ((bar (bar element)))
-    (call-next-method)
-    (number-elements (elements bar))))
-
-(defmethod number-all ((bar bar))
-  (number-elements (elements bar)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Slice
-
-(defnclass nslice slice
-  ())
-
-(defmethod add-bar :after ((bar nbar) (slice slice) position)
-  (declare (ignore position))
-  (number-elements (bars slice)))
-
-(defmethod remove-bar :around ((bar nbar))
-  (let ((slice (slice bar)))
-    (call-next-method)
-    (number-elements (bars slice))))
-
-(defmethod number-all ((slice slice))
-  (number-elements (bars slice))
-  (mapc #'number-all (bars slice)))
-
-(defmethod initialize-instance :after ((slice nslice) &rest args)
-  (declare (ignore args))
-  (number-elements (bars slice)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Layer
-
-(defnclass nlayer layer
-  ())
-
-(defmethod initialize-instance :after ((layer nlayer) &rest args)
-  (declare (ignore args))
-  (setf (number (head layer)) 0
-	(number (body layer)) 1
-	(number (tail layer)) 2))
-
-(defmethod number-all ((layer layer))
-  (number-all (head layer))
-  (number-all (body layer))
-  (number-all (tail layer)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Segment
-
-(defnclass nsegment segment
-  ())
-
-(defmethod add-layer :after ((layer nlayer) (segment segment))
-  (number-elements (layers segment)))
-
-(defmethod remove-layer :around ((layer nlayer))
-  (let ((segment (segment layer)))
-    (call-next-method)
-    (number-elements (layers segment))))
-
-(defmethod number-all ((segment segment))
-  (number-elements (layers segment))
-  (mapc #'number-all (layers segment)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; Buffer
-
-(defnclass nbuffer buffer
-  ())
-
-(defmethod initialize-instance :after ((buffer nbuffer) &rest args)
-  (declare (ignore args))
-  (number-elements (segments buffer)))
-
-(defmethod add-segment :after ((segment nsegment) (buffer buffer) position)
-  (declare (ignore position))
-  (number-elements (segments buffer)))
-
-(defmethod remove-segment :around ((segment nsegment))
-  (let ((buffer (buffer segment)))
-    (call-next-method)
-    (number-elements (segments buffer))))
-
-(defmethod number-all ((buffer buffer))
-  (number-elements (segments buffer))
-  (mapc #'number-all (segments buffer)))

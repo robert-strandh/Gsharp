@@ -77,7 +77,7 @@
   (:use :gsharp-utilities :gsharp-buffer :clim-lisp)
   (:shadowing-import-from :gsharp-buffer #:rest)
   (:shadow #:number)
-  (:export #:number #:number-all))
+  (:export #:number))
 
 (defpackage :obseq
   (:use :common-lisp)
