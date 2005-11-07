@@ -477,6 +477,8 @@
 (defmethod print-object :after ((b bar) stream)
   (format stream ":elements ~W " (elements b)))
 
+(defgeneric make-bar-for-staff (staff &rest args &key elements))
+
 (defmethod nb-elements ((bar bar))
   (length (elements bar)))
 
@@ -518,6 +520,10 @@
 	   (ignore elements))
   (apply #'make-instance 'melody-bar args))
 
+(defmethod make-bar-for-staff ((staff fiveline-staff) &rest args &key elements)
+  (declare (ignore elements))
+  (apply #'make-instance 'melody-bar args))
+
 (defun read-melody-bar-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'melody-bar (read-delimited-list #\] stream t)))
@@ -532,6 +538,10 @@
 (defun make-lyrics-bar (&rest args &key elements)
   (declare (type list elements)
 	   (ignore elements))
+  (apply #'make-instance 'lyrics-bar args))
+
+(defmethod make-bar-for-staff ((staff lyrics-staff) &rest args &key elements)
+  (declare (ignore elements))
   (apply #'make-instance 'lyrics-bar args))
 
 (defun read-lyrics-bar-v3 (stream char n)
@@ -672,8 +682,15 @@
    (tail :initarg :tail :accessor tail))
   (:default-initargs :name "default layer"))
 
-(defmethod initialize-instance :after ((l layer) &rest args)
+(defmethod initialize-instance :after ((l layer) &rest args &key head body tail)
   (declare (ignore args))
+  (let ((staff (car (staves l))))
+    (unless head
+      (setf (head l) (make-slice :bars (list (make-bar-for-staff staff)))))
+    (unless body 
+      (setf (body l) (make-slice :bars (list (make-bar-for-staff staff)))))
+    (unless tail
+      (setf (tail l) (make-slice :bars (list (make-bar-for-staff staff))))))
   (setf (layer (head l)) l
 	(layer (body l)) l
 	(layer (tail l)) l))
@@ -683,25 +700,19 @@
     (format stream ":staves ~W :head ~W :body ~W :tail ~W "
 	    staves head body tail)))
 
+(defgeneric make-layer-for-staff (staff &rest args &key staves head body tail))
+
+(defun make-layer (staves &rest args &key head body tail)
+  (declare (type list staves)
+	   (type (or slice null) head body tail)
+	   (ignore head body tail))
+  (apply #'make-layer-for-staff (car staves) :staves staves args))	   
+
 ;;; melody layer
 
 (defclass melody-layer (layer)
   ((print-character :allocation :class :initform #\_)))
 
-(defmethod make-layer (name (initial-staff fiveline-staff))
-  (flet ((make-initialized-slice ()
-	   (make-slice :bars (list (make-melody-bar)))))
-    (let* ((head (make-initialized-slice))
-	   (body (make-initialized-slice))
-	   (tail (make-initialized-slice))
-	   (result (make-instance 'melody-layer
-		      :name name :staves (list initial-staff)
-		      :head head :body body :tail tail)))
-      (setf (slot-value head 'layer) result
-	    (slot-value body 'layer) result
-	    (slot-value tail 'layer) result)
-      result)))
-  
 (defun read-melody-layer-v3 (stream char n)
   (declare (ignore char n))
   (apply #'make-instance 'melody-layer (read-delimited-list #\] stream t)))
@@ -710,24 +721,14 @@
   #'read-melody-layer-v3
   *gsharp-readtable-v3*)
 
+(defmethod make-layer-for-staff ((staff fiveline-staff) &rest args &key staves head body tail)
+  (declare (ignore staves head body tail))
+  (apply #'make-instance 'melody-layer args))
+
 ;;; lyrics layer
 
 (defclass lyrics-layer (layer)
   ((print-character :allocation :class :initform #\M)))
-
-(defmethod make-layer (name (initial-staff lyrics-staff))
-  (flet ((make-initialized-slice ()
-	   (make-slice :bars (list (make-lyrics-bar)))))
-    (let* ((head (make-initialized-slice))
-	   (body (make-initialized-slice))
-	   (tail (make-initialized-slice))
-	   (result (make-instance 'lyrics-layer
-		      :name name :staves (list initial-staff)
-		      :head head :body body :tail tail)))
-      (setf (slot-value head 'layer) result
-	    (slot-value body 'layer) result
-	    (slot-value tail 'layer) result)
-      result)))
 
 (defun read-lyrics-layer-v3 (stream char n)
   (declare (ignore char n))
@@ -736,6 +737,10 @@
 (set-dispatch-macro-character #\[ #\M
   #'read-lyrics-layer-v3
   *gsharp-readtable-v3*)
+
+(defmethod make-layer-for-staff ((staff lyrics-staff) &rest args &key staves head body tail)
+  (declare (ignore staves head body tail))
+  (apply #'make-instance 'lyrics-layer args))
 
 (defmethod slices ((layer layer))
   (with-slots (head body tail) layer
@@ -817,7 +822,7 @@
   (with-slots (layers) s
     (when (null layers)
       (assert (not (null staff)))
-      (push (make-layer "Default layer" staff) layers))
+      (push (make-layer (list staff)) layers))
     (loop for layer in layers
 	  do (setf (segment layer) s))))
 
@@ -864,7 +869,7 @@
       (setf layers (delete layer layers :test #'eq))
       ;; make sure there is one layer left
       (unless layers
-	(add-layer (make-layer "Default layer" (car (staves (buffer segment))))
+	(add-layer (make-layer (staves (buffer segment)))
 		   segment)))
     (setf segment nil)))
 
