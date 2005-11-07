@@ -18,12 +18,19 @@
 (defparameter *font* nil)
 (defparameter *fonts* (make-array 100 :initial-element nil))
 
+;;; Map integer levels of white, represented by the number of white pixels in 
+;;; a 4x4 pixel grid, to CLIM inks. 
 (defparameter *gray-levels*
   (loop with result = (make-array '(17))
 	for i from 0 to 16 do
 	(setf (aref result i) (make-gray-color (/ i 16)))
 	finally (return result)))
 
+;;; Given a pane and a matrix representing a glyph in a font, return a server-side
+;;; pixmap that corresponds to that matrix for that pane.  Create pixmaps
+;;; on demand to avoid initial delays and too many pixmaps in the server.
+;;; The elements of the matrix are integers from 0 to 16 inclusive, representing how
+;;; many pixels are white in a 4x4 grid.
 (defun pane-pixmap (pane matrix)
   (or (gethash matrix (pane-pixmaps pane))
       (let* ((dimensions (array-dimensions matrix))
@@ -138,9 +145,23 @@
 ;;;
 ;;; drawing functions
 
+;;; A staff step is half of the distance between two staff lines.
+;;; Given a staff-step value, determine the corresponding number of
+;;; pixels in the current font.  The sign of the value returned is 
+;;; the same as that of the argument.
 (defun staff-step (n)
   (* n (/ (staff-line-distance *font*) 2)))
 
+;;; Given a pane, a glyph number, an x position (measured in pixels)
+;;; and a y position (measured in staff steps), draw the glyph
+;;; at the position in the pane. 
+;;; The font is organized so that the normal glyph is immediately
+;;; followed by a light version of the glyph.  Hence, we add 1
+;;; to the glyph number if a light version is desired. 
+;;; It appears that the resulting y-coordinate (in pixels) has the 
+;;; same sign as the staff-step argument, which suggests that this
+;;; function must be called with a negated staff-step.  It might be
+;;; better to have this function do the negation. 
 (defun draw-antialiased-glyph (pane glyph-no x staff-step)
   (let* ((extra (if *light-glyph* 1 0))
 	 (matrix (glyph *font* (+ glyph-no extra)))
@@ -152,6 +173,14 @@
 	    (y1 (+ (staff-step staff-step) dy)))
 	(draw-pixmap* pane pixmap x1 y1)))))
 
+;;; Given a pane, an x position (measured in pixels) a y position 
+;;; (measured in staff steps), a glyph to draw a the bottom of the stack
+;;; a glyph to draw at the top of the stack, a glyph to draws in the middle
+;;; of the stack, and the number of elements of the stack, draw the stack
+;;; by first drawing the lower glyph, then the intermediate glyphs, and
+;;; finally the upper glyph.  
+;;; It appears that this function increases the staff step in each iteration,
+;;; which seems incomptible with the way draw-antialiased-glyph appears to work.
 (defun draw-stack (pane glyph-lower glyph-upper glyph-two x staff-step how-many)
   (draw-antialiased-glyph pane glyph-lower x staff-step)
   (loop for ss from staff-step by 2
@@ -159,14 +188,20 @@
 	(draw-antialiased-glyph pane glyph-two x ss))
   (draw-antialiased-glyph pane glyph-upper x (+ staff-step (* 2 (1- how-many)))))
   
+;;; Draw a stack of whole-note noteheads
+;;; This function is currently not used.  
 (defun draw-whole-stack (pane x staff-step how-many)
   (draw-stack pane +glyph-whole-lower+ +glyph-whole-upper+ +glyph-whole-two+
 	      x staff-step how-many))
 
+;;; draw a stack of half-note noteheads
+;;; This function is currently not used.  
 (defun draw-half-stack (pane x staff-step how-many)
   (draw-stack pane +glyph-half-lower+ +glyph-half-upper+ +glyph-half-two+
 	      x staff-step how-many))
 
+;;; draw a stack of filled noteheads.  
+;;; This function is currently not used.  
 (defun draw-filled-stack (pane x staff-step how-many)
   (draw-stack pane +glyph-filled-lower+ +glyph-filled-upper+ +glyph-filled-two+
 	      x staff-step how-many))
