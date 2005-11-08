@@ -304,9 +304,7 @@
 
 (defun draw-staff-line (pane x1 staff-step x2)
   (multiple-value-bind (down up) (staff-line-offsets *font*)
-    ;; the staff line offsets are both positive, so subract
-    ;; the UP value from y and add the DOWN value to y. 
-    (let ((y1 (- (- (staff-step staff-step)) up))
+    (let ((y1 (+ (- (staff-step staff-step)) up))
 	  (y2 (+ (- (staff-step staff-step)) down)))
       (draw-rectangle* pane x1 y1 x2 y2))))
 

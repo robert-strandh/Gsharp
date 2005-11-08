@@ -56,7 +56,7 @@
       (setf staff-line-offset-down
 	    (floor (/ staff-line-thickness 2))
 	    staff-line-offset-up
-	    (- staff-line-thickness staff-line-offset-down)))
+	    (- staff-line-offset-down staff-line-thickness)))
     (let ((stem-thickness (round (/ staff-line-distance 11.9))))
       (setf stem-offset-left
 	    (- (floor (/ stem-thickness 2)))
@@ -130,14 +130,17 @@
   (with-slots (x-offset y-offset) (aref (glyphs font) glyph-no)
     (values x-offset y-offset)))
 
-;;; the staff line offsets are both positive integers.
-;;; if the staff line has a thickness which is an even
-;;; number of pixels, then the two values returned are the
-;;; same.  Otherwise the first value (down) is 1 smaller
-;;; than the second value (up).  This implies that the
-;;; y-value of the reference point for a staff line is either
-;;; in the middle of the staff line (if the thickness is even)
-;;; or half a pixel BELOW the middle (if the thickness is odd).
+;;; the DOWN staff line offset is a nonnegative integer, and the UP
+;;; staff line offset is a negative integer.  This way, both of them
+;;; should be ADDED to a reference y value to obtain the lower and
+;;; upper y coordinates of the staff line.  If the staff line has a
+;;; thickness which is an even number of pixels, then the two values
+;;; returned have the same magnitude (but opposite signs).  Otherwise
+;;; the first value (DOWN) has a magnitude which is one smaller than
+;;; that of the second value (UP).  This implies that the y-value of the
+;;; reference point for a staff line is either in the middle of the
+;;; staff line (if the thickness is even) or half a pixel BELOW the
+;;; middle (if the thickness is odd).
 (defmethod staff-line-offsets ((font font))
   (with-slots (staff-line-offset-down staff-line-offset-up) font
     (values staff-line-offset-down staff-line-offset-up)))
