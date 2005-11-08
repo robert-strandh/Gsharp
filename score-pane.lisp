@@ -149,6 +149,9 @@
 ;;; Given a staff-step value, determine the corresponding number of
 ;;; pixels in the current font.  The sign of the value returned is 
 ;;; the same as that of the argument.
+;;; But is that reasonable?  It seems more logical to have it return
+;;; the opposite sign, so that the result from staff-step is always
+;;; added to some y coordinate.
 (defun staff-step (n)
   (* n (/ (staff-line-distance *font*) 2)))
 
@@ -181,6 +184,8 @@
 ;;; finally the upper glyph.  
 ;;; It appears that this function increases the staff step in each iteration,
 ;;; which seems incomptible with the way draw-antialiased-glyph appears to work.
+;;; This function is currently used only by the three draw-xxx-stack functions,
+;;; which in turn are currently not used.
 (defun draw-stack (pane glyph-lower glyph-upper glyph-two x staff-step how-many)
   (draw-antialiased-glyph pane glyph-lower x staff-step)
   (loop for ss from staff-step by 2
@@ -299,8 +304,10 @@
 
 (defun draw-staff-line (pane x1 staff-step x2)
   (multiple-value-bind (down up) (staff-line-offsets *font*)
+    ;; the staff line offsets are both positive, so subract
+    ;; the UP value from y and add the DOWN value to y. 
     (let ((y1 (- (- (staff-step staff-step)) up))
-	  (y2 (- (- (staff-step staff-step)) down)))
+	  (y2 (+ (- (staff-step staff-step)) down)))
       (draw-rectangle* pane x1 y1 x2 y2))))
 
 (defclass staff-output-record (output-record)

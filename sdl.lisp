@@ -130,6 +130,14 @@
   (with-slots (x-offset y-offset) (aref (glyphs font) glyph-no)
     (values x-offset y-offset)))
 
+;;; the staff line offsets are both positive integers.
+;;; if the staff line has a thickness which is an even
+;;; number of pixels, then the two values returned are the
+;;; same.  Otherwise the first value (down) is 1 smaller
+;;; than the second value (up).  This implies that the
+;;; y-value of the reference point for a staff line is either
+;;; in the middle of the staff line (if the thickness is even)
+;;; or half a pixel BELOW the middle (if the thickness is odd).
 (defmethod staff-line-offsets ((font font))
   (with-slots (staff-line-offset-down staff-line-offset-up) font
     (values staff-line-offset-down staff-line-offset-up)))
