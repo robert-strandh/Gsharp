@@ -5,7 +5,12 @@
 		   (make-pathname :directory (pathname-directory *load-truename*))))
 
 (defgeneric glyph (font glyph-no))
-(defgeneric glyph-offsets (font glyph-no))
+(defgeneric glyph-offsets (font glyph-no)
+  (:documentation "Return two values, DX and DY to be added to the reference point of
+a glyph in order to obtain its upper-left corner.  If (as is usually the case) 
+the reference point is somewhere inside the bounding box of the glyph, this
+means that both the values returned are negative"))
+
 (defgeneric staff-line-distance (font))
 (defgeneric staff-line-offsets (font))
 (defgeneric stem-offsets (font))
