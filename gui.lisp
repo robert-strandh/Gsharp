@@ -441,7 +441,7 @@
 (define-gsharp-command (com-add-layer :name t) ()
   (let* ((name (acquire-unique-layer-name "Name of new layer"))
 	 (staff (accept 'score-pane:staff :prompt "Initial staff of new layer"))
-	 (new-layer (make-layer staff :name name)))
+	 (new-layer (make-layer (list staff) :name name)))
     (add-layer new-layer (segment (cursor *application-frame*)))
     (select-layer (cursor *application-frame*) new-layer)))
     

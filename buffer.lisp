@@ -700,9 +700,9 @@
     (format stream ":staves ~W :head ~W :body ~W :tail ~W "
 	    staves head body tail)))
 
-(defgeneric make-layer-for-staff (staff &rest args &key staves head body tail))
+(defgeneric make-layer-for-staff (staff &rest args &key staves head body tail &allow-other-keys))
 
-(defun make-layer (staves &rest args &key head body tail)
+(defun make-layer (staves &rest args &key head body tail &allow-other-keys)
   (declare (type list staves)
 	   (type (or slice null) head body tail)
 	   (ignore head body tail))
@@ -721,7 +721,7 @@
   #'read-melody-layer-v3
   *gsharp-readtable-v3*)
 
-(defmethod make-layer-for-staff ((staff fiveline-staff) &rest args &key staves head body tail)
+(defmethod make-layer-for-staff ((staff fiveline-staff) &rest args &key staves head body tail &allow-other-keys)
   (declare (ignore staves head body tail))
   (apply #'make-instance 'melody-layer args))
 
@@ -738,7 +738,7 @@
   #'read-lyrics-layer-v3
   *gsharp-readtable-v3*)
 
-(defmethod make-layer-for-staff ((staff lyrics-staff) &rest args &key staves head body tail)
+(defmethod make-layer-for-staff ((staff lyrics-staff) &rest args &key staves head body tail &allow-other-keys)
   (declare (ignore staves head body tail))
   (apply #'make-instance 'lyrics-layer args))
 
