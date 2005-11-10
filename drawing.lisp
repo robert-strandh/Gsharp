@@ -169,23 +169,45 @@
    ;; that is not attached to a note, independent of the
    ;; staff on which it is located
    (final-stem-position :accessor final-stem-position)
+   ;; the yoffset of the staff relative to which the end of the
+   ;; stem is located
    (final-stem-yoffset :initform 0 :accessor final-stem-yoffset)
+   ;; the position, in staff steps, of the bottom not in the element.
+   ;; Rename this bot-note-pos or something like that
    (minpos :accessor element-minpos)
-   ;; the yoffset of the staff that contains the highest note of
+   ;; the yoffset of the staff that contains the top note of
    ;; the element
+   ;; Rename this top-staff-yoffset 
    (min-yoffset :accessor element-min-yoffset)
+   ;; the position, in staff steps, of the top not in the element.
+   ;; Rename this top-note-pos or something like that
    (maxpos :accessor element-maxpos)
-   ;; the yoffset of the staff that contains the lowest note of
+   ;; the yoffset of the staff that contains the bottom note of
    ;; the element
+   ;; Rename this bot-staff-yoffset 
    (max-yoffset :accessor element-max-yoffset)
    (xpos :accessor element-xpos)))
 
 (define-added-mixin welement () lyrics-element
   ((xpos :accessor element-xpos)))
 
+;;; compute and store several important pieces of information
+;;; about an element:
+;;;  * the position, in staff steps of the top note.
+;;;    Currently this is named element-maxpos.
+;;;    Rename it element-top-note-pos or something like that
+;;;  * the position, in staff steps of the bottom note.
+;;;    Currently this is named element-minpos.
+;;;    Rename it element-bot-note-pos or something like that
+;;;  * the y-offset of the staff containing the top note.
+;;;    Currently, this is called element-min-yoffset.
+;;;    Rename it element-top-note-staff-yoffset for instance
+;;;  * the y-offset of the staff containing the bottom note.
+;;;    Currently, this is called element-max-yoffset.
+;;;    Rename it element-bot-note-staff-yoffset for instance
 (defun compute-maxpos-minpos (element)
   (if (and (typep element 'cluster) (notes element))
-      (let ((max-note (reduce (lambda (n1 n2)
+      (let ((top-note (reduce (lambda (n1 n2)
 				(cond ((< (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n1)
@@ -197,7 +219,7 @@
 				       n1)
 				      (t n2)))
 			      (notes element)))
-	    (min-note (reduce (lambda (n1 n2)
+	    (bot-note (reduce (lambda (n1 n2)
 				(cond ((> (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n1)
@@ -209,10 +231,10 @@
 				       n1)
 				      (t n2)))
 			      (notes element))))
-	(setf (element-maxpos element) (note-position max-note)
-	      (element-minpos element) (note-position min-note)
-	      (element-max-yoffset element) (staff-yoffset (staff min-note))
-	      (element-min-yoffset element) (staff-yoffset (staff max-note))))
+	(setf (element-maxpos element) (note-position top-note)
+	      (element-minpos element) (note-position bot-note)
+	      (element-max-yoffset element) (staff-yoffset (staff bot-note))
+	      (element-min-yoffset element) (staff-yoffset (staff top-note))))
       (setf (element-maxpos element) 4
 	    (element-minpos element) 4
 	    ;; clearly wrong.  should be taken from element or layer.
@@ -223,18 +245,17 @@
   (setf (final-stem-direction element)
 	(if (or (eq (stem-direction element) :up) (eq (stem-direction element) :down))
 	    (stem-direction element)
-	    (let ((max-pos (element-maxpos element))
-		  (min-pos (element-minpos element)))
-	      (if (>= (- max-pos 4)
-		      (- 4 min-pos))
+	    (let ((top-note-pos (element-maxpos element))
+		  (bot-note-pos (element-minpos element)))
+	      (if (>= (- top-note-pos 4)
+		      (- 4 bot-note-pos))
 		  :down
 		  :up)))))
 
 (defun compute-stem-length (element)
-  (let* ((max-pos (element-maxpos element))
-	 (min-pos (element-minpos element))
-	 ;; the uppermost note
-	 (max-note (reduce (lambda (n1 n2)
+  (let* ((top-note-pos (element-maxpos element))
+	 (bot-note-pos (element-minpos element))
+	 (top-note (reduce (lambda (n1 n2)
 			     (cond ((< (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n1)
@@ -246,8 +267,7 @@
 				    n1)
 				   (t n2)))
 			   (notes element)))
-	 ;; the lowermost note
-	 (min-note (reduce (lambda (n1 n2)
+	 (bot-note (reduce (lambda (n1 n2)
 			     (cond ((> (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n1)
@@ -260,13 +280,13 @@
 				   (t n2)))
 			   (notes element)))
 	 (length (if (eq (final-stem-direction element) :up)
-		     (cond ((<= max-pos -3) (- 4 max-pos))
-			   ((<= max-pos 3) 7)
-			   ((= max-pos 4) 6)
+		     (cond ((<= top-note-pos -3) (- 4 top-note-pos))
+			   ((<= top-note-pos 3) 7)
+			   ((= top-note-pos 4) 6)
 			   (t 5))
-		     (cond ((>= min-pos 11) (- min-pos 4))
-			   ((>= min-pos 4) 7)
-			   ((= min-pos 3) 6)
+		     (cond ((>= bot-note-pos 11) (- bot-note-pos 4))
+			   ((>= bot-note-pos 4) 7)
+			   ((= bot-note-pos 3) 6)
 			   (t 5))))
 	 (nb-flags (max (rbeams element) (lbeams element))))
     (when (> nb-flags 0)
@@ -275,11 +295,11 @@
 			   (* 2 (max 0 (- nb-flags 2)))))))
     (setf (final-stem-yoffset element)
 	  (staff-yoffset (staff (if (eq (final-stem-direction element) :up)
-				    max-note min-note))))
+				    top-note bot-note))))
     (setf (final-stem-position element)
 	  (if (eq (final-stem-direction element) :up)
-	      (+ max-pos length)
-	      (- min-pos length)))))
+	      (+ top-note-pos length)
+	      (- bot-note-pos length)))))
 
 (defun compute-appearance (element)
   (when (typep element 'cluster)
@@ -300,9 +320,9 @@
 (defun compute-stem-directions (elements)
   (if (not (eq (stem-direction (car elements)) :auto))
       (stem-direction (car elements))
-      (let ((max-pos (reduce #'max elements :key #'element-maxpos))
-	    (min-pos (reduce #'min elements :key #'element-minpos)))
-	(if (>= (- max-pos 4) (- 4 min-pos)) :down :up))))
+      (let ((top-note-pos (reduce #'max elements :key #'element-maxpos))
+	    (bot-note-pos (reduce #'min elements :key #'element-minpos)))
+	(if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up))))
 
 (defun dominating-note (notes stem-direction)
   (reduce (lambda (n1 n2)
