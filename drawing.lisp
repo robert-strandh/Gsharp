@@ -165,11 +165,18 @@
 
 (define-added-mixin velement () melody-element
   ((final-stem-direction :accessor final-stem-direction)
+   ;; the position, in staff steps, of the end of the stem
+   ;; that is not attached to a note, independent of the
+   ;; staff on which it is located
    (final-stem-position :accessor final-stem-position)
    (final-stem-yoffset :initform 0 :accessor final-stem-yoffset)
    (minpos :accessor element-minpos)
+   ;; the yoffset of the staff that contains the highest note of
+   ;; the element
    (min-yoffset :accessor element-min-yoffset)
    (maxpos :accessor element-maxpos)
+   ;; the yoffset of the staff that contains the lowest note of
+   ;; the element
    (max-yoffset :accessor element-max-yoffset)
    (xpos :accessor element-xpos)))
 
@@ -179,10 +186,10 @@
 (defun compute-maxpos-minpos (element)
   (if (and (typep element 'cluster) (notes element))
       (let ((max-note (reduce (lambda (n1 n2)
-				(cond ((> (staff-yoffset (staff n1))
+				(cond ((< (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n1)
-				      ((< (staff-yoffset (staff n1))
+				      ((> (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n2)
 				      ((> (note-position n1)
@@ -191,10 +198,10 @@
 				      (t n2)))
 			      (notes element)))
 	    (min-note (reduce (lambda (n1 n2)
-				(cond ((< (staff-yoffset (staff n1))
+				(cond ((> (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n1)
-				      ((> (staff-yoffset (staff n1))
+				      ((< (staff-yoffset (staff n1))
 					  (staff-yoffset (staff n2)))
 				       n2)
 				      ((< (note-position n1)
@@ -204,8 +211,8 @@
 			      (notes element))))
 	(setf (element-maxpos element) (note-position max-note)
 	      (element-minpos element) (note-position min-note)
-	      (element-max-yoffset element) (staff-yoffset (staff max-note))
-	      (element-min-yoffset element) (staff-yoffset (staff min-note))))
+	      (element-max-yoffset element) (staff-yoffset (staff min-note))
+	      (element-min-yoffset element) (staff-yoffset (staff max-note))))
       (setf (element-maxpos element) 4
 	    (element-minpos element) 4
 	    ;; clearly wrong.  should be taken from element or layer.
@@ -226,11 +233,12 @@
 (defun compute-stem-length (element)
   (let* ((max-pos (element-maxpos element))
 	 (min-pos (element-minpos element))
+	 ;; the uppermost note
 	 (max-note (reduce (lambda (n1 n2)
-			     (cond ((> (staff-yoffset (staff n1))
+			     (cond ((< (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n1)
-				   ((< (staff-yoffset (staff n1))
+				   ((> (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n2)
 				   ((> (note-position n1)
@@ -238,11 +246,12 @@
 				    n1)
 				   (t n2)))
 			   (notes element)))
+	 ;; the lowermost note
 	 (min-note (reduce (lambda (n1 n2)
-			     (cond ((< (staff-yoffset (staff n1))
+			     (cond ((> (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n1)
-				   ((> (staff-yoffset (staff n1))
+				   ((< (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
 				    n2)
 				   ((< (note-position n1)
@@ -620,10 +629,10 @@
       (unless (eq (notehead element) :whole)
 	(if (eq direction :up)
 	    (score-pane:draw-right-stem pane x
-					(- min-yoffset (score-pane:staff-step min-pos))
+					(- max-yoffset (score-pane:staff-step min-pos))
 					(- stem-yoffset (score-pane:staff-step stem-pos)))
 	    (score-pane:draw-left-stem pane x
-				       (- max-yoffset (score-pane:staff-step max-pos))
+				       (- min-yoffset (score-pane:staff-step max-pos))
 				       (- stem-yoffset (score-pane:staff-step stem-pos))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
