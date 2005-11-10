@@ -324,19 +324,23 @@
 	    (bot-note-pos (reduce #'min elements :key #'element-minpos)))
 	(if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up))))
 
+;;; the dominating note among a bunch of notes is the 
+;;; one that is closest to the beam, i.e. the one 
+;;; the one that is closest to the end of the stem that
+;;; is not attached to a notehead. 
 (defun dominating-note (notes stem-direction)
   (reduce (lambda (n1 n2)
 	    (let ((yoff1 (staff-yoffset (staff n1)))
 		  (yoff2 (staff-yoffset (staff n2))))
 	      (if (eq stem-direction :up)
-		  (if (> yoff1 yoff2)
+		  (if (< yoff1 yoff2)
 		      n1 
-		      (if (< yoff1 yoff2)
+		      (if (> yoff1 yoff2)
 			  n2
 			  (if (> (pitch n1) (pitch n2)) n1 n2)))
-		  (if (< yoff1 yoff2)
+		  (if (> yoff1 yoff2)
 		      n1
-		      (if (> yoff1 yoff2)
+		      (if (< yoff1 yoff2)
 			  n2
 			  (if (< (pitch n1) (pitch n2)) n1 n2))))))
 	  notes))
