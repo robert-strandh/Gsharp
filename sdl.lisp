@@ -19,7 +19,9 @@ means that both the values returned are negative"))
 (defgeneric notehead-right-offsets (font))
 (defgeneric notehead-left-offsets (font))
 (defgeneric bar-line-offsets (font))
-(defgeneric suspended-note-offset (font))
+(defgeneric suspended-note-offset (font)
+  (:documentation "the x offset of a suspended note compared to that
+of a normal note.  This function always returns a positive value"))
 
 (defclass font ()
   ((gf-font :initarg :gf-font :reader gf-font)

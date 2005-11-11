@@ -485,18 +485,30 @@
   (loop for note in notes do
 	(draw-note pane note notehead dots (final-xposition note) (note-position note))))
 
+;;; given a group of notes (i.e. a list of notes, all displayed on the
+;;; same staff, compute their final x offsets.  This is a question of
+;;; determining whether the note goes to the right or to the left of
+;;; the stem.  The head-note of the stem goes to the left of an
+;;; up-stem and to the right of a down-stem.  The x offset of a cluster
+;;; gives the x position of the head-note. 
 (defun compute-final-xpositions (group x direction)
   (setf group (sort (copy-list group)
 		    (if (eq direction :up)
 			(lambda (x y) (< (note-position x) (note-position y)))
 			(lambda (x y) (> (note-position x) (note-position y))))))
   (score-pane:with-suspended-note-offset offset
+    ;; the first element of the group is the head-note
     (setf (final-xposition (car group)) x)
+    ;; OFFSET is a positive quantity that determines the 
+    ;; absolute difference between the x offset of a suspended
+    ;; note and that of a normally positioned note. 
     (when (eq direction :down) (setf offset (- offset)))
     (loop for note in (cdr group)
 	  and old-note = (car group) then note
 	  do (let* ((pos (note-position note))
 		    (old-pos (note-position old-note))
+		    ;; if adjacent notes are just one staff step apart, 
+		    ;; then one must be suspended. 
 		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
 	       (setf (final-xposition note) (+ x dx))
 	       ;; go back to ordinary offset
@@ -612,6 +624,8 @@
 	       (setf (accidental-position choice)
 		     (accidental-min-xpos choice notes staff-step))))))
 
+;;; given a list of notes, group them so that every note in the group
+;;; is displayed on the same staff.  Return the list of groups. 
 (defun group-notes-by-staff (notes)
   (let ((groups '()))
     (loop while notes do
