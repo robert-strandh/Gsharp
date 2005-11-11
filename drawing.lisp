@@ -311,9 +311,9 @@
 	(start-time 0))
     (mapc (lambda (element)
 	    (setf (element-xpos element)
-		  (+ x
-		     (score-pane:staff-step (xoffset element))
-		     (cdr (assoc start-time time-alist))))
+		  (round (+ x
+			    (score-pane:staff-step (xoffset element))
+			    (cdr (assoc start-time time-alist)))))
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
