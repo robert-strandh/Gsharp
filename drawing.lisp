@@ -172,20 +172,16 @@
    ;; the yoffset of the staff relative to which the end of the
    ;; stem is located
    (final-stem-yoffset :initform 0 :accessor final-stem-yoffset)
-   ;; the position, in staff steps, of the bottom not in the element.
-   ;; Rename this bot-note-pos or something like that
-   (minpos :accessor element-minpos)
+   ;; the position, in staff steps, of the bottom note in the element.
+   (bot-note-pos :accessor bot-note-pos)
    ;; the yoffset of the staff that contains the top note of
    ;; the element
-   ;; Rename this top-staff-yoffset 
-   (min-yoffset :accessor element-min-yoffset)
+   (top-note-staff-yoffset :accessor top-note-staff-yoffset)
    ;; the position, in staff steps, of the top not in the element.
-   ;; Rename this top-note-pos or something like that
-   (maxpos :accessor element-maxpos)
+   (top-note-pos :accessor top-note-pos)
    ;; the yoffset of the staff that contains the bottom note of
    ;; the element
-   ;; Rename this bot-staff-yoffset 
-   (max-yoffset :accessor element-max-yoffset)
+   (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)
    (xpos :accessor element-xpos)))
 
 (define-added-mixin welement () lyrics-element
@@ -194,18 +190,10 @@
 ;;; compute and store several important pieces of information
 ;;; about an element:
 ;;;  * the position, in staff steps of the top note.
-;;;    Currently this is named element-maxpos.
-;;;    Rename it element-top-note-pos or something like that
 ;;;  * the position, in staff steps of the bottom note.
-;;;    Currently this is named element-minpos.
-;;;    Rename it element-bot-note-pos or something like that
 ;;;  * the y-offset of the staff containing the top note.
-;;;    Currently, this is called element-min-yoffset.
-;;;    Rename it element-top-note-staff-yoffset for instance
 ;;;  * the y-offset of the staff containing the bottom note.
-;;;    Currently, this is called element-max-yoffset.
-;;;    Rename it element-bot-note-staff-yoffset for instance
-(defun compute-maxpos-minpos (element)
+(defun compute-top-bot-pos-yoffset (element)
   (if (and (typep element 'cluster) (notes element))
       (let ((top-note (reduce (lambda (n1 n2)
 				(cond ((< (staff-yoffset (staff n1))
@@ -231,30 +219,30 @@
 				       n1)
 				      (t n2)))
 			      (notes element))))
-	(setf (element-maxpos element) (note-position top-note)
-	      (element-minpos element) (note-position bot-note)
-	      (element-max-yoffset element) (staff-yoffset (staff bot-note))
-	      (element-min-yoffset element) (staff-yoffset (staff top-note))))
-      (setf (element-maxpos element) 4
-	    (element-minpos element) 4
+	(setf (top-note-pos element) (note-position top-note)
+	      (bot-note-pos element) (note-position bot-note)
+	      (bot-note-staff-yoffset element) (staff-yoffset (staff bot-note))
+	      (top-note-staff-yoffset element) (staff-yoffset (staff top-note))))
+      (setf (top-note-pos element) 4
+	    (bot-note-pos element) 4
 	    ;; clearly wrong.  should be taken from element or layer.
-	    (element-min-yoffset element) 0
-	    (element-max-yoffset element) 0)))
+	    (top-note-staff-yoffset element) 0
+	    (bot-note-staff-yoffset element) 0)))
 
 (defun compute-stem-direction (element)
   (setf (final-stem-direction element)
 	(if (or (eq (stem-direction element) :up) (eq (stem-direction element) :down))
 	    (stem-direction element)
-	    (let ((top-note-pos (element-maxpos element))
-		  (bot-note-pos (element-minpos element)))
+	    (let ((top-note-pos (top-note-pos element))
+		  (bot-note-pos (bot-note-pos element)))
 	      (if (>= (- top-note-pos 4)
 		      (- 4 bot-note-pos))
 		  :down
 		  :up)))))
 
 (defun compute-stem-length (element)
-  (let* ((top-note-pos (element-maxpos element))
-	 (bot-note-pos (element-minpos element))
+  (let* ((top-note-pos (top-note-pos element))
+	 (bot-note-pos (bot-note-pos element))
 	 (top-note (reduce (lambda (n1 n2)
 			     (cond ((< (staff-yoffset (staff n1))
 				       (staff-yoffset (staff n2)))
@@ -320,8 +308,8 @@
 (defun compute-stem-directions (elements)
   (if (not (eq (stem-direction (car elements)) :auto))
       (stem-direction (car elements))
-      (let ((top-note-pos (reduce #'max elements :key #'element-maxpos))
-	    (bot-note-pos (reduce #'min elements :key #'element-minpos)))
+      (let ((top-note-pos (reduce #'max elements :key #'top-note-pos))
+	    (bot-note-pos (reduce #'min elements :key #'bot-note-pos)))
 	(if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up))))
 
 ;;; the dominating note among a bunch of notes is the 
@@ -346,7 +334,7 @@
 	  notes))
 
 (defun draw-beam-group (pane elements)
-  (mapc #'compute-maxpos-minpos elements)
+  (mapc #'compute-top-bot-pos-yoffset elements)
   (if (null (cdr elements))
       (when (or (typep (car elements) 'rest) (notes (car elements)))
 	(compute-appearance (car elements))
@@ -461,11 +449,11 @@
 (defun draw-ledger-lines (pane x notes)
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff (car notes))))
     (let* ((positions (mapcar #'note-position notes))
-	   (max-pos (reduce #'max positions))
-	   (min-pos (reduce #'min positions)))
-      (loop for pos from 10 to max-pos by 2
+	   (top-note-pos (reduce #'max positions))
+	   (bot-note-pos (reduce #'min positions)))
+      (loop for pos from 10 to top-note-pos by 2
 	    do (score-pane:draw-ledger-line pane x pos))
-      (loop for pos from -2 downto min-pos by 2
+      (loop for pos from -2 downto bot-note-pos by 2
 	    do (score-pane:draw-ledger-line pane x pos)))))
 
 (defun draw-flags (pane element x direction pos)
@@ -633,11 +621,7 @@
 
 (defmethod draw-element (pane (element cluster) x &optional (flags t))
   (when (notes element)
-    (let ((max-pos (element-maxpos element))
-	  (min-pos (element-minpos element))
-	  (max-yoffset (element-max-yoffset element))
-	  (min-yoffset (element-min-yoffset element))
-	  (direction (final-stem-direction element))
+    (let ((direction (final-stem-direction element))
 	  (stem-pos (final-stem-position element))
 	  (stem-yoffset (final-stem-yoffset element))
 	  (groups (group-notes-by-staff (notes element))))
@@ -652,12 +636,14 @@
 	    (draw-ledger-lines pane x group))
       (unless (eq (notehead element) :whole)
 	(if (eq direction :up)
-	    (score-pane:draw-right-stem pane x
-					(- max-yoffset (score-pane:staff-step min-pos))
-					(- stem-yoffset (score-pane:staff-step stem-pos)))
-	    (score-pane:draw-left-stem pane x
-				       (- min-yoffset (score-pane:staff-step max-pos))
-				       (- stem-yoffset (score-pane:staff-step stem-pos))))))))
+	    (score-pane:draw-right-stem
+	     pane x
+	     (- (bot-note-staff-yoffset element) (score-pane:staff-step (bot-note-pos element)))
+	     (- stem-yoffset (score-pane:staff-step stem-pos)))
+	    (score-pane:draw-left-stem
+	     pane x
+	     (- (top-note-staff-yoffset element) (score-pane:staff-step (top-note-pos element)))
+	     (- stem-yoffset (score-pane:staff-step stem-pos))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
