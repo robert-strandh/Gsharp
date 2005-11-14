@@ -1072,7 +1072,7 @@
 
 ;;; FIXME restrict to staves that are actually in the layer. 
 (define-gsharp-command (com-delete-staff-from-layer :name t) ()
-  (let ((staff (accept 'score-pane:staff :prompt "Add staff to layer"))
+  (let ((staff (accept 'score-pane:staff :prompt "Delete staff from layer"))
 	(layer (layer (cursor *application-frame*))))
     (remove-staff-from-layer staff layer)))
 
