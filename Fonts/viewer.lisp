@@ -39,7 +39,7 @@
 			    :initial-element 16 :element-type '(unsigned-byte 8))))
     (unless (aref vector index)
       (loop for r from 0 below height
-	    for y from (gf-char-max-n char) by -1 do
+	    for y downfrom (gf-char-max-n char) by 1 do
 	    (loop for c from 0 below width
 		  for x from (gf-char-min-m char) do
 		  (decf (aref glyph
