@@ -138,7 +138,8 @@
 	   #:esa-top-level #:simple-command-loop
 	   #:global-esa-table #:keyboard-macro-table
            #:help-table
-	   #:set-key))
+	   #:set-key
+           #:find-applicable-command-table))
 
 (defpackage :score-pane
   (:use :clim :clim-extensions :clim-lisp :sdl :esa)

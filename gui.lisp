@@ -423,12 +423,12 @@
     (declare (ignore string))
     (if success layer (error 'no-such-layer))))
 
-(defmethod select-layer :after (cursor (layer layer))
-  (typecase layer
-    (lyrics-layer (setf (command-table (first (windows *application-frame*)))
-                        (find-command-table 'total-lyrics-table)))
-    (melody-layer (setf (command-table (first (windows *application-frame*)))
-                        (find-command-table 'total-melody-table)))))
+(defmethod find-applicable-command-table ((frame gsharp))
+  (let* ((layer (layer (cursor *application-frame*))))
+    ;; F-A-C-T-WITH-LAYER?
+    (typecase layer
+      (lyrics-layer (find-command-table 'total-lyrics-table))
+      (melody-layer (find-command-table 'total-melody-table)))))
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
