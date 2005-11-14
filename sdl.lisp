@@ -110,7 +110,7 @@ of a normal note.  This function always returns a positive value"))
   (declare (ignore initargs))
   (with-slots (gf-char x-offset y-offset) glyph
     (setf x-offset (floor (gf-char-min-m gf-char) 4)
-	  y-offset (- (floor (1+ (gf-char-max-n gf-char)) 4)))))
+	  y-offset (- (ceiling (gf-char-max-n gf-char) 4)))))
 
 (defmethod glyph ((font font) glyph-no)
   (with-slots (gf-char pixmap) (aref (glyphs font) glyph-no)
