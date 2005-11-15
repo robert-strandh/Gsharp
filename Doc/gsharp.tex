@@ -702,7 +702,7 @@ algorithm.
 
 There is a slight problem with \emph{head slices} and \emph{tail
 slices} which is why they are not implemented yet.  While
-conceptually these slices below to the segment of their
+conceptually these slices belong to the segment of their
 corresponding layer, the layout algorithm must align them with the
 last measure of the previous segment and the first measure of the
 next segment.  To make it impossible for those slices to stick out
@@ -738,7 +738,7 @@ distance requires a longer geographic distance on the score as well,
 but that is not all there is to it.  In fact, we also know that
 \emph{on a given line}, the smallest geographic distance possible (a
 global parameter of the score that determines denseness and that we
-will call $w_min$) is assigned to the shortest temporal distance on
+will call $w_{min}$) is assigned to the shortest temporal distance on
 that line, \emph{independently of the absolute value of that temporal
 distance}. The other geographic distances are adjusted accordingly.
 Thus, a measure can take up a lot more space on a line if other
