@@ -534,6 +534,16 @@
 (defun element-has-suspended-notes (element)
   (not (apply #'= (mapcar #'final-xposition (notes element)))))
 
+;;; table of x offsets (in staff steps) of accendentals.
+;;; The first index represents a notehead or a type of accidental.
+;;; The second index represents a type of accidentsl.
+;;; The third index is a vertical distance, measured in difference
+;;; in staff steps between the two. 
+;;; The table entry gives how much the accidental represented by
+;;; the second parameter must be positioned to the left of the 
+;;; first one. 
+;;; Entries in the table are offset by 5 in the last dimension
+;;; so that vertical distances between -5 and 5 can be represented
 (defparameter *accidental-offset*
   ;;;     -5  -4  -3  -2  -1   0   1   2   3   4   5
   #3A(((   0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)    ; notehead - dbl flat
@@ -567,6 +577,11 @@
        (   0 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8   0)    ; dbl sharp - sharp
        (   0   0   0 2.8 2.8 2.8 2.8 2.8   0   0   0)))) ; dbl sharp - dbl sharp
 
+;;; given 1) a type of accidental 2) its position (in staff steps) 3)
+;;; a type of accidental or a type of notehead, and 4) its position,
+;;; return the x offset of the first accidental, i.e., how many staff
+;;; steps to the left that it must be moved in order to avoid overlap
+;;; with the second one.
 (defun accidental-distance (acc1 pos1 acc2 pos2)
   (let ((dist (- pos2 pos1)))
     (if (> (abs dist) 5)
@@ -587,6 +602,13 @@
 		(:double-sharp 4))
 	      (+ dist 5)))))		
 
+;;; given two notes (where the first one has an accidental, and the
+;;; second one may or may not have an accidental) and the conversion
+;;; factor between staff steps and x positions, compute the x offset
+;;; of the accidental of the first note.  If the second note has 
+;;; an accidental, but that has not been given a final x offset, then 
+;;; use the x offset of the notehead instead.
+;;; (this funtction should probably be renamed accidental-xoffset)
 (defun accidental-xpos (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
 	 (pos1 (note-position note1))
@@ -599,9 +621,18 @@
 		    (final-xposition note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
+;;; given a note and a list of notes, compute x offset of the accidental
+;;; of the note as required by each of the notes in the list.  In order
+;;; for the accidental of the note not to overlap any of the others, 
+;;; we must use the minimum of all the x offsets thus computed. 
+;;; (this function shoudl probably be renamed accidental-min-xoffset)
 (defun accidental-min-xpos (note1 notes staff-step)
   (reduce #'min notes :key (lambda (note) (accidental-xpos note1 note staff-step))))
 
+;;; given a list of notes that have accidentals to place, and a list of 
+;;; notes that either have no accidentals or with already-placed accidentals, 
+;;; compute the note in the first list that can be placed as far to the right 
+;;; as possible.
 (defun best-accidental (notes-with-accidentals notes staff-step)
   (reduce (lambda (note1 note2) (if (>= (accidental-min-xpos note1 notes staff-step)
 					(accidental-min-xpos note2 notes staff-step))
@@ -609,14 +640,20 @@
 				    note2))
 	  notes-with-accidentals))  
 
+;;; for each note in a list of notes, if it has an accidental, compute
+;;; the position of that accidental and store it in the note. 
 (defun compute-final-accidental-positions (notes x final-stem-direction)
   (let* ((staff-step (score-pane:staff-step 1))
+	 ;; sort the notes from top to bottom
 	 (notes (sort (copy-list notes)
 		      (lambda (x y) (> (note-position x) (note-position y)))))
 	 (notes-with-accidentals (remove-if-not #'final-accidental notes)))
     ;; initially, no accidental has been placed
     (loop for note in notes do (setf (accidental-position note) nil))
     (when (eq final-stem-direction :up)
+      ;; when the stem direction is :up and there is a suspended note
+      ;; i.e., one to the right of the stem, then the accidental of the topmost
+      ;; suspended note is placed first. 
       (let ((first-suspended-note
 	     (find x notes-with-accidentals :test #'/= :key #'final-xposition)))
 	(when first-suspended-note
@@ -641,6 +678,16 @@
 	  (setf notes (remove (staff (car notes)) notes :test #'eq :key #'staff)))
     groups))
 
+;;; draw a cluster.  The stem direction and the stem position have
+;;; already been computed.  
+;;; 1. Group notes by staff.
+;;; 2. Determine which notes in each group go to the left and which notes
+;;;    go to the right of the stem.  
+;;; 3. Determine which notes in each group should be displayed with an accidental.  
+;;; 4. Compute the x offset of each accidental to be displayed. 
+;;; 5. Draw the notes in each group
+;;; 6. If necessary, draw ledger lines for notes in a group
+;;; 7. Draw the stem, if any
 (defmethod draw-element (pane (element cluster) x &optional (flags t))
   (when (notes element)
     (let ((direction (final-stem-direction element))

@@ -110,6 +110,9 @@ of a normal note.  This function always returns a positive value"))
   (declare (ignore initargs))
   (with-slots (gf-char x-offset y-offset) glyph
     (setf x-offset (floor (gf-char-min-m gf-char) 4)
+	  ;; adding 1 to gv-char-max-n is necessary because
+	  ;; of a discrepancy between the GF documentation
+	  ;; and the GF file format
 	  y-offset (- (ceiling (1+ (gf-char-max-n gf-char)) 4)))))
 
 (defmethod glyph ((font font) glyph-no)
@@ -117,6 +120,9 @@ of a normal note.  This function always returns a positive value"))
     (let ((left (floor (gf-char-min-m gf-char) 4))
 	  (right (ceiling (1+ (gf-char-max-m gf-char)) 4))
 	  (down (floor (gf-char-min-n gf-char) 4))
+	  ;; adding 1 to gv-char-max-n is necessary because
+	  ;; of a discrepancy between the GF documentation
+	  ;; and the GF file format
 	  (up (ceiling (1+ (gf-char-max-n gf-char)) 4))
 	  (matrix (gf-char-matrix gf-char)))
       (unless pixmap
