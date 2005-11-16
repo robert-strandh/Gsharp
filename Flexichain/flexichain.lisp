@@ -199,9 +199,6 @@ at position 0 is now at position N."))
 (defmethod flexi-empty-p ((chain standard-flexichain))
   (zerop (nb-elements chain)))
 
-(defgeneric insert-object (chain position object)
-  (:documentation "Inserts an object at gap-start of a chain."))
-  
 (defun position-index (chain position)
   "Returns the (0 indexed) index of the POSITION-th element
 of the CHAIN in the buffer."

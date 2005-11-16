@@ -32,5 +32,6 @@
   :components ((:file "flexichain-package")
                (:file "utilities" :depends-on ("flexichain-package"))
                (:file "flexichain" :depends-on ("utilities"))
-               (:file "flexicursor" :depends-on ("flexichain"))))
+               (:file "flexicursor" :depends-on ("flexichain"))
+               (:file "flexirank" :depends-on ("flexichain"))))
 

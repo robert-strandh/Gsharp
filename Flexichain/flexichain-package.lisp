@@ -36,4 +36,6 @@
 	   #:at-beginning-p #:at-end-p
 	   #:move> #:move<
 	   #:insert #:insert-sequence
-	   #:element< #:element> #:delete< #:delete>))
+	   #:element< #:element> #:delete< #:delete>
+	   #:flexirank-mixin #:element-rank-mixin #:rank))
+
