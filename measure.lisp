@@ -125,8 +125,22 @@
 ;;;
 ;;; Measure
 
+;;; A measure represents the set of simultaneous bars.
+;;; Define a TIMELINE of a measure to be the set of all
+;;; simultaneous elements of the bars of the measure.
+;;; The DURATION of a timeline is either the distance to
+;;; the next closest timeline following it, or, in case 
+;;; it is the last timeline of the measure, the duration 
+;;; of the longest element of the timeline. 
+
 (defclass measure (obseq-elem)
-  ((min-dist :initarg :min-dist :reader measure-min-dist)
+  (;; the smallest temporal distance between either two adjacent
+   ;; timelines in the measure or between the last timeline
+   ;; and the end of the mesure.  The temporal distance between
+   ;; the last timeline and the end of the measure is the same
+   ;; as the duration of the longest element of the last timeline.
+   (min-dist :initarg :min-dist :reader measure-min-dist)
+   ;; the coefficient of a measure is the sum of 
    (coeff :initarg :coeff :reader measure-coeff)
    (start-times :initarg :start-times :reader measure-start-times)
    (seg-pos :initarg :seg-pos :reader measure-seg-pos)
@@ -304,8 +318,11 @@
 ;;; Cost functions
 
 (defclass measure-cost-method (cost-method)
-  ((min-width :initarg :min-width :reader min-width)
+  (;; the min width is taken from the min width of the buffer
+   (min-width :initarg :min-width :reader min-width)
+   ;; the spaceing style is taken from the spacing style of the buffer
    (spacing-style :initarg :spacing-style :reader spacing-style)
+   ;; the amount of horizontal space available to music material
    (line-width :initarg :line-width :reader line-width)))
 
 (defun make-measure-cost-method (min-width spacing-style line-width)

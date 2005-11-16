@@ -916,7 +916,12 @@
    (segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff))
 	   :initarg :staves :accessor staves)
+   ;; the min width determines the preferred geographic distance after the
+   ;; timetlime with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
+   ;; the spacing style of the buffer determines the how geographic distance
+   ;; between adjacent timelines is related to temporal distance.
+   ;; a value of 0 means constant spacing, a value of 1 means proportional spacing
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
