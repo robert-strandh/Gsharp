@@ -125,26 +125,30 @@
 ;;;
 ;;; Measure
 
-;;; A measure represents the set of simultaneous bars.
-;;; Define a TIMELINE of a measure to be the set of all
-;;; simultaneous elements of the bars of the measure.
-;;; The DURATION of a timeline is either the distance to
-;;; the next closest timeline following it, or, in case 
-;;; it is the last timeline of the measure, the duration 
-;;; of the longest element of the timeline. 
+;;; A measure represents the set of simultaneous bars.  Define a
+;;; TIMELINE of a measure to be the set of all simultaneous elements
+;;; of the bars of the measure.  The DURATION of a timeline is either
+;;; the temporal distance to the next closest timeline following it,
+;;; or, in case it is the last timeline of the measure, the duration
+;;; of the longest element of the timeline.
 
 (defclass measure (obseq-elem)
-  (;; the smallest temporal distance between either two adjacent
-   ;; timelines in the measure or between the last timeline
-   ;; and the end of the mesure.  The temporal distance between
-   ;; the last timeline and the end of the measure is the same
-   ;; as the duration of the longest element of the last timeline.
+  (;; the smallest duration of any timeline in the measure
    (min-dist :initarg :min-dist :reader measure-min-dist)
-   ;; the coefficient of a measure is the sum of 
+   ;; the coefficient of a measure is the sum of d_i^k where d_i
+   ;; is the duration of the i:th timeline, and k is the spacing style
    (coeff :initarg :coeff :reader measure-coeff)
+   ;; a list of unique rational numbers, sorted by increasing numeric value,
+   ;; of the start time of the time lines of the measure
    (start-times :initarg :start-times :reader measure-start-times)
+   ;; the position of a measure in the sequence of measures
+   ;; of a buffer is indicated by two numbers, the position
+   ;; of the segment to which the measure belongs within the
+   ;; sequence of segments of the buffer, and the position of
+   ;; the bars within that segment. 
    (seg-pos :initarg :seg-pos :reader measure-seg-pos)
    (bar-pos :initarg :bar-pos :reader measure-bar-pos)
+   ;; a list of the bars that make up this measure
    (bars :initarg :bars :reader measure-bars)))
 
 (defun make-measure (min-dist coeff start-times seg-pos bar-pos bars)
@@ -179,6 +183,8 @@
 (defun adjust-lowpos-highpos (segment)
   (when (modified-p segment)
     (let ((buffer (buffer segment)))
+      ;; Do this better.  Now, we essentially tell the obseq library
+      ;; that every measure in the entire buffer has been damaged.
       (obseq-first-undamaged-element buffer nil)
       (obseq-last-undamaged-element buffer nil))))
 
@@ -190,34 +196,63 @@
 (defmethod nb-measures ((segment rsegment))
   (length (measures segment)))
 
+;;; Given a segment and a position, return the measure in that 
+;;; position in the sequence of measures in the segment. 
 (defmethod measureno ((segment rsegment) position)
   (elt (measures segment) position))
 
-;;; convert a list of durations to a list of start times
+;;; Convert a list of durations to a list of start times
+;;; by accumulating values starting at zero.
+;;; The list returned has the same length as the one passed 
+;;; as argument, which we obtain by treating the first element
+;;; as the initial start time.  Doing so makes it possible to compute
+;;; the inverse of this transformation.
 (defun rel-abs (list)
   (loop with acc = 0
 	for elem in list
 	collect (incf acc elem)))
 
-;;; convert a list of start times to a list of durations
+;;; Convert a list of start times to a list of durations
+;;; by computing the differences beteen adjacent elements.
+;;; The list returned has the same length as the one passed
+;;; as argument, which we obtain by including the first 
+;;; element unchanged.  Doing so makes it possible to compute
+;;; the inverse of this transformation.
 (defun abs-rel (list)
   (loop with prev = 0
 	for elem in list
 	collect (- elem prev)
 	do (setf prev elem)))
 
+;;; Compute the start times of the elements of the bar.  The last
+;;; element is the "start time" of the end of the bar.  Currently, we
+;;; do not handle zero-duration bars very well.  For that reason, when
+;;; there are no elements in the bar, we return the list of a single
+;;; number 1.  This is clearly wrong, so we need to figure out a
+;;; better way of doing that.
 (defun start-times (bar)
   (let ((elements (elements bar)))
     (if elements
 	(rel-abs (mapcar #'duration elements))
 	'(1))))
 
-;;; treat the last start time (which is really the duration of the
+;;; Combine the list of start times of two bars into a single list
+;;; of start times.  Don't worry about duplicated elements which will 
+;;; be removed ultimately. 
+;;; Treat the last start time (which is really the duration of the
 ;;; bar) specially and only keep the largest one
 (defun combine-bars (bar1 bar2)
   (append (merge 'list (butlast bar1) (butlast bar2) #'<)
 	  (list (max (car (last bar1)) (car (last bar2))))))
 
+;;; From a list of simultaneous bars (and some other stuff), create a
+;;; measure.  The `other stuff' is the spacing style, which is neded
+;;; in order to compute the coefficient of the measure, the position
+;;; of the segment to which the bars belong in the sequence of
+;;; segments of the buffer, and the position of the bars in the
+;;; sequence of bars within that segment.  The last two items are used
+;;; to indicate the position of the measure in the sequence of all
+;;; measures of the buffer.
 (defun compute-measure (bars spacing-style seg-pos bar-pos)
   (let* ((start-times (remove-duplicates
 		       (reduce #'combine-bars
@@ -228,6 +263,8 @@
 		      sum (expt duration spacing-style))))
     (make-measure min-dist coeff start-times seg-pos bar-pos bars)))
 
+;;; Compute all the measures of a segment by stepping through all the
+;;; bars in parallel as long as there is at least one simultaneous bar.
 (defun compute-measures (segment spacing-style)
   (setf (slot-value segment 'measures)
 	(loop for all-bars on (mapcar (lambda (layer) (bars (body layer)))
@@ -246,11 +283,21 @@
 (define-added-mixin rbuffer (obseq) buffer
   ((modified-p :initform t :accessor modified-p)))
 
+;;; Given a buffer, a position of a segment in the sequence of
+;;; segments of the buffer, and a position of a measure within that
+;;; segment, return the corresponding measure.
 (defmethod buffer-pos ((buffer rbuffer) seg-pos bar-pos)
   (if (or (<= seg-pos -1) (>= seg-pos (nb-segments buffer)))
       nil
       (measureno (segmentno buffer seg-pos) bar-pos)))
 
+;;; as required by the obseq library, we supply a method on this
+;;; generic function.  When we are given a measure other than the last
+;;; one in the segment, return the next one in the segment.  When we
+;;; are given the last measure in a segment which is not the last one,
+;;; return the first measure in the following segment.  When we are
+;;; given the last measure of the last segment, return nil as required
+;;; by the obseq library.
 (defmethod obseq-next ((buf buffer) (measure measure))
   (let ((seg-pos (measure-seg-pos measure))
 	(bar-pos (measure-bar-pos measure)))
@@ -260,9 +307,19 @@
 	   (buffer-pos buf (1+ seg-pos) 0))
 	  (t nil))))
 
+;;; as required by the obseq library, we supply a method on this
+;;; generic function specialized on NIL, for which the first measure
+;;; of the first segment is returned.
 (defmethod obseq-next ((buf buffer) (measure (eql nil)))
   (measureno (segmentno buf 0) 0))
 
+;;; as required by the obseq library, we supply a method on this
+;;; generic function.  When we are given a measure other than the first
+;;; one in the segment, return the previous one in the segment.  When we
+;;; are given the first measure in a segment which is not the first one,
+;;; return the last measure in the preceding segment.  When we are
+;;; given the first measure of the first segment, return nil as required
+;;; by the obseq library.
 (defmethod obseq-prev ((buf buffer) (measure measure))
   (let ((seg-pos (measure-seg-pos measure))
 	(bar-pos (measure-bar-pos measure)))
@@ -272,6 +329,9 @@
 				     (1- (nb-measures (segmentno buf (1- seg-pos))))))
 	  (t nil))))
 
+;;; as required by the obseq library, we supply a method on this
+;;; generic function specialized on NIL, for which the last measure
+;;; of the last segment is returned.
 (defmethod obseq-prev ((buf buffer) (measure (eql nil)))
   (buffer-pos buf
 	      (1- (nb-segments buf))
