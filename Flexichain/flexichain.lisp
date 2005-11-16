@@ -176,7 +176,7 @@ at position 0 is now at position N."))
 							initial-contents
 							fill-list)))))
   (with-slots (gap-start gap-end data-start) chain
-     (setf gap-start 2
+     (setf gap-start (+ 2 (length initial-contents))
 	   gap-end 0
 	   data-start 1)))
 
