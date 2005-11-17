@@ -349,14 +349,19 @@
     (mark-modified (buffer segment))))
 
 ;;; temporary stuff
+;;; call fun on every list of measures (which make up a line)
+;;; in the buffer
 (defun new-map-over-obseq-subsequences (fun buf)
   (loop with m = (obseq-interval buf (buffer-pos buf 0 0))
 	while m
 	do (multiple-value-bind (left right)
+	       ;; find the end points of the interval that contains m
 	       (obseq-interval buf m)
 	     (funcall fun (loop for mm = left then (obseq-next buf mm)
 				collect mm
 				until (eq mm right)))
+	     ;; move to the next measure after the rightmost one
+	     ;; in the current line
 	     (setf m (obseq-next buf right)))))
 
 (defun buffer-cost-method (buffer)
@@ -364,6 +369,7 @@
 
 (defmethod recompute-measures ((buffer rbuffer))
   (when (modified-p buffer)
+    ;; for now, invalidate everything
     (mapc #'adjust-lowpos-highpos (segments buffer))
     ;; initialize cost method from buffer-specific style parameters
     (setf (obseq-cost-method buffer)
@@ -377,6 +383,8 @@
 ;;;
 ;;; Cost functions
 
+;;; As required by the obseq library, define a cost method
+;;; that is passed to the cost-comparison methods.
 (defclass measure-cost-method (cost-method)
   (;; the min width is taken from the min width of the buffer
    (min-width :initarg :min-width :reader min-width)
@@ -391,11 +399,15 @@
 		 :spacing-style spacing-style
 		 :line-width line-width))
 				 
+;;; As required by the obseq library, define a sequence cost, i.e., in
+;;; this case the cost of a sequece of measures.
 (defclass measure-seq-cost (seq-cost)
   ((min-dist :initarg :min-dist :reader min-dist)
    (coeff :initarg :coeff :reader coeff)
    (nb-measures :initarg :nb-measures :reader nb-measures)))
 
+;;; As required by the obseq library, define a total cost, i.e., in
+;;; this case the cost of a sequece of sequences of measures.
 (defclass measure-total-cost (total-cost)
   ((cost :initarg :cost :reader measure-total-cost)))
 
@@ -406,6 +418,15 @@
   (print-unreadable-object (obj stream :identity t :type t)
     (format stream "~D" (measure-total-cost obj))))
 
+;;; As required by the obseq library, this method computes the
+;;; combined cost of a sequence of measures by taking the existing
+;;; cost of all but the last measures and combining it with the
+;;; characteristics of the last measure.  The result is a sequence
+;;; cost that has the sum of the coefficients of each measure in the
+;;; sequence, the min of the min-dists of each measure in the
+;;; sequence, and the total number of measures in the sequence.
+;;; As far as Gsharp is concerned, this cost computation is 
+;;; commutable, so rely on Obseq to supply the symmetric method. 
 (defmethod combine-cost ((method measure-cost-method)
 				(seq-cost measure-seq-cost)
 				(elem measure))
@@ -414,6 +435,17 @@
     :min-dist (min (min-dist seq-cost) (measure-min-dist elem))
     :nb-measures (1+ (nb-measures seq-cost))))
 
+;;; As required by the obseq library, this method computes the
+;;; combined cost of a sequence of sequences of measures by taking the
+;;; existing cost of all but the last sequences of measures and
+;;; combining it with the sequence cost of the last sequence of
+;;; measures.  The result is a total cost that has the max of the cost
+;;; of each individual sequence of measures.  The reason for using the
+;;; max is that we do not want for a good line to be able to
+;;; compensate for the badness of another.  We thus compute the score
+;;; that minimizes the maximum of the badness of each line.  As far as
+;;; Gsharp is concerned, this cost computation is commutable, so rely
+;;; on Obseq to supply the symmetric method.
 (defmethod combine-cost ((method measure-cost-method)
 				(tcost measure-total-cost)
 				(seq-cost measure-seq-cost))
@@ -428,6 +460,8 @@
     :cost (measure-seq-cost method seq-cost)))
 
 
+;;; As required by the obseq library, this method computes the
+;;; sequence cost of a singleton sequence.  
 (defmethod combine-cost ((method measure-cost-method)
 				(elem measure)
 				(whatever (eql nil)))
@@ -436,11 +470,21 @@
     :min-dist (measure-min-dist elem)
     :nb-measures 1))
 
+;;; As required by the obseq library, this method computes the
+;;; sequence cost of a singleton sequence.  
 (defmethod combine-cost ((method measure-cost-method)
 				(whatever (eql nil))
 				(elem measure))
   (combine-cost method elem nil))
 
+;;; The reduced width of a sequence of measures is the sum of the
+;;; widths of the measures in the sequence, but ignoring the space
+;;; before first timeline.  If the min-dist is 0 (which I think is the
+;;; case if each measure has no timelines), then the reduced width is
+;;; 0, otherwise we obtain the reduced width by multiplying the sum of
+;;; the coefficients of each mesure in the sequence, the min-width to
+;;; use for the display, and (1/d_min)^k, where d_min is the duration
+;;; of the shortest timeline, and k is the spacing style.
 (defmethod reduced-width ((method measure-cost-method)
 			  (seq-cost measure-seq-cost))
   (if (zerop (min-dist seq-cost))
@@ -448,42 +492,54 @@
       (* (coeff seq-cost) (min-width method)
 	 (expt (/ (min-dist seq-cost)) (spacing-style method)))))
 
+;;; The natural width of a sequence of mesures is like the reduced
+;;; width, except that we do not ignore the space before the first
+;;; timeline in each measure.  That space might be necessary to
+;;; parameterize one day, but for now we just use the w_min.
 (defmethod natural-width ((method measure-cost-method)
 			  (seq-cost measure-seq-cost))
   (+ (reduced-width method seq-cost)
      (* (nb-measures seq-cost) (min-width method))))
 
+;;; The compress factor indicates how by how much a sequence of
+;;; measures must be compressed in order to fit the line width at our
+;;; disposal.  Values > 1 indicate that the sequence of mesures must
+;;; be stretched instead of compressed.
 (defmethod compress-factor ((method measure-cost-method)
 			    (seq-cost measure-seq-cost))
   (/ (natural-width method seq-cost) (line-width method)))
 
+;;; As far as Gsharp is concerned, we define the cost of a sequence of
+;;; measures as the max of the compress factor and its inverse.  In
+;;; other words, we consider it as bad to have to stretch a line by x%
+;;; as it is to have to compress it by x%, and the more we have to
+;;; compress or expand it, the worse it is.  This way of doing it is
+;;; not great.  At some point, we need to severely penalize compressed
+;;; lines that become too short to display without overlaps, unless
+;;; the line contains a single measure, of course.
 (defmethod measure-seq-cost ((method measure-cost-method)
 			     (seq-cost measure-seq-cost))
   (let ((c (compress-factor method seq-cost)))
     (max c (/ c))))
 
+;;; As required by the obseq library, we define a method that
+;;; determines whether we can prove that adding another measure to an
+;;; existing sequence is guaranteed to make the cost of the sequence
+;;; higher.  The obseq library uses this to radically diminish the
+;;; complexity of the computation. 
 (defmethod seq-cost-cannot-decrease ((method measure-cost-method)
 					    (seq-cost measure-seq-cost))
   (>= (natural-width method seq-cost)
       (line-width method)))
 
+;;; Compare the cost of two sequences of measures
 (defmethod cost-less ((method measure-cost-method)
 		      (c1 measure-seq-cost)
 		      (c2 measure-seq-cost))
   (< (measure-seq-cost method c1) (measure-seq-cost method c2)))
 
+;;; Compare the cost of two sequences of sequences of measures
 (defmethod cost-less ((method measure-cost-method)
 		      (c1 measure-total-cost)
 		      (c2 measure-total-cost))
   (< (measure-total-cost c1) (measure-total-cost c2)))
-
-(defmethod cost-less ((method measure-cost-method)
-			     (c1 measure-seq-cost)
-			     (c2 measure-seq-cost))
-  (< (measure-seq-cost method c1) (measure-seq-cost method c2)))
-
-(defmethod cost-less ((method measure-cost-method)
-		      (c1 measure-total-cost)
-		      (c2 measure-total-cost))
-  (< (measure-total-cost c1) (measure-total-cost c2)))
-
