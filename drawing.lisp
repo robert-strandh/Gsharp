@@ -217,7 +217,7 @@
 		   (t n2)))
 	   notes))
 
-;;; compute and store several important pieces of information
+;;; Compute and store several important pieces of information
 ;;; about an element:
 ;;;  * the position, in staff steps of the top note.
 ;;;  * the position, in staff steps of the bottom note.
@@ -230,7 +230,7 @@
       (setf (top-note-pos element) 4
 	    (bot-note-pos element) 4)))
 
-;;; compute and store several important pieces of information
+;;; Compute and store several important pieces of information
 ;;; about an element:
 ;;;  * the y-offset of the staff containing the top note.
 ;;;  * the y-offset of the staff containing the bottom note.
@@ -244,6 +244,8 @@
 	    (top-note-staff-yoffset element) 0
 	    (bot-note-staff-yoffset element) 0)))
 
+;;; Compute and store the final stem direction of an element that is
+;;; not beamed together with any other elements.
 (defun compute-stem-direction (element)
   (setf (final-stem-direction element)
 	(if (or (eq (stem-direction element) :up) (eq (stem-direction element) :down))
@@ -304,11 +306,6 @@
 	      (+ top-note-pos length)
 	      (- bot-note-pos length)))))
 
-(defun compute-appearance (element)
-  (when (typep element 'cluster)
-    (compute-stem-direction element)
-    (compute-stem-length element)))
-
 (defun compute-element-x-positions (bar x time-alist)
   (let (;;(time-alist (time-alist bar))
 	(start-time 0))
@@ -320,12 +317,16 @@
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
+;;; Compute and store the final stem directions of all the elements of
+;;; a beam group with at least two elements in it.
 (defun compute-stem-directions (elements)
-  (if (not (eq (stem-direction (car elements)) :auto))
-      (stem-direction (car elements))
-      (let ((top-note-pos (reduce #'max elements :key #'top-note-pos))
-	    (bot-note-pos (reduce #'min elements :key #'bot-note-pos)))
-	(if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up))))
+  (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
+			    (stem-direction (car elements))
+			    (let ((top-note-pos (reduce #'max elements :key #'top-note-pos))
+				  (bot-note-pos (reduce #'min elements :key #'bot-note-pos)))
+			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
+    (loop for element in elements
+	  do (setf (final-stem-direction element) stem-direction))))
 
 ;;; the dominating note among a bunch of notes is the 
 ;;; one that is closest to the beam, i.e. the one 
@@ -348,14 +349,28 @@
 			  (if (< (pitch n1) (pitch n2)) n1 n2))))))
 	  notes))
 
-(defun draw-beam-group (pane elements)
+;;; Given a list of elements to be beamed together, for each element,
+;;; compute the top and bottom note position, and the final stem
+;;; direction. 
+(defun compute-positions-and-stem-direction (elements)
   (mapc #'compute-top-bot-pos elements)
+  (if (null (cdr elements))
+      (let ((element (car elements)))
+	(when (or (typep element 'rest) (notes element))
+	  (when (typep element 'cluster)
+	    (compute-stem-direction element))))
+      (compute-stem-directions elements)))
+
+(defun draw-beam-group (pane elements)
   (mapc #'compute-top-bot-yoffset elements)
   (if (null (cdr elements))
-      (when (or (typep (car elements) 'rest) (notes (car elements)))
-	(compute-appearance (car elements))
-	(draw-element pane (car elements) (element-xpos (car elements))))
-      (let* ((stem-direction (compute-stem-directions elements))
+      (let ((element (car elements)))
+	(when (or (typep element 'rest) (notes element))
+	  (when (typep element 'cluster)
+	    (compute-stem-direction element)
+	    (compute-stem-length element))
+	  (draw-element pane element (element-xpos element))))
+      (let* ((stem-direction (final-stem-direction (car elements)))
 	     (dominating-notes
 	      (mapcar (lambda (e) (dominating-note (notes e) stem-direction))
 		      elements))
@@ -370,8 +385,6 @@
 				    (/ (element-xpos element) (score-pane:staff-step 1)))
 				  elements))
 	     (beaming (beaming-single (mapcar #'list positions x-positions) stem-direction)))
-	(loop for element in elements do
-	      (setf (final-stem-direction element) stem-direction))
 	(destructuring-bind ((ss1 . offset1) (ss2 . offset2)) beaming
 	  (let* ((y1 (+ ss1 (* 1/2 offset1)))
 		 (y2 (+ ss2 (* 1/2 offset2)))
@@ -424,7 +437,8 @@
 (defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
   (loop for group in (beam-groups (elements bar))
-	do (draw-beam-group pane group))
+	do (compute-positions-and-stem-direction group)
+  	   (draw-beam-group pane group))
   (when (eq (cursor-bar *cursor*) bar)
     (let ((elements (elements bar)))
       (if (null (cursor-element *cursor*))
@@ -537,6 +551,9 @@
 	       (when (= (abs (- pos old-pos)) 1)
 		 (setf note old-note))))))
 
+;;; Given a list of notes to be displayed on the same staff line, for
+;;; each note, compute the accidental to be displayed as a function of
+;;; the accidentals of the note and the key signature of the staff.
 (defun compute-final-accidentals (group)
   (loop for note in group do
 	(setf (final-accidental note)
