@@ -28,13 +28,13 @@
 
 (defmethod duration :around ((element relement))
   (with-slots (duration) element
-    (when (or (modified-p element) (null duration))
-      (setf duration (call-next-method))
-      (setf (modified-p element) nil))
+    (when (null duration)
+      (setf duration (call-next-method)))
     duration))
 
 (defmethod mark-modified ((element relement))
-  (setf (modified-p element) t)
+  (setf (modified-p element) t
+	(slot-value element 'duration) nil)
   (when (bar element)
     (mark-modified (bar element))))
 

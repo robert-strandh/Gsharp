@@ -221,19 +221,26 @@
 ;;; about an element:
 ;;;  * the position, in staff steps of the top note.
 ;;;  * the position, in staff steps of the bottom note.
-;;;  * the y-offset of the staff containing the top note.
-;;;  * the y-offset of the staff containing the bottom note.
-(defun compute-top-bot-pos-yoffset (element)
+(defun compute-top-bot-pos (element)
   (if (and (typep element 'cluster) (notes element))
       (let ((top-note (top-note (notes element)))
 	    (bot-note (bot-note (notes element))))
 	(setf (top-note-pos element) (note-position top-note)
-	      (bot-note-pos element) (note-position bot-note)
-	      (bot-note-staff-yoffset element) (staff-yoffset (staff bot-note))
-	      (top-note-staff-yoffset element) (staff-yoffset (staff top-note))))
+	      (bot-note-pos element) (note-position bot-note)))
       (setf (top-note-pos element) 4
-	    (bot-note-pos element) 4
-	    ;; clearly wrong.  should be taken from element or layer.
+	    (bot-note-pos element) 4)))
+
+;;; compute and store several important pieces of information
+;;; about an element:
+;;;  * the y-offset of the staff containing the top note.
+;;;  * the y-offset of the staff containing the bottom note.
+(defun compute-top-bot-yoffset (element)
+  (if (and (typep element 'cluster) (notes element))
+      (let ((top-note (top-note (notes element)))
+	    (bot-note (bot-note (notes element))))
+	(setf (bot-note-staff-yoffset element) (staff-yoffset (staff bot-note))
+	      (top-note-staff-yoffset element) (staff-yoffset (staff top-note))))
+      (setf ;; clearly wrong.  should be taken from element or layer.
 	    (top-note-staff-yoffset element) 0
 	    (bot-note-staff-yoffset element) 0)))
 
@@ -342,7 +349,8 @@
 	  notes))
 
 (defun draw-beam-group (pane elements)
-  (mapc #'compute-top-bot-pos-yoffset elements)
+  (mapc #'compute-top-bot-pos elements)
+  (mapc #'compute-top-bot-yoffset elements)
   (if (null (cdr elements))
       (when (or (typep (car elements) 'rest) (notes (car elements)))
 	(compute-appearance (car elements))
@@ -399,10 +407,11 @@
 (defun draw-cursor (pane x)
   (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
 
-(defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
-  (compute-element-x-positions bar x time-alist)
-  (let ((elements (elements bar))
-	(group '()))
+;;; Given a list of the elements of a bar, return a list of beam
+;;; groups, where each beam group is a list of elements that are
+;;; beamed together
+(defun beam-groups (elements)
+  (let ((group '()))
     (loop while (not (null elements)) do
 	  (setf group '())
 	  (push (pop elements) group)
@@ -410,7 +419,12 @@
 			   (> (rbeams (car group)) 0)
 			   (> (lbeams (car elements)) 0))
 		do (push (pop elements) group))
-	  (draw-beam-group pane (nreverse group))))
+	  collect (nreverse group))))
+
+(defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
+  (compute-element-x-positions bar x time-alist)
+  (loop for group in (beam-groups (elements bar))
+	do (draw-beam-group pane group))
   (when (eq (cursor-bar *cursor*) bar)
     (let ((elements (elements bar)))
       (if (null (cursor-element *cursor*))
