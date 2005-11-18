@@ -62,8 +62,15 @@
 ;;; Return the final x offset of a note.  This value is computed from
 ;;; the x offset of the cluster of the note and the relative x offset
 ;;; of the note with respect to the cluster.
-(defun final-xoffset (note)
+(defun final-note-xoffset (note)
   (+ (element-xpos (cluster note)) (final-relative-xoffset note)))
+
+;;; Return the final x offset of the accidental of a note.  This value
+;;; is computed from the x offset of the cluster of the note and the
+;;; relative x offset of the accidental of the note with respect to
+;;; the cluster.
+(defun final-accidental-xoffset (note)
+  (+ (element-xpos (cluster note)) (accidental-position note)))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
@@ -526,7 +533,7 @@
 
 (defun draw-notes (pane notes dots notehead)
   (loop for note in notes do
-	(draw-note pane note notehead dots (final-xoffset note) (note-position note))))
+	(draw-note pane note notehead dots (final-note-xoffset note) (note-position note))))
 
 ;;; given a group of notes (i.e. a list of notes, all displayed on the
 ;;; same staff, compute their final x offsets.  This is a question of
@@ -646,8 +653,7 @@
 ;;; of the accidental of the first note.  If the second note has 
 ;;; an accidental, but that has not been given a final x offset, then 
 ;;; use the x offset of the notehead instead.
-;;; (this funtction should probably be renamed accidental-xoffset)
-(defun accidental-xpos (note1 note2 staff-step)
+(defun accidental-xoffset (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
 	 (pos1 (note-position note1))
 	 (acc2 (if (and (final-accidental note2)
@@ -656,24 +662,23 @@
 		   :notehead))
 	 (pos2 (note-position note2))
 	 (xpos2 (or (accidental-position note2)
-		    (final-xoffset note2))))
+		    (final-note-xoffset note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
 ;;; given a note and a list of notes, compute x offset of the accidental
 ;;; of the note as required by each of the notes in the list.  In order
 ;;; for the accidental of the note not to overlap any of the others, 
 ;;; we must use the minimum of all the x offsets thus computed. 
-;;; (this function shoudl probably be renamed accidental-min-xoffset)
-(defun accidental-min-xpos (note1 notes staff-step)
-  (reduce #'min notes :key (lambda (note) (accidental-xpos note1 note staff-step))))
+(defun accidental-min-xoffset (note1 notes staff-step)
+  (reduce #'min notes :key (lambda (note) (accidental-xoffset note1 note staff-step))))
 
 ;;; given a list of notes that have accidentals to place, and a list of 
 ;;; notes that either have no accidentals or with already-placed accidentals, 
 ;;; compute the note in the first list that can be placed as far to the right 
 ;;; as possible.
 (defun best-accidental (notes-with-accidentals notes staff-step)
-  (reduce (lambda (note1 note2) (if (>= (accidental-min-xpos note1 notes staff-step)
-					(accidental-min-xpos note2 notes staff-step))
+  (reduce (lambda (note1 note2) (if (>= (accidental-min-xoffset note1 notes staff-step)
+					(accidental-min-xoffset note2 notes staff-step))
 				    note1
 				    note2))
 	  notes-with-accidentals))  
@@ -698,14 +703,14 @@
 	  (setf notes-with-accidentals
 		(remove first-suspended-note notes-with-accidentals))
 	  (setf (accidental-position first-suspended-note)
-		(accidental-min-xpos first-suspended-note notes staff-step)))))
+		(accidental-min-xoffset first-suspended-note notes staff-step)))))
     ;; place remaining accidentals
     (loop while notes-with-accidentals
 	  do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
 	       (setf notes-with-accidentals
 		     (remove choice notes-with-accidentals))
 	       (setf (accidental-position choice)
-		     (accidental-min-xpos choice notes staff-step))))))
+		     (accidental-min-xoffset choice notes staff-step))))))
 
 ;;; given a list of notes, group them so that every note in the group
 ;;; is displayed on the same staff.  Return the list of groups. 
