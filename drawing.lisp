@@ -5,10 +5,13 @@
 
 (define-added-mixin dnote () note
   (;; the relative x offset of the note with respect to the cluster
-   (final-relative-xoffset :accessor final-relative-xoffset)
+   (final-relative-note-xoffset :accessor final-relative-note-xoffset)
    (final-accidental :initform nil :accessor final-accidental)
-   ;; nil indicates that accidental has not been placed yet
-   (accidental-position :initform nil :accessor accidental-position)))
+   ;; The relative x offset of the accidental of the note with respect
+   ;; to the cluster.  A value of nil indicates that accidental has
+   ;; not been placed yet
+   (final-relative-accidental-xoffset :initform nil
+				      :accessor final-relative-accidental-xoffset)))
 
 (define-presentation-method present
     (object (type score-pane:clef) stream (view textual-view) &key)
@@ -59,18 +62,18 @@
 	     :x1 ,x1 :x2 ,x2)
 	   :stream pane))
 
-;;; Return the final x offset of a note.  This value is computed from
-;;; the x offset of the cluster of the note and the relative x offset
-;;; of the note with respect to the cluster.
-(defun final-note-xoffset (note)
-  (+ (element-xpos (cluster note)) (final-relative-xoffset note)))
+;;; Return the final absolute x offset of a note.  This value is
+;;; computed from the x offset of the cluster of the note and the
+;;; relative x offset of the note with respect to the cluster.
+(defun final-absolute-note-xoffset (note)
+  (+ (element-xpos (cluster note)) (final-relative-note-xoffset note)))
 
-;;; Return the final x offset of the accidental of a note.  This value
-;;; is computed from the x offset of the cluster of the note and the
-;;; relative x offset of the accidental of the note with respect to
-;;; the cluster.
-(defun final-accidental-xoffset (note)
-  (+ (element-xpos (cluster note)) (accidental-position note)))
+;;; Return the final absolute x offset of the accidental of a note.
+;;; This value is computed from the x offset of the cluster of the
+;;; note and the relative x offset of the accidental of the note with
+;;; respect to the cluster.
+(defun final-absolute-accidental-xoffset (note)
+  (+ (element-xpos (cluster note)) (final-relative-accidental-xoffset note)))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
@@ -528,12 +531,12 @@
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff note)))
     (score-pane:draw-notehead pane notehead x pos)
     (when (final-accidental note)
-      (score-pane:draw-accidental pane (final-accidental note) (accidental-position note) pos))
+      (score-pane:draw-accidental pane (final-accidental note) (final-absolute-accidental-xoffset note) pos))
     (draw-dots pane nb-dots x pos)))
 
 (defun draw-notes (pane notes dots notehead)
   (loop for note in notes do
-	(draw-note pane note notehead dots (final-note-xoffset note) (note-position note))))
+	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note))))
 
 ;;; given a group of notes (i.e. a list of notes, all displayed on the
 ;;; same staff, compute their final x offsets.  This is a question of
@@ -541,14 +544,14 @@
 ;;; the stem.  The head-note of the stem goes to the left of an
 ;;; up-stem and to the right of a down-stem.  The x offset of a cluster
 ;;; gives the x position of the head-note. 
-(defun compute-final-relative-xoffsets (group direction)
+(defun compute-final-relative-note-xoffsets (group direction)
   (setf group (sort (copy-list group)
 		    (if (eq direction :up)
 			(lambda (x y) (< (note-position x) (note-position y)))
 			(lambda (x y) (> (note-position x) (note-position y))))))
   (score-pane:with-suspended-note-offset offset
     ;; the first element of the group is the head-note
-    (setf (final-relative-xoffset (car group)) 0)
+    (setf (final-relative-note-xoffset (car group)) 0)
     ;; OFFSET is a positive quantity that determines the 
     ;; absolute difference between the x offset of a suspended
     ;; note and that of a normally positioned note. 
@@ -560,7 +563,7 @@
 		    ;; if adjacent notes are just one staff step apart, 
 		    ;; then one must be suspended. 
 		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
-	       (setf (final-relative-xoffset note) dx)
+	       (setf (final-relative-note-xoffset note) dx)
 	       ;; go back to ordinary offset
 	       (when (= (abs (- pos old-pos)) 1)
 		 (setf note old-note))))))
@@ -577,7 +580,7 @@
 		  (accidentals note)))))
 
 (defun element-has-suspended-notes (element)
-  (not (apply #'= (mapcar #'final-relative-xoffset (notes element)))))
+  (not (apply #'= (mapcar #'final-relative-note-xoffset (notes element)))))
 
 ;;; table of x offsets (in staff steps) of accendentals.
 ;;; The first index represents a notehead or a type of accidental.
@@ -653,16 +656,16 @@
 ;;; of the accidental of the first note.  If the second note has 
 ;;; an accidental, but that has not been given a final x offset, then 
 ;;; use the x offset of the notehead instead.
-(defun accidental-xoffset (note1 note2 staff-step)
+(defun accidental-relative-xoffset (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
 	 (pos1 (note-position note1))
 	 (acc2 (if (and (final-accidental note2)
-			(accidental-position note2))
+			(final-relative-accidental-xoffset note2))
 		   (final-accidental note2)
 		   :notehead))
 	 (pos2 (note-position note2))
-	 (xpos2 (or (accidental-position note2)
-		    (final-note-xoffset note2))))
+	 (xpos2 (or (final-relative-accidental-xoffset note2)
+		    (final-relative-note-xoffset note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
 ;;; given a note and a list of notes, compute x offset of the accidental
@@ -670,7 +673,7 @@
 ;;; for the accidental of the note not to overlap any of the others, 
 ;;; we must use the minimum of all the x offsets thus computed. 
 (defun accidental-min-xoffset (note1 notes staff-step)
-  (reduce #'min notes :key (lambda (note) (accidental-xoffset note1 note staff-step))))
+  (reduce #'min notes :key (lambda (note) (accidental-relative-xoffset note1 note staff-step))))
 
 ;;; given a list of notes that have accidentals to place, and a list of 
 ;;; notes that either have no accidentals or with already-placed accidentals, 
@@ -684,32 +687,32 @@
 	  notes-with-accidentals))  
 
 ;;; for each note in a list of notes, if it has an accidental, compute
-;;; the position of that accidental and store it in the note. 
-(defun compute-final-accidental-positions (notes x final-stem-direction)
+;;; the final relative x offset of that accidental and store it in the note. 
+(defun compute-final-relative-accidental-xoffset (notes x final-stem-direction)
   (let* ((staff-step (score-pane:staff-step 1))
 	 ;; sort the notes from top to bottom
 	 (notes (sort (copy-list notes)
 		      (lambda (x y) (> (note-position x) (note-position y)))))
 	 (notes-with-accidentals (remove-if-not #'final-accidental notes)))
     ;; initially, no accidental has been placed
-    (loop for note in notes do (setf (accidental-position note) nil))
+    (loop for note in notes do (setf (final-relative-accidental-xoffset note) nil))
     (when (eq final-stem-direction :up)
       ;; when the stem direction is :up and there is a suspended note
       ;; i.e., one to the right of the stem, then the accidental of the topmost
       ;; suspended note is placed first. 
       (let ((first-suspended-note
-	     (find x notes-with-accidentals :test #'/= :key #'final-relative-xoffset)))
+	     (find x notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
 	(when first-suspended-note
 	  (setf notes-with-accidentals
 		(remove first-suspended-note notes-with-accidentals))
-	  (setf (accidental-position first-suspended-note)
+	  (setf (final-relative-accidental-xoffset first-suspended-note)
 		(accidental-min-xoffset first-suspended-note notes staff-step)))))
     ;; place remaining accidentals
     (loop while notes-with-accidentals
 	  do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
 	       (setf notes-with-accidentals
 		     (remove choice notes-with-accidentals))
-	       (setf (accidental-position choice)
+	       (setf (final-relative-accidental-xoffset choice)
 		     (accidental-min-xoffset choice notes staff-step))))))
 
 ;;; given a list of notes, group them so that every note in the group
@@ -741,9 +744,9 @@
 	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
       (loop for group in groups do 
-	    (compute-final-relative-xoffsets group direction)
+	    (compute-final-relative-note-xoffsets group direction)
 	    (compute-final-accidentals group)
-	    (compute-final-accidental-positions group x direction)
+	    (compute-final-relative-accidental-xoffset group x direction)
 	    (draw-notes pane group (dots element) (notehead element))
 	    (draw-ledger-lines pane x group))
       (unless (eq (notehead element) :whole)
