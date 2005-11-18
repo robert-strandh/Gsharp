@@ -4,7 +4,8 @@
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
 (define-added-mixin dnote () note
-  ((final-xposition :accessor final-xposition)
+  (;; the relative x offset of the note with respect to the cluster
+   (final-relative-xoffset :accessor final-relative-xoffset)
    (final-accidental :initform nil :accessor final-accidental)
    ;; nil indicates that accidental has not been placed yet
    (accidental-position :initform nil :accessor accidental-position)))
@@ -57,6 +58,12 @@
 	   `((score-pane:lyrics-staff)
 	     :x1 ,x1 :x2 ,x2)
 	   :stream pane))
+
+;;; Return the final x offset of a note.  This value is computed from
+;;; the x offset of the cluster of the note and the relative x offset
+;;; of the note with respect to the cluster.
+(defun final-xoffset (note)
+  (+ (element-xpos (cluster note)) (final-relative-xoffset note)))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
@@ -519,7 +526,7 @@
 
 (defun draw-notes (pane notes dots notehead)
   (loop for note in notes do
-	(draw-note pane note notehead dots (final-xposition note) (note-position note))))
+	(draw-note pane note notehead dots (final-xoffset note) (note-position note))))
 
 ;;; given a group of notes (i.e. a list of notes, all displayed on the
 ;;; same staff, compute their final x offsets.  This is a question of
@@ -527,14 +534,14 @@
 ;;; the stem.  The head-note of the stem goes to the left of an
 ;;; up-stem and to the right of a down-stem.  The x offset of a cluster
 ;;; gives the x position of the head-note. 
-(defun compute-final-xpositions (group x direction)
+(defun compute-final-relative-xoffsets (group direction)
   (setf group (sort (copy-list group)
 		    (if (eq direction :up)
 			(lambda (x y) (< (note-position x) (note-position y)))
 			(lambda (x y) (> (note-position x) (note-position y))))))
   (score-pane:with-suspended-note-offset offset
     ;; the first element of the group is the head-note
-    (setf (final-xposition (car group)) x)
+    (setf (final-relative-xoffset (car group)) 0)
     ;; OFFSET is a positive quantity that determines the 
     ;; absolute difference between the x offset of a suspended
     ;; note and that of a normally positioned note. 
@@ -546,7 +553,7 @@
 		    ;; if adjacent notes are just one staff step apart, 
 		    ;; then one must be suspended. 
 		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
-	       (setf (final-xposition note) (+ x dx))
+	       (setf (final-relative-xoffset note) dx)
 	       ;; go back to ordinary offset
 	       (when (= (abs (- pos old-pos)) 1)
 		 (setf note old-note))))))
@@ -563,7 +570,7 @@
 		  (accidentals note)))))
 
 (defun element-has-suspended-notes (element)
-  (not (apply #'= (mapcar #'final-xposition (notes element)))))
+  (not (apply #'= (mapcar #'final-relative-xoffset (notes element)))))
 
 ;;; table of x offsets (in staff steps) of accendentals.
 ;;; The first index represents a notehead or a type of accidental.
@@ -649,7 +656,7 @@
 		   :notehead))
 	 (pos2 (note-position note2))
 	 (xpos2 (or (accidental-position note2)
-		    (final-xposition note2))))
+		    (final-xoffset note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
 ;;; given a note and a list of notes, compute x offset of the accidental
@@ -686,7 +693,7 @@
       ;; i.e., one to the right of the stem, then the accidental of the topmost
       ;; suspended note is placed first. 
       (let ((first-suspended-note
-	     (find x notes-with-accidentals :test #'/= :key #'final-xposition)))
+	     (find x notes-with-accidentals :test #'/= :key #'final-relative-xoffset)))
 	(when first-suspended-note
 	  (setf notes-with-accidentals
 		(remove first-suspended-note notes-with-accidentals))
@@ -729,7 +736,7 @@
 	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
       (loop for group in groups do 
-	    (compute-final-xpositions group x direction)
+	    (compute-final-relative-xoffsets group direction)
 	    (compute-final-accidentals group)
 	    (compute-final-accidental-positions group x direction)
 	    (draw-notes pane group (dots element) (notehead element))
