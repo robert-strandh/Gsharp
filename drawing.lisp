@@ -66,14 +66,14 @@
 ;;; computed from the x offset of the cluster of the note and the
 ;;; relative x offset of the note with respect to the cluster.
 (defun final-absolute-note-xoffset (note)
-  (+ (element-xpos (cluster note)) (final-relative-note-xoffset note)))
+  (+ (final-absolute-element-xoffset (cluster note)) (final-relative-note-xoffset note)))
 
 ;;; Return the final absolute x offset of the accidental of a note.
 ;;; This value is computed from the x offset of the cluster of the
 ;;; note and the relative x offset of the accidental of the note with
 ;;; respect to the cluster.
 (defun final-absolute-accidental-xoffset (note)
-  (+ (element-xpos (cluster note)) (final-relative-accidental-xoffset note)))
+  (+ (final-absolute-element-xoffset (cluster note)) (final-relative-accidental-xoffset note)))
 
 (defun line-cost (measures method)
   (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
@@ -199,10 +199,10 @@
    ;; the yoffset of the staff that contains the bottom note of
    ;; the element
    (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)
-   (xpos :accessor element-xpos)))
+   (final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
 (define-added-mixin welement () lyrics-element
-  ((xpos :accessor element-xpos)))
+  ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
 ;;; given a list of notes, return the one that is at the top
 (defun top-note (notes)
@@ -263,7 +263,7 @@
 
 ;;; Compute and store the final stem direction of an element that is
 ;;; not beamed together with any other elements.
-(defun compute-stem-direction (element)
+(defun compute-final-stem-direction (element)
   (setf (final-stem-direction element)
 	(if (or (eq (stem-direction element) :up) (eq (stem-direction element) :down))
 	    (stem-direction element)
@@ -327,7 +327,7 @@
   (let (;;(time-alist (time-alist bar))
 	(start-time 0))
     (mapc (lambda (element)
-	    (setf (element-xpos element)
+	    (setf (final-absolute-element-xoffset element)
 		  (round (+ x
 			    (score-pane:staff-step (xoffset element))
 			    (cdr (assoc start-time time-alist)))))
@@ -336,7 +336,7 @@
 
 ;;; Compute and store the final stem directions of all the elements of
 ;;; a beam group with at least two elements in it.
-(defun compute-stem-directions (elements)
+(defun compute-final-stem-directions (elements)
   (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
 			    (stem-direction (car elements))
 			    (let ((top-note-pos (reduce #'max elements :key #'top-note-pos))
@@ -375,8 +375,8 @@
       (let ((element (car elements)))
 	(when (or (typep element 'rest) (notes element))
 	  (when (typep element 'cluster)
-	    (compute-stem-direction element))))
-      (compute-stem-directions elements)))
+	    (compute-final-stem-direction element))))
+      (compute-final-stem-directions elements)))
 
 (defun draw-beam-group (pane elements)
   (mapc #'compute-top-bot-yoffset elements)
@@ -384,9 +384,9 @@
       (let ((element (car elements)))
 	(when (or (typep element 'rest) (notes element))
 	  (when (typep element 'cluster)
-	    (compute-stem-direction element)
+	    (compute-final-stem-direction element)
 	    (compute-stem-length element))
-	  (draw-element pane element (element-xpos element))))
+	  (draw-element pane element (final-absolute-element-xoffset element))))
       (let* ((stem-direction (final-stem-direction (car elements)))
 	     (dominating-notes
 	      (mapcar (lambda (e) (dominating-note (notes e) stem-direction))
@@ -399,24 +399,24 @@
 				      (if (eq stem-direction :up) -1000 1000)))
 				dominating-notes))
 	     (x-positions (mapcar (lambda (element)
-				    (/ (element-xpos element) (score-pane:staff-step 1)))
+				    (/ (final-absolute-element-xoffset element) (score-pane:staff-step 1)))
 				  elements))
 	     (beaming (beaming-single (mapcar #'list positions x-positions) stem-direction)))
 	(destructuring-bind ((ss1 . offset1) (ss2 . offset2)) beaming
 	  (let* ((y1 (+ ss1 (* 1/2 offset1)))
 		 (y2 (+ ss2 (* 1/2 offset2)))
-		 (x1 (element-xpos (car elements)))
-		 (x2 (element-xpos (car (last elements))))
+		 (x1 (final-absolute-element-xoffset (car elements)))
+		 (x2 (final-absolute-element-xoffset (car (last elements))))
 		 (slope (/ (- y2 y1) (- x2 x1))))
 	    (if (eq stem-direction :up)
 		(loop for element in elements do
 		      (setf (final-stem-position element)
-			    (+ y1 (* slope (- (element-xpos element) x1))))
+			    (+ y1 (* slope (- (final-absolute-element-xoffset element) x1))))
 		      (setf (final-stem-yoffset element)
 			    (staff-yoffset dominating-staff)))
 		(loop for element in elements do
 		      (setf (final-stem-position element)
-			    (+ y1 (* slope (- (element-xpos element) x1))))
+			    (+ y1 (* slope (- (final-absolute-element-xoffset element) x1))))
 		      (setf (final-stem-yoffset element)
 			    (staff-yoffset dominating-staff)))))
 	  (score-pane:with-vertical-score-position (pane (staff-yoffset dominating-staff))
@@ -424,15 +424,15 @@
 		(score-pane:with-notehead-right-offsets (right up)
 		  (declare (ignore up))
 		  (score-pane:draw-beam pane
-					(+ (element-xpos (car elements)) right) ss1 offset1
-					(+ (element-xpos (car (last elements))) right) ss2 offset2))
+					(+ (final-absolute-element-xoffset (car elements)) right) ss1 offset1
+					(+ (final-absolute-element-xoffset (car (last elements))) right) ss2 offset2))
 		(score-pane:with-notehead-left-offsets (left down)
 		  (declare (ignore down))
 		  (score-pane:draw-beam pane
-					(+ (element-xpos (car elements)) left) ss1 offset1
-					(+ (element-xpos (car (last elements))) left) ss2 offset2))))
+					(+ (final-absolute-element-xoffset (car elements)) left) ss1 offset1
+					(+ (final-absolute-element-xoffset (car (last elements))) left) ss2 offset2))))
 	  (loop for element in elements do
-		(draw-element pane element (element-xpos element) nil))))))
+		(draw-element pane element (final-absolute-element-xoffset element) nil))))))
 
 (defun draw-cursor (pane x)
   (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
@@ -461,28 +461,28 @@
       (if (null (cursor-element *cursor*))
 	  (funcall draw-cursor (/ (+ (if (null elements)
 					 x
-					 (element-xpos (car (last elements))))
+					 (final-absolute-element-xoffset (car (last elements))))
 				     x width) 2))
 	  (loop for element in elements
-		and xx = x then (element-xpos element) do
+		and xx = x then (final-absolute-element-xoffset element) do
 		(when (eq (cursor-element *cursor*) element)
-		  (funcall draw-cursor (/ (+ xx (element-xpos element)) 2))))))))
+		  (funcall draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2))))))))
 
 (defmethod draw-bar (pane (bar lyrics-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
   (let ((elements (elements bar)))
     (loop for element in elements
-	  do (draw-element pane element (element-xpos element)))
+	  do (draw-element pane element (final-absolute-element-xoffset element)))
     (when (eq (cursor-bar *cursor*) bar)
       (if (null (cursor-element *cursor*))
 	  (funcall draw-cursor (/ (+ (if (null elements)
 					 x
-					 (element-xpos (car (last elements))))
+					 (final-absolute-element-xoffset (car (last elements))))
 				     x width) 2))
 	  (loop for element in elements
-		and xx = x then (element-xpos element) do
+		and xx = x then (final-absolute-element-xoffset element) do
 		(when (eq (cursor-element *cursor*) element)
-		  (funcall draw-cursor (/ (+ xx (element-xpos element)) 2))))))))
+		  (funcall draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
