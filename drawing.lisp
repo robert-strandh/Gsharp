@@ -204,36 +204,6 @@
 (define-added-mixin welement () lyrics-element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
-;;; given a list of notes, return the one that is at the top
-(defun top-note (notes)
-  (reduce (lambda (n1 n2)
-	    (cond ((< (staff-yoffset (staff n1))
-		      (staff-yoffset (staff n2)))
-		   n1)
-		  ((> (staff-yoffset (staff n1))
-		      (staff-yoffset (staff n2)))
-		   n2)
-		  ((> (note-position n1)
-		      (note-position n2))
-		   n1)
-		  (t n2)))
-	  notes))
-
-;;; given a list of notes, return the one that is at the bottom
-(defun bot-note (notes)
-  (reduce  (lambda (n1 n2)
-	     (cond ((> (staff-yoffset (staff n1))
-		       (staff-yoffset (staff n2)))
-		    n1)
-		   ((< (staff-yoffset (staff n1))
-		       (staff-yoffset (staff n2)))
-		    n2)
-		   ((< (note-position n1)
-		       (note-position n2))
-		    n1)
-		   (t n2)))
-	   notes))
-
 ;;; Compute and store several important pieces of information
 ;;; about an element:
 ;;;  * the position, in staff steps of the top note.
@@ -492,12 +462,6 @@
 
 (defmethod note-difference ((note1 note) (note2 note))
   (- (pitch note1) (pitch note2)))
-
-(defmethod note-position ((note note))
-  (let ((clef (clef (staff note))))
-    (+ (- (pitch note)
-	  (ecase (name clef) (:treble 32) (:bass 24) (:c 35)))
-       (lineno clef))))
 
 (defun draw-ledger-lines (pane x notes)
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff (car notes))))

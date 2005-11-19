@@ -100,7 +100,9 @@
 	   #:recompute-measures #:measure-cost-method #:make-measure-cost-method
 	   #:buffer-cost-method
 	   #:reduced-width #:natural-width #:compress-factor
-	   #:measure-seq-cost))
+	   #:measure-seq-cost
+	   #:note-position
+	   #:top-note #:bot-note))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

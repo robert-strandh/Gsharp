@@ -8,6 +8,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Staff
+
+(define-added-mixin rstaff () staff
+  ((rank :accessor staff-rank)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Note
 
 (defrclass rnote note
@@ -53,6 +60,42 @@
 (defmethod (setf dots) :after (dots (element relement))
   (declare (ignore dots))
   (mark-modified element))
+
+(defmethod note-position ((note note))
+  (let ((clef (clef (staff note))))
+    (+ (- (pitch note)
+	  (ecase (name clef) (:treble 32) (:bass 24) (:c 35)))
+       (lineno clef))))
+
+;;; given a list of notes, return the one that is at the top
+(defun top-note (notes)
+  (reduce (lambda (n1 n2)
+	    (cond ((< (staff-rank (staff n1))
+		      (staff-rank (staff n2)))
+		   n1)
+		  ((> (staff-rank (staff n1))
+		      (staff-rank (staff n2)))
+		   n2)
+		  ((> (note-position n1)
+		      (note-position n2))
+		   n1)
+		  (t n2)))
+	  notes))
+
+;;; given a list of notes, return the one that is at the bottom
+(defun bot-note (notes)
+  (reduce  (lambda (n1 n2)
+	     (cond ((> (staff-rank (staff n1))
+		       (staff-rank (staff n2)))
+		    n1)
+		   ((< (staff-rank (staff n1))
+		       (staff-rank (staff n2)))
+		    n2)
+		   ((< (note-position n1)
+		       (note-position n2))
+		    n1)
+		   (t n2)))
+	   notes))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -369,6 +412,10 @@
 
 (defmethod recompute-measures ((buffer rbuffer))
   (when (modified-p buffer)
+    ;; number the staves
+    (loop for staff in (staves buffer)
+	  for i from 0
+	  do (setf (staff-rank staff) i))
     ;; for now, invalidate everything
     (mapc #'adjust-lowpos-highpos (segments buffer))
     ;; initialize cost method from buffer-specific style parameters
