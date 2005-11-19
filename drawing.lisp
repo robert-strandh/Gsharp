@@ -181,42 +181,41 @@
 	 buffer)))))
 
 (define-added-mixin velement () melody-element
-  ((final-stem-direction :accessor final-stem-direction)
-   ;; the position, in staff steps, of the end of the stem
+  (;; the position, in staff steps, of the end of the stem
    ;; that is not attached to a note, independent of the
    ;; staff on which it is located
    (final-stem-position :accessor final-stem-position)
    ;; the yoffset of the staff relative to which the end of the
    ;; stem is located
    (final-stem-yoffset :initform 0 :accessor final-stem-yoffset)
-   ;; the position, in staff steps, of the bottom note in the element.
-   (bot-note-pos :accessor bot-note-pos)
    ;; the yoffset of the staff that contains the top note of
    ;; the element
    (top-note-staff-yoffset :accessor top-note-staff-yoffset)
-   ;; the position, in staff steps, of the top not in the element.
-   (top-note-pos :accessor top-note-pos)
    ;; the yoffset of the staff that contains the bottom note of
    ;; the element
    (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)
    (final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
+(define-added-mixin vcluster () cluster
+  ((final-stem-direction :accessor final-stem-direction)
+   ;; the position, in staff steps, of the top not in the element.
+   (top-note-pos :accessor top-note-pos)
+   ;; the position, in staff steps, of the bottom note in the element.
+   (bot-note-pos :accessor bot-note-pos)))
+
 (define-added-mixin welement () lyrics-element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
-;;; Compute and store several important pieces of information
-;;; about an element:
+;;; Compute and store some important information about a non-empty
+;;; cluster:
 ;;;  * the position, in staff steps of the top note.
 ;;;  * the position, in staff steps of the bottom note.
-(defun compute-top-bot-pos (element)
-  (if (and (typep element 'cluster) (notes element))
-      (let ((top-note (top-note (notes element)))
-	    (bot-note (bot-note (notes element))))
-	(setf (top-note-pos element) (note-position top-note)
-	      (bot-note-pos element) (note-position bot-note)))
-;;      (setf (top-note-pos element) 4
-;;	    (bot-note-pos element) 4)
-      ))
+(defun compute-top-bot-pos (cluster)
+  (assert (non-empty-cluster-p cluster))
+  (let ((top-note (top-note (notes cluster)))
+	(bot-note (bot-note (notes cluster))))
+    (setf (top-note-pos cluster) (note-position top-note)
+	  (bot-note-pos cluster) (note-position bot-note))))
 
 ;;; Compute and store several important pieces of information
 ;;; about an element:
@@ -232,14 +231,15 @@
 	    (top-note-staff-yoffset element) 0
 	    (bot-note-staff-yoffset element) 0)))
 
-;;; Compute and store the final stem direction of an element that is
-;;; not beamed together with any other elements.
-(defun compute-final-stem-direction (element)
-  (setf (final-stem-direction element)
-	(if (or (eq (stem-direction element) :up) (eq (stem-direction element) :down))
-	    (stem-direction element)
-	    (let ((top-note-pos (top-note-pos element))
-		  (bot-note-pos (bot-note-pos element)))
+;;; Given a non-empty cluster that is not beamed together with any
+;;; other clusters, compute and store its final stem direction.
+(defun compute-final-stem-direction (cluster)
+  (assert (non-empty-cluster-p cluster))
+  (setf (final-stem-direction cluster)
+	(if (or (eq (stem-direction cluster) :up) (eq (stem-direction cluster) :down))
+	    (stem-direction cluster)
+	    (let ((top-note-pos (top-note-pos cluster))
+		  (bot-note-pos (bot-note-pos cluster)))
 	      (if (>= (- top-note-pos 4)
 		      (- 4 bot-note-pos))
 		  :down
@@ -306,25 +306,27 @@
 	  (elements bar))))
 
 ;;; Return true if and only if the element is a non-empty cluster
-(defun non-empty-custer-p (element)
+(defun non-empty-cluster-p (element)
   (and (typep element 'cluster)
        (not (null (notes element)))))
 
-;;; Compute and store the final stem directions of all the elements of
-;;; a beam group with at least two elements in it.
+;;; Given a beam group containing at least two nonempty clusters,
+;;; compute and store the final stem directions of all the non-empty
+;;; clusters in the group
 (defun compute-final-stem-directions (elements)
   (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
 			    (stem-direction (car elements))
 			    (let ((top-note-pos
 				   (loop for element in elements
-					 when (non-empty-custer-p element)
+					 when (non-empty-cluster-p element)
 					 maximize (top-note-pos element)))
 				  (bot-note-pos
 				   (loop for element in elements
-					 when (non-empty-custer-p element)
+					 when (non-empty-cluster-p element)
 					 minimize (top-note-pos element))))
 			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
     (loop for element in elements
+	  when (non-empty-cluster-p element)
 	  do (setf (final-stem-direction element) stem-direction))))
 
 ;;; the dominating note among a bunch of notes is the 
@@ -348,16 +350,16 @@
 			  (if (< (pitch n1) (pitch n2)) n1 n2))))))
 	  notes))
 
-;;; Given a list of elements to be beamed together, for each element,
-;;; compute the top and bottom note position, and the final stem
-;;; direction. 
+;;; Given a beam group, for each nonempty element, compute the top and
+;;; bottom note position, and the final stem direction.
 (defun compute-positions-and-stem-direction (elements)
-  (mapc #'compute-top-bot-pos elements)
+  (loop for element in elements
+	when (non-empty-cluster-p element)
+	do (compute-top-bot-pos element))
   (if (null (cdr elements))
       (let ((element (car elements)))
-	(when (or (typep element 'rest) (notes element))
-	  (when (typep element 'cluster)
-	    (compute-final-stem-direction element))))
+	(when (non-empty-cluster-p element)
+	  (compute-final-stem-direction element)))
       (compute-final-stem-directions elements)))
 
 (defun draw-beam-group (pane elements)
@@ -365,14 +367,14 @@
   (if (null (cdr elements))
       (let ((element (car elements)))
 	(when (or (typep element 'rest) (notes element))
-	  (when (typep element 'cluster)
+	  (when (non-empty-cluster-p element)
 	    (compute-final-stem-direction element)
 	    (compute-stem-length element))
 	  (draw-element pane element (final-absolute-element-xoffset element))))
       (let* ((stem-direction (final-stem-direction (car elements)))
 	     (dominating-notes
 	      (loop for element in elements
-		    when (non-empty-custer-p element)
+		    when (non-empty-cluster-p element)
 		    collect (dominating-note (notes element) stem-direction)))
 	     (dominating-staff
 	      (staff (dominating-note dominating-notes stem-direction)))
@@ -438,17 +440,17 @@
     (loop until (null elements) do
 	  (setf group (list (car elements))
 		elements (cdr elements))
-	  (when (and (non-empty-custer-p (car group))
+	  (when (and (non-empty-cluster-p (car group))
 		     (plusp (rbeams (car group))))
 	    (loop while (and (not (null elements))
 			     (or (not (typep (car elements) 'cluster))
 				 (null (notes (car elements)))
 				 (plusp (lbeams (car elements)))))
 		  do (push (pop elements) group)
-		  until (and (non-empty-custer-p (car group))
+		  until (and (non-empty-cluster-p (car group))
 			     (zerop (rbeams (car group)))))
 	    ;; pop off trailing unbeamable objects
-	    (loop until (non-empty-custer-p (car group))
+	    (loop until (non-empty-cluster-p (car group))
 		  do (push (pop group) elements)))
 	  collect (nreverse group))))
 
@@ -730,7 +732,7 @@
 ;;; 6. If necessary, draw ledger lines for notes in a group
 ;;; 7. Draw the stem, if any
 (defmethod draw-element (pane (element cluster) x &optional (flags t))
-  (when (notes element)
+  (unless (null (notes element))
     (let ((direction (final-stem-direction element))
 	  (stem-pos (final-stem-position element))
 	  (stem-yoffset (final-stem-yoffset element))
