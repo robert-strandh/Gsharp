@@ -214,8 +214,9 @@
 	    (bot-note (bot-note (notes element))))
 	(setf (top-note-pos element) (note-position top-note)
 	      (bot-note-pos element) (note-position bot-note)))
-      (setf (top-note-pos element) 4
-	    (bot-note-pos element) 4)))
+;;      (setf (top-note-pos element) 4
+;;	    (bot-note-pos element) 4)
+      ))
 
 ;;; Compute and store several important pieces of information
 ;;; about an element:
@@ -304,13 +305,24 @@
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
+;;; Return true if and only if the element is a non-empty cluster
+(defun non-empty-custer-p (element)
+  (and (typep element 'cluster)
+       (not (null (notes element)))))
+
 ;;; Compute and store the final stem directions of all the elements of
 ;;; a beam group with at least two elements in it.
 (defun compute-final-stem-directions (elements)
   (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
 			    (stem-direction (car elements))
-			    (let ((top-note-pos (reduce #'max elements :key #'top-note-pos))
-				  (bot-note-pos (reduce #'min elements :key #'bot-note-pos)))
+			    (let ((top-note-pos
+				   (loop for element in elements
+					 when (non-empty-custer-p element)
+					 maximize (top-note-pos element)))
+				  (bot-note-pos
+				   (loop for element in elements
+					 when (non-empty-custer-p element)
+					 minimize (top-note-pos element))))
 			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
     (loop for element in elements
 	  do (setf (final-stem-direction element) stem-direction))))
@@ -359,8 +371,9 @@
 	  (draw-element pane element (final-absolute-element-xoffset element))))
       (let* ((stem-direction (final-stem-direction (car elements)))
 	     (dominating-notes
-	      (mapcar (lambda (e) (dominating-note (notes e) stem-direction))
-		      elements))
+	      (loop for element in elements
+		    when (non-empty-custer-p element)
+		    collect (dominating-note (notes element) stem-direction)))
 	     (dominating-staff
 	      (staff (dominating-note dominating-notes stem-direction)))
 	     (positions (mapcar (lambda (n)
@@ -408,17 +421,35 @@
   (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
 
 ;;; Given a list of the elements of a bar, return a list of beam
-;;; groups, where each beam group is a list of elements that are
-;;; beamed together
+;;; groups.  A beam group is defined to be either a singleton list or
+;;; a list with more than one element.  In the case of a singleton,
+;;; the element is either a non-cluster, an empty cluster, a cluster
+;;; that does not beam to the right, or a cluster that does beam to
+;;; the right, but either it is the last cluster in the bar, or the
+;;; first following cluster in the bar does not beam to the left.  In
+;;; the case of a list with more than one element, the first element
+;;; is a cluster that beams to the right, the last element is a
+;;; cluster that beams to the left, and all other clusters in the list
+;;; beam both to the left and to the right.  Notice that in the last
+;;; case, elements other than the first and the last can be
+;;; non-clusters, or empty clusters.
 (defun beam-groups (elements)
   (let ((group '()))
-    (loop while (not (null elements)) do
-	  (setf group '())
-	  (push (pop elements) group)
-	  (loop while (and (not (null elements))
-			   (> (rbeams (car group)) 0)
-			   (> (lbeams (car elements)) 0))
-		do (push (pop elements) group))
+    (loop until (null elements) do
+	  (setf group (list (car elements))
+		elements (cdr elements))
+	  (when (and (non-empty-custer-p (car group))
+		     (plusp (rbeams (car group))))
+	    (loop while (and (not (null elements))
+			     (or (not (typep (car elements) 'cluster))
+				 (null (notes (car elements)))
+				 (plusp (lbeams (car elements)))))
+		  do (push (pop elements) group)
+		  until (and (non-empty-custer-p (car group))
+			     (zerop (rbeams (car group)))))
+	    ;; pop off trailing unbeamable objects
+	    (loop until (non-empty-custer-p (car group))
+		  do (push (pop group) elements)))
 	  collect (nreverse group))))
 
 (defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
