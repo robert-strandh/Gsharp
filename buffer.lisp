@@ -352,6 +352,24 @@
       (setf notes (delete note notes :test #'eq)))
     (setf cluster nil)))
 
+(defun lower-bound (bound list &key (test #'<))
+  "Return the `largest' element in the sorted list LIST such that
+\(TEST element BOUND) is true."
+  (let ((last nil))
+    (dolist (item list)
+      (unless (funcall test item bound)
+        (return-from lower-bound last))
+      (setf last item))
+    last))
+
+(defmethod cluster-lower-bound ((cluster cluster) (bound note))
+  (with-slots (notes) cluster
+    (lower-bound bound notes :test #'note-less)))
+
+(defmethod cluster-upper-bound ((cluster cluster) (bound note))
+  (with-slots (notes) cluster
+    (lower-bound bound (reverse notes) :test (complement #'note-less))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Rest

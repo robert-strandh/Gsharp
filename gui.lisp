@@ -812,6 +812,19 @@
     (add-note cluster new-note)
     (setf *current-note* new-note)))
 
+(define-gsharp-command com-remove-current-note ()
+  (let ((cluster (cur-cluster))
+        (note (cur-note)))
+    (when note
+      (remove-note note)
+      ;; try to set current-note to the highest note lower than the
+      ;; removed note.  If that fails, to the lowest note higher than
+      ;; it.
+      (setf *current-note* (or (cluster-lower-bound cluster note)
+                               (cluster-upper-bound cluster note)))
+      (unless *current-note*
+        (com-erase-element)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; motion by element

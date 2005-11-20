@@ -45,6 +45,7 @@
 	   #:notehead #:rbeams #:lbeams #:dots #:element
 	   #:melody-element #:notes
 	   #:add-note #:find-note #:remove-note
+           #:cluster-upper-bound #:cluster-lower-bound
 	   #:cluster #:make-cluster
 	   #:rest #:make-rest
 	   #:lyrics-element #:make-lyrics-element
