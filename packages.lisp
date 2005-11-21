@@ -103,7 +103,8 @@
 	   #:reduced-width #:natural-width #:compress-factor
 	   #:measure-seq-cost
 	   #:note-position #:non-empty-cluster-p
-	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos))
+	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos
+	   #:beam-groups #:final-stem-direction))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

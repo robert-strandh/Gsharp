@@ -196,9 +196,6 @@
    (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)
    (final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
-(define-added-mixin vcluster () cluster
-  ((final-stem-direction :accessor final-stem-direction)))
-
 (define-added-mixin welement () lyrics-element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
@@ -215,20 +212,6 @@
       (setf ;; clearly wrong.  should be taken from element or layer.
 	    (top-note-staff-yoffset element) 0
 	    (bot-note-staff-yoffset element) 0)))
-
-;;; Given a non-empty cluster that is not beamed together with any
-;;; other clusters, compute and store its final stem direction.
-(defun compute-final-stem-direction (cluster)
-  (assert (non-empty-cluster-p cluster))
-  (setf (final-stem-direction cluster)
-	(if (or (eq (stem-direction cluster) :up) (eq (stem-direction cluster) :down))
-	    (stem-direction cluster)
-	    (let ((top-note-pos (top-note-pos cluster))
-		  (bot-note-pos (bot-note-pos cluster)))
-	      (if (>= (- top-note-pos 4)
-		      (- 4 bot-note-pos))
-		  :down
-		  :up)))))
 
 (defun compute-stem-length (element)
   (let* ((top-note-pos (top-note-pos element))
@@ -290,25 +273,6 @@
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
-;;; Given a beam group containing at least two nonempty clusters,
-;;; compute and store the final stem directions of all the non-empty
-;;; clusters in the group
-(defun compute-final-stem-directions (elements)
-  (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
-			    (stem-direction (car elements))
-			    (let ((top-note-pos
-				   (loop for element in elements
-					 when (non-empty-cluster-p element)
-					 maximize (top-note-pos element)))
-				  (bot-note-pos
-				   (loop for element in elements
-					 when (non-empty-cluster-p element)
-					 minimize (top-note-pos element))))
-			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
-    (loop for element in elements
-	  when (non-empty-cluster-p element)
-	  do (setf (final-stem-direction element) stem-direction))))
-
 ;;; the dominating note among a bunch of notes is the 
 ;;; one that is closest to the beam, i.e. the one 
 ;;; the one that is closest to the end of the stem that
@@ -330,25 +294,12 @@
 			  (if (< (pitch n1) (pitch n2)) n1 n2))))))
 	  notes))
 
-;;; Given a beam group, for each nonempty element, compute the top and
-;;; bottom note position, and the final stem direction.
-(defun compute-positions-and-stem-direction (elements)
-;;  (loop for element in elements
-;;	when (non-empty-cluster-p element)
-;;	do (compute-top-bot-pos element))
-  (if (null (cdr elements))
-      (let ((element (car elements)))
-	(when (non-empty-cluster-p element)
-	  (compute-final-stem-direction element)))
-      (compute-final-stem-directions elements)))
-
 (defun draw-beam-group (pane elements)
   (mapc #'compute-top-bot-yoffset elements)
   (if (null (cdr elements))
       (let ((element (car elements)))
 	(when (or (typep element 'rest) (notes element))
 	  (when (non-empty-cluster-p element)
-	    (compute-final-stem-direction element)
 	    (compute-stem-length element))
 	  (draw-element pane element (final-absolute-element-xoffset element))))
       (let* ((stem-direction (final-stem-direction (car elements)))
@@ -402,43 +353,10 @@
 (defun draw-cursor (pane x)
   (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
 
-;;; Given a list of the elements of a bar, return a list of beam
-;;; groups.  A beam group is defined to be either a singleton list or
-;;; a list with more than one element.  In the case of a singleton,
-;;; the element is either a non-cluster, an empty cluster, a cluster
-;;; that does not beam to the right, or a cluster that does beam to
-;;; the right, but either it is the last cluster in the bar, or the
-;;; first following cluster in the bar does not beam to the left.  In
-;;; the case of a list with more than one element, the first element
-;;; is a cluster that beams to the right, the last element is a
-;;; cluster that beams to the left, and all other clusters in the list
-;;; beam both to the left and to the right.  Notice that in the last
-;;; case, elements other than the first and the last can be
-;;; non-clusters, or empty clusters.
-(defun beam-groups (elements)
-  (let ((group '()))
-    (loop until (null elements) do
-	  (setf group (list (car elements))
-		elements (cdr elements))
-	  (when (and (non-empty-cluster-p (car group))
-		     (plusp (rbeams (car group))))
-	    (loop while (and (not (null elements))
-			     (or (not (typep (car elements) 'cluster))
-				 (null (notes (car elements)))
-				 (plusp (lbeams (car elements)))))
-		  do (push (pop elements) group)
-		  until (and (non-empty-cluster-p (car group))
-			     (zerop (rbeams (car group)))))
-	    ;; pop off trailing unbeamable objects
-	    (loop until (non-empty-cluster-p (car group))
-		  do (push (pop group) elements)))
-	  collect (nreverse group))))
-
 (defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
   (loop for group in (beam-groups (elements bar))
-	do (compute-positions-and-stem-direction group)
-  	   (draw-beam-group pane group))
+	do (draw-beam-group pane group))
   (when (eq (cursor-bar *cursor*) bar)
     (let ((elements (elements bar)))
       (if (null (cursor-element *cursor*))

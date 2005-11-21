@@ -102,7 +102,8 @@
 ;;; Cluster
 
 (define-added-mixin rcluster () cluster
-  (;; the position, in staff steps, of the top not in the element.
+  ((final-stem-direction :accessor final-stem-direction)
+   ;; the position, in staff steps, of the top not in the element.
    (top-note-pos :accessor top-note-pos)
    ;; the position, in staff steps, of the bottom note in the element.
    (bot-note-pos :accessor bot-note-pos)))
@@ -127,6 +128,39 @@
 (defmethod remove-note :before ((note rnote))
   (when (cluster note)
     (mark-modified (cluster note))))
+
+;;; Given a non-empty cluster that is not beamed together with any
+;;; other clusters, compute and store its final stem direction.
+(defun compute-final-stem-direction (cluster)
+  (assert (non-empty-cluster-p cluster))
+  (setf (final-stem-direction cluster)
+	(if (or (eq (stem-direction cluster) :up) (eq (stem-direction cluster) :down))
+	    (stem-direction cluster)
+	    (let ((top-note-pos (top-note-pos cluster))
+		  (bot-note-pos (bot-note-pos cluster)))
+	      (if (>= (- top-note-pos 4)
+		      (- 4 bot-note-pos))
+		  :down
+		  :up)))))
+
+;;; Given a beam group containing at least two nonempty clusters,
+;;; compute and store the final stem directions of all the non-empty
+;;; clusters in the group
+(defun compute-final-stem-directions (elements)
+  (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
+			    (stem-direction (car elements))
+			    (let ((top-note-pos
+				   (loop for element in elements
+					 when (non-empty-cluster-p element)
+					 maximize (top-note-pos element)))
+				  (bot-note-pos
+				   (loop for element in elements
+					 when (non-empty-cluster-p element)
+					 minimize (top-note-pos element))))
+			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
+    (loop for element in elements
+	  when (non-empty-cluster-p element)
+	  do (setf (final-stem-direction element) stem-direction))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -318,12 +352,60 @@
   (when (non-empty-cluster-p element)
     (compute-top-bot-pos element)))
 
+(defun compute-beam-group-parameters (elements)
+  (let ((any-element-modified nil))
+    (loop for element in elements
+	  do (when (modified-p element)
+	       (compute-element-parameters element)
+	       (setf any-element-modified t)
+	       (setf (modified-p element) nil)))
+    (when any-element-modified
+      (if (null (cdr elements))
+	  (when (non-empty-cluster-p (car elements))
+	    (compute-final-stem-direction (car elements)))
+	  (compute-final-stem-directions elements)))))
+
+;;; Given a list of the elements of a bar, return a list of beam
+;;; groups.  A beam group is defined to be either a singleton list or
+;;; a list with more than one element.  In the case of a singleton,
+;;; the element is either a non-cluster, an empty cluster, a cluster
+;;; that does not beam to the right, or a cluster that does beam to
+;;; the right, but either it is the last cluster in the bar, or the
+;;; first following cluster in the bar does not beam to the left.  In
+;;; the case of a list with more than one element, the first element
+;;; is a cluster that beams to the right, the last element is a
+;;; cluster that beams to the left, and all other clusters in the list
+;;; beam both to the left and to the right.  Notice that in the last
+;;; case, elements other than the first and the last can be
+;;; non-clusters, or empty clusters.
+(defun beam-groups (elements)
+  (let ((group '()))
+    (loop until (null elements) do
+	  (setf group (list (car elements))
+		elements (cdr elements))
+	  (when (and (non-empty-cluster-p (car group))
+		     (plusp (rbeams (car group))))
+	    (loop while (and (not (null elements))
+			     (or (not (typep (car elements) 'cluster))
+				 (null (notes (car elements)))
+				 (plusp (lbeams (car elements)))))
+		  do (push (pop elements) group)
+		  until (and (non-empty-cluster-p (car group))
+			     (zerop (rbeams (car group)))))
+	    ;; pop off trailing unbeamable objects
+	    (loop until (non-empty-cluster-p (car group))
+		  do (push (pop group) elements)))
+	  collect (nreverse group))))
+
 ;;; compute some important parameters of a bar
-(defun compute-bar-parameters (bar)
-  (loop for element in (elements bar)
-	do (when (modified-p element)
-	     (compute-element-parameters element)
-	     (setf (modified-p element) nil))))
+(defgeneric compute-bar-parameters (bar))
+
+(defmethod compute-bar-parameter (bar)
+  nil)
+
+(defmethod compute-bar-parameters ((bar melody-bar))
+  (loop for group in (beam-groups (elements bar))
+	do (compute-beam-group-parameters group)))	
 
 ;;; From a list of simultaneous bars (and some other stuff), create a
 ;;; measure.  The `other stuff' is the spacing style, which is neded
