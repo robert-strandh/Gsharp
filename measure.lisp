@@ -18,7 +18,12 @@
 ;;; Note
 
 (defrclass rnote note
-  ((final-accidental :initform nil :accessor final-accidental)
+  (;; The relative x offset of the accidental of the note with respect
+   ;; to the cluster.  A value of nil indicates that accidental has
+   ;; not been placed yet
+   (final-relative-accidental-xoffset :initform nil
+				      :accessor final-relative-accidental-xoffset)
+   (final-accidental :initform nil :accessor final-accidental)
    ;; the relative x offset of the note with respect to the cluster
    (final-relative-note-xoffset :accessor final-relative-note-xoffset)))
 
@@ -183,6 +188,139 @@
 		      (aref (keysig (staff note)) (mod (pitch note) 7)))
 		  nil
 		  (accidentals note)))))
+
+;;; table of x offsets (in staff steps) of accendentals.
+;;; The first index represents a notehead or a type of accidental.
+;;; The second index represents a type of accidentsl.
+;;; The third index is a vertical distance, measured in difference
+;;; in staff steps between the two. 
+;;; The table entry gives how much the accidental represented by
+;;; the second parameter must be positioned to the left of the 
+;;; first one. 
+;;; Entries in the table are offset by 5 in the last dimension
+;;; so that vertical distances between -5 and 5 can be represented
+(defparameter *accidental-offset*
+  ;;;     -5  -4  -3  -2  -1   0   1   2   3   4   5
+  #3A(((   0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)    ; notehead - dbl flat
+       (   0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)    ; notehead - flat
+       (   0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)    ; notehead - natural
+       (   0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)    ; notehead - sharp
+       (   0   0   0 3.5 3.5 3.5 3.5 3.5   0   0   0))   ; notehead - dbl sharp
+      (( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - dbl flat
+       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - flat
+       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - natural
+       (   4   4   4   4   4   4   4   4   4 3.5   0)    ; dbl flat - sharp
+       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   0   0   0))   ; dbl flat - dbl sharp
+      ((   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - dbl flat
+       (   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - flat
+       (   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - natural
+       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 1.5   0)    ; flat - sharp
+       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0   0))   ; flat - dbl sharp
+      ((   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - dbl flat
+       (   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - flat
+       (   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - natural
+       (   2   2   2   2   2   2   2   2   2   2   2)    ; natural - sharp
+       (   2   2   2   2   2   2   2   2   1   1   1))   ; natural - dbl sharp
+      ((   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - dbl flat
+       (   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - flat
+       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - natural
+       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 2.0)    ; sharp - sharp
+       (   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0))   ; sharp - dbl sharp
+      ((   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - dbl flat
+       (   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - flat
+       (   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - natural
+       (   0 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8   0)    ; dbl sharp - sharp
+       (   0   0   0 2.8 2.8 2.8 2.8 2.8   0   0   0)))) ; dbl sharp - dbl sharp
+
+;;; given 1) a type of accidental 2) its position (in staff steps) 3)
+;;; a type of accidental or a type of notehead, and 4) its position,
+;;; return the x offset of the first accidental, i.e., how many staff
+;;; steps to the left that it must be moved in order to avoid overlap
+;;; with the second one.
+(defun accidental-distance (acc1 pos1 acc2 pos2)
+  (let ((dist (- pos2 pos1)))
+    (if (> (abs dist) 5)
+	0
+	(aref *accidental-offset*
+	      (ecase acc2
+		(:notehead 0)
+		(:double-flat 1)
+		(:flat 2)
+		(:natural 3)
+		(:sharp 4)
+		(:double-sharp 5))
+	      (ecase acc1
+		(:double-flat 0)
+		(:flat 1)
+		(:natural 2)
+		(:sharp 3)
+		(:double-sharp 4))
+	      (+ dist 5)))))		
+
+;;; given two notes (where the first one has an accidental, and the
+;;; second one may or may not have an accidental) and the conversion
+;;; factor between staff steps and x positions, compute the x offset
+;;; of the accidental of the first note.  If the second note has 
+;;; an accidental, but that has not been given a final x offset, then 
+;;; use the x offset of the notehead instead.
+(defun accidental-relative-xoffset (note1 note2 staff-step)
+  (let* ((acc1 (final-accidental note1))
+	 (pos1 (note-position note1))
+	 (acc2 (if (and (final-accidental note2)
+			(final-relative-accidental-xoffset note2))
+		   (final-accidental note2)
+		   :notehead))
+	 (pos2 (note-position note2))
+	 (xpos2 (or (final-relative-accidental-xoffset note2)
+		    (final-relative-note-xoffset note2))))
+    (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
+
+;;; given a note and a list of notes, compute x offset of the accidental
+;;; of the note as required by each of the notes in the list.  In order
+;;; for the accidental of the note not to overlap any of the others, 
+;;; we must use the minimum of all the x offsets thus computed. 
+(defun accidental-min-xoffset (note1 notes staff-step)
+  (reduce #'min notes :key (lambda (note) (accidental-relative-xoffset note1 note staff-step))))
+
+;;; given a list of notes that have accidentals to place, and a list of 
+;;; notes that either have no accidentals or with already-placed accidentals, 
+;;; compute the note in the first list that can be placed as far to the right 
+;;; as possible.
+(defun best-accidental (notes-with-accidentals notes staff-step)
+  (reduce (lambda (note1 note2) (if (>= (accidental-min-xoffset note1 notes staff-step)
+					(accidental-min-xoffset note2 notes staff-step))
+				    note1
+				    note2))
+	  notes-with-accidentals))  
+
+;;; for each note in a list of notes, if it has an accidental, compute
+;;; the final relative x offset of that accidental and store it in the note. 
+(defun compute-final-relative-accidental-xoffset (notes final-stem-direction)
+  (let* ((staff-step (score-pane:staff-step 1))
+	 ;; sort the notes from top to bottom
+	 (notes (sort (copy-list notes)
+		      (lambda (x y) (> (note-position x) (note-position y)))))
+	 (notes-with-accidentals (remove-if-not #'final-accidental notes)))
+    ;; initially, no accidental has been placed
+    (loop for note in notes do (setf (final-relative-accidental-xoffset note) nil))
+    (when (eq final-stem-direction :up)
+      ;; when the stem direction is :up and there is a suspended note
+      ;; i.e., one to the right of the stem, then the accidental of the topmost
+      ;; suspended note is placed first. 
+      (let ((first-suspended-note
+	     (find 0 notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
+	(when first-suspended-note
+	  (setf notes-with-accidentals
+		(remove first-suspended-note notes-with-accidentals))
+	  (setf (final-relative-accidental-xoffset first-suspended-note)
+		(accidental-min-xoffset first-suspended-note notes staff-step)))))
+    ;; place remaining accidentals
+    (loop while notes-with-accidentals
+	  do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
+	       (setf notes-with-accidentals
+		     (remove choice notes-with-accidentals))
+	       (setf (final-relative-accidental-xoffset choice)
+		     (accidental-min-xoffset choice notes staff-step))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -396,7 +534,8 @@
 
 (defun compute-staff-group-parameters (staff-group stem-direction)
   (compute-final-relative-note-xoffsets staff-group stem-direction)
-  (compute-final-accidentals staff-group))
+  (compute-final-accidentals staff-group)
+  (compute-final-relative-accidental-xoffset staff-group stem-direction))
 
 ;;; compute some important parameters of an element
 (defgeneric compute-element-parameters (element))
