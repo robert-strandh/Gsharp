@@ -132,7 +132,8 @@
 	   #:note-position #:non-empty-cluster-p
 	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos
 	   #:beam-groups #:final-stem-direction
-	   #:group-notes-by-staff #:final-relative-note-xoffset))
+	   #:group-notes-by-staff #:final-relative-note-xoffset
+	   #:final-accidental))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

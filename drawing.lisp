@@ -4,8 +4,7 @@
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
 (define-added-mixin dnote () note
-  ((final-accidental :initform nil :accessor final-accidental)
-   ;; The relative x offset of the accidental of the note with respect
+  (;; The relative x offset of the accidental of the note with respect
    ;; to the cluster.  A value of nil indicates that accidental has
    ;; not been placed yet
    (final-relative-accidental-xoffset :initform nil
@@ -431,17 +430,6 @@
   (loop for note in notes do
 	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note))))
 
-;;; Given a list of notes to be displayed on the same staff line, for
-;;; each note, compute the accidental to be displayed as a function of
-;;; the accidentals of the note and the key signature of the staff.
-(defun compute-final-accidentals (group)
-  (loop for note in group do
-	(setf (final-accidental note)
-	      (if (eq (accidentals note)
-		      (aref (keysig (staff note)) (mod (pitch note) 7)))
-		  nil
-		  (accidentals note)))))
-
 (defun element-has-suspended-notes (element)
   (not (apply #'= (mapcar #'final-relative-note-xoffset (notes element)))))
 
@@ -598,7 +586,6 @@
 	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
       (loop for group in groups do 
-	    (compute-final-accidentals group)
 	    (compute-final-relative-accidental-xoffset group x direction)
 	    (draw-notes pane group (dots element) (notehead element))
 	    (draw-ledger-lines pane x group))

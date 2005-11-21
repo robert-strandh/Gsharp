@@ -18,7 +18,8 @@
 ;;; Note
 
 (defrclass rnote note
-  (;; the relative x offset of the note with respect to the cluster
+  ((final-accidental :initform nil :accessor final-accidental)
+   ;; the relative x offset of the note with respect to the cluster
    (final-relative-note-xoffset :accessor final-relative-note-xoffset)))
 
 ;;; given a list of notes, group them so that every note in the group
@@ -171,6 +172,17 @@
     (loop for element in elements
 	  when (non-empty-cluster-p element)
 	  do (setf (final-stem-direction element) stem-direction))))
+
+;;; Given a list of notes to be displayed on the same staff line, for
+;;; each note, compute the accidental to be displayed as a function of
+;;; the accidentals of the note and the key signature of the staff.
+(defun compute-final-accidentals (group)
+  (loop for note in group do
+	(setf (final-accidental note)
+	      (if (eq (accidentals note)
+		      (aref (keysig (staff note)) (mod (pitch note) 7)))
+		  nil
+		  (accidentals note)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -383,7 +395,8 @@
 		 (setf note old-note))))))
 
 (defun compute-staff-group-parameters (staff-group stem-direction)
-  (compute-final-relative-note-xoffsets staff-group stem-direction))
+  (compute-final-relative-note-xoffsets staff-group stem-direction)
+  (compute-final-accidentals staff-group))
 
 ;;; compute some important parameters of an element
 (defgeneric compute-element-parameters (element))
