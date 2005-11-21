@@ -101,6 +101,26 @@
 ;;;
 ;;; Cluster
 
+(define-added-mixin rcluster () cluster
+  (;; the position, in staff steps, of the top not in the element.
+   (top-note-pos :accessor top-note-pos)
+   ;; the position, in staff steps, of the bottom note in the element.
+   (bot-note-pos :accessor bot-note-pos)))
+
+;;; Return true if and only if the element is a non-empty cluster
+(defun non-empty-cluster-p (element)
+  (and (typep element 'cluster)
+       (not (null (notes element)))))
+
+;;; Compute and store some important information about a non-empty
+;;; cluster:
+;;;  * the position, in staff steps of the top note.
+;;;  * the position, in staff steps of the bottom note.
+(defun compute-top-bot-pos (cluster)
+  (assert (non-empty-cluster-p cluster))
+  (setf (top-note-pos cluster) (note-position (top-note (notes cluster)))
+	(bot-note-pos cluster) (note-position (bot-note (notes cluster)))))
+
 (defmethod add-note :after ((element relement) (note note))
   (mark-modified element))
 
@@ -288,6 +308,23 @@
   (append (merge 'list (butlast bar1) (butlast bar2) #'<)
 	  (list (max (car (last bar1)) (car (last bar2))))))
 
+;;; compute some important parameters of an element
+(defgeneric compute-element-parameters (element))
+
+(defmethod compute-element-parameters (element)
+  nil)
+
+(defmethod compute-element-parameters ((element cluster))
+  (when (non-empty-cluster-p element)
+    (compute-top-bot-pos element)))
+
+;;; compute some important parameters of a bar
+(defun compute-bar-parameters (bar)
+  (loop for element in (elements bar)
+	do (when (modified-p element)
+	     (compute-element-parameters element)
+	     (setf (modified-p element) nil))))
+
 ;;; From a list of simultaneous bars (and some other stuff), create a
 ;;; measure.  The `other stuff' is the spacing style, which is neded
 ;;; in order to compute the coefficient of the measure, the position
@@ -297,6 +334,10 @@
 ;;; to indicate the position of the measure in the sequence of all
 ;;; measures of the buffer.
 (defun compute-measure (bars spacing-style seg-pos bar-pos)
+  (loop for bar in bars
+	do (when (modified-p bar)
+	     (compute-bar-parameters bar)
+	     (setf (modified-p bar) nil)))
   (let* ((start-times (remove-duplicates
 		       (reduce #'combine-bars
 			       (mapcar #'start-times bars))))

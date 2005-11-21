@@ -102,8 +102,8 @@
 	   #:buffer-cost-method
 	   #:reduced-width #:natural-width #:compress-factor
 	   #:measure-seq-cost
-	   #:note-position
-	   #:top-note #:bot-note))
+	   #:note-position #:non-empty-cluster-p
+	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

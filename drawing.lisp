@@ -197,25 +197,10 @@
    (final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
 (define-added-mixin vcluster () cluster
-  ((final-stem-direction :accessor final-stem-direction)
-   ;; the position, in staff steps, of the top not in the element.
-   (top-note-pos :accessor top-note-pos)
-   ;; the position, in staff steps, of the bottom note in the element.
-   (bot-note-pos :accessor bot-note-pos)))
+  ((final-stem-direction :accessor final-stem-direction)))
 
 (define-added-mixin welement () lyrics-element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
-
-;;; Compute and store some important information about a non-empty
-;;; cluster:
-;;;  * the position, in staff steps of the top note.
-;;;  * the position, in staff steps of the bottom note.
-(defun compute-top-bot-pos (cluster)
-  (assert (non-empty-cluster-p cluster))
-  (let ((top-note (top-note (notes cluster)))
-	(bot-note (bot-note (notes cluster))))
-    (setf (top-note-pos cluster) (note-position top-note)
-	  (bot-note-pos cluster) (note-position bot-note))))
 
 ;;; Compute and store several important pieces of information
 ;;; about an element:
@@ -305,11 +290,6 @@
 	    (incf start-time (duration element)))
 	  (elements bar))))
 
-;;; Return true if and only if the element is a non-empty cluster
-(defun non-empty-cluster-p (element)
-  (and (typep element 'cluster)
-       (not (null (notes element)))))
-
 ;;; Given a beam group containing at least two nonempty clusters,
 ;;; compute and store the final stem directions of all the non-empty
 ;;; clusters in the group
@@ -353,9 +333,9 @@
 ;;; Given a beam group, for each nonempty element, compute the top and
 ;;; bottom note position, and the final stem direction.
 (defun compute-positions-and-stem-direction (elements)
-  (loop for element in elements
-	when (non-empty-cluster-p element)
-	do (compute-top-bot-pos element))
+;;  (loop for element in elements
+;;	when (non-empty-cluster-p element)
+;;	do (compute-top-bot-pos element))
   (if (null (cdr elements))
       (let ((element (car elements)))
 	(when (non-empty-cluster-p element)
