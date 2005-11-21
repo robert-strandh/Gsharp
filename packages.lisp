@@ -1,3 +1,16 @@
+(defpackage :esa
+  (:use :clim-lisp :clim)
+  (:export #:minibuffer-pane #:display-message
+	   #:esa-pane-mixin #:previous-command
+	   #:info-pane #:master-pane
+	   #:esa-frame-mixin #:windows #:recordingp #:executingp
+	   #:*numeric-argument-p* #:*current-gesture*
+	   #:esa-top-level #:simple-command-loop
+	   #:global-esa-table #:keyboard-macro-table
+           #:help-table
+	   #:set-key
+           #:find-applicable-command-table))
+
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
   (:use :clim-lisp :clim-mop)
@@ -32,6 +45,20 @@
 	   #:+glyph-flags-down-four+ #:+glyph-flags-down-five+ #:+glyph-flags-up-one+
 	   #:+glyph-flags-up-two+ #:+glyph-flags-up-three+ #:+glyph-flags-up-four+
 	   #:+glyph-flags-up-five+))
+
+(defpackage :score-pane
+  (:use :clim :clim-extensions :clim-lisp :sdl :esa)
+  (:shadow #:rest)
+  (:export #:draw-fiveline-staff #:draw-lyrics-staff
+	   #:draw-stem #:draw-right-stem #:draw-left-stem 
+	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
+	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
+	   #:draw-flags-up #:draw-flags-down
+	   #:with-score-pane #:with-vertical-score-position
+	   #:with-staff-size #:with-notehead-right-offsets
+	   #:with-suspended-note-offset
+	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
+	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead))
 
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities)
@@ -104,7 +131,8 @@
 	   #:measure-seq-cost
 	   #:note-position #:non-empty-cluster-p
 	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos
-	   #:beam-groups #:final-stem-direction))
+	   #:beam-groups #:final-stem-direction
+	   #:group-notes-by-staff #:final-relative-note-xoffset))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)
@@ -131,33 +159,6 @@
 	   #:8th-flag-down #:extend-flag-down #:whole-rest #:half-rest
 	   #:quarter-rest #:8th-rest #:16th-rest #:32nd-rest #:64th-rest
 	   #:128th-rest #:measure-rest #:double-whole-rest))
-
-(defpackage :esa
-  (:use :clim-lisp :clim)
-  (:export #:minibuffer-pane #:display-message
-	   #:esa-pane-mixin #:previous-command
-	   #:info-pane #:master-pane
-	   #:esa-frame-mixin #:windows #:recordingp #:executingp
-	   #:*numeric-argument-p* #:*current-gesture*
-	   #:esa-top-level #:simple-command-loop
-	   #:global-esa-table #:keyboard-macro-table
-           #:help-table
-	   #:set-key
-           #:find-applicable-command-table))
-
-(defpackage :score-pane
-  (:use :clim :clim-extensions :clim-lisp :sdl :esa)
-  (:shadow #:rest)
-  (:export #:draw-fiveline-staff #:draw-lyrics-staff
-	   #:draw-stem #:draw-right-stem #:draw-left-stem 
-	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
-	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
-	   #:draw-flags-up #:draw-flags-down
-	   #:with-score-pane #:with-vertical-score-position
-	   #:with-staff-size #:with-notehead-right-offsets
-	   #:with-suspended-note-offset
-	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
-	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead))
 
 (defpackage :gsharp-beaming
   (:use :common-lisp)

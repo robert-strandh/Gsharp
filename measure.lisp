@@ -18,7 +18,17 @@
 ;;; Note
 
 (defrclass rnote note
-  ())
+  (;; the relative x offset of the note with respect to the cluster
+   (final-relative-note-xoffset :accessor final-relative-note-xoffset)))
+
+;;; given a list of notes, group them so that every note in the group
+;;; is displayed on the same staff.  Return the list of groups. 
+(defun group-notes-by-staff (notes)
+  (let ((groups '()))
+    (loop while notes do
+	  (push (remove (staff (car notes)) notes :test-not #'eq :key #'staff) groups)
+	  (setf notes (remove (staff (car notes)) notes :test #'eq :key #'staff)))
+    groups))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -342,6 +352,39 @@
   (append (merge 'list (butlast bar1) (butlast bar2) #'<)
 	  (list (max (car (last bar1)) (car (last bar2))))))
 
+;;; given a group of notes (i.e. a list of notes, all displayed on the
+;;; same staff, compute their final x offsets.  This is a question of
+;;; determining whether the note goes to the right or to the left of
+;;; the stem.  The head-note of the stem goes to the left of an
+;;; up-stem and to the right of a down-stem.  The x offset of a cluster
+;;; gives the x position of the head-note. 
+(defun compute-final-relative-note-xoffsets (group direction)
+  (setf group (sort (copy-list group)
+		    (if (eq direction :up)
+			(lambda (x y) (< (note-position x) (note-position y)))
+			(lambda (x y) (> (note-position x) (note-position y))))))
+  (score-pane:with-suspended-note-offset offset
+    ;; the first element of the group is the head-note
+    (setf (final-relative-note-xoffset (car group)) 0)
+    ;; OFFSET is a positive quantity that determines the 
+    ;; absolute difference between the x offset of a suspended
+    ;; note and that of a normally positioned note. 
+    (when (eq direction :down) (setf offset (- offset)))
+    (loop for note in (cdr group)
+	  and old-note = (car group) then note
+	  do (let* ((pos (note-position note))
+		    (old-pos (note-position old-note))
+		    ;; if adjacent notes are just one staff step apart, 
+		    ;; then one must be suspended. 
+		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
+	       (setf (final-relative-note-xoffset note) dx)
+	       ;; go back to ordinary offset
+	       (when (= (abs (- pos old-pos)) 1)
+		 (setf note old-note))))))
+
+(defun compute-staff-group-parameters (staff-group stem-direction)
+  (compute-final-relative-note-xoffsets staff-group stem-direction))
+
 ;;; compute some important parameters of an element
 (defgeneric compute-element-parameters (element))
 
@@ -350,20 +393,26 @@
 
 (defmethod compute-element-parameters ((element cluster))
   (when (non-empty-cluster-p element)
-    (compute-top-bot-pos element)))
+    (compute-top-bot-pos element)
+    (loop for staff-group in (group-notes-by-staff (notes element))
+	  do (compute-staff-group-parameters staff-group (final-stem-direction element)))))
 
 (defun compute-beam-group-parameters (elements)
   (let ((any-element-modified nil))
     (loop for element in elements
 	  do (when (modified-p element)
-	       (compute-element-parameters element)
-	       (setf any-element-modified t)
-	       (setf (modified-p element) nil)))
+	       (when (non-empty-cluster-p element)
+		 (compute-top-bot-pos element))
+	       (setf any-element-modified t)))
     (when any-element-modified
       (if (null (cdr elements))
 	  (when (non-empty-cluster-p (car elements))
 	    (compute-final-stem-direction (car elements)))
-	  (compute-final-stem-directions elements)))))
+	  (compute-final-stem-directions elements)))
+    (loop for element in elements
+	  do (when (modified-p element)
+	       (compute-element-parameters element)
+	       (setf (modified-p element) nil)))))
 
 ;;; Given a list of the elements of a bar, return a list of beam
 ;;; groups.  A beam group is defined to be either a singleton list or
@@ -416,18 +465,19 @@
 ;;; to indicate the position of the measure in the sequence of all
 ;;; measures of the buffer.
 (defun compute-measure (bars spacing-style seg-pos bar-pos)
-  (loop for bar in bars
-	do (when (modified-p bar)
-	     (compute-bar-parameters bar)
-	     (setf (modified-p bar) nil)))
-  (let* ((start-times (remove-duplicates
-		       (reduce #'combine-bars
-			       (mapcar #'start-times bars))))
-	 (durations (abs-rel start-times))
-	 (min-dist (reduce #'min durations))
-	 (coeff (loop for duration in durations
-		      sum (expt duration spacing-style))))
-    (make-measure min-dist coeff start-times seg-pos bar-pos bars)))
+  (score-pane:with-staff-size 6
+    (loop for bar in bars
+	  do (when (modified-p bar)
+	       (compute-bar-parameters bar)
+	       (setf (modified-p bar) nil)))
+    (let* ((start-times (remove-duplicates
+			 (reduce #'combine-bars
+				 (mapcar #'start-times bars))))
+	   (durations (abs-rel start-times))
+	   (min-dist (reduce #'min durations))
+	   (coeff (loop for duration in durations
+			sum (expt duration spacing-style))))
+      (make-measure min-dist coeff start-times seg-pos bar-pos bars))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.

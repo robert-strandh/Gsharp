@@ -4,9 +4,7 @@
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
 (define-added-mixin dnote () note
-  (;; the relative x offset of the note with respect to the cluster
-   (final-relative-note-xoffset :accessor final-relative-note-xoffset)
-   (final-accidental :initform nil :accessor final-accidental)
+  ((final-accidental :initform nil :accessor final-accidental)
    ;; The relative x offset of the accidental of the note with respect
    ;; to the cluster.  A value of nil indicates that accidental has
    ;; not been placed yet
@@ -433,36 +431,6 @@
   (loop for note in notes do
 	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note))))
 
-;;; given a group of notes (i.e. a list of notes, all displayed on the
-;;; same staff, compute their final x offsets.  This is a question of
-;;; determining whether the note goes to the right or to the left of
-;;; the stem.  The head-note of the stem goes to the left of an
-;;; up-stem and to the right of a down-stem.  The x offset of a cluster
-;;; gives the x position of the head-note. 
-(defun compute-final-relative-note-xoffsets (group direction)
-  (setf group (sort (copy-list group)
-		    (if (eq direction :up)
-			(lambda (x y) (< (note-position x) (note-position y)))
-			(lambda (x y) (> (note-position x) (note-position y))))))
-  (score-pane:with-suspended-note-offset offset
-    ;; the first element of the group is the head-note
-    (setf (final-relative-note-xoffset (car group)) 0)
-    ;; OFFSET is a positive quantity that determines the 
-    ;; absolute difference between the x offset of a suspended
-    ;; note and that of a normally positioned note. 
-    (when (eq direction :down) (setf offset (- offset)))
-    (loop for note in (cdr group)
-	  and old-note = (car group) then note
-	  do (let* ((pos (note-position note))
-		    (old-pos (note-position old-note))
-		    ;; if adjacent notes are just one staff step apart, 
-		    ;; then one must be suspended. 
-		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
-	       (setf (final-relative-note-xoffset note) dx)
-	       ;; go back to ordinary offset
-	       (when (= (abs (- pos old-pos)) 1)
-		 (setf note old-note))))))
-
 ;;; Given a list of notes to be displayed on the same staff line, for
 ;;; each note, compute the accidental to be displayed as a function of
 ;;; the accidentals of the note and the key signature of the staff.
@@ -610,15 +578,6 @@
 	       (setf (final-relative-accidental-xoffset choice)
 		     (accidental-min-xoffset choice notes staff-step))))))
 
-;;; given a list of notes, group them so that every note in the group
-;;; is displayed on the same staff.  Return the list of groups. 
-(defun group-notes-by-staff (notes)
-  (let ((groups '()))
-    (loop while notes do
-	  (push (remove (staff (car notes)) notes :test-not #'eq :key #'staff) groups)
-	  (setf notes (remove (staff (car notes)) notes :test #'eq :key #'staff)))
-    groups))
-
 ;;; draw a cluster.  The stem direction and the stem position have
 ;;; already been computed.  
 ;;; 1. Group notes by staff.
@@ -639,7 +598,6 @@
 	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
       (loop for group in groups do 
-	    (compute-final-relative-note-xoffsets group direction)
 	    (compute-final-accidentals group)
 	    (compute-final-relative-accidental-xoffset group x direction)
 	    (draw-notes pane group (dots element) (notehead element))
