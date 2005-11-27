@@ -37,5 +37,6 @@
 	   #:move> #:move<
 	   #:insert #:insert-sequence
 	   #:element< #:element> #:delete< #:delete>
-	   #:flexirank-mixin #:element-rank-mixin #:rank))
+	   #:flexirank-mixin #:element-rank-mixin #:rank
+	   #:flexi-next #:flexi-prev))
 

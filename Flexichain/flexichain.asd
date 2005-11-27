@@ -27,11 +27,11 @@
 ;; The tester is not included, for it depends on clim.  The stupid
 ;; implementation has also been left out, since it seems mostly useful
 ;; for testing.
-(defsystem flexichain
+(defsystem :flexichain
   :name "flexichain"
   :components ((:file "flexichain-package")
                (:file "utilities" :depends-on ("flexichain-package"))
-               (:file "flexichain" :depends-on ("utilities"))
+               (:file "flexichain" :depends-on ("utilities" "flexichain-package"))
                (:file "flexicursor" :depends-on ("flexichain"))
                (:file "flexirank" :depends-on ("flexichain"))))
 
