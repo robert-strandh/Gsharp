@@ -47,7 +47,8 @@
 ;;; modification to the element have taken place in the meantime. 
 
 (defrclass relement element
-  ((duration :initform nil)))
+  ((duration :initform nil)
+   (timeline :accessor timeline)))
 
 (defmethod duration :around ((element relement))
   (with-slots (duration) element
@@ -380,15 +381,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Timeline
+
+;;; A timeline of a measure is the set of all simultaneous elements of
+;;; the bars of the meausure.  The duration of a timeline is either
+;;; the temporal distance between it and the next closest timeline
+;;; following it, or, in case it is the last timeline of the measure,
+;;; the duration of the longest element of the timeline.
+
+(defclass timeline (flexichain:element-rank-mixin)
+  ((start-time :initarg :start-time :reader start-time)
+   (elements :initform '() :accessor elements)
+   (duration :initarg :duration :reader duration)
+   (elasticity :accessor elasticity)))
+
+(defclass ranked-flexichain (flexichain:standard-flexichain flexichain:flexirank-mixin)
+  ())
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Measure
 
-;;; A measure represents the set of simultaneous bars.  Define a
-;;; TIMELINE of a measure to be the set of all simultaneous elements
-;;; of the bars of the measure.  The DURATION of a timeline is either
-;;; the temporal distance to the next closest timeline following it,
-;;; or, in case it is the last timeline of the measure, the duration
-;;; of the longest element of the timeline.
-
+;;; A measure represents the set of simultaneous bars.
 (defclass measure (obseq-elem)
   (;; the smallest duration of any timeline in the measure
    (min-dist :initarg :min-dist :reader measure-min-dist)
@@ -406,7 +420,9 @@
    (seg-pos :initarg :seg-pos :reader measure-seg-pos)
    (bar-pos :initarg :bar-pos :reader measure-bar-pos)
    ;; a list of the bars that make up this measure
-   (bars :initarg :bars :reader measure-bars)))
+   (bars :initarg :bars :reader measure-bars)
+   ;; the first timeline of the measure, or NIL of there are not timelines
+   (timelines :initform (make-instance 'ranked-flexichain) :reader timelines)))
 
 (defun make-measure (min-dist coeff start-times seg-pos bar-pos bars)
   (make-instance 'measure :min-dist min-dist :coeff coeff
@@ -448,6 +464,7 @@
 (defmethod measures :before ((segment rsegment))
   (when (modified-p segment)
     (compute-measures segment (spacing-style (buffer-cost-method (buffer segment))))
+    (mapc #'compute-timelines (measures segment))
     (setf (modified-p segment) nil)))
 
 (defmethod nb-measures ((segment rsegment))
@@ -630,6 +647,30 @@
 	   (coeff (loop for duration in durations
 			sum (expt duration spacing-style))))
       (make-measure min-dist coeff start-times seg-pos bar-pos bars))))
+
+(defun compute-timelines (measure)
+  (let ((timelines (timelines measure))
+	(start-times (measure-start-times measure)))
+    ;; create a timeline for each start time of the measure
+    (loop for start-time in start-times
+	  for duration in (abs-rel start-times)
+	  for i from 0
+	  do (let ((timeline (make-instance 'timeline
+			       :start-time start-time
+			       :duration duration)))
+	       (flexichain:insert* timelines i timeline)))
+    ;; link each timeline to its elements and each element of a
+    ;; timeline to the timeline
+    (loop for bar in (measure-bars measure)
+	  do (loop for element in (elements bar)
+		   for start-time = 0 then (+ start-time (duration element))
+		   for timeline-index from 0
+		   do (loop while (< (start-time (flexichain:element* timelines timeline-index))
+				     start-time)
+		   do (incf timeline-index))
+		   do (let ((timeline (flexichain:element* timelines timeline-index)))
+		   (push element (elements timeline))
+		   (setf (timeline element) timeline))))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.

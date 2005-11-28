@@ -20,7 +20,7 @@
 						     :defaults *gsharp-directory*))
 			     collect `(:file ,(pathname-name p) :pathname ,p))))))
 
-(gsharp-defsystem (:gsharp :depends-on (:mcclim))
+(gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain))
    "packages"
    "esa"
    "utilities"
