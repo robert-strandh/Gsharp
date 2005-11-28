@@ -133,7 +133,9 @@
 	   #:top-note #:bot-note #:top-note-pos #:bot-note-pos
 	   #:beam-groups #:final-stem-direction
 	   #:group-notes-by-staff #:final-relative-note-xoffset
-	   #:final-accidental #:final-relative-accidental-xoffset))
+	   #:final-accidental #:final-relative-accidental-xoffset
+	   #:timeline #:timelines #:elasticity
+	   #:smallest-gap))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

@@ -48,7 +48,7 @@
 
 (defrclass relement element
   ((duration :initform nil)
-   (timeline :accessor timeline)))
+   (timeline :accessor timeline)))   
 
 (defmethod duration :around ((element relement))
   (with-slots (duration) element
@@ -393,7 +393,10 @@
   ((start-time :initarg :start-time :reader start-time)
    (elements :initform '() :accessor elements)
    (duration :initarg :duration :reader duration)
-   (elasticity :accessor elasticity)))
+   (elasticity :accessor elasticity)
+   ;; the minimum x offset from this timeline to the next, or, if this
+   ;; is the last timeline, from this one to the end of the measure
+   (smallest-gap :initform 0 :accessor smallest-gap)))
 
 (defclass ranked-flexichain (flexichain:standard-flexichain flexichain:flexirank-mixin)
   ())
@@ -464,7 +467,7 @@
 (defmethod measures :before ((segment rsegment))
   (when (modified-p segment)
     (compute-measures segment (spacing-style (buffer-cost-method (buffer segment))))
-    (mapc #'compute-timelines (measures segment))
+    (mapc #'compute-timelines (slot-value segment 'measures))
     (setf (modified-p segment) nil)))
 
 (defmethod nb-measures ((segment rsegment))

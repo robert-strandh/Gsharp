@@ -96,6 +96,41 @@
 	  collect (/ (nat-width method (measure-coeff measure) min-dist)
 		     compress))))
 
+(defun compute-elasticities (measures method)
+  (loop for measure in measures
+	do (loop with timelines = (timelines measure)
+		 for i from 0 below (flexichain:nb-elements timelines)
+		 for timeline = (flexichain:element* timelines i)
+		 do (setf (elasticity timeline)
+			  (expt (duration timeline) (spacing-style method))))))
+
+(defgeneric left-bulge (element pane))
+(defgeneric right-bulge (element pane))
+
+(defmethod left-bulge ((element element) pane)
+  0)  
+
+(defmethod right-bulge ((element element) pane)
+  0)  
+
+(defun compute-gaps (measures method pane)
+  (declare (ignore method))
+  (loop for measure in measures
+	do (loop for bar in (measure-bars measure)
+		 do (loop for (e1 e2) on (elements bar)
+			  for t1 = (timeline e1)
+			  do (cond ((null e2)
+				    (when (flexichain:flexi-last-p t1)
+				      (setf (smallest-gap t1)
+					    (max (smallest-gap t1)
+						 (right-bulge e1 pane)))))
+				   ((eq (flexichain:flexi-next t1)
+					(timeline e2))
+				    (setf (smallest-gap t1)
+					  (max (smallest-gap t1)
+					       (+ (right-bulge e1 pane)
+						  (left-bulge e2 pane))))))))))			  
+
 (defun draw-measure (pane measure min-dist compress x method draw-cursor)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
 		   compress))
@@ -154,6 +189,8 @@
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
 	 (lambda (measures)
+	   (compute-elasticities measures method)
+	   (compute-gaps measures method pane)
 	   (let ((widths (compute-widths measures method)))
 	     (score-pane:with-vertical-score-position (pane yy)
 	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
