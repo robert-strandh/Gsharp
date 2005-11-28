@@ -28,6 +28,8 @@
 ;;; generic function rank.
 
 (defgeneric rank (element))
+(defgeneric flexi-first-p (element))
+(defgeneric flexi-last-p (element))
 (defgeneric flexi-next (element))
 (defgeneric flexi-prev (element))
 
@@ -38,16 +40,19 @@
 (defmethod rank ((element element-rank-mixin))
   (index-position (chain element) (index element)))
 
+(defmethod flexi-first-p ((element element-rank-mixin))
+  (zerop (rank element)))
+
+(defmethod flexi-last-p ((element element-rank-mixin))
+  (= (rank element) (1- (nb-elements (chain element)))))
+
 (defmethod flexi-next ((element element-rank-mixin))
-  (let ((new-rank (1+ (rank element)))
-	(chain (chain element)))
-    (assert (< new-rank (nb-elements chain)))
-    (element* chain new-rank)))
+  (assert (not (flexi-last-p element)))
+  (element* (chain element) (1+ (rank element))))
 
 (defmethod flexi-prev ((element element-rank-mixin))
-  (let ((new-rank (1- (rank element))))
-    (assert (not (minusp new-rank)))
-    (element* (chain element) new-rank)))
+  (assert (not (flexi-first-p element)))
+  (element* (chain element) (1- (rank element))))
 
 ;;; this class must be mixed into a flexichain that contains ranked elements
 (defclass flexirank-mixin () ())

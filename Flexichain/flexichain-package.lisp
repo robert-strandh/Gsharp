@@ -38,5 +38,6 @@
 	   #:insert #:insert-sequence
 	   #:element< #:element> #:delete< #:delete>
 	   #:flexirank-mixin #:element-rank-mixin #:rank
+	   #:flexi-first-p #:flexi-last-p
 	   #:flexi-next #:flexi-prev))
 
