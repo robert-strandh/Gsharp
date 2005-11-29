@@ -653,10 +653,10 @@
 
 (defun compute-timelines (measure)
   (let ((timelines (timelines measure))
-	(start-times (measure-start-times measure)))
+	(durations (abs-rel (measure-start-times measure))))
     ;; create a timeline for each start time of the measure
-    (loop for start-time in start-times
-	  for duration in (abs-rel start-times)
+    (loop for duration in durations
+	  for start-time = 0 then (+ start-time duration)
 	  for i from 0
 	  do (let ((timeline (make-instance 'timeline
 			       :start-time start-time
@@ -665,15 +665,15 @@
     ;; link each timeline to its elements and each element of a
     ;; timeline to the timeline
     (loop for bar in (measure-bars measure)
-	  do (loop for element in (elements bar)
+	  do (loop with timeline-index = 0
+		   for element in (elements bar)
 		   for start-time = 0 then (+ start-time (duration element))
-		   for timeline-index from 0
 		   do (loop while (< (start-time (flexichain:element* timelines timeline-index))
 				     start-time)
-		   do (incf timeline-index))
+			    do (incf timeline-index))
 		   do (let ((timeline (flexichain:element* timelines timeline-index)))
-		   (push element (elements timeline))
-		   (setf (timeline element) timeline))))))
+			(push element (elements timeline))
+			(setf (timeline element) timeline))))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.
