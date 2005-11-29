@@ -35,6 +35,7 @@
    "postscript"
    "glyphs"
    "beaming"
+   "elasticity"
    "drawing"
    "cursor"
    "input-state"

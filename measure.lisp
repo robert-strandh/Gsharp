@@ -424,8 +424,12 @@
    (bar-pos :initarg :bar-pos :reader measure-bar-pos)
    ;; a list of the bars that make up this measure
    (bars :initarg :bars :reader measure-bars)
-   ;; the first timeline of the measure, or NIL of there are not timelines
-   (timelines :initform (make-instance 'ranked-flexichain) :reader timelines)))
+   ;; a ranked flexichain of timelines
+   (timelines :initform (make-instance 'ranked-flexichain) :reader timelines)
+   ;; a convex piecewise-linear function that determines the
+   ;; horizontal size of the measure as a function of the "force" that
+   ;; is applied to it
+   (elasticity-function :accessor elasticity-function)))
 
 (defun make-measure (min-dist coeff start-times seg-pos bar-pos bars)
   (make-instance 'measure :min-dist min-dist :coeff coeff
@@ -656,7 +660,7 @@
 	(durations (abs-rel (measure-start-times measure))))
     ;; create a timeline for each start time of the measure
     (loop for duration in durations
-	  for start-time = 0 then (+ start-time duration)
+	  and start-time = 0 then (+ start-time duration)
 	  for i from 0
 	  do (let ((timeline (make-instance 'timeline
 			       :start-time start-time
@@ -667,7 +671,7 @@
     (loop for bar in (measure-bars measure)
 	  do (loop with timeline-index = 0
 		   for element in (elements bar)
-		   for start-time = 0 then (+ start-time (duration element))
+		   and start-time = 0 then (+ start-time (duration element))
 		   do (loop while (< (start-time (flexichain:element* timelines timeline-index))
 				     start-time)
 			    do (incf timeline-index))
