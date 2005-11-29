@@ -110,8 +110,16 @@
 (defmethod left-bulge ((element element) pane)
   (score-pane:staff-step 1))
 
+(defmethod left-bulge ((element lyrics-element) pane)
+  (+ (score-pane:staff-step 0.5)
+     (/ (text-size pane (map 'string 'code-char (text element))) 2)))
+
 (defmethod right-bulge ((element element) pane)
   (score-pane:staff-step 1))
+
+(defmethod right-bulge ((element lyrics-element) pane)
+  (+ (score-pane:staff-step 0.5)
+     (/ (text-size pane (map 'string 'code-char (text element))) 2)))
 
 (defun compute-gaps-adjacent-timelines (bars method pane)
   (declare (ignore method))

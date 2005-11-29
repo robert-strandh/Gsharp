@@ -621,7 +621,7 @@
 ;;; compute some important parameters of a bar
 (defgeneric compute-bar-parameters (bar))
 
-(defmethod compute-bar-parameter (bar)
+(defmethod compute-bar-parameters (bar)
   nil)
 
 (defmethod compute-bar-parameters ((bar melody-bar))
