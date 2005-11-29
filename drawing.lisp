@@ -108,28 +108,87 @@
 (defgeneric right-bulge (element pane))
 
 (defmethod left-bulge ((element element) pane)
-  0)  
+  (score-pane:staff-step 1))
 
 (defmethod right-bulge ((element element) pane)
-  0)  
+  (score-pane:staff-step 1))
+
+(defun compute-gaps-adjacent-timelines (bars method pane)
+  (declare (ignore method))
+  (loop for bar in bars
+	do (loop for (e1 e2) on (elements bar)
+		 for t1 = (timeline e1)
+		 do (cond ((null e2)
+			   (when (flexichain:flexi-last-p t1)
+			     (setf (smallest-gap t1)
+				   (max (smallest-gap t1)
+					(right-bulge e1 pane)))))
+			  ((eq (flexichain:flexi-next t1)
+			       (timeline e2))
+			   (setf (smallest-gap t1)
+				 (max (smallest-gap t1)
+				      (+ (right-bulge e1 pane)
+					 (left-bulge e2 pane)))))))))
+
+(defun compute-gaps-separated-timelines (bars method pane)
+  (declare (ignore method))
+  (flet ((handle-timelines (timelines element-gap)
+	   (let ((sum-gap (reduce #'+ timelines :key #'smallest-gap))
+		 (sum-elasticity (reduce #'+ timelines :key #'elasticity)))
+	     (unless (> sum-gap element-gap)
+	       (if (zerop sum-elasticity)
+		   (loop for timeline = (find (/ element-gap (length timelines))
+					      timelines
+					      :key #'smallest-gap
+					      :test #'<)
+			 until (null timeline)
+			 do (decf element-gap (smallest-gap timeline))
+			 do (setf timelines (remove timeline timelines :test #'eq))
+			 finally (let ((gap (/ element-gap (length timelines))))
+				   (loop for timeline in timelines
+					 do (setf (smallest-gap timeline) gap))))
+		   (loop for timeline = (let ((gap/elasticity (/ element-gap sum-elasticity)))
+					  (find-if (lambda (timeline)
+						     (> (smallest-gap timeline)
+							(* (elasticity timeline) gap/elasticity)))
+						   timelines))
+			 until (null timeline)
+			 do (decf element-gap (smallest-gap timeline))
+			 do (decf sum-elasticity (elasticity timeline))
+			 do (setf timelines (remove timeline timelines :test #'eq))
+			 finally (let ((gap/elasticity (/ element-gap sum-elasticity)))
+				   (loop for timeline in timelines
+					 do (setf (smallest-gap timeline)
+						  (* (elasticity timeline) gap/elasticity))))))))))
+    (loop for bar in bars
+	  do (loop for (e1 e2) on (elements bar)
+		   for t1 = (timeline e1)
+		   do (cond ((null e2)
+			     (unless (flexichain:flexi-last-p t1)
+			       (let ((timelines (loop for tl = t1 then (flexichain:flexi-next tl)
+						      collect tl
+						      until (flexichain:flexi-last-p tl))))
+				 (handle-timelines timelines (right-bulge e1 pane)))))
+			    ((not (eq (flexichain:flexi-next t1)
+				      (timeline e2)))
+			     (let ((timelines (loop for tl = t1 then (flexichain:flexi-next tl)
+						    until (eq tl (timeline e2))
+						    collect tl)))
+			       (handle-timelines timelines (+ (right-bulge e1 pane)
+							      (left-bulge e2 pane))))))))))
 
 (defun compute-gaps (measures method pane)
-  (declare (ignore method))
   (loop for measure in measures
-	do (loop for bar in (measure-bars measure)
-		 do (loop for (e1 e2) on (elements bar)
-			  for t1 = (timeline e1)
-			  do (cond ((null e2)
-				    (when (flexichain:flexi-last-p t1)
-				      (setf (smallest-gap t1)
-					    (max (smallest-gap t1)
-						 (right-bulge e1 pane)))))
-				   ((eq (flexichain:flexi-next t1)
-					(timeline e2))
-				    (setf (smallest-gap t1)
-					  (max (smallest-gap t1)
-					       (+ (right-bulge e1 pane)
-						  (left-bulge e2 pane))))))))))			  
+	;; initially, look only at adjacent elements whose
+	;; corrsponding timelines are also adjacent, and at the last
+	;; element of a bar, provided that its timeline is also the
+	;; last one in the measure
+	do (compute-gaps-adjacent-timelines (measure-bars measure) method pane)
+	
+	;; then look at adjacent elements whose corresponding
+	;; timelines are NOT adjacent, or the last element of a bar
+	;; whose corresponding timeline is not the last one in the meaure
+	do (compute-gaps-separated-timelines (measure-bars measure) method pane)))
 
 (defun draw-measure (pane measure min-dist compress x method draw-cursor)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
