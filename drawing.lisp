@@ -96,6 +96,14 @@
 	  collect (/ (nat-width method (measure-coeff measure) min-dist)
 		     compress))))
 
+;;; Compute the elasticity of each timeline in each measure of the
+;;; measures of a system (line) by taking its duration to the power of
+;;; the spaceing style.  This metric is arbitrarily normalized to the
+;;; duration of a whole note, which means that the force to apply to a
+;;; line is not comparable between two different lines.  All we know
+;;; is that timelines with the same elasticity will grow and shrink in
+;;; parallel, and that proportions between two timelines of different
+;;; durations will be preserved. 
 (defun compute-elasticities (measures method)
   (loop for measure in measures
 	do (loop with timelines = (timelines measure)
@@ -104,8 +112,29 @@
 		 do (setf (elasticity timeline)
 			  (expt (duration timeline) (spacing-style method))))))
 
-(defgeneric left-bulge (element pane))
-(defgeneric right-bulge (element pane))
+;;; FIXME: there should be an :around method that adds the value
+;;; return by the main method to the explicit horizontal offset that
+;;; the user wants to impose on an element, and the existence of this 
+;;; around method should be documented.
+;;; FIXME: we should probably also allow for the user to introduce
+;;; explicit (positive or negative) bulges that will be added in by
+;;; the :around method, thus allowing the user to explicitly move two
+;;; adjacent elements further apart, or to bring them closer together. 
+(defgeneric left-bulge (element pane)
+  (:documentation "The amount by which an element sticks out to the
+left of the center of its timeline"))
+
+;;; FIXME: there should be an :around method that adds the value
+;;; return by the main method to the explicit horizontal offset that
+;;; the user wants to impose on an element, and the existence of this
+;;; around method should be documented.  
+;;; FIXME: we should probably also allow for the user to introduce
+;;; explicit (positive or negative) bulges that will be added in by
+;;; the :around method, thus allowing the user to explicitly move two
+;;; adjacent elements further apart, or to bring them closer together. 
+(defgeneric right-bulge (element pane)
+  (:documentation "The amount by which an element sticks out to the
+right of the center of its timeline"))
 
 (defmethod left-bulge ((element element) pane)
   (score-pane:staff-step 1))
@@ -121,6 +150,15 @@
   (+ (score-pane:staff-step 0.5)
      (/ (text-size pane (map 'string 'code-char (text element))) 2)))
 
+;;; As it turns out, the spacing algorithm would be very complicated
+;;; if we were to take into account exactly how elements with
+;;; arbitrarily many timelines between them might influence the
+;;; overall layout.  Instead we apprixmate by obtaining a closest gap
+;;; only between adjacent timelines as follows: first, we consider
+;;; adjacent elements whose timelines are also adjacent (and there is
+;;; a special case for the last element of a layer), and set the
+;;; smallest gap between the timelines to the closest possible
+;;; distance between the two elements...
 (defun compute-gaps-adjacent-timelines (bars method pane)
   (declare (ignore method))
   (loop for bar in bars
@@ -138,6 +176,27 @@
 				      (+ (right-bulge e1 pane)
 					 (left-bulge e2 pane)))))))))
 
+;;; ... Then we consider adjacent elements whose timelines are
+;;; separated by at least one other timeline.  If the sum of the
+;;; distances between individual timelines is greater than or equal to
+;;; the closest distance between the adjacent elements (which is
+;;; likely if we are talking melody), then there is nothing to do,
+;;; since the individual distances are more restrictive than that
+;;; imposed by the adjacent elements.  If not, we try to distribute
+;;; the closest distance between the two adjacent elements over the
+;;; individual timelines proportionally to the elasticity of the
+;;; timlines.  If in doing so, we find that some timeline already has
+;;; a smallest gap that is larger than the fraction of the closest
+;;; distance between adjacent elements that we attribute to it, then
+;;; that smallest gap is subtracted from the distance we need to
+;;; distribute, the timeline is removed from consideration, and we
+;;; start over.  This process must terminate (or else, the sum of the
+;;; closest gaps must have been larger than the distance to distribute
+;;; in the first place) with at least one timeline to distribute over.
+;;; There is a special case here, which occurs when all the
+;;; elasticites of the timelines to be considered is zero.  In this
+;;; case, instead of distributing proportionally to the elasticities
+;;; of individual timelies, we distribute evenly between the timelines.
 (defun compute-gaps-separated-timelines (bars method pane)
   (declare (ignore method))
   (flet ((handle-timelines (timelines element-gap)
@@ -198,6 +257,11 @@
 	;; whose corresponding timeline is not the last one in the meaure
 	do (compute-gaps-separated-timelines (measure-bars measure) method pane)))
 
+;;; When this function is called, each timeline has an elasticity and
+;;; a smallest gap to the next adjacent timline (or to the end of the
+;;; measure).  These values, together with an elasticity function at
+;;; the beginning of a measure, are used to compute the total
+;;; elasticity function of a measure.
 (defun compute-elasticity-functions (measures method)
   (loop for measure in measures
 	do (loop with result = (make-elementary-elasticity (min-width method) 0.0001)
@@ -272,8 +336,11 @@
 	   (compute-elasticities measures method)
 	   (compute-gaps measures method pane)
 	   (let* ((e-fun (compute-elasticity-functions measures method))
+		  ;; FIXME:  it would be much better to compress the system
+		  ;; proportionally, so that every smallest gap gets shrunk
+		  ;; by the same percentage
 		  (force (if (> (zero-force-size e-fun) (line-width method))
-			     0
+			     0 
 			     (force-at-size e-fun (line-width method)))))
 	     nil)
 	   (let ((widths (compute-widths measures method)))
