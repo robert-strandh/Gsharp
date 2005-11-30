@@ -52,6 +52,9 @@
 required to obtain that size.  The size must be larger than the 
 size at zero force, as reported by zero-force-size"))
 
+(defgeneric size-at-force (elasticity force)
+  (:documentation "for a given force, return the size at that force"))
+
 (defclass elasticity ()
   ((zero-force-size :initarg :zero-force-size :reader zero-force-size)
    (elements :initform '() :initarg :elements :reader elements)))
@@ -124,10 +127,15 @@ have a size smaller than the zero-force-size given"
 	    do (pop l))
       (+ current-force (/ (- size current-size) current-slope)))))
 
-
-
-	    
-	    
-    
-    
-    
+(defmethod size-at-force ((e elasticity) force)
+  (let ((l (elements e))
+	(current-size (zero-force-size e)))
+    (let ((current-force 0)
+	  (current-slope 0))
+      (loop until (or (null l)
+		      (>= (caar l) force))
+	    do (incf current-size (* current-slope (- (caar l) current-force)))
+	    do (setf current-force (caar l)
+		     current-slope (cdar l))
+	    do (pop l))
+      (+ current-size (* (- force current-force) current-slope)))))

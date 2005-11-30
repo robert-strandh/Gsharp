@@ -208,7 +208,8 @@
 			  (add-elasticities
 			   result
 			   (make-elementary-elasticity (smallest-gap timeline) (elasticity timeline))))
-		 finally (setf (elasticity-function measure) result))))
+		 finally (setf (elasticity-function measure) result)))
+  (reduce #'add-elasticities measures :key #'elasticity-function))
 
 (defun draw-measure (pane measure min-dist compress x method draw-cursor)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
@@ -270,7 +271,11 @@
 	 (lambda (measures)
 	   (compute-elasticities measures method)
 	   (compute-gaps measures method pane)
-	   (compute-elasticity-functions measures method)
+	   (let* ((e-fun (compute-elasticity-functions measures method))
+		  (force (if (> (zero-force-size e-fun) (line-width method))
+			     0
+			     (force-at-size e-fun (line-width method)))))
+	     nil)
 	   (let ((widths (compute-widths measures method)))
 	     (score-pane:with-vertical-score-position (pane yy)
 	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
