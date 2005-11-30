@@ -56,6 +56,11 @@ size at zero force, as reported by zero-force-size"))
   ((zero-force-size :initarg :zero-force-size :reader zero-force-size)
    (elements :initform '() :initarg :elements :reader elements)))
 
+(defmethod print-object ((e elasticity) stream)
+  (print-unreadable-object (e stream :type t :identity t)
+    (format stream "zero-size: ~a  elements:~s"
+	    (zero-force-size e) (elements e))))	    
+
 (defun make-zero-elasticity (size)
   "create an elasticity function that is constant for all
 values of the force"
@@ -67,38 +72,41 @@ product of the force and slope given, except that it will never
 have a size smaller than the zero-force-size given"
   (make-instance 'elasticity
     :zero-force-size zero-force-size
-    :elements `(,(/ zero-force-size slope) . ,slope)))
+    :elements `((,(/ zero-force-size slope) . ,slope))))
 
 (defmethod add-elasticities ((e1 elasticity) (e2 elasticity))
   (let ((l1 (elements e1))
 	(l2 (elements e2))
 	(s1 0)
 	(s2 0)
-	(result (list (+ (zero-force-size e1) (zero-force-size e2)))))
+	(zero-force-size (+ (zero-force-size e1) (zero-force-size e2)))
+	(elements '()))
     (loop until (and (null l1) (null l2))
 	  do (cond ((null l1)
 		    (setf s2 (cdar l2))
-		    (push (cons (caar l2) (+ s1 s2)) result)
+		    (push (cons (caar l2) (+ s1 s2)) elements)
 		    (pop l2))
 		   ((null l2)
 		    (setf s1 (cdar l1))
-		    (push (cons (caar l1) (+ s1 s2)) result)
+		    (push (cons (caar l1) (+ s1 s2)) elements)
 		    (pop l1))
-		   ((< 0.99999 (/ (caar l1) (caar l2)) 1.00001)
+		   ((< 0.99999 (/ (+ (caar l1) 0.00001) (+ (caar l2) .00001)) 1.00001)
 		    (setf s1 (cdar l1)
 			  s2 (cdar l2))
-		    (push (cons (/ (+ (caar l1) (caar l2)) 2) (+ s1 s2)) result)
+		    (push (cons (/ (+ (caar l1) (caar l2)) 2) (+ s1 s2)) elements)
 		    (pop l1)
 		    (pop l2))
 		   ((< (caar l1) (caar l2))
 		    (setf s1 (cdar l1))
-		    (push (cons (caar l1) (+ s1 s2)) result)
+		    (push (cons (caar l1) (+ s1 s2)) elements)
 		    (pop l1))
 		   (t
 		    (setf s2 (cdar l2))
-		    (push (cons (caar l2) (+ s1 s2)) result)
+		    (push (cons (caar l2) (+ s1 s2)) elements)
 		    (pop l2))))
-    (make-instance 'elasticity :elements (nreverse result))))
+    (make-instance 'elasticity
+      :zero-force-size zero-force-size
+      :elements (nreverse elements))))
 
 (defmethod force-at-size ((e elasticity) size)
   (let ((l (elements e))

@@ -198,6 +198,18 @@
 	;; whose corresponding timeline is not the last one in the meaure
 	do (compute-gaps-separated-timelines (measure-bars measure) method pane)))
 
+(defun compute-elasticity-functions (measures method)
+  (loop for measure in measures
+	do (loop with result = (make-elementary-elasticity (min-width method) 0.0001)
+		 with timelines = (timelines measure)
+		 for i from 0 below (flexichain:nb-elements timelines)
+		 for timeline = (flexichain:element* timelines i)
+		 do (setf result
+			  (add-elasticities
+			   result
+			   (make-elementary-elasticity (smallest-gap timeline) (elasticity timeline))))
+		 finally (setf (elasticity-function measure) result))))
+
 (defun draw-measure (pane measure min-dist compress x method draw-cursor)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
 		   compress))
@@ -258,6 +270,7 @@
 	 (lambda (measures)
 	   (compute-elasticities measures method)
 	   (compute-gaps measures method pane)
+	   (compute-elasticity-functions measures method)
 	   (let ((widths (compute-widths measures method)))
 	     (score-pane:with-vertical-score-position (pane yy)
 	       (draw-system pane measures (+ x (left-offset buffer) timesig-offset)
