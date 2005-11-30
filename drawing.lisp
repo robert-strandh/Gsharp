@@ -1,5 +1,11 @@
 (in-package :gsharp-drawing)
 
+(define-added-mixin dmeasure () measure
+  (;; an elasticity function that describes how the space right after
+   ;; the initial barline of the measure behaves as a function of the
+   ;; force that is applied to it.
+   (prefix-elasticity-function :accessor prefix-elasticity-function)))
+
 (define-added-mixin dstaff () staff
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
@@ -264,7 +270,9 @@ right of the center of its timeline"))
 ;;; elasticity function of a measure.
 (defun compute-elasticity-functions (measures method)
   (loop for measure in measures
-	do (loop with result = (make-elementary-elasticity (min-width method) 0.0001)
+	do (setf (prefix-elasticity-function measure)
+		 (make-elementary-elasticity (min-width method) 0.0001))
+	do (loop with result = (prefix-elasticity-function measure)
 		 with timelines = (timelines measure)
 		 for i from 0 below (flexichain:nb-elements timelines)
 		 for timeline = (flexichain:element* timelines i)
@@ -274,6 +282,22 @@ right of the center of its timeline"))
 			   (make-elementary-elasticity (smallest-gap timeline) (elasticity timeline))))
 		 finally (setf (elasticity-function measure) result)))
   (reduce #'add-elasticities measures :key #'elasticity-function))
+
+;;; eventually remove the existing draw-measure and rename this
+;;; to draw-measure
+(defun new-draw-measure (pane measure x force draw-cursor)
+  (loop with timelines = (timelines measure)
+	for i from 0 below (flexichain:nb-elements timelines)
+	for timeline = (flexichain:element* timelines i)
+	and xx = (+ x (size-at-force (prefix-elasticity-function measure) force))
+                 then (+ xx (max (smallest-gap timeline)
+				 (* force (elasticity timeline))))
+        do (loop for element in (elements timeline)
+		 do (setf (final-absolute-element-xoffset element) xx)))
+  (loop for bar in (measure-bars measure)
+	do (if (gsharp-cursor::cursors (slice bar))
+	      (new-draw-bar pane bar draw-cursor)
+	      (score-pane:with-light-glyphs pane (new-draw-bar pane bar draw-cursor)))))
 
 (defun draw-measure (pane measure min-dist compress x method draw-cursor)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
@@ -294,6 +318,17 @@ right of the center of its timeline"))
 	  (if (gsharp-cursor::cursors (slice bar))
 	      (draw-bar pane bar x width time-alist draw-cursor)
 	      (score-pane:with-light-glyphs pane (draw-bar pane bar x width time-alist draw-cursor))))))
+
+;;; eventually remove the existing draw-system and rename this
+;;; to draw-system
+(defun new-draw-system (pane measures x force staves draw-cursor)
+  (loop for measure in measures
+	do (new-draw-measure pane measure x force draw-cursor)
+	do (incf x (size-at-force (elasticity-function measure) force))
+	do (score-pane:draw-bar-line pane x
+				     (- (score-pane:staff-step 8))
+				     (staff-yoffset (car (last staves))))))
+
 
 (defun draw-system (pane measures x widths method staves draw-cursor)
   (let ((compress (compute-compress-factor measures method))
@@ -531,6 +566,8 @@ right of the center of its timeline"))
 
 (defun draw-cursor (pane x)
   (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
+
+(defgeneric new-draw-bar (pane bar draw-cursor))
 
 (defmethod draw-bar (pane (bar melody-bar) x width time-alist draw-cursor)
   (compute-element-x-positions bar x time-alist)
