@@ -67,7 +67,7 @@
   (let ((state (input-state *application-frame*)))
     (score-pane:with-score-pane pane
       (score-pane:with-staff-size 10
-	(score-pane:with-vertical-score-position (pane 800)
+	(score-pane:with-vertical-score-position (pane 100)
 	  (let ((xpos 30))
 	    (score-pane:draw-notehead pane (notehead state) xpos 4)
 	    (when (not (eq (notehead state) :whole))
@@ -83,7 +83,7 @@
 		      (loop repeat (lbeams state)
 			    for staff-step from -4 by 2 do
 			    (score-pane:draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
-		(score-pane:draw-left-stem pane xpos (score-pane:staff-step 4) (score-pane:staff-step -4)))
+		(score-pane:draw-left-stem pane xpos (- (score-pane:staff-step 4)) (- (score-pane:staff-step -4))))
 	      (when (or (eq (stem-direction state) :auto)
 			(eq (stem-direction state) :up))
 		(when (eq (notehead state) :filled)
@@ -96,7 +96,7 @@
 		      (loop repeat (lbeams state)
 			    for staff-step downfrom 12 by 2 do
 			    (score-pane:draw-beam pane (- x 10) staff-step 0 x staff-step 0)))))
-		(score-pane:draw-right-stem pane xpos (score-pane:staff-step 4) (score-pane:staff-step 12))))
+		(score-pane:draw-right-stem pane xpos (- (score-pane:staff-step 4)) (- (score-pane:staff-step 12)))))
 	    (score-pane:with-notehead-right-offsets (right up)
 	      (declare (ignore up))
 	      (loop repeat (dots state)
