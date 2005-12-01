@@ -103,44 +103,13 @@
 		    for dx from (+ right 5) by 5 do
 		    (score-pane:draw-dot pane (+ xpos dx) 4)))))))))
 
-(defun draw-the-cursor (pane x)
-  (let* ((state (input-state *application-frame*))
-	 (staff (car (staves (layer (cursor *application-frame*)))))
-         ;; Why (- STAFF-YOFFSET)?  dunno.  -- CSR, 2005-10-28
-	 (yoffset (- (gsharp-drawing::staff-yoffset staff))))
-    (if (typep staff 'fiveline-staff)
-	(let* ((clef (clef staff))
-	       (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
-			       (lineno clef)))
-	       (lnote-offset (score-pane:staff-step (- (last-note state) bottom-line))))
-	  (draw-line* pane
-		      x (- (+ (score-pane:staff-step 12) yoffset))
-		      x (- (+ (score-pane:staff-step -4) yoffset))
-		      :ink +yellow+)
-	  (draw-line* pane
-		      (- x 1) (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset))
-		      (- x 1) (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset))
-		      :ink +red+)
-	  (draw-line* pane
-		      (+ x 1) (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset))
-		      (+ x 1) (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset))
-		      :ink +red+))
-	(progn (draw-line* pane
-			   (+ x 1) (- (+ (score-pane:staff-step 2) yoffset))
-			   (+ x 1) (- (+ (score-pane:staff-step -2) yoffset))
-			   :ink +red+)
-	       (draw-line* pane
-			   (- x 1) (- (+ (score-pane:staff-step 2) yoffset))
-			   (- x 1) (- (+ (score-pane:staff-step -2) yoffset))
-			   :ink +red+)))))
-
 (defmethod display-score ((frame gsharp) pane)
   (let* ((buffer (buffer frame)))
     (recompute-measures buffer)
     (score-pane:with-score-pane pane
-      (flet ((draw-cursor (x) (draw-the-cursor pane x)))
-	(draw-buffer pane buffer (cursor *application-frame*)
-		     (left-margin buffer) 100 #'draw-cursor)))))
+      (draw-buffer pane buffer (cursor *application-frame*)
+		   (left-margin buffer) 100)
+      (gsharp-drawing::draw-the-cursor pane (cursor-element (cursor *application-frame*)) (last-note (input-state *application-frame*))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

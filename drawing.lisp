@@ -1,5 +1,14 @@
 (in-package :gsharp-drawing)
 
+(define-added-mixin dbar () bar
+  (;; indicates the absolute y position of the system to which the 
+   ;; bar belongs
+   (system-y-position :accessor system-y-position)
+   ;; the absolute x position of the bar
+   (final-absolute-bar-xoffset :accessor final-absolute-bar-xoffset)
+   ;;
+   (final-width :accessor final-width)))
+
 (define-added-mixin dmeasure () measure
   (;; an elasticity function that describes how the space right after
    ;; the initial barline of the measure behaves as a function of the
@@ -285,7 +294,7 @@ right of the center of its timeline"))
 
 ;;; eventually remove the existing draw-measure and rename this
 ;;; to draw-measure
-(defun new-draw-measure (pane measure x force draw-cursor)
+(defun new-draw-measure (pane measure x force)
   (loop with timelines = (timelines measure)
 	for i from 0 below (flexichain:nb-elements timelines)
 	for timeline = (flexichain:element* timelines i)
@@ -296,10 +305,10 @@ right of the center of its timeline"))
 		 do (setf (final-absolute-element-xoffset element) xx)))
   (loop for bar in (measure-bars measure)
 	do (if (gsharp-cursor::cursors (slice bar))
-	      (new-draw-bar pane bar draw-cursor)
-	      (score-pane:with-light-glyphs pane (new-draw-bar pane bar draw-cursor)))))
+	      (new-draw-bar pane bar)
+	      (score-pane:with-light-glyphs pane (new-draw-bar pane bar)))))
 
-(defun draw-measure (pane measure min-dist compress x y method draw-cursor)
+(defun draw-measure (pane measure min-dist compress x y method)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
 		   compress))
 	 (time-alist (cons (cons 0 (/ (min-width method) compress))
@@ -316,32 +325,32 @@ right of the center of its timeline"))
 						  compress))))))
     (loop for bar in (measure-bars measure) do
 	  (if (gsharp-cursor::cursors (slice bar))
-	      (draw-bar pane bar x y width time-alist draw-cursor)
-	      (score-pane:with-light-glyphs pane (draw-bar pane bar x y width time-alist draw-cursor))))))
+	      (draw-bar pane bar x y width time-alist)
+	      (score-pane:with-light-glyphs pane (draw-bar pane bar x y width time-alist))))))
 
 ;;; eventually remove the existing draw-system and rename this
 ;;; to draw-system
-(defun new-draw-system (pane measures x force staves draw-cursor)
+(defun new-draw-system (pane measures x force staves)
   (loop for measure in measures
-	do (new-draw-measure pane measure x force draw-cursor)
+	do (new-draw-measure pane measure x force)
 	do (incf x (size-at-force (elasticity-function measure) force))
 	do (score-pane:draw-bar-line pane x
 				     (- (score-pane:staff-step 8))
 				     (staff-yoffset (car (last staves))))))
 
 
-(defun draw-system (pane measures x y widths method staves draw-cursor)
+(defun draw-system (pane measures x y widths method staves)
   (let ((compress (compute-compress-factor measures method))
 	(min-dist (compute-min-dist measures)))
     (loop for measure in measures
 	  for width in widths do
-	  (draw-measure pane measure min-dist compress x y method draw-cursor)
+	  (draw-measure pane measure min-dist compress x y method)
 	  (incf x width)
 	  (score-pane:draw-bar-line pane x
 				    (+ y (- (score-pane:staff-step 8)))
 				    (+ y (staff-yoffset (car (last staves))))))))
 
-(defmethod draw-buffer (pane (buffer buffer) *cursor* x y draw-cursor)
+(defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
 	   (timesig-offset (max (* (score-pane:staff-step 2)
@@ -381,7 +390,7 @@ right of the center of its timeline"))
 	   (let ((widths (compute-widths measures method)))
 	     (draw-system pane measures
 			  (+ x (left-offset buffer) timesig-offset) yy
-			  widths method staves draw-cursor)
+			  widths method staves)
 	     (score-pane:draw-bar-line pane x
 				       (+ yy (- (score-pane:staff-step 8)))
 				       (+ yy (staff-yoffset (car (last staves)))))
@@ -564,44 +573,73 @@ right of the center of its timeline"))
 	  (loop for element in elements do
 		(draw-element pane element (final-absolute-element-xoffset element) nil))))))
 
-(defun draw-cursor (pane x)
-  (draw-line* pane x (- (score-pane:staff-step -4)) x (- (score-pane:staff-step 12)) :ink +red+))
+(defgeneric new-draw-bar (pane bar))
 
-(defgeneric new-draw-bar (pane bar draw-cursor))
+(defun draw-the-cursor (pane cursor-element last-note)
+  (let* ((cursor (cursor *application-frame*))
+	 (staff (car (staves (layer cursor))))
+	 (bar (bar cursor)))
+    (flet ((draw-cursor (x)
+	     (let* ((sy (system-y-position bar))
+		    ;; Why (- STAFF-YOFFSET)?  dunno.  -- CSR, 2005-10-28
+		    (yoffset (- (gsharp-drawing::staff-yoffset staff))))
+	       (if (typep staff 'fiveline-staff)
+		   (let* ((clef (clef staff))
+			  (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
+					  (lineno clef)))
+			  (lnote-offset (score-pane:staff-step (- last-note bottom-line))))
+		     (draw-line* pane
+				 x (+ sy (- (+ (score-pane:staff-step 12) yoffset)))
+				 x (+ sy (- (+ (score-pane:staff-step -4) yoffset)))
+				 :ink +yellow+)
+		     (draw-line* pane
+				 (- x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
+				 (- x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
+				 :ink +red+)
+		     (draw-line* pane
+				 (+ x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
+				 (+ x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
+				 :ink +red+))
+		   (progn (draw-line* pane
+				      (+ x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
+				      (+ x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
+				      :ink +red+)
+			  (draw-line* pane
+				      (- x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
+				      (- x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
+				      :ink +red+))))))
+      (score-pane:with-staff-size 6
+	(let* ((x (final-absolute-bar-xoffset bar))
+	       (width (final-width bar))
+	       (elements (elements bar)))
+	  (if (null cursor-element)
+	      (draw-cursor (/ (+ (if (null elements)
+				     x
+				     (final-absolute-element-xoffset (car (last elements))))
+				 x width) 2))
+	      (loop for element in elements
+		    and xx = x then (final-absolute-element-xoffset element) do
+		    (when (eq element cursor-element)
+		      (draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2))))))))))
 
-(defmethod draw-bar (pane (bar melody-bar) x y width time-alist draw-cursor)
+(defmethod draw-bar (pane (bar melody-bar) x y width time-alist)
   (compute-element-x-positions bar x time-alist)
+  (setf (system-y-position bar) y
+	(final-absolute-bar-xoffset bar) x
+	(final-width bar) width)
   (score-pane:with-vertical-score-position (pane y)
     (loop for group in (beam-groups (elements bar))
-	  do (draw-beam-group pane group))
-    (when (eq (cursor-bar *cursor*) bar)
-      (let ((elements (elements bar)))
-	(if (null (cursor-element *cursor*))
-	    (funcall draw-cursor (/ (+ (if (null elements)
-					   x
-					   (final-absolute-element-xoffset (car (last elements))))
-				       x width) 2))
-	    (loop for element in elements
-		  and xx = x then (final-absolute-element-xoffset element) do
-		  (when (eq (cursor-element *cursor*) element)
-		    (funcall draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2)))))))))
+	  do (draw-beam-group pane group))))
 
-(defmethod draw-bar (pane (bar lyrics-bar) x y width time-alist draw-cursor)
+(defmethod draw-bar (pane (bar lyrics-bar) x y width time-alist)
   (compute-element-x-positions bar x time-alist)
+  (setf (system-y-position bar) y
+	(final-absolute-bar-xoffset bar) x
+	(final-width bar) width)
   (score-pane:with-vertical-score-position (pane y)
     (let ((elements (elements bar)))
       (loop for element in elements
-	    do (draw-element pane element (final-absolute-element-xoffset element)))
-      (when (eq (cursor-bar *cursor*) bar)
-	(if (null (cursor-element *cursor*))
-	    (funcall draw-cursor (/ (+ (if (null elements)
-					   x
-					   (final-absolute-element-xoffset (car (last elements))))
-				       x width) 2))
-	    (loop for element in elements
-		  and xx = x then (final-absolute-element-xoffset element) do
-		  (when (eq (cursor-element *cursor*) element)
-		    (funcall draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2)))))))))
+	    do (draw-element pane element (final-absolute-element-xoffset element))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
