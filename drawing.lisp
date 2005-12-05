@@ -296,7 +296,7 @@ right of the center of its timeline"))
 
 ;;; eventually replace the existing compute-measure-coordinates
 ;;; by this one
-(defun new-compute-measure-coordinates (measure x force)
+(defun new-compute-measure-coordinates (measure x y force)
   (loop with timelines = (timelines measure)
 	for i from 0 below (flexichain:nb-elements timelines)
 	for timeline = (flexichain:element* timelines i)
@@ -306,7 +306,7 @@ right of the center of its timeline"))
         do (loop for element in (elements timeline)
 		 do (setf (final-absolute-element-xoffset element) xx)))
   (loop for bar in (measure-bars measure)
-	do (compute-bar-coordinates bar x (size-at-force (elasticity-function measure) force))))
+	do (compute-bar-coordinates bar x y (size-at-force (elasticity-function measure) force))))
 
 (defun compute-measure-coordinates (measure min-dist compress x y method)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
@@ -323,9 +323,9 @@ right of the center of its timeline"))
 						      method
 						      coeff min-dist))
 						  compress))))))
-    (setf (system-y-position measure) y
-	  (final-absolute-measure-xoffset measure) x
-	  (final-width measure) width)
+;;    (setf (system-y-position measure) y
+;;	  (final-absolute-measure-xoffset measure) x
+;;	  (final-width measure) width)
     (loop for bar in (measure-bars measure) do
 	  (compute-bar-coordinates bar x y width)
 	  (compute-element-x-positions bar x time-alist))))
@@ -335,19 +335,20 @@ right of the center of its timeline"))
 	(if (gsharp-cursor::cursors (slice bar))
 	    (draw-bar pane bar)
 	    (score-pane:with-light-glyphs pane (draw-bar pane bar))))
-  (let ((x (final-absolute-measure-xoffset measure))
-	(y (system-y-position measure))
-	(width (final-width measure))
-	(staves (staves (buffer (segment (layer (slice (car (measure-bars measure)))))))))
-    (score-pane:draw-bar-line pane (+ x width)
-			      (+ y (- (score-pane:staff-step 8)))
-			      (+ y (staff-yoffset (car (last staves)))))))
+  (let ((first-bar (car (measure-bars measure))))
+    (let ((x (final-absolute-measure-xoffset first-bar))
+	  (y (system-y-position first-bar))
+	  (width (final-width first-bar))
+	  (staves (staves (buffer (segment (layer (slice first-bar)))))))
+      (score-pane:draw-bar-line pane (+ x width)
+				(+ y (- (score-pane:staff-step 8)))
+				(+ y (staff-yoffset (car (last staves))))))))
 
 ;;; eventually remove the existing compute-system-coordinates
 ;;; and rename this one
-(defun new-compute-system-coordinates (measures x force)
+(defun new-compute-system-coordinates (measures x y force)
   (loop for measure in measures
-	do (new-compute-measure-coordinates measure x force)
+	do (new-compute-measure-coordinates measure x y force)
 	do (incf x (size-at-force (elasticity-function measure) force))))
 
 (defun compute-system-coordinates (measures x y widths method)
@@ -398,11 +399,14 @@ right of the center of its timeline"))
 		  (force (if (> (zero-force-size e-fun) (line-width method))
 			     0 
 			     (force-at-size e-fun (line-width method)))))
-	     nil)
+	     (new-compute-system-coordinates measures
+					     (+ x (left-offset buffer) timesig-offset) yy
+					     force)
+	     )
 	   (let ((widths (compute-widths measures method)))
-	     (compute-system-coordinates measures
-					 (+ x (left-offset buffer) timesig-offset) yy
-					 widths method)
+;;	     (compute-system-coordinates measures
+;;					 (+ x (left-offset buffer) timesig-offset) yy
+;;					 widths method)
 	     (draw-system pane measures)
 	     (score-pane:draw-bar-line pane x
 				       (+ yy (- (score-pane:staff-step 8)))
