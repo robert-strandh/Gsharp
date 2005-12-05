@@ -1,15 +1,17 @@
 (in-package :gsharp-drawing)
 
-(define-added-mixin dbar () bar
+(defclass x-y-width-mixin ()
   (;; indicates the absolute y position of the system to which the 
-   ;; bar belongs
+   ;; object belongs
    (system-y-position :accessor system-y-position)
-   ;; the absolute x position of the bar
-   (final-absolute-bar-xoffset :accessor final-absolute-bar-xoffset)
-   ;;
+   ;; the absolute x position of the object
+   (final-absolute-measure-xoffset :accessor final-absolute-measure-xoffset)
    (final-width :accessor final-width)))
 
-(define-added-mixin dmeasure () measure
+(define-added-mixin dbar (x-y-width-mixin) bar
+  ())
+
+(define-added-mixin dmeasure (x-y-width-mixin) measure
   (;; an elasticity function that describes how the space right after
    ;; the initial barline of the measure behaves as a function of the
    ;; force that is applied to it.
@@ -323,6 +325,9 @@ right of the center of its timeline"))
 						      method
 						      coeff min-dist))
 						  compress))))))
+    (setf (system-y-position measure) y
+	  (final-absolute-measure-xoffset measure) x
+	  (final-width measure) width)
     (loop for bar in (measure-bars measure) do
 	  (compute-bar-coordinates bar x y width)
 	  (compute-element-x-positions bar x time-alist))))
@@ -331,7 +336,14 @@ right of the center of its timeline"))
   (loop for bar in (measure-bars measure) do
 	(if (gsharp-cursor::cursors (slice bar))
 	    (draw-bar pane bar)
-	    (score-pane:with-light-glyphs pane (draw-bar pane bar)))))
+	    (score-pane:with-light-glyphs pane (draw-bar pane bar))))
+  (let ((x (final-absolute-measure-xoffset measure))
+	(y (system-y-position measure))
+	(width (final-width measure))
+	(staves (staves (buffer (segment (layer (slice (car (measure-bars measure)))))))))
+    (score-pane:draw-bar-line pane (+ x width)
+			      (+ y (- (score-pane:staff-step 8)))
+			      (+ y (staff-yoffset (car (last staves)))))))
 
 ;;; eventually remove the existing draw-system and rename this
 ;;; to draw-system
@@ -343,18 +355,17 @@ right of the center of its timeline"))
 				     (- (score-pane:staff-step 8))
 				     (staff-yoffset (car (last staves))))))
 
-
-(defun draw-system (pane measures x y widths method staves)
+(defun compute-system-coordinates (measures x y widths method)
   (let ((compress (compute-compress-factor measures method))
 	(min-dist (compute-min-dist measures)))
     (loop for measure in measures
 	  for width in widths do
 	  (compute-measure-coordinates measure min-dist compress x y method)
-	  (draw-measure pane measure)
-	  (incf x width)
-	  (score-pane:draw-bar-line pane x
-				    (+ y (- (score-pane:staff-step 8)))
-				    (+ y (staff-yoffset (car (last staves))))))))
+	  (incf x width))))
+  
+(defun draw-system (pane measures)
+  (loop for measure in measures do
+	(draw-measure pane measure)))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
@@ -394,9 +405,10 @@ right of the center of its timeline"))
 			     (force-at-size e-fun (line-width method)))))
 	     nil)
 	   (let ((widths (compute-widths measures method)))
-	     (draw-system pane measures
-			  (+ x (left-offset buffer) timesig-offset) yy
-			  widths method staves)
+	     (compute-system-coordinates measures
+					 (+ x (left-offset buffer) timesig-offset) yy
+					 widths method)
+	     (draw-system pane measures)
 	     (score-pane:draw-bar-line pane x
 				       (+ yy (- (score-pane:staff-step 8)))
 				       (+ yy (staff-yoffset (car (last staves)))))
@@ -614,7 +626,7 @@ right of the center of its timeline"))
 				      (- x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
 				      :ink +red+))))))
       (score-pane:with-staff-size 6
-	(let* ((x (final-absolute-bar-xoffset bar))
+	(let* ((x (final-absolute-measure-xoffset bar))
 	       (width (final-width bar))
 	       (elements (elements bar)))
 	  (if (null cursor-element)
@@ -629,7 +641,7 @@ right of the center of its timeline"))
 
 (defun compute-bar-coordinates (bar x y width)
   (setf (system-y-position bar) y
-	(final-absolute-bar-xoffset bar) x
+	(final-absolute-measure-xoffset bar) x
 	(final-width bar) width))
 
 (defmethod draw-bar (pane (bar melody-bar))
