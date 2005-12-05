@@ -308,7 +308,7 @@ right of the center of its timeline"))
 	      (new-draw-bar pane bar)
 	      (score-pane:with-light-glyphs pane (new-draw-bar pane bar)))))
 
-(defun draw-measure (pane measure min-dist compress x y method)
+(defun compute-measure-coordinates (measure min-dist compress x y method)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
 		   compress))
 	 (time-alist (cons (cons 0 (/ (min-width method) compress))
@@ -324,10 +324,14 @@ right of the center of its timeline"))
 						      coeff min-dist))
 						  compress))))))
     (loop for bar in (measure-bars measure) do
-	  (compute-element-x-positions bar x time-alist)
-	  (if (gsharp-cursor::cursors (slice bar))
-	      (draw-bar pane bar x y width)
-	      (score-pane:with-light-glyphs pane (draw-bar pane bar x y width))))))
+	  (compute-bar-coordinates bar x y width)
+	  (compute-element-x-positions bar x time-alist))))
+
+(defun draw-measure (pane measure)
+  (loop for bar in (measure-bars measure) do
+	(if (gsharp-cursor::cursors (slice bar))
+	    (draw-bar pane bar)
+	    (score-pane:with-light-glyphs pane (draw-bar pane bar)))))
 
 ;;; eventually remove the existing draw-system and rename this
 ;;; to draw-system
@@ -345,7 +349,8 @@ right of the center of its timeline"))
 	(min-dist (compute-min-dist measures)))
     (loop for measure in measures
 	  for width in widths do
-	  (draw-measure pane measure min-dist compress x y method)
+	  (compute-measure-coordinates measure min-dist compress x y method)
+	  (draw-measure pane measure)
 	  (incf x width)
 	  (score-pane:draw-bar-line pane x
 				    (+ y (- (score-pane:staff-step 8)))
@@ -622,19 +627,20 @@ right of the center of its timeline"))
 		    (when (eq element cursor-element)
 		      (draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2))))))))))
 
-(defmethod draw-bar (pane (bar melody-bar) x y width)
+(defun compute-bar-coordinates (bar x y width)
   (setf (system-y-position bar) y
 	(final-absolute-bar-xoffset bar) x
-	(final-width bar) width)
-  (score-pane:with-vertical-score-position (pane y)
+	(final-width bar) width))
+
+(defmethod draw-bar (pane (bar melody-bar))
+  (score-pane:with-vertical-score-position
+      (pane (system-y-position bar))
     (loop for group in (beam-groups (elements bar))
 	  do (draw-beam-group pane group))))
 
-(defmethod draw-bar (pane (bar lyrics-bar) x y width)
-  (setf (system-y-position bar) y
-	(final-absolute-bar-xoffset bar) x
-	(final-width bar) width)
-  (score-pane:with-vertical-score-position (pane y)
+(defmethod draw-bar (pane (bar lyrics-bar))
+  (score-pane:with-vertical-score-position
+      (pane (system-y-position bar))
     (let ((elements (elements bar)))
       (loop for element in elements
 	    do (draw-element pane element)))))
