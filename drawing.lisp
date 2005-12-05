@@ -288,10 +288,16 @@ right of the center of its timeline"))
 ;;; measure).  These values, together with an elasticity function at
 ;;; the beginning of a measure, are used to compute the total
 ;;; elasticity function of a measure.
-(defun compute-elasticity-functions (measures method)
+(defun compute-elasticity-functions (measures method pane)
   (loop for measure in measures
 	do (setf (prefix-elasticity-function measure)
-		 (make-elementary-elasticity (min-width method) 0.0001))
+		 (let ((prefix-width
+			(max (min-width method)
+			     (if (zerop (flexichain:nb-elements (timelines measure)))
+				 0
+				 (loop for element in (elements (flexichain:element* (timelines measure) 0))
+				       maximize (left-bulge element pane))))))
+		   (make-elementary-elasticity prefix-width 0.0001)))
 	do (loop with result = (prefix-elasticity-function measure)
 		 with timelines = (timelines measure)
 		 for i from 0 below (flexichain:nb-elements timelines)
@@ -401,7 +407,7 @@ right of the center of its timeline"))
 	 (lambda (measures)
 	   (compute-elasticities measures method)
 	   (compute-gaps measures method pane)
-	   (let* ((e-fun (compute-elasticity-functions measures method))
+	   (let* ((e-fun (compute-elasticity-functions measures method pane))
 		  ;; FIXME:  it would be much better to compress the system
 		  ;; proportionally, so that every smallest gap gets shrunk
 		  ;; by the same percentage
