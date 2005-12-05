@@ -324,9 +324,10 @@ right of the center of its timeline"))
 						      coeff min-dist))
 						  compress))))))
     (loop for bar in (measure-bars measure) do
+	  (compute-element-x-positions bar x time-alist)
 	  (if (gsharp-cursor::cursors (slice bar))
-	      (draw-bar pane bar x y width time-alist)
-	      (score-pane:with-light-glyphs pane (draw-bar pane bar x y width time-alist))))))
+	      (draw-bar pane bar x y width)
+	      (score-pane:with-light-glyphs pane (draw-bar pane bar x y width))))))
 
 ;;; eventually remove the existing draw-system and rename this
 ;;; to draw-system
@@ -486,8 +487,7 @@ right of the center of its timeline"))
 	      (- bot-note-pos length)))))
 
 (defun compute-element-x-positions (bar x time-alist)
-  (let (;;(time-alist (time-alist bar))
-	(start-time 0))
+  (let ((start-time 0))
     (mapc (lambda (element)
 	    (setf (final-absolute-element-xoffset element)
 		  (round (+ x
@@ -524,7 +524,7 @@ right of the center of its timeline"))
 	(when (or (typep element 'rest) (notes element))
 	  (when (non-empty-cluster-p element)
 	    (compute-stem-length element))
-	  (draw-element pane element (final-absolute-element-xoffset element))))
+	  (draw-element pane element)))
       (let* ((stem-direction (final-stem-direction (car elements)))
 	     (dominating-notes
 	      (loop for element in elements
@@ -571,7 +571,7 @@ right of the center of its timeline"))
 					(+ (final-absolute-element-xoffset (car elements)) left) ss1 offset1
 					(+ (final-absolute-element-xoffset (car (last elements))) left) ss2 offset2))))
 	  (loop for element in elements do
-		(draw-element pane element (final-absolute-element-xoffset element) nil))))))
+		(draw-element pane element nil))))))
 
 (defgeneric new-draw-bar (pane bar))
 
@@ -622,8 +622,7 @@ right of the center of its timeline"))
 		    (when (eq element cursor-element)
 		      (draw-cursor (/ (+ xx (final-absolute-element-xoffset element)) 2))))))))))
 
-(defmethod draw-bar (pane (bar melody-bar) x y width time-alist)
-  (compute-element-x-positions bar x time-alist)
+(defmethod draw-bar (pane (bar melody-bar) x y width)
   (setf (system-y-position bar) y
 	(final-absolute-bar-xoffset bar) x
 	(final-width bar) width)
@@ -631,21 +630,20 @@ right of the center of its timeline"))
     (loop for group in (beam-groups (elements bar))
 	  do (draw-beam-group pane group))))
 
-(defmethod draw-bar (pane (bar lyrics-bar) x y width time-alist)
-  (compute-element-x-positions bar x time-alist)
+(defmethod draw-bar (pane (bar lyrics-bar) x y width)
   (setf (system-y-position bar) y
 	(final-absolute-bar-xoffset bar) x
 	(final-width bar) width)
   (score-pane:with-vertical-score-position (pane y)
     (let ((elements (elements bar)))
       (loop for element in elements
-	    do (draw-element pane element (final-absolute-element-xoffset element))))))
+	    do (draw-element pane element)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Cluster
 
-(defgeneric draw-element (pane element x &optional flags))
+(defgeneric draw-element (pane element &optional flags))
 
 (defmethod note-difference ((note1 note) (note2 note))
   (- (pitch note1) (pitch note2)))
@@ -695,19 +693,16 @@ right of the center of its timeline"))
 ;;; draw a cluster.  The stem direction and the stem position have
 ;;; already been computed.  
 ;;; 1. Group notes by staff.
-;;; 2. Determine which notes in each group go to the left and which notes
-;;;    go to the right of the stem.  
-;;; 3. Determine which notes in each group should be displayed with an accidental.  
-;;; 4. Compute the x offset of each accidental to be displayed. 
-;;; 5. Draw the notes in each group
-;;; 6. If necessary, draw ledger lines for notes in a group
-;;; 7. Draw the stem, if any
-(defmethod draw-element (pane (element cluster) x &optional (flags t))
+;;; 2. Draw the notes in each group
+;;; 3. If necessary, draw ledger lines for notes in a group
+;;; 4. Draw the stem, if any
+(defmethod draw-element (pane (element cluster) &optional (flags t))
   (unless (null (notes element))
     (let ((direction (final-stem-direction element))
 	  (stem-pos (final-stem-position element))
 	  (stem-yoffset (final-stem-yoffset element))
-	  (groups (group-notes-by-staff (notes element))))
+	  (groups (group-notes-by-staff (notes element)))
+	  (x (final-absolute-element-xoffset element)))
       (when flags
 	(score-pane:with-vertical-score-position (pane stem-yoffset)
 	  (draw-flags pane element x direction stem-pos)))
@@ -729,19 +724,21 @@ right of the center of its timeline"))
 ;;;
 ;;; Rest
 
-(defmethod draw-element (pane (element rest) x &optional (flags t))
+(defmethod draw-element (pane (element rest) &optional (flags t))
   (declare (ignore flags))
-  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
-    (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
-    (draw-dots pane (dots element) x (1+ (staff-pos element)))))
+  (let ((x (final-absolute-element-xoffset element)))
+    (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
+      (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
+      (draw-dots pane (dots element) x (1+ (staff-pos element))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Lyrics element
 
-(defmethod draw-element (pane (element lyrics-element) x &optional (flags t))
+(defmethod draw-element (pane (element lyrics-element) &optional (flags t))
   (declare (ignore flags))
-  (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
-    (with-text-family (pane :serif)
-      (draw-text* pane (map 'string 'code-char (text element))
-                  x 0 :align-x :center))))
+  (let ((x (final-absolute-element-xoffset element)))
+    (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
+      (with-text-family (pane :serif)
+	(draw-text* pane (map 'string 'code-char (text element))
+		    x 0 :align-x :center)))))
