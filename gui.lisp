@@ -803,7 +803,8 @@
 	do (forward-element (cursor *application-frame*))))
 
 (define-gsharp-command com-backward-element ((count 'integer :prompt "Number of Elements"))
-  (backward-element (cursor *application-frame*)))
+  (loop repeat count
+	do (backward-element (cursor *application-frame*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

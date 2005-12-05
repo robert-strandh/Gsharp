@@ -294,9 +294,9 @@ right of the center of its timeline"))
 		 finally (setf (elasticity-function measure) result)))
   (reduce #'add-elasticities measures :key #'elasticity-function))
 
-;;; eventually remove the existing draw-measure and rename this
-;;; to draw-measure
-(defun new-draw-measure (pane measure x force)
+;;; eventually replace the existing compute-measure-coordinates
+;;; by this one
+(defun new-compute-measure-coordinates (measure x force)
   (loop with timelines = (timelines measure)
 	for i from 0 below (flexichain:nb-elements timelines)
 	for timeline = (flexichain:element* timelines i)
@@ -306,9 +306,7 @@ right of the center of its timeline"))
         do (loop for element in (elements timeline)
 		 do (setf (final-absolute-element-xoffset element) xx)))
   (loop for bar in (measure-bars measure)
-	do (if (gsharp-cursor::cursors (slice bar))
-	      (new-draw-bar pane bar)
-	      (score-pane:with-light-glyphs pane (new-draw-bar pane bar)))))
+	do (compute-bar-coordinates bar x (size-at-force (elasticity-function measure) force))))
 
 (defun compute-measure-coordinates (measure min-dist compress x y method)
   (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
@@ -345,15 +343,12 @@ right of the center of its timeline"))
 			      (+ y (- (score-pane:staff-step 8)))
 			      (+ y (staff-yoffset (car (last staves)))))))
 
-;;; eventually remove the existing draw-system and rename this
-;;; to draw-system
-(defun new-draw-system (pane measures x force staves)
+;;; eventually remove the existing compute-system-coordinates
+;;; and rename this one
+(defun new-compute-system-coordinates (measures x force)
   (loop for measure in measures
-	do (new-draw-measure pane measure x force)
-	do (incf x (size-at-force (elasticity-function measure) force))
-	do (score-pane:draw-bar-line pane x
-				     (- (score-pane:staff-step 8))
-				     (staff-yoffset (car (last staves))))))
+	do (new-compute-measure-coordinates measure x force)
+	do (incf x (size-at-force (elasticity-function measure) force))))
 
 (defun compute-system-coordinates (measures x y widths method)
   (let ((compress (compute-compress-factor measures method))
@@ -589,8 +584,6 @@ right of the center of its timeline"))
 					(+ (final-absolute-element-xoffset (car (last elements))) left) ss2 offset2))))
 	  (loop for element in elements do
 		(draw-element pane element nil))))))
-
-(defgeneric new-draw-bar (pane bar))
 
 (defun draw-the-cursor (pane cursor-element last-note)
   (let* ((cursor (cursor *application-frame*))
