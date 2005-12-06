@@ -161,9 +161,13 @@ right of the center of its timeline"))
      (/ (text-size pane (map 'string 'code-char (text element))) 2)))
 
 (defmethod left-bulge ((element cluster) pane)
-  (+ (- (loop for note in (notes element)
-	      when (final-accidental note)
-	      minimize (final-relative-accidental-xoffset note)))
+  (+ (max (- (loop for note in (notes element)
+		   when (final-accidental note)
+		   minimize (final-relative-accidental-xoffset note)))
+	  (if (and (eq (final-stem-direction element) :down)
+		   (element-has-suspended-notes element))
+	      (score-pane:staff-step 3)
+	      (score-pane:staff-step 0)))
      (score-pane:staff-step 2)))
 
 (defmethod right-bulge ((element element) pane)
@@ -174,7 +178,10 @@ right of the center of its timeline"))
      (/ (text-size pane (map 'string 'code-char (text element))) 2)))
 
 (defmethod right-bulge ((element cluster) pane)
-  (score-pane:staff-step 2))
+  (if (and (eq (final-stem-direction element) :up)
+	   (element-has-suspended-notes element))
+      (score-pane:staff-step 5)
+      (score-pane:staff-step 2)))
 
 ;;; As it turns out, the spacing algorithm would be very complicated
 ;;; if we were to take into account exactly how elements with
