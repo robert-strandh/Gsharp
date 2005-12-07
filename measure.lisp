@@ -78,6 +78,10 @@
   (declare (ignore dots))
   (mark-modified element))
 
+(defmethod (setf stem-direction) :after (direction (element relement))
+  (declare (ignore direction))
+  (mark-modified element))
+
 (defmethod note-position ((note note))
   (let ((clef (clef (staff note))))
     (+ (- (pitch note)

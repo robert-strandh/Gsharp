@@ -22,6 +22,7 @@
 
 (gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain))
    "packages"
+   "clim-patches"
    "esa"
    "utilities"
    "gf"

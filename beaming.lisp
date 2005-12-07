@@ -3,9 +3,9 @@
 ;;; The beaming function takes a list of the form:
 ;;; ((p1 x1) (p2 x2) ... (pn xn))
 ;;; where p1 through pn are staff positions (bottom line is 0, 
-;;; increas upwards by 1 for each half staff step) and x1 through xn
+;;; increas upwards by 1 for each staff step) and x1 through xn
 ;;; are x positions for the clusters given in the same unit as the
-;;; positions, i.e., half staff steps
+;;; positions, i.e., staff steps
 
 ;;; The result of the computation is a VALID BEAMING.  Such a beaming
 ;;; is represented as a list of two elements representing the left and
@@ -18,11 +18,13 @@
 ;;; representation makes it easy to transform the constellation by
 ;;; reflection.
 
-;;; Take two notes and compute the beam slant and beam position for the
-;;; beam connecting them. A position of zero means the bottom of the
-;;; staff. Positive integers count up 1/2 space so that C on a staff
-;;; with a G-clef gets to have number -2.  Negative numbers go the other
-;;; way. This procedure assumes that pos2 >= pos1.
+;;; Take two vertical positions and compute the beam slant and beam
+;;; position for the beam connecting them. A position of zero means
+;;; the bottom of the staff. Positive integers count up 1/2 space so
+;;; that C on a staff with a G-clef gets to have number -2.  Negative
+;;; numbers go the other way. This function assumes that pos2 >= pos1,
+;;; and that the two notes are sufficiently far apart that the slant
+;;; is going to be acceptably small. 
 (defun beaming-single-stemsup-rising-twonotes (pos1 pos2)
   (let ((d (- pos2 pos1))
 	(s1 (+ pos2 1))
@@ -96,11 +98,19 @@
 	       (t `((,s5 . -1) (,s7 .  0))))))))
 
 (defun reflect-pos (pos)
-  (list (- 8 (car pos)) (cadr pos)))
+  (destructuring-bind (p x b) pos
+    (list (- 8 p) x b)))
 
 (defun reflect-bpos (pos)
   (cons (- 8 (car pos)) (- (cdr pos))))
 
+;;; take two points of the form (pos x b), where pos is a vertical
+;;; position (in staff-steps), x is a horizontal position (also in
+;;; staff-steps), and b is the number of beams at that position and
+;;; compute a valid beaming for the two points.  To do so, first call
+;;; the function passed as an argument on the two vertical positions.
+;;; If the slant thus obtained is too high, repeat with a slightly
+;;; higher vertical position of the first point.
 (defun beaming-two-points (p1 p2 fun)
   (let* ((beaming (funcall fun (car p1) (car p2)))
 	 (left (car beaming))
@@ -114,8 +124,18 @@
 	(progn (incf (car p1)) (beaming-two-points p1 p2 fun))
 	beaming)))
 
-;;; main entry
+;;; main entry 
 
+;;; Take a list of the form ((p1 x1 b1) (p2 x2 b2) ... (pn xn bn)),
+;;; (where pi is a vertical position, xi is a horizontal position
+;;; (both measured in staff-steps), and bi is the number of stems at
+;;; that position), a stem direction, and a function to compute a
+;;; valid slant of two notes sufficiently far apart, compute a valid
+;;; beaming.  First reflect the positions vertically and horizontally
+;;; until the last note is higher than the first and the stems are up.
+;;; Then compute a valid beaming using only the first and last
+;;; elements of the list.  Finally, move the beaming up vertically
+;;; until each stem it as least 2.5 staff steps long.
 (defun beaming-general (positions stem-direction fun)
   (let* ((first (car positions))
 	 (last (car (last positions)))
@@ -130,12 +150,11 @@
 		  (right (cadr beaming))
 		  (y1 (+ (car left) (* 0.5 (cdr left))))
 		  (y2 (+ (car right) (* 0.5 (cdr right))))
+		  (slope (/ (- y2 y1) (- x2 x1)))
 		  (minstem (reduce #'min positions
 				   :key (lambda (pos)
-					  (- (+ y1 (* (- (cadr pos) x1)
-						      (/ (- y2 y1)
-							 (- x2 x1))))
-					     (car pos)))))
+					  (destructuring-bind (p x b) pos
+					    (- (+ y1 (* (- x x1) slope)) p (* 2 (1- b)))))))
 		  (increment (* 2 (ceiling (/ (max 0 (- 5 minstem)) 2)))))
 	     `((,(+ (car left) increment) . ,(cdr left))
 	       (,(+ (car right) increment) . ,(cdr right))))))))
