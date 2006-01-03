@@ -17,15 +17,21 @@
 (define-command-table total-lyrics-table
     :inherit-from (lyrics-table global-gsharp-table gsharp))
 
+(defclass orchestra-view (score-pane:score-view)
+  ((cursor :initarg :cursor :reader cursor)
+   (buffer :initarg :buffer :reader buffer)))
+
+(defclass gsharp-pane (score-pane:score-pane)
+  ((view :initarg :view :accessor view)))	  
+
 (define-application-frame gsharp (standard-application-frame
 				  esa-frame-mixin)
-  ((buffer :initarg :buffer :accessor buffer)
-   (cursor :initarg :cursor :accessor cursor)
+  ((views :initarg :views :initform '() :accessor views)
    (input-state :initarg :input-state :accessor input-state))
   (:menu-bar menubar-command-table :height 25)
   (:pointer-documentation t)
   (:panes
-   (score (let ((win (make-pane 'score-pane:score-pane
+   (score (let ((win (make-pane 'gsharp-pane
 				:width 400 :height 500
 				:name "score"
 				;; :incremental-redisplay t
@@ -33,6 +39,7 @@
 				:display-function 'display-score
 				:command-table 'total-melody-table)))
 	    (setf (windows *application-frame*) (list win))
+	    (setf (view win) (car (views *application-frame*)))
 	    win))
    (state (make-pane 'score-pane:score-pane
 		     :width 50 :height 200
@@ -58,6 +65,12 @@
 				element)))
        interactor)))
   (:top-level (esa-top-level)))
+
+(defun current-buffer ()
+  (buffer (view (car (windows *application-frame*)))))
+
+(defun current-cursor ()
+  (cursor (view (car (windows *application-frame*)))))
 
 (defmethod execute-frame-command :around ((frame gsharp) command)
   (handler-case (call-next-method)
@@ -104,12 +117,12 @@
 		    (score-pane:draw-dot pane (+ xpos dx) 4)))))))))
 
 (defmethod display-score ((frame gsharp) pane)
-  (let* ((buffer (buffer frame)))
+  (let* ((buffer (buffer (view pane))))
     (recompute-measures buffer)
     (score-pane:with-score-pane pane
-      (draw-buffer pane buffer (cursor *application-frame*)
+      (draw-buffer pane buffer (current-cursor)
 		   (left-margin buffer) 100)
-      (gsharp-drawing::draw-the-cursor pane (cursor-element (cursor *application-frame*)) (last-note (input-state *application-frame*))))))
+      (gsharp-drawing::draw-the-cursor pane (current-cursor) (cursor-element (current-cursor)) (last-note (input-state *application-frame*))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -189,10 +202,13 @@
   (let* ((buffer (make-instance 'buffer))
 	 (cursor (make-initial-cursor buffer))
 	 (staff (car (staves buffer)))
-	 (input-state (make-input-state)))
-    (setf (buffer *application-frame*) buffer
-	  (cursor *application-frame*) cursor
-	  (input-state *application-frame*) input-state
+	 (input-state (make-input-state))
+	 (view (make-instance 'orchestra-view 
+			      :buffer buffer
+			      :cursor cursor)))
+    (push view (views *application-frame*))
+    (setf (view (car (windows *application-frame*))) view)
+    (setf (input-state *application-frame*) input-state
 	  (staves (car (layers (car (segments buffer))))) (list staff))))
 
 (define-presentation-type completable-pathname ()
@@ -282,11 +298,13 @@
 		     (simple-parse-error () (error 'file-not-found))))
 	 (buffer (read-everything filename))
 	 (input-state (make-input-state))
-	 (cursor (make-initial-cursor buffer)))
-    (setf (buffer *application-frame*) buffer
-	  (input-state *application-frame*) input-state
-	  (cursor *application-frame*) cursor)
-    (select-layer cursor (car (layers (segment (cursor *application-frame*)))))))
+	 (cursor (make-initial-cursor buffer))
+	 (view (make-instance 'orchestra-view 
+			      :buffer buffer
+			      :cursor cursor)))
+    (setf (view (car (windows *application-frame*))) view)
+    (setf (input-state *application-frame*) input-state)
+    (select-layer cursor (car (layers (segment (current-cursor)))))))
 
 (define-gsharp-command (com-save-buffer-as :name t) ()
   (let* ((stream (frame-standard-input *application-frame*))
@@ -294,7 +312,7 @@
 					 :prompt "File Name")
 		     (simple-parse-error () (error 'file-not-found)))))
     (with-open-file (stream filename :direction :output)
-      (save-buffer-to-stream (buffer *application-frame*) stream)
+      (save-buffer-to-stream (current-buffer) stream)
       (message "Saved buffer to ~A~%" filename))))
 
 (define-gsharp-command (com-quit :name t) ()
@@ -324,23 +342,23 @@
 	 ("Insert Before Current" :command com-insert-segment-before)))
 
 (define-gsharp-command (com-forward-segment :name t) ()
-  (forward-segment (cursor *application-frame*)))
+  (forward-segment (current-cursor)))
 
 (define-gsharp-command (com-backward-segment :name t) ()
-  (backward-segment (cursor *application-frame*)))
+  (backward-segment (current-cursor)))
 
 (define-gsharp-command (com-delete-segment :name t) ()
-  (delete-segment (cursor *application-frame*)))
+  (delete-segment (current-cursor)))
 
 (define-gsharp-command (com-insert-segment-before :name t) ()
-  (let ((cursor (cursor *application-frame*)))
-    (insert-segment-before (make-instance 'segment :staff (car (staves (buffer *application-frame*))))
+  (let ((cursor (current-cursor)))
+    (insert-segment-before (make-instance 'segment :staff (car (staves (current-buffer))))
 			   cursor)
     (backward-segment cursor)))
 
 (define-gsharp-command (com-insert-segment-after :name t) ()
-  (let ((cursor (cursor *application-frame*)))
-    (insert-segment-after (make-instance 'segment :staff (car (staves (buffer *application-frame*))))
+  (let ((cursor (current-cursor)))
+    (insert-segment-after (make-instance 'segment :staff (car (staves (current-buffer))))
 			  cursor)
     (forward-segment cursor)))
 
@@ -364,7 +382,7 @@
 
 (defun acquire-unique-layer-name (prompt)
   (let ((name (accept 'string :prompt prompt)))
-    (assert (not (member name (layers (segment (cursor *application-frame*)))
+    (assert (not (member name (layers (segment (current-cursor)))
 			 :test #'string= :key #'name))
 	    () `layer-name-not-unique)
     name))
@@ -382,7 +400,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       (layers (segment (cursor *application-frame*)))
+				       (layers (segment (current-cursor)))
 				       '()
 				       :action mode
 				       :predicate (constantly t)
@@ -393,7 +411,7 @@
     (if success layer (error 'no-such-layer))))
 
 (defmethod find-applicable-command-table ((frame gsharp))
-  (let* ((layer (layer (cursor *application-frame*))))
+  (let* ((layer (layer (current-cursor))))
     ;; F-A-C-T-WITH-LAYER?
     (typecase layer
       (lyrics-layer (find-command-table 'total-lyrics-table))
@@ -401,7 +419,7 @@
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
-    (select-layer (cursor *application-frame*) selected-layer)))
+    (select-layer (current-cursor) selected-layer)))
 
 (define-gsharp-command (com-rename-layer :name t) ()
   (setf (name (accept 'layer :prompt "Rename layer"))
@@ -411,11 +429,11 @@
   (let* ((name (acquire-unique-layer-name "Name of new layer"))
 	 (staff (accept 'score-pane:staff :prompt "Initial staff of new layer"))
 	 (new-layer (make-layer (list staff) :name name)))
-    (add-layer new-layer (segment (cursor *application-frame*)))
-    (select-layer (cursor *application-frame*) new-layer)))
+    (add-layer new-layer (segment (current-cursor)))
+    (select-layer (current-cursor) new-layer)))
     
 (define-gsharp-command (com-delete-layer :name t) ()
-  (delete-layer (cursor *application-frame*)))
+  (delete-layer (current-cursor)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -429,19 +447,19 @@
 	 ("Tail" :command com-tail-slisce)))
 
 (define-gsharp-command (com-head-slice :name t) ()
-  (head-slice (cursor *application-frame*)))
+  (head-slice (current-cursor)))
 
 (define-gsharp-command (com-body-slice :name t) ()
-  (body-slice (cursor *application-frame*)))
+  (body-slice (current-cursor)))
 
 (define-gsharp-command (com-tail-slice :name t) ()
-  (tail-slice (cursor *application-frame*)))
+  (tail-slice (current-cursor)))
 
 (define-gsharp-command (com-forward-slice :name t) ()
-  (forward-slice (cursor *application-frame*)))
+  (forward-slice (current-cursor)))
 
 (define-gsharp-command (com-backward-slice :name t) ()
-  (backward-slice (cursor *application-frame*)))
+  (backward-slice (current-cursor)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -454,10 +472,10 @@
 	 ("Backward" :command com-backward-measure)))
 
 (define-gsharp-command (com-forward-measure :name t) ()
-  (forward-bar (cursor *application-frame*)))
+  (forward-bar (current-cursor)))
 
 (define-gsharp-command (com-backward-measure :name t) ()
-  (backward-bar (cursor *application-frame*)))
+  (backward-bar (current-cursor)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -481,7 +499,7 @@
  :menu '(("Rotate" :command com-rotate-staves)))
 
 (define-gsharp-command (com-rotate-staves :name t) ()
-  (let ((layer (layer (cursor *application-frame*))))
+  (let ((layer (layer (current-cursor))))
     (setf (staves layer)
 	  (append (cdr (staves layer)) (list (car (staves layer)))))))
 
@@ -496,33 +514,46 @@
 	 ("Segment" :command com-play-segment)))
 
 (define-gsharp-command (com-play-segment :name t) ()
-  (play-segment (segment (cursor *application-frame*))))
+  (play-segment (segment (current-cursor))))
 
 (define-gsharp-command (com-play-layer :name t) ()
-  (play-layer (layer (cursor *application-frame*))))
+  (play-layer (layer (current-cursor))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; main entry point
 
-(defun gsharp (&key new-process (process-name "Gsharp")
-	       (width 900) (height 600))
-  "Start a Gsharp session" 
-  (let* ((buffer (make-instance 'buffer))
-	 (staff (car (staves buffer)))
+(defun gsharp-common (buffer new-process process-name width height)
+  (let* ((staff (car (staves buffer)))
 	 (input-state (make-input-state))
-	 (cursor (make-initial-cursor buffer)))
+	 (cursor (make-initial-cursor buffer))
+	 (view (make-instance 'orchestra-view
+			      :buffer buffer
+			      :cursor cursor)))
     (let ((frame (make-application-frame 'gsharp
 					 :buffer buffer
 					 :input-state input-state
 					 :cursor cursor
 					 :width width :height height)))
+      (push view (views frame))
       (flet ((run ()
 	       (run-frame-top-level frame)))
 	(setf (staves (car (layers (car (segments buffer))))) (list staff))
 	(if new-process
 	    (clim-sys:make-process #'run :name process-name)
-	    (run))))))
+	    (run))))))    
+
+(defun gsharp (&key new-process (process-name "Gsharp")
+	       (width 900) (height 600))
+  "Start a Gsharp session with a fresh empty buffer" 
+  (gsharp-common (make-instance 'buffer)
+		 new-process process-name width height))
+
+(defun edit-file (filename &key new-process (process-name "Gsharp")
+		  (width 900) (height 600))
+  "Start a Gsharp session editing a given file" 
+  (gsharp-common (read-everything filename)
+		 new-process process-name width height))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -530,7 +561,7 @@
 
 (defun insert-cluster ()
   (let* ((state (input-state *application-frame*))
-	 (cursor (cursor *application-frame*))
+	 (cursor (current-cursor))
 	 (cluster (make-cluster
 		   :notehead (notehead state)
 		   :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
@@ -591,8 +622,8 @@
 
 (define-gsharp-command com-insert-rest ()
   (let* ((state (input-state *application-frame*))
-	 (cursor (cursor *application-frame*))
-	 (rest (make-rest (car (staves (layer (cursor *application-frame*))))
+	 (cursor (current-cursor))
+	 (rest (make-rest (car (staves (layer (current-cursor))))
 		 :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
 		 :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
 		 :dots (dots state)
@@ -605,10 +636,10 @@
   (insert-cluster))  
 
 (defun cur-cluster ()
-  (current-cluster (cursor *application-frame*)))
+  (current-cluster (current-cursor)))
 
 (defun cur-element ()
-  (current-element (cursor *application-frame*)))
+  (current-element (current-cursor)))
 
 (defun cur-note ()
   (let ((cluster (cur-cluster)))
@@ -712,7 +743,7 @@
 	      (notehead (notehead element))
 	      (staff-pos (staff-pos element))
 	      (staff (staff element))
-	      (cursor (cursor *application-frame*)))
+	      (cursor (current-cursor)))
 	  (backward-element cursor)
 	  (delete-element cursor)
 	  (insert-element (make-rest staff
@@ -739,7 +770,7 @@
 	      (notehead (notehead element))
 	      (staff-pos (staff-pos element))
 	      (staff (staff element))
-	      (cursor (cursor *application-frame*)))
+	      (cursor (current-cursor)))
 	  (backward-element cursor)
 	  (delete-element cursor)
 	  (insert-element (make-rest staff
@@ -800,11 +831,11 @@
 
 (define-gsharp-command com-forward-element ((count 'integer :prompt "Number of Elements"))
   (loop repeat count
-	do (forward-element (cursor *application-frame*))))
+	do (forward-element (current-cursor))))
 
 (define-gsharp-command com-backward-element ((count 'integer :prompt "Number of Elements"))
   (loop repeat count
-	do (backward-element (cursor *application-frame*))))
+	do (backward-element (current-cursor))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -831,7 +862,7 @@
 	  (forward-element cursor))))
 
 (define-gsharp-command com-delete-element ((count 'integer :prompt "Number of Elements"))
-  (let ((cursor (cursor *application-frame*)))
+  (let ((cursor (current-cursor)))
     (loop repeat count
 	  do (progn
 	       ;; this will signal a condition if in last bar and
@@ -843,7 +874,7 @@
 		   (delete-element cursor))))))
 
 (define-gsharp-command com-erase-element ()
-  (let ((cursor (cursor *application-frame*)))
+  (let ((cursor (current-cursor)))
     (backward-element cursor)
     (if (end-of-bar-p cursor)
 	(fuse-bar-with-next cursor)
@@ -904,7 +935,7 @@
   (decf (last-note (input-state *application-frame*)) 7))
 
 (define-gsharp-command com-insert-measure-bar ()
-  (let ((cursor (cursor *application-frame*))
+  (let ((cursor (current-cursor))
 	(elements '()))
     (loop until (end-of-bar-p cursor)
 	  do (push (cursor-element cursor) elements)
@@ -931,7 +962,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       (staves (buffer *application-frame*))
+				       (staves (current-buffer))
 				       '()
 				       :action mode
 				       :predicate (constantly t)
@@ -948,7 +979,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       (staves (buffer *application-frame*))
+				       (staves (current-buffer))
 				       '()
 				       :action mode
 				       :predicate (lambda (obj) (typep obj 'fiveline-staff))
@@ -1015,7 +1046,7 @@
 
 (defun acquire-unique-staff-name (prompt)
   (let ((name (accept 'string :prompt prompt)))
-    (assert (not (member name (staves (buffer *application-frame*)) :test #'string= :key #'name))
+    (assert (not (member name (staves (current-buffer)) :test #'string= :key #'name))
 	    () `staff-name-not-unique)
     name))
 
@@ -1031,32 +1062,32 @@
 (define-gsharp-command (com-insert-staff-before :name t) ()
   (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")
 			  (acquire-new-staff)
-			  (buffer *application-frame*)))
+			  (current-buffer)))
 
 (define-gsharp-command (com-insert-staff-after :name t) ()
   (add-staff-after-staff (accept 'score-pane:staff :prompt "Insert staff after staff")
 			 (acquire-new-staff)
-			 (buffer *application-frame*)))
+			 (current-buffer)))
 
 (define-gsharp-command (com-delete-staff :name t) ()
   (remove-staff-from-buffer (accept 'score-pane:staff :prompt "Staff")
-			    (buffer *application-frame*)))
+			    (current-buffer)))
 
 (define-gsharp-command (com-rename-staff :name t) ()
   (let* ((staff (accept 'score-pane:staff :prompt "Rename staff"))
 	 (name (acquire-unique-staff-name "New name of staff"))
-	 (buffer (buffer *application-frame*)))
+	 (buffer (current-buffer)))
     (rename-staff name staff buffer)))
 
 (define-gsharp-command (com-add-staff-to-layer :name t) ()
   (let ((staff (accept 'score-pane:staff :prompt "Add staff to layer"))
-	(layer (layer (cursor *application-frame*))))
+	(layer (layer (current-cursor))))
     (add-staff-to-layer staff layer)))
 
 ;;; FIXME restrict to staves that are actually in the layer. 
 (define-gsharp-command (com-delete-staff-from-layer :name t) ()
   (let ((staff (accept 'score-pane:staff :prompt "Delete staff from layer"))
-	(layer (layer (cursor *application-frame*))))
+	(layer (layer (current-cursor))))
     (remove-staff-from-layer staff layer)))
 
 (defun invalidate-slice-using-staff (slice staff)
@@ -1066,8 +1097,8 @@
 		 do (mark-modified element))))
 
 (define-gsharp-command com-more-sharps ()
-  (let ((staff (car (staves (layer (cursor *application-frame*))))))
-    (loop for segment in (segments (buffer *application-frame*))
+  (let ((staff (car (staves (layer (current-cursor))))))
+    (loop for segment in (segments (current-buffer))
 	  do (loop for layer in (layers segment)
 		   do (when (member staff (staves layer))
 			(invalidate-slice-using-staff (head layer) staff)
@@ -1090,8 +1121,8 @@
 	    ((eq (aref keysig 6) :natural) (setf (aref keysig 6) :sharp))))))
 
 (define-gsharp-command com-more-flats ()
-  (let ((staff (car (staves (layer (cursor *application-frame*))))))
-    (loop for segment in (segments (buffer *application-frame*))
+  (let ((staff (car (staves (layer (current-cursor))))))
+    (loop for segment in (segments (current-buffer))
 	  do (loop for layer in (layers segment)
 		   do (when (member staff (staves layer))
 			(invalidate-slice-using-staff (head layer) staff)
@@ -1119,8 +1150,8 @@
 
 (defun insert-lyrics-element ()
   (let* ((state (input-state *application-frame*))
-	 (cursor (cursor *application-frame*))
-	 (element (make-lyrics-element (car (staves (layer (cursor *application-frame*))))
+	 (cursor (current-cursor))
+	 (element (make-lyrics-element (car (staves (layer (current-cursor))))
 		    :rbeams (if (eq (notehead state) :filled) (rbeams state) 0)
 		    :lbeams (if (eq (notehead state) :filled) (lbeams state) 0)
 		    :dots (dots state)

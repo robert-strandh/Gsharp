@@ -674,9 +674,8 @@ right of the center of its timeline"))
 	  (loop for element in elements do
 		(draw-element pane element nil))))))
 
-(defun draw-the-cursor (pane cursor-element last-note)
-  (let* ((cursor (cursor *application-frame*))
-	 (staff (car (staves (layer cursor))))
+(defun draw-the-cursor (pane cursor cursor-element last-note)
+  (let* ((staff (car (staves (layer cursor))))
 	 (bar (bar cursor)))
     (flet ((draw-cursor (x)
 	     (let* ((sy (system-y-position bar))

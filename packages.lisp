@@ -58,7 +58,8 @@
 	   #:with-staff-size #:with-notehead-right-offsets
 	   #:with-suspended-note-offset
 	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
-	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead))
+	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead
+	   #:score-view))
 
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities)
@@ -227,7 +228,7 @@
 	:gsharp-play)
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest)
-  (:export #:gsharp))
+  (:export #:gsharp #:edit-file))
 
 (in-package :gsharp-numbering)
 (deftype number () 'cl:number)
