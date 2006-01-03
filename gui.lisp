@@ -131,7 +131,7 @@
 (defmethod note-position ((note note))
   (let ((clef (clef (staff note))))
     (+ (- (pitch note)
-	  (ecase (name clef) (:treble 32) (:bass 24) (:c 35)))
+	  (ecase (name clef) (:treble 32) (:bass 24) (:c 28)))
        (lineno clef))))
 
 (defmethod display-element ((frame gsharp) pane)

@@ -683,7 +683,7 @@ right of the center of its timeline"))
 		    (yoffset (- (gsharp-drawing::staff-yoffset staff))))
 	       (if (typep staff 'fiveline-staff)
 		   (let* ((clef (clef staff))
-			  (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 35))
+			  (bottom-line (- (ecase (name clef) (:treble 32) (:bass 24) (:c 28))
 					  (lineno clef)))
 			  (lnote-offset (score-pane:staff-step (- last-note bottom-line))))
 		     (draw-line* pane
