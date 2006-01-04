@@ -115,7 +115,8 @@ of a normal note.  This function always returns a positive value"))
       (setf beam-offset-up
 	    (- (ceiling (/ staff-line-distance 2) 2)))
       (setf beam-hang-sit-offset
-	    (/ (- (+ beam-offset-down beam-offset-up) staff-line-thickness) 2)))))
+	    (let ((beam-thickness (- beam-offset-down beam-offset-up)))
+	      (/ (- beam-thickness staff-line-thickness) 2))))))
 
 (defgeneric gf-char (glyph))
 (defgeneric pixmap (glyph))

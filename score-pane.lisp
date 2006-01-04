@@ -454,9 +454,11 @@
   ((light-glyph-p :initarg :light-glyph-p)
    (thickness :initarg :thickness)))
 
-(defun draw-horizontal-beam (medium x1 y1 x2 thickness)
-  (let ((y2 (- y1 thickness)))
-    (draw-rectangle* medium x1 y1 x2 y2)))
+;;; draw a horizontal beam around the vertical reference 
+;;; point y.
+(defun draw-horizontal-beam (medium x1 y x2)
+  (multiple-value-bind (down up) (beam-offsets *font*)
+    (draw-rectangle* medium x1 (+ y up) x2 (+ y down))))
 
 (defvar *darker-gray-progressions*)
 (defvar *lighter-gray-progressions*)
@@ -576,34 +578,39 @@
 	      (draw-upward-beam medium x1 y2 y1 thickness
 				  (/ (- x2 x1) (- y2 y1))))))))))
 
-(defun draw-sloped-beam (medium x1 y1 x2 y2 thickness inverse-slope)
-  (let ((transformation (medium-transformation *pane*)))
-    (cond ((< y1 y2)
-	   (when (stream-recording-p *pane*)
-	     (multiple-value-bind (xx1 yy1)
-		 (transform-position transformation x1 y1)
-	       (multiple-value-bind (xx2 yy2)
-		   (transform-position transformation x2 y2)
-		 (stream-add-output-record
-		  *pane* (make-instance 'downward-beam-output-record
-			   :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
-                           :light-glyph-p *light-glyph*
-			   :thickness thickness :ink (medium-ink medium))))))
-	   (when (stream-drawing-p *pane*)
-	     (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
-	  (t
-	   (when (stream-recording-p *pane*)
-	     (multiple-value-bind (xx1 yy1)
-		 (transform-position transformation x1 y1)
-	       (multiple-value-bind (xx2 yy2)
-		   (transform-position transformation x2 y2)
-		 (stream-add-output-record
-		  *pane* (make-instance 'upward-beam-output-record
-			   :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
-                           :light-glyph-p *light-glyph*
-			   :thickness thickness :ink (medium-ink medium))))))
-	   (when (stream-drawing-p *pane*)
-	     (draw-upward-beam medium x1 y1 y2 thickness inverse-slope))))))
+;;; draw a sloped beam.  The vertical reference points 
+;;; of the two end points are indicated by y1 and y2. 
+(defun draw-sloped-beam (medium x1 y1 x2 y2)
+  (multiple-value-bind (down up) (beam-offsets *font*)
+    (let ((transformation (medium-transformation *pane*))
+	  (inverse-slope (abs (/ (- x2 x1) (- y2 y1))))
+	  (thickness (- down up)))
+      (cond ((< y1 y2)
+	     (when (stream-recording-p *pane*)
+	       (multiple-value-bind (xx1 yy1)
+		   (transform-position transformation x1 y1)
+		 (multiple-value-bind (xx2 yy2)
+		     (transform-position transformation x2 y2)
+		   (stream-add-output-record
+		    *pane* (make-instance 'downward-beam-output-record
+					  :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
+					  :light-glyph-p *light-glyph*
+					  :thickness thickness :ink (medium-ink medium))))))
+	     (when (stream-drawing-p *pane*)
+	       (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
+	    (t
+	     (when (stream-recording-p *pane*)
+	       (multiple-value-bind (xx1 yy1)
+		   (transform-position transformation x1 y1)
+		 (multiple-value-bind (xx2 yy2)
+		     (transform-position transformation x2 y2)
+		   (stream-add-output-record
+		    *pane* (make-instance 'upward-beam-output-record
+					  :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
+					  :light-glyph-p *light-glyph*
+					  :thickness thickness :ink (medium-ink medium))))))
+	     (when (stream-drawing-p *pane*)
+	       (draw-upward-beam medium x1 y1 y2 thickness inverse-slope)))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
@@ -612,16 +619,13 @@
       (multiple-value-bind (left right) (stem-offsets *font*)
 	(let* ((xx1 (+ x1 left))
 	       (xx2 (+ x2 right))
-	       (offset (round (staff-step 1/3)))
+	       (offset (beam-hang-sit-offset *font*))
 	       (y1 (- (+ (staff-step staff-step-1) (* offset1 offset))))
 	       (y2 (- (+ (staff-step staff-step-2) (* offset2 offset))))
-	       (slope (abs (/ (- y2 y1) (- xx2 xx1))))
-	       (thickness (/ (staff-line-distance *font*) 2))
 	       (medium (sheet-medium pane)))
-	  (assert (< slope 1))
 	  (if (= y1 y2)
-	      (draw-horizontal-beam pane xx1 y1 xx2 thickness)
-	      (draw-sloped-beam medium xx1 y1 xx2 y2 thickness (/ slope)))))))
+	      (draw-horizontal-beam pane xx1 y1 xx2)
+	      (draw-sloped-beam medium xx1 y1 xx2 y2))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
