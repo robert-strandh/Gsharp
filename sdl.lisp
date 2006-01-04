@@ -22,6 +22,15 @@ means that both the values returned are negative"))
 (defgeneric suspended-note-offset (font)
   (:documentation "the x offset of a suspended note compared to that
 of a normal note.  This function always returns a positive value"))
+(defgeneric beam-offsets (font)
+  (:documentation "return two values, both to be added to the 
+		   vertical reference point in order to obtain the 
+		   bottom and top of the beam (in that order)"))
+(defgeneric beam-hang-sit-offset (font)
+  (:documentation "return a positive value to be added to (hang) or 
+		   subtracted from (sit) the vertical reference point
+		   of a staff line, in order to obtain the reference 
+		   point of a hanging or sitting beam respectively"))
 
 (defclass font ()
   ((gf-font :initarg :gf-font :reader gf-font)
@@ -40,6 +49,9 @@ of a normal note.  This function always returns a positive value"))
    (notehead-right-y-offset)
    (notehead-left-x-offset)
    (notehead-left-y-offset)
+   (beam-offset-down)
+   (beam-offset-up)
+   (beam-hang-sit-offset :reader beam-hang-sit-offset)
    (glyphs :initarg :glyphs :reader glyphs)))
   
 (defmethod initialize-instance :after ((font font) &rest initargs &key &allow-other-keys)
@@ -58,7 +70,10 @@ of a normal note.  This function always returns a positive value"))
 	       notehead-right-x-offset
 	       notehead-right-y-offset
 	       notehead-left-x-offset
-	       notehead-left-y-offset) font
+	       notehead-left-y-offset
+               beam-offset-down
+	       beam-offset-up
+	       beam-hang-sit-offset) font
     (let ((staff-line-thickness (round (/ (staff-line-distance font) 10))))
       (setf staff-line-offset-down
 	    (floor (/ staff-line-thickness 2))
@@ -94,7 +109,13 @@ of a normal note.  This function always returns a positive value"))
       (setf notehead-right-y-offset
 	    (round (+ (* 0.25 staff-line-distance) yoffset)))
       (setf notehead-left-y-offset
-	    (- (round (- (* 0.25 staff-line-distance) yoffset)))))))
+	    (- (round (- (* 0.25 staff-line-distance) yoffset))))
+      (setf beam-offset-down
+	    (floor (/ staff-line-distance 2) 2))
+      (setf beam-offset-up
+	    (- (ceiling (/ staff-line-distance 2) 2)))
+      (setf beam-hang-sit-offset
+	    (/ (- (+ beam-offset-down beam-offset-up) staff-line-thickness) 2)))))
 
 (defgeneric gf-char (glyph))
 (defgeneric pixmap (glyph))
@@ -185,6 +206,10 @@ of a normal note.  This function always returns a positive value"))
 (defmethod suspended-note-offset ((font font))
   (with-slots (notehead-left-x-offset notehead-right-x-offset) font
     (- notehead-right-x-offset notehead-left-x-offset)))
+
+(defmethod beam-offsets ((font font))
+  (with-slots (beam-offset-down beam-offset-up) font
+    (values beam-offset-down beam-offset-up)))
 
 (defun load-font (staff-line-distance)
   (let* ((gf-font (parse-gf-file (merge-pathnames

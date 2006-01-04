@@ -33,6 +33,7 @@
 	   #:ledger-line-x-offsets #:ledger-line-y-offsets
 	   #:notehead-right-offsets #:notehead-left-offsets
 	   #:load-font #:glyph-offsets #:suspended-note-offset
+	   #:beam-offsets #:beam-hang-sit-offset
 	   #:+glyph-whole+ #:+glyph-whole-upper+ #:+glyph-whole-lower+ #:+glyph-whole-two+
 	   #:+glyph-half+ #:+glyph-half-upper+ #:+glyph-half-lower+ #:+glyph-half-two+
 	   #:+glyph-filled+ #:+glyph-filled-upper+ #:+glyph-filled-lower+ #:+glyph-filled-two+
