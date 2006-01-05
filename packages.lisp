@@ -137,7 +137,8 @@
 	   #:group-notes-by-staff #:final-relative-note-xoffset
 	   #:final-accidental #:final-relative-accidental-xoffset
 	   #:timeline #:timelines #:elasticity
-	   #:smallest-gap #:elasticity-function))
+	   #:smallest-gap #:elasticity-function
+	   #:invalidate-everything-using-staff))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)

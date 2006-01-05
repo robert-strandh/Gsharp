@@ -13,6 +13,23 @@
 (define-added-mixin rstaff () staff
   ((rank :accessor staff-rank)))
 
+(defun invalidate-slice-using-staff (slice staff)
+  (declare (ignore staff)) ; maybe use this later
+  (loop for bar in (bars slice)
+	do (loop for element in (elements bar)
+		 do (mark-modified element))))
+
+(defun invalidate-everything-using-staff (buffer staff)
+  (loop for segment in (segments buffer)
+	do (loop for layer in (layers segment)
+		 do (when (member staff (staves layer))
+		      (invalidate-slice-using-staff (head layer) staff)
+		      (invalidate-slice-using-staff (body layer) staff)
+		      (invalidate-slice-using-staff (tail layer) staff)))))
+		      
+(defmethod (setf clef) :before (clef (staff staff))
+  (invalidate-everything-using-staff (buffer staff) staff))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Note

@@ -66,7 +66,7 @@
 ;;; Staff
 
 (defclass staff (gsharp-object name-mixin)
-  ()
+  ((buffer :initarg :buffer :accessor buffer))
   (:default-initargs :name "default staff"))
 
 ;;; fiveline
@@ -945,8 +945,17 @@
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
    (left-margin :initform *default-left-margin* :initarg :left-margin :accessor left-margin)))
 
+(defun set-buffer-of-staves (buffer)
+  (loop for staff in (staves buffer)
+	do (setf (buffer staff) buffer)))
+
+(defmethod (setf staves) :after (staves (buffer buffer))
+  (declare (ignore staves))
+  (set-buffer-of-staves buffer))
+
 (defmethod initialize-instance :after ((b buffer) &rest args)
   (declare (ignore args))
+  (set-buffer-of-staves b)
   (with-slots (segments) b
     (when (null segments)
       (add-segment (make-instance 'segment :staff (car (staves b))) b 0))
@@ -1034,10 +1043,12 @@
   (assert (not (null staves)))  
   (if (eq staff (car staves))
       (push newstaff (cdr staves))
-      (add-staff-after newstaff staff (cdr staves))))
+      (add-staff-after newstaff staff (cdr staves)))
+  staves)
 
 (defmethod add-staff-after-staff (staff newstaff (buffer buffer))
-  (add-staff-after newstaff staff (staves buffer)))
+  (setf (staves buffer)
+	(add-staff-after newstaff staff (staves buffer))))
   
 (defmethod rename-staff (staff-name (staff staff) (buffer buffer))
   (assert (not (find-staff staff-name buffer nil)) () 'staff-already-in-buffer)
