@@ -495,6 +495,14 @@
 (defmethod print-object :after ((b bar) stream)
   (format stream ":elements ~W " (elements b)))
 
+;;; The duration of a bar is simply the sum of durations
+;;; of its elements.  We might want to improve on the 
+;;; implementation of this method so that it uses some 
+;;; kind of cache, in order to avoid looping over each 
+;;; element and computing the duration of each one each time.
+(defmethod duration ((bar bar))
+  (reduce #'+ (mapcar #'duration (elements bar))))
+
 (defgeneric make-bar-for-staff (staff &rest args &key elements))
 
 (defmethod nb-elements ((bar bar))
@@ -935,7 +943,7 @@
    (staves :initform (list (make-fiveline-staff))
 	   :initarg :staves :accessor staves)
    ;; the min width determines the preferred geographic distance after the
-   ;; timetlime with the shortest duration on a line.
+   ;; timeline with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
    ;; the spacing style of the buffer determines the how geographic distance
    ;; between adjacent timelines is related to temporal distance.

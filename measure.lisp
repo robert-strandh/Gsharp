@@ -413,7 +413,7 @@
 (defclass timeline (flexichain:element-rank-mixin)
   ((start-time :initarg :start-time :reader start-time)
    (elements :initform '() :accessor elements)
-   (duration :initarg :duration :reader duration)
+   (duration :initarg :duration :accessor duration)
    (elasticity :accessor elasticity)
    ;; the minimum x offset from this timeline to the next, or, if this
    ;; is the last timeline, from this one to the end of the measure
@@ -433,9 +433,6 @@
    ;; the coefficient of a measure is the sum of d_i^k where d_i
    ;; is the duration of the i:th timeline, and k is the spacing style
    (coeff :initarg :coeff :reader measure-coeff)
-   ;; a list of unique rational numbers, sorted by increasing numeric value,
-   ;; of the start time of the time lines of the measure
-   (start-times :initarg :start-times :reader measure-start-times)
    ;; the position of a measure in the sequence of measures
    ;; of a buffer is indicated by two numbers, the position
    ;; of the segment to which the measure belongs within the
@@ -452,9 +449,8 @@
    ;; is applied to it
    (elasticity-function :accessor elasticity-function)))
 
-(defun make-measure (min-dist coeff start-times seg-pos bar-pos bars)
+(defun make-measure (min-dist coeff seg-pos bar-pos bars)
   (make-instance 'measure :min-dist min-dist :coeff coeff
-		 :start-times start-times
 		 :seg-pos seg-pos :bar-pos bar-pos :bars bars))
 
 (defmethod print-object ((obj measure) stream)
@@ -492,6 +488,7 @@
 (defmethod measures :before ((segment rsegment))
   (when (modified-p segment)
     (compute-measures segment (spacing-style (buffer-cost-method (buffer segment))))
+    ;; avoid an infinite computation by using slot-value here
     (mapc #'compute-timelines (slot-value segment 'measures))
     (setf (modified-p segment) nil)))
 
@@ -536,17 +533,26 @@
   (let ((elements (elements bar)))
     (if elements
 	(rel-abs (mapcar #'duration elements))
-	'(1))))
+	'(0))))
 
 ;;; Combine the list of start times of two bars into a single list
-;;; of start times.  Don't worry about duplicated elements which will 
-;;; be removed ultimately. 
+;;; of start times.  If any of the list contains duplicate start 
+;;; times, then the resulting list will contain as many duplicates
+;;; as the maximum number of duplicates of the two lists.
 ;;; Treat the last start time (which is really the duration of the
 ;;; bar) specially and only keep the largest one
 (defun combine-bars (bar1 bar2)
-  (append (merge 'list (butlast bar1) (butlast bar2) #'<)
-	  (list (max (car (last bar1)) (car (last bar2))))))
-
+  (labels ((combine (l1 l2)
+	      (cond ((null l1) l2)
+		    ((null l2) l1)
+		    ((< (car l1) (car l2))
+		     (cons (car l1) (combine (cdr l1) l2)))
+		    ((< (car l2) (car l1))
+		     (cons (car l2) (combine (cdr l2) l1)))
+		    (t (cons (car l1) (combine (cdr l1) (cdr l2)))))))
+    (append (combine (butlast bar1) (butlast bar2))
+	    (list (max (car (last bar1)) (car (last bar2)))))))
+    
 ;;; given a group of notes (i.e. a list of notes, all displayed on the
 ;;; same staff, compute their final x offsets.  This is a question of
 ;;; determining whether the note goes to the right or to the left of
@@ -654,7 +660,7 @@
 	do (compute-beam-group-parameters group)))	
 
 ;;; From a list of simultaneous bars (and some other stuff), create a
-;;; measure.  The `other stuff' is the spacing style, which is neded
+;;; measure.  The `other stuff' is the spacing style, which is needed
 ;;; in order to compute the coefficient of the measure, the position
 ;;; of the segment to which the bars belong in the sequence of
 ;;; segments of the buffer, and the position of the bars in the
@@ -667,38 +673,54 @@
 	  do (when (modified-p bar)
 	       (compute-bar-parameters bar)
 	       (setf (modified-p bar) nil)))
-    (let* ((start-times (remove-duplicates
-			 (reduce #'combine-bars
-				 (mapcar #'start-times bars))))
+    (let* ((start-times (reduce #'combine-bars
+				(mapcar #'start-times bars)))
 	   (durations (abs-rel start-times))
-	   (min-dist (reduce #'min durations))
+	   ;; elements with zero duration do not intervene
+	   ;; in the computation of the min-dist.
+	   ;; Choose a large default value for min-dist.
+	   (min-dist (reduce #'min (remove 0 durations) :initial-value 10000))
 	   (coeff (loop for duration in durations
 			sum (expt duration spacing-style))))
-      (make-measure min-dist coeff start-times seg-pos bar-pos bars))))
+      (make-measure min-dist coeff seg-pos bar-pos bars))))
 
 (defun compute-timelines (measure)
-  (let ((timelines (timelines measure))
-	(durations (abs-rel (measure-start-times measure))))
-    ;; create a timeline for each start time of the measure
-    (loop for duration in durations
-	  and start-time = 0 then (+ start-time duration)
-	  for i from 0
-	  do (let ((timeline (make-instance 'timeline
-			       :start-time start-time
-			       :duration duration)))
-	       (flexichain:insert* timelines i timeline)))
-    ;; link each timeline to its elements and each element of a
-    ;; timeline to the timeline
-    (loop for bar in (measure-bars measure)
-	  do (loop with timeline-index = 0
-		   for element in (elements bar)
-		   and start-time = 0 then (+ start-time (duration element))
-		   do (loop while (< (start-time (flexichain:element* timelines timeline-index))
-				     start-time)
-			    do (incf timeline-index))
-		   do (let ((timeline (flexichain:element* timelines timeline-index)))
-			(push element (elements timeline))
-			(setf (timeline element) timeline))))))
+  (let ((timelines (timelines measure)))
+    (flet ((compute-bar-timelines (bar)
+	      (loop with timeline-index = 0
+		    for element in (elements bar)
+		    and start-time = 0 then (+ start-time (duration element))
+		    do (loop until (= timeline-index (flexichain:nb-elements timelines))
+			     for timeline = (flexichain:element* timelines timeline-index)
+			     until (or (> (start-time timeline) start-time)
+				       (and (= (start-time timeline) start-time)
+					    (or (zerop (duration element))
+						;; either none or every element of a timline
+						;; has zero duration, so we only have to test
+						;; the first one. 
+						(not (zerop (duration (car (elements timeline))))))))
+			     do (incf timeline-index))
+		    do (when (or (= timeline-index (flexichain:nb-elements timelines))
+				 (> (start-time (flexichain:element* timelines timeline-index))
+				    start-time))
+			 (let ((timeline (make-instance 'timeline
+							:start-time start-time)))
+			   (flexichain:insert* timelines timeline-index timeline)))
+		    do (let ((timeline (flexichain:element* timelines timeline-index)))
+			 (push element (elements timeline))
+			 (setf (timeline element) timeline)))))
+      (loop for bar in (measure-bars measure)
+	    do (compute-bar-timelines bar)))
+    ;; compute the duration of each timeline except the last one
+    (loop for i from 0 below (1- (flexichain:nb-elements timelines))
+	  do (setf (duration (flexichain:element* timelines i))
+		   (- (start-time (flexichain:element* timelines (1+ i)))
+		      (start-time (flexichain:element* timelines i)))))
+    ;; compute the duration of the last timeline, if any
+    (unless (zerop (flexichain:nb-elements timelines))
+      (let ((measure-duration (reduce #'max (measure-bars measure) :key #'duration))
+	    (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
+	(setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.

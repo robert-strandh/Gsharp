@@ -82,36 +82,7 @@
 (defun final-absolute-accidental-xoffset (note)
   (+ (final-absolute-element-xoffset (cluster note)) (final-relative-accidental-xoffset note)))
 
-(defun line-cost (measures method)
-  (reduce (lambda (x y) (combine-cost method x y)) measures :initial-value nil))
-
-(defun compute-compress-factor (measures method)
-  (compress-factor method (line-cost measures method)))
-
-(defun red-width (method coeff min-dist)
-  (* coeff (min-width method) (expt (/ min-dist) (spacing-style method))))
-
-(defun compute-reduced-width (method coeff min-dist)
-  (if (zerop min-dist) 0 (red-width method coeff min-dist)))
-
-(defun nat-width (method coeff min-dist)
-  (+ (red-width method coeff min-dist) (min-width method)))
-
 (defvar *cursor* nil)
-
-(defun compute-min-dist (measures)
-  (let ((min-dists (mapcar (lambda (measure)
-			     (reduce #'min (gsharp-measure::abs-rel
-					    (measure-start-times measure))))
-			   measures)))
-    (reduce #'min min-dists)))  
-
-(defun compute-widths (measures method)
-  (let ((compress (compute-compress-factor measures method))
-	(min-dist (compute-min-dist measures)))
-    (loop for measure in measures
-	  collect (/ (nat-width method (measure-coeff measure) min-dist)
-		     compress))))
 
 ;;; Compute the elasticity of each timeline in each measure of the
 ;;; measures of a system (line) by taking its duration to the power of
@@ -316,9 +287,7 @@ right of the center of its timeline"))
 		 finally (setf (elasticity-function measure) result)))
   (reduce #'add-elasticities measures :key #'elasticity-function))
 
-;;; eventually replace the existing compute-measure-coordinates
-;;; by this one
-(defun new-compute-measure-coordinates (measure x y force)
+(defun compute-measure-coordinates (measure x y force)
   (loop with timelines = (timelines measure)
 	for i from 0 below (flexichain:nb-elements timelines)
 	for timeline = (flexichain:element* timelines i)
@@ -329,28 +298,6 @@ right of the center of its timeline"))
 		 do (setf (final-absolute-element-xoffset element) xx)))
   (loop for bar in (measure-bars measure)
 	do (compute-bar-coordinates bar x y (size-at-force (elasticity-function measure) force))))
-
-(defun compute-measure-coordinates (measure min-dist compress x y method)
-  (let* ((width (/ (nat-width method (measure-coeff measure) min-dist)
-		   compress))
-	 (time-alist (cons (cons 0 (/ (min-width method) compress))
-			   (loop for start-time in (measure-start-times measure)
-				 and old-start-time = 0 then start-time
-				 with coeff = 0
-				 do (incf coeff (expt (- start-time old-start-time)
-						      (spacing-style method)))
-				 collect (cons start-time
-					       (/ (+ (min-width method)
-						     (compute-reduced-width
-						      method
-						      coeff min-dist))
-						  compress))))))
-;;    (setf (system-y-position measure) y
-;;	  (final-absolute-measure-xoffset measure) x
-;;	  (final-width measure) width)
-    (loop for bar in (measure-bars measure) do
-	  (compute-bar-coordinates bar x y width)
-	  (compute-element-x-positions bar x time-alist))))
 
 (defun draw-measure (pane measure)
   (loop for bar in (measure-bars measure) do
@@ -366,21 +313,11 @@ right of the center of its timeline"))
 				(+ y (- (score-pane:staff-step 8)))
 				(+ y (staff-yoffset (car (last staves))))))))
 
-;;; eventually remove the existing compute-system-coordinates
-;;; and rename this one
-(defun new-compute-system-coordinates (measures x y force)
+(defun compute-system-coordinates (measures x y force)
   (loop for measure in measures
-	do (new-compute-measure-coordinates measure x y force)
+	do (compute-measure-coordinates measure x y force)
 	do (incf x (size-at-force (elasticity-function measure) force))))
 
-(defun compute-system-coordinates (measures x y widths method)
-  (let ((compress (compute-compress-factor measures method))
-	(min-dist (compute-min-dist measures)))
-    (loop for measure in measures
-	  for width in widths do
-	  (compute-measure-coordinates measure min-dist compress x y method)
-	  (incf x width))))
-  
 (defun draw-system (pane measures)
   (loop for measure in measures do
 	(draw-measure pane measure)))
@@ -407,7 +344,6 @@ right of the center of its timeline"))
 	   (right-edge (right-edge buffer)))
       (loop for staff in staves
 	    for offset from 0 by 90 do
-;;	    for offset downfrom 0 by 90 do
 	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
@@ -421,25 +357,20 @@ right of the center of its timeline"))
 		  (force (if (> (zero-force-size e-fun) (line-width method))
 			     0 
 			     (force-at-size e-fun (line-width method)))))
-	     (new-compute-system-coordinates measures
-					     (+ x (left-offset buffer) timesig-offset) yy
-					     force)
-	     )
-	   (let ((widths (compute-widths measures method)))
-;;	     (compute-system-coordinates measures
-;;					 (+ x (left-offset buffer) timesig-offset) yy
-;;					 widths method)
-	     (draw-system pane measures)
-	     (score-pane:draw-bar-line pane x
-				       (+ yy (- (score-pane:staff-step 8)))
-				       (+ yy (staff-yoffset (car (last staves)))))
-	     (loop for staff in staves do
-		   (score-pane:with-vertical-score-position (pane yy)
-		     (if (member staff (staves (layer (slice (bar *cursor*)))))
-			 (draw-staff-and-clef pane staff x right-edge)
-			 (score-pane:with-light-glyphs pane
-			   (draw-staff-and-clef pane staff x right-edge))))
-		   (incf yy 90))))
+	     (compute-system-coordinates measures
+					 (+ x (left-offset buffer) timesig-offset) yy
+					 force))
+	   (draw-system pane measures)
+	   (score-pane:draw-bar-line pane x
+				     (+ yy (- (score-pane:staff-step 8)))
+				     (+ yy (staff-yoffset (car (last staves)))))
+	   (loop for staff in staves do
+		 (score-pane:with-vertical-score-position (pane yy)
+		    (if (member staff (staves (layer (slice (bar *cursor*)))))
+			(draw-staff-and-clef pane staff x right-edge)
+			(score-pane:with-light-glyphs pane
+			  (draw-staff-and-clef pane staff x right-edge))))
+		 (incf yy 90)))
 	 buffer)))))
 
 (define-added-mixin velement () melody-element
