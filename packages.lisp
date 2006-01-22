@@ -124,7 +124,7 @@
   (:shadowing-import-from :gsharp-numbering #:number)
   (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:mark-modified #:modified-p #:measure
-	   #:measure-min-dist #:measure-coeff #:measure-start-times
+	   #:measure-min-dist #:measure-coeff
 	   #:measure-bar-pos #:measure-seg-pos #:measure-bars #:measures
 	   #:nb-measures #:measureno
 	   #:recompute-measures #:measure-cost-method #:make-measure-cost-method

@@ -429,10 +429,10 @@
 ;;; A measure represents the set of simultaneous bars.
 (defclass measure (obseq-elem)
   (;; the smallest duration of any timeline in the measure
-   (min-dist :initarg :min-dist :reader measure-min-dist)
+   (min-dist :initarg :min-dist :accessor measure-min-dist)
    ;; the coefficient of a measure is the sum of d_i^k where d_i
    ;; is the duration of the i:th timeline, and k is the spacing style
-   (coeff :initarg :coeff :reader measure-coeff)
+   (coeff :initarg :coeff :accessor measure-coeff)
    ;; the position of a measure in the sequence of measures
    ;; of a buffer is indicated by two numbers, the position
    ;; of the segment to which the measure belongs within the
@@ -449,9 +449,8 @@
    ;; is applied to it
    (elasticity-function :accessor elasticity-function)))
 
-(defun make-measure (min-dist coeff seg-pos bar-pos bars)
-  (make-instance 'measure :min-dist min-dist :coeff coeff
-		 :seg-pos seg-pos :bar-pos bar-pos :bars bars))
+(defun make-measure (seg-pos bar-pos bars)
+  (make-instance 'measure :seg-pos seg-pos :bar-pos bar-pos :bars bars))
 
 (defmethod print-object ((obj measure) stream)
   (with-slots (min-dist coeff seg-pos bar-pos) obj
@@ -487,9 +486,11 @@
 
 (defmethod measures :before ((segment rsegment))
   (when (modified-p segment)
-    (compute-measures segment (spacing-style (buffer-cost-method (buffer segment))))
-    ;; avoid an infinite computation by using slot-value here
-    (mapc #'compute-timelines (slot-value segment 'measures))
+    (let ((spacing-style (spacing-style (buffer-cost-method (buffer segment)))))
+      (compute-measures segment)
+      ;; avoid an infinite computation by using slot-value here
+      (loop for measure in (slot-value segment 'measures)
+	    do (compute-timelines measure spacing-style)))
     (setf (modified-p segment) nil)))
 
 (defmethod nb-measures ((segment rsegment))
@@ -500,60 +501,7 @@
 (defmethod measureno ((segment rsegment) position)
   (elt (measures segment) position))
 
-;;; Convert a list of durations to a list of start times
-;;; by accumulating values starting at zero.
-;;; The list returned has the same length as the one passed 
-;;; as argument, which we obtain by treating the first element
-;;; as the initial start time.  Doing so makes it possible to compute
-;;; the inverse of this transformation.
-(defun rel-abs (list)
-  (loop with acc = 0
-	for elem in list
-	collect (incf acc elem)))
-
-;;; Convert a list of start times to a list of durations
-;;; by computing the differences beteen adjacent elements.
-;;; The list returned has the same length as the one passed
-;;; as argument, which we obtain by including the first 
-;;; element unchanged.  Doing so makes it possible to compute
-;;; the inverse of this transformation.
-(defun abs-rel (list)
-  (loop with prev = 0
-	for elem in list
-	collect (- elem prev)
-	do (setf prev elem)))
-
-;;; Compute the start times of the elements of the bar.  The last
-;;; element is the "start time" of the end of the bar.  Currently, we
-;;; do not handle zero-duration bars very well.  For that reason, when
-;;; there are no elements in the bar, we return the list of a single
-;;; number 1.  This is clearly wrong, so we need to figure out a
-;;; better way of doing that.
-(defun start-times (bar)
-  (let ((elements (elements bar)))
-    (if elements
-	(rel-abs (mapcar #'duration elements))
-	'(0))))
-
-;;; Combine the list of start times of two bars into a single list
-;;; of start times.  If any of the list contains duplicate start 
-;;; times, then the resulting list will contain as many duplicates
-;;; as the maximum number of duplicates of the two lists.
-;;; Treat the last start time (which is really the duration of the
-;;; bar) specially and only keep the largest one
-(defun combine-bars (bar1 bar2)
-  (labels ((combine (l1 l2)
-	      (cond ((null l1) l2)
-		    ((null l2) l1)
-		    ((< (car l1) (car l2))
-		     (cons (car l1) (combine (cdr l1) l2)))
-		    ((< (car l2) (car l1))
-		     (cons (car l2) (combine (cdr l2) l1)))
-		    (t (cons (car l1) (combine (cdr l1) (cdr l2)))))))
-    (append (combine (butlast bar1) (butlast bar2))
-	    (list (max (car (last bar1)) (car (last bar2)))))))
-    
-;;; given a group of notes (i.e. a list of notes, all displayed on the
+;;; Given a group of notes (i.e. a list of notes, all displayed on the
 ;;; same staff, compute their final x offsets.  This is a question of
 ;;; determining whether the note goes to the right or to the left of
 ;;; the stem.  The head-note of the stem goes to the left of an
@@ -667,24 +615,15 @@
 ;;; sequence of bars within that segment.  The last two items are used
 ;;; to indicate the position of the measure in the sequence of all
 ;;; measures of the buffer.
-(defun compute-measure (bars spacing-style seg-pos bar-pos)
+(defun compute-measure (bars seg-pos bar-pos)
   (score-pane:with-staff-size 6
     (loop for bar in bars
 	  do (when (modified-p bar)
 	       (compute-bar-parameters bar)
 	       (setf (modified-p bar) nil)))
-    (let* ((start-times (reduce #'combine-bars
-				(mapcar #'start-times bars)))
-	   (durations (abs-rel start-times))
-	   ;; elements with zero duration do not intervene
-	   ;; in the computation of the min-dist.
-	   ;; Choose a large default value for min-dist.
-	   (min-dist (reduce #'min (remove 0 durations) :initial-value 10000))
-	   (coeff (loop for duration in durations
-			sum (expt duration spacing-style))))
-      (make-measure min-dist coeff seg-pos bar-pos bars))))
+    (make-measure seg-pos bar-pos bars)))
 
-(defun compute-timelines (measure)
+(defun compute-timelines (measure spacing-style)
   (let ((timelines (timelines measure)))
     (flet ((compute-bar-timelines (bar)
 	      (loop with timeline-index = 0
@@ -701,8 +640,10 @@
 						(not (zerop (duration (car (elements timeline))))))))
 			     do (incf timeline-index))
 		    do (when (or (= timeline-index (flexichain:nb-elements timelines))
-				 (> (start-time (flexichain:element* timelines timeline-index))
-				    start-time))
+				 (let ((timeline (flexichain:element* timelines timeline-index)))
+				   (or (> (start-time timeline) start-time)
+				       (and (zerop (duration element))
+					    (not (zerop (duration (car (elements timeline)))))))))
 			 (let ((timeline (make-instance 'timeline
 							:start-time start-time)))
 			   (flexichain:insert* timelines timeline-index timeline)))
@@ -720,11 +661,21 @@
     (unless (zerop (flexichain:nb-elements timelines))
       (let ((measure-duration (reduce #'max (measure-bars measure) :key #'duration))
 	    (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
-	(setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))))
+	(setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))
+    ;; set the coefficient and the min-dist of the measure
+    (loop with min-dist = 10000 
+	  for timeline-index from 0 below (flexichain:nb-elements timelines)
+	  for duration = (duration (flexichain:element* timelines timeline-index))
+	  sum (expt duration spacing-style) into coeff
+	  do (when (plusp duration) (setf min-dist (min min-dist duration)))
+	  ;; timelines with zero duration do not intervene in the calculation
+	  ;; of the min-dist
+	  finally (setf (measure-coeff measure) coeff
+			(measure-min-dist measure) min-dist))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.
-(defun compute-measures (segment spacing-style)
+(defun compute-measures (segment)
   (setf (slot-value segment 'measures)
 	(loop for all-bars on (mapcar (lambda (layer) (bars (body layer)))
 				      (layers segment))
@@ -732,7 +683,7 @@
 	      as bar-pos from 0 by 1
 	      while (notevery #'null all-bars)
 	      collect (compute-measure
-		       (remove nil (mapcar #'car all-bars)) spacing-style
+		       (remove nil (mapcar #'car all-bars))
 		       (number segment) bar-pos))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
