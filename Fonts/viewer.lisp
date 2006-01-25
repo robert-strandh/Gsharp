@@ -119,9 +119,6 @@
 				     (t +black+))))))))
 
 (defun viewer ()
-  (loop for port in climi::*all-ports*
-      do (destroy-port port))
-  (setq climi::*all-ports* nil)
   (let ((frame (make-application-frame 'gf-viewer)))
     (run-frame-top-level frame)))  
 
