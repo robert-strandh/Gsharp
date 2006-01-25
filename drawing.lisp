@@ -98,7 +98,7 @@
 		 for i from 0 below (flexichain:nb-elements timelines)
 		 for timeline = (flexichain:element* timelines i)
 		 do (setf (elasticity timeline)
-			  (expt (duration timeline) (spacing-style method))))))
+			  (max (expt (duration timeline) (spacing-style method)) 0.0001)))))
 
 ;;; FIXME: there should be an :around method that adds the value
 ;;; return by the main method to the explicit horizontal offset that

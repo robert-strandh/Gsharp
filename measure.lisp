@@ -649,7 +649,8 @@
 			   (flexichain:insert* timelines timeline-index timeline)))
 		    do (let ((timeline (flexichain:element* timelines timeline-index)))
 			 (push element (elements timeline))
-			 (setf (timeline element) timeline)))))
+			 (setf (timeline element) timeline)
+			 (incf timeline-index)))))
       (loop for bar in (measure-bars measure)
 	    do (compute-bar-timelines bar)))
     ;; compute the duration of each timeline except the last one
