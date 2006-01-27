@@ -103,29 +103,60 @@ had the time to figure out how it works yet.
 
 We have not worked on the installation procedure at all, and in fact,
 we have not decided exactly in what form the releases will be made
-available to the public.  
+available to the public.  For that reason, these instructions may
+change in the future. 
+
+{\gs} uses a number of programs and libraries that you need to install
+before installing {\gs} itself.
+
+
+Most importantly, you will need an implementation of {\commonlisp}.
+We recommend SBCL on GNU/Linux x86 and OpenMCL on MacOS PPC.
+
+To install the libraries and {\gs} itself, you will need ASDF, which
+comes with some {\commonlisp} implementations.  If not, you will have
+to install it first. 
+
+You will need a copy of the Flexichain library which you can find on
+common-lisp.net.  
+
+You will need to download a copy of McCLIM, the free implementation of
+the Common Lisp Interface Manager.  Again, you will find it on
+common-lisp.net.
+
+{\gs} uses a library on top of McCLIM called ESA (for Emacs-Style
+Application).  For now, the ESA library is distributed with {\gs}, but
+that might change in the future, in which case you will need a copy of
+it as well, again from common-lisp.net.
+
+If you have downloaded a \emph{tar}-file of {\gs}, you need to untar
+it (using something like \texttt{tar xvf gsharp.tar}) in some
+directory.  If you have downloaded {\gs} from a CVS repository, you
+already have the directory structure required.
 
 First make the fonts.  In the \texttt{Fonts} subdirectory, type
 \texttt{make}. 
 
-For now, you have to use a Lisp system that runs McCLIM comfortably
-(SBCL, CMUCL, OpenMCL) with a core image that contains {\clim} and
-ASDF.  Start {\lisp}, load the file \texttt{gsharp.asd} into
-the running {\lisp} image and then type:
+To compile and load {\gs}, you have two possibilities (as with most of
+the libraries): either load the \texttt{gsharp.asd} file manually, or
+put the directory in which {\gs} resides in the
+\texttt{asdf:*central-registry*} list of software that can compiled
+and installed using ASDF.
+
+Next, follow the instructions for installing ASDF, Flexichain, and
+McCLIM.  When you have all these libraries in a running {\lisp} image,
+type: 
 
 \texttt{(asdf:operate 'asdf:load-op :gsharp)}
 
-which will compile and load all the files. To start {\gs} type 
+which will compile and load all the files of {\gs}. To start {\gs} type 
 
 \texttt{(gsharp::gsharp)}
 
-Instead of loading the ASDF file manually, you could put it in a
-directory that is in the list \texttt{asdf:*central-registry*}. 
-
 \section{The different editing panes}
 
-You should be seeing a main window (known as a \emph{frame}) with a
-menu bar and four sub-windows, known as \emph{panes}.  
+When you start {\gs}, you should see a number of windows (called
+\emph{panes}) that are described briefly in this section.
 
 \subsection{The score pane}
 \label{sec-score-pane}
@@ -139,27 +170,30 @@ operates on a particular staff, you can usually click on a visual
 representation of the staff in the score pane to satisfy the request
 for the staff. 
 
-\subsection{The command pane}
-label{sec-command-pane}
+\subsection{The minibuffer}
+\label{sec-minibuffer}
 
-The pane at the bottom is a {\clim} \emph{command pane}\index{command
-  pane}\index{pane!command|)}.  In it, you can type
-commands that do not have keyboard shortcuts. 
+The pane at the bottom is called the
+\emph{minibuffer}\index{minibuffer}.  In it, you can type
+\emph{extended commands} (invoked by the keystroke M-x) that do not
+have keyboard shortcuts.
 
-The command pane is also where you get prompted for arguments to
-various {\gs} commands.  In those cases, you usually have a choice
-between clicking on a visual representation of the argument you would
-like to supply as mentioned in section \ref{sec-score-pane}, or to
-type some textual representation of it directly at the prompt. 
+The minibuffer is also where you get prompted for arguments to various
+{\gs} commands.  In those cases, you usually have a choice between
+clicking on a visual representation of the argument you would like to
+supply as mentioned in section \ref{sec-score-pane}, typing some
+textual representation of it directly at the prompt, or using the
+right mouse button to get a menu of all possibilities from which you
+can select the one you want. 
 
 When typing some textual representation of some existing object, such
 as the name of a layer or of a staff, you can usually use
 \emph{completion}\index{completion}, which means that you can type a
 unique prefix of the text and then use the \kbd{TAB} key to get {\gs}
-to fill in the rest.  Using completion after having issued a command
-in the command pane is usually faster (provided you have some idea of
-what the textual representation is) than to grab the mouse and click
-on the object in the score pane. 
+to fill in the rest.  Using completion after having been prompted for
+some argument is usually faster (provided you have some idea of what
+the textual representation is) than to grab the mouse and click on the
+object in the score pane.
 
 \subsection{Other panes}
 
@@ -193,7 +227,7 @@ usually near the yellow line.  This is the {\gs}
 The cursor is either before all the elements, after all the elements,
 or between two element.  Newly created elements will be inserted
 immediately to the left of the cursor (which will make the newly
-inserted element the \emph{current} one. 
+inserted element the \emph{current} one). 
 
 The yellow line indicates the staff to which newly inserted elements
 will belong.  The red lines indicate the interval of pitches that will
@@ -240,7 +274,7 @@ element and start over.
 \section{Adding a rest}
 
 A rest is another kind of element.  You enter a rest by typing \kbd{,}
-\command{Insert Rest}.  Conceptually, every rest has a notehead as
+(\command{Insert Rest}).  Conceptually, every rest has a notehead as
 well as rbeams and lbeams in addition to augmentation dots.  These are
 used to determine the duration and what kind of rest to display.
 
@@ -251,7 +285,7 @@ Element}), i.e. hold the \kbd{control} key down while hitting the
 \kbd{h} key.
 
 It is also possible to delete the next element after the cursor by
-typing \kbd{Control-d} (\command{Delete Element}. 
+typing \kbd{Control-d} (\command{Delete Element}). 
 
 In general, we speak about \emph{erasing}\index{erasing} when the
 material removed is to the left of the cursor, and
@@ -422,11 +456,11 @@ material displayed on it, such as ``Trumpets'' or ``Piano right
 hand'', etc. 
 
 You can give a different name to an existing staff by issuing the
-command \command{Rename Staff}, either from a menu or form the command
-pane.  This command prompts for a staff to rename and a new name for
-the staff.  At the prompt for the staff to rename, you have a choice
-of clicking on a staff on display as indicated in section
-\ref{sec-score-pane}, or typing its name in the command pane possibly
+command \command{Rename Staff}, either from a menu or form the
+minibuffer.  This command prompts for a staff to rename and a new name
+for the staff.  At the prompt for the staff to rename, you have a
+choice of clicking on a staff on display as indicated in section
+\ref{sec-score-pane}, or typing its name in the minibuffer possibly
 with \emph{completion}\index{completion} as indicated in section
 \ref{sec-score-pane}.  Renaming a staff is such an infrequent
 operation that there is no keyboard shortcut for it.
@@ -439,7 +473,7 @@ monophonic instrument, you probably want to be able to add new staves
 to the score. Because adding new staves are done fairly infrequently,
 there is no keyboard shortcut for doing it.  Instead, you have to
 issue one of the commands for doing this either by typing it (with
-completion, see \ref{sec-command-pane}) in the command pane or using
+completion, see \ref{sec-minibuffer}) in the minibuffer or using
 the mouse to select one from a menu.  
 
 {\gs} imposes an \emph{order} on the staves of a score.  This order is
@@ -455,18 +489,18 @@ be prompted for an existing staff after which (in the case of
 \command{Insert Staff Before} you would like to insert the new staff.
 As usual, you can either click on a visual representation of the staff
 in the score pane (see section \ref{sec-score-pane}) or type its name
-in the command pane with completion (see section
-\ref{sec-command-pane}). 
+in the minibuffer with completion (see section
+\ref{sec-minibuffer}). 
 
 Next, you are prompted for the type of the staff to create.  There are
 currently two types of staves, namely `fiveline' and `lyrics'.  At the
 moment, the only way to answer this question is to type it in the
-command pane (again, completion is available). 
+minibuffer (again, completion is available). 
 
 If you requested a five-line staff to be created, you will also be
 prompted for the type of clef you would like the staff to have.  There
 are three possible choices `treble', `bass', and `c', which you have
-to type in the command pane at the prompt.  You will also be prompted
+to type in the minibuffer at the prompt.  You will also be prompted
 for a `line' number on which the clef is to be placed.  Recall that
 the lines are numbered with even numbers starting with `0' for the
 bottom line of the staff.  The normal place for a treble clef is thus
@@ -479,14 +513,14 @@ more information to supply.
 \section{Deleting a staff}
 
 To delete an existing staff, you issue the \command{Delete Staff}
-command, either from a menu or in the command pane.  Deleting an
+command, either from a menu or in the minibuffer.  Deleting an
 existing staff is such an infrequent operation that no keyboard
 shortcut is provided. 
 
 The command prompts for a staff to be deleted.  As usual, you can
 either satisfy the request by clicking on the visual representation of
 a staff in the score pane (see section \ref{sec-score-pane}) or typing
-a response in the command pane (see section \ref{sec-command-pane}). 
+a response in the minibuffer (see section \ref{sec-minibuffer}). 
 
 \section{Changing the key signature}
 
@@ -521,13 +555,13 @@ or ``Solo Guitar''.
 \section{Renaming an existing layer}
 
 You can rename any layer by issuing the command \command{Rename
-Layer}, either in the command pane (see section
-\ref{sec-command-pane}) or from a menu.
+Layer}, either in the minibuffer (see section
+\ref{sec-minibuffer}) or from a menu.
 
 You will first be prompted for a layer to rename.  Currently the only
 way to satisfy this request is by typing the name of the layer to the
-prompt in the command pane. Completion is possible as usual (see
-section \ref{sec-command-pane}). 
+prompt in the minibuffer. Completion is possible as usual (see
+section \ref{sec-minibuffer}). 
  
 Next, you will be prompted for a new name of the layer.  To satisfy
 the request, you type any string at the prompts.  Notice that names
@@ -541,12 +575,12 @@ which receives all music material typed in the score pane, such as
 notes, rests, etc. 
 
 To change the current layer, issue the \command{Select Layer} either
-from a menu or in the command pane.  
+from a menu or in the minibuffer.  
 
 You will be prompted for a layer to be used as the current one.  At
 the moment, the only way to satisfy this request is to type its unique
-name (with completion, see \ref{sec-command-pane}) at the prompt in
-the command pane. 
+name (with completion, see \ref{sec-minibuffer}) at the prompt in
+the minibuffer. 
 
 \section{Adding a new layer}
 
@@ -565,7 +599,7 @@ the initial staff is a lyrics staff, a lyrics layer is created.
 
 \section{Deleting a layer}
 
-To delete the current layer, you have to use the command pane (since
+To delete the current layer, you have to use the minibuffer (since
 this is an operation that is presumably rare).  The command to use is
 \command{Delete Layer}. You will be prompted for a layer to delete. 
 

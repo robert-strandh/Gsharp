@@ -11,27 +11,34 @@ on the part of the user.  There is no special button to click or
 command to type in order for the final layout to appear; the final
 layout is always the one that is presented. 
 
-One of the main goal of {\gs} is to provide a program that can produce
-high-quality scores.  For that reason, we have put in some effort to
-respect at least one set of rules of musical typography (or
-\emph{engraving}\index{engraving}).  But music engraving is hard and
-littered with very complex rules that do not necessarily cover all
-cases.  For that reason, {\gs} also provides \unimp{We ultimately
-  intend to provide a large spectrum of ways for the user to tweak the
-  layout decisions, but for now, only automatic layout exists.} a
-number of ways in which the user can help the layout engine make the
-right decision. 
+One of the main goals of {\gs} is to provide a program that can
+produce high-quality scores.  For that reason, we have put in some
+effort to respect at least one set\footnote{The rules defined in Ted
+Ross' book: Teach yourself music engraving and printing} of rules of
+musical typography (or \emph{engraving}\index{engraving}).  But music
+engraving is hard and littered with very complex rules that do not
+necessarily cover all cases.  For that reason, {\gs} also provides
+\footnote{Only some of these features are currently implemented.  We
+ultimately intend to provide a large spectrum of ways for the user to
+tweak the layout decisions, but for now, only automatic layout
+exists.} a number of ways in which the user can help the layout engine
+make the right decision.
 
-We wanted {\gs} to be extensible at a number of level.  The ordinary
+We wanted {\gs} to be extensible at a number of levels.  The ordinary
 end-user should be able to add and redefine keystrokes, to create
 macros, and to alter global parameters that affect the end result.
 The more advanced end-user should be able to write more complex
-extensions.  Usually, programs that permit this use a {\gs} scripting
-language, which is usually different from the programming language
+extensions.  Usually, programs that permit this use a \emph{scripting
+language}, which is usually different from the programming language
 that was used to implement the basic functionality of the program.
 {\gs} has a different approach.  The entire program is written in
-{\commonlisp} which both is as fast as a lower-level language and provides the
-ability to dynamically replace any part of the program.  
+{\commonlisp} which both is as fast as a lower-level language and
+provides the ability to dynamically replace any part of the program.
+Advanced users and programmers can use {\commonlisp} to extend {\gs},
+to modify the standard behavior of {\gs}, and even to replace large
+chunks of {\gs} to suits specific needs.  We intend to provide
+documentation that explains how to accomplish such adaptations at
+various degrees of complexity.
 
 Since {\gs} makes extensive use of graphics and related functionality,
 we needed a good library for providing such functionality.  While the
@@ -39,7 +46,7 @@ we needed a good library for providing such functionality.  While the
 semi-standard library available for many years and which only recently
 exists in a freely distributable version, namely {\clim}\index{\clim},
 which stands for the Common Lisp Interface Manager.  Many of the basic
-functions of {\gs} are due to {\clim}, and the advances {\gs} user can
+functions of {\gs} are due to {\clim}, and the advanced {\gs} user can
 take advantage of this fact in order to improve the program. 
 
 We deliberately did not try commercial score editors so as not to be
@@ -108,6 +115,14 @@ general use.
 
 There is no upper bound on the minor release number.
 
+Aside from releases, the CVS repository is publicly available at
+common-lisp.net, and recent snapshots can be downloaded by anyone.  
+This is the preferable method for tracking {\gs} progress by users who
+want the latest improvements and by contributors to the {\gs} code.
+Users who depend on a stable {\gs} on a daily basis \footnote{which we
+  highly recommend against as of now (early 2006)} should not use this
+method to get a recent version of {\gs}.
+
 % ------------------------------------------
 \section{Contributions}
 
@@ -125,7 +140,11 @@ with any language, it is possible to write poor code with {\commonlisp}.  It
 is our goal to try to keep the code at a reasonably good level.  For
 that reason, contributors are encouraged to put some effort into the
 quality of the code, to make sure it compiles without warnings (as
-much as possible) and to make sure it works.
+much as possible) and to make sure it works.  We encourage the use of
+documentation strings with any externally-available functionality and
+the use of comments whenever needed to explain some otherwise
+hard-to-understand code. \footnote{we prefer that the code not be hard
+  to understand}
 
 We also accept contributions to this document.  We intend to use some
 kind of free license for this document, probably the GNU Free
@@ -138,13 +157,13 @@ This document is organized in several \emph{parts}.
 
 The \emph{getting started} part is intended for users who look at
 {\gs} for the first time, and who want to know how to use the most
-fundamental aspects of it, in particular the basic architecture of the
-program.  It is not intended to be a complete user's guide, but
-instead structured around a few typical use cases encountered by
-users. 
+fundamental aspects of it, in particular the basic externally-visible
+architecture of the program.  It is not intended to be a complete
+user's guide, but instead structured around a few typical use cases
+encountered by users.
 
 The \emph{reference manual} is the part that is most useful to the
-user that has graduated beyond the first impression, and who want to
+user that has graduated beyond the first impression, and who wants to
 know more about the features of {\gs}.  The structure of this part is
 not meant to be pedagogical, but instead a complete enumeration of the
 features of {\gs} that a moderately experienced users needs to know. 
