@@ -1,29 +1,39 @@
 (in-package :gsharp-buffer)
 
 (defparameter *gsharp-readtable-v3* (copy-readtable))
+(defparameter *gsharp-readtable-v4* (copy-readtable))
 
 (make-dispatch-macro-character #\[ nil *gsharp-readtable-v3*)
 
-(defun skip-until-close-bracket (stream)
-  (loop until (eql (read-char stream) #\])))
+(defun read-gsharp-object-v4 (stream char)
+  (declare (ignore char))
+  (apply #'make-instance (read-delimited-list #\] stream t)))
+
+(set-macro-character #\[ #'read-gsharp-object-v4 nil *gsharp-readtable-v4*)
 
 (defclass gsharp-object () ())
 
-(defmethod print-object ((obj gsharp-object) stream)
-  nil)
+(defgeneric print-gsharp-object (obj stream))
 
-(defmethod print-object :around ((obj gsharp-object) stream)
-  (format stream "[~a " (slot-value obj 'print-character))
-  (call-next-method)
-  (format stream "] "))
+(defmethod print-gsharp-object ((obj gsharp-object) stream)
+  (format stream "~s ~2i" (class-name (class-of obj))))
+
+;;; (defmethod print-object :around ((obj gsharp-object) stream)
+;;;  (format stream "[~a " (slot-value obj 'print-character))
+;;;   (call-next-method)
+;;;   (format stream "] "))
+
+(defmethod print-object ((obj gsharp-object) stream)
+  (pprint-logical-block (stream nil :prefix "[" :suffix "]")
+    (print-gsharp-object obj stream)))
 
 (defgeneric name (obj))
 
 (defclass name-mixin ()
   ((name :initarg :name :accessor name)))
 
-(defmethod print-object :after ((obj name-mixin) stream)
-  (format stream ":name ~W " (name obj)))
+(defmethod print-gsharp-object :after ((obj name-mixin) stream)
+  (format stream "~_:name ~W " (name obj)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -50,8 +60,8 @@
 	      (:percussion 3))))
   (make-instance 'clef :name name :lineno lineno))
 
-(defmethod print-object :after ((c clef) stream)
-  (format stream ":lineno ~W " (lineno c)))
+(defmethod print-gsharp-object :after ((c clef) stream)
+  (format stream "~_:lineno ~W " (lineno c)))
 
 (defun read-clef-v3 (stream char n)
   (declare (ignore char n))
@@ -83,8 +93,8 @@
   (declare (ignore name clef keysig))
   (apply #'make-instance 'fiveline-staff args))
 
-(defmethod print-object :after ((s fiveline-staff) stream)
-  (format stream ":clef ~W :keysig ~W " (clef s) (keysig s)))
+(defmethod print-gsharp-object :after ((s fiveline-staff) stream)
+  (format stream "~_:clef ~W ~_:keysig ~W " (clef s) (keysig s)))
 
 (defun read-fiveline-staff-v3 (stream char n)
   (declare (ignore char n))
@@ -179,10 +189,10 @@
 	   (ignore head accidentals dots))
   (apply #'make-instance 'note :pitch pitch :staff staff args))
 
-(defmethod print-object :after ((n note) stream)
+(defmethod print-gsharp-object :after ((n note) stream)
   (with-slots (pitch staff head accidentals dots) n
     (format stream
-	    ":pitch ~W :staff ~W :head ~W :accidentals ~W :dots ~W "
+	    "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W "
 	    pitch staff head accidentals dots)))
 
 (defun read-note-v3 (stream char n)
@@ -237,10 +247,10 @@
    (dots :initform 0 :initarg :dots :accessor dots)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)))
    
-(defmethod print-object :after ((e element) stream)
+(defmethod print-gsharp-object :after ((e element) stream)
   (with-slots (notehead rbeams lbeams dots xoffset) e
     (format stream
-	    ":notehead ~W :rbeams ~W :lbeams ~W :dots ~W :xoffset ~W "
+	    "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W ~_:xoffset ~W "
 	    notehead rbeams lbeams dots xoffset)))
 
 (defmethod undotted-duration ((element element))
@@ -307,9 +317,9 @@
 	   (ignore notehead lbeams rbeams dots xoffset notes stem-direction))
   (apply #'make-instance 'cluster args))
 
-(defmethod print-object :after ((c cluster) stream)
+(defmethod print-gsharp-object :after ((c cluster) stream)
   (with-slots (stem-direction notes) c
-    (format stream ":stem-direction ~W :notes ~W " stem-direction notes)))
+    (format stream "~_:stem-direction ~W ~_:notes ~W " stem-direction notes)))
 
 (defun read-cluster-v3 (stream char n)
   (declare (ignore char n))
@@ -393,9 +403,9 @@
   (apply #'make-instance 'rest
 	 :staff staff args))
 
-(defmethod print-object :after ((s rest) stream)
+(defmethod print-gsharp-object :after ((s rest) stream)
   (with-slots (staff staff-pos) s
-    (format stream ":staff ~W :staff-pos ~W " staff staff-pos)))
+    (format stream "~_:staff ~W ~_:staff-pos ~W " staff staff-pos)))
 
 (defun read-rest-v3 (stream char n)
   (declare (ignore char n))
@@ -437,9 +447,9 @@
   (apply #'make-instance 'lyrics-element
 	 :staff staff args))
 
-(defmethod print-object :after ((elem lyrics-element) stream)
+(defmethod print-gsharp-object :after ((elem lyrics-element) stream)
   (with-slots (staff text) elem
-     (format stream ":staff ~W :text ~W " staff text)))
+     (format stream "~_:staff ~W ~_:text ~W " staff text)))
 
 (defun read-lyrics-element-v3 (stream char n)
   (declare (ignore char n))
@@ -492,8 +502,8 @@
   (loop for element in (elements b)
 	do (setf (bar element) b)))
 
-(defmethod print-object :after ((b bar) stream)
-  (format stream ":elements ~W " (elements b)))
+(defmethod print-gsharp-object :after ((b bar) stream)
+  (format stream "~_:elements ~W " (elements b)))
 
 ;;; The duration of a bar is simply the sum of durations
 ;;; of its elements.  We might want to improve on the 
@@ -615,8 +625,8 @@
 	   (ignore bars))
   (apply #'make-instance 'slice args))
 
-(defmethod print-object :after ((s slice) stream)
-  (format stream ":bars ~W " (bars s)))
+(defmethod print-gsharp-object :after ((s slice) stream)
+  (format stream "~_:bars ~W " (bars s)))
 
 (defun read-slice-v3 (stream char n)
   (declare (ignore char n))
@@ -721,9 +731,9 @@
 	(layer (body l)) l
 	(layer (tail l)) l))
 
-(defmethod print-object :after ((l layer) stream)
+(defmethod print-gsharp-object :after ((l layer) stream)
   (with-slots (head body tail staves) l
-    (format stream ":staves ~W :head ~W :body ~W :tail ~W "
+    (format stream "~_:staves ~W ~_:head ~W ~_:body ~W ~_:tail ~W "
 	    staves head body tail)))
 
 (defgeneric make-layer-for-staff (staff &rest args &key staves head body tail &allow-other-keys))
@@ -852,8 +862,8 @@
     (loop for layer in layers
 	  do (setf (segment layer) s))))
 
-(defmethod print-object :after ((s segment) stream)
-  (format stream ":layers ~W " (layers s)))
+(defmethod print-gsharp-object :after ((s segment) stream)
+  (format stream "~_:layers ~W " (layers s)))
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))
@@ -970,10 +980,11 @@
     (loop for segment in segments
 	  do (setf (buffer segment) b))))
 
-(defmethod print-object :after ((b buffer) stream)
+(defmethod print-gsharp-object :after ((b buffer) stream)
   (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
-    (format stream ":staves ~W :segments ~W :min-width ~W :spacing-style ~W :right-edge ~W :left-offset ~W :left-margin ~W "
-	    staves segments min-width spacing-style right-edge left-offset left-margin)))
+    (format stream 
+	    "~_:min-width ~W ~_:spacing-style ~W ~_:right-edge ~W ~_:left-offset ~W ~_:left-margin ~W ~_:staves ~W ~_:segments ~W "
+	    min-width spacing-style right-edge left-offset left-margin staves segments )))
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))
@@ -1095,7 +1106,8 @@
      (format stream "Unknown file version"))))
 
 (defparameter *readtables*
-  `(("G#V3" . ,*gsharp-readtable-v3*)))
+  `(("G#V3" . ,*gsharp-readtable-v3*)
+    ("G#V4" . ,*gsharp-readtable-v4*)))
 
 (defun read-everything (filename)
   (assert (probe-file filename) () 'file-does-not-exist)
@@ -1108,8 +1120,10 @@
 	(read stream)))))
 
 (defun save-buffer-to-stream (buffer stream)
-  (let ((*print-circle* t))
-    (format stream "G#V3~%")
-    (print buffer stream)
+  (let ((*print-circle* t)
+	(*package* (find-package :keyword)))
+    ;;    (format stream "G#V3~%")
+    (format stream "G#V4~%")
+    (pprint buffer stream)
     (terpri stream)
     (finish-output stream)))
