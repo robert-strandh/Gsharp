@@ -298,7 +298,7 @@ right of the center of its timeline"))
 				 (* force (elasticity timeline))))
         do (loop for element in (elements timeline)
 		 do (setf (final-absolute-element-xoffset element)
-			  (+ xx (score-pane:staff-step (xoffset element))))))
+			  (round (+ xx (score-pane:staff-step (xoffset element)))))))
   (loop for bar in (measure-bars measure)
 	do (compute-bar-coordinates bar x y (size-at-force (elasticity-function measure) force))))
 
