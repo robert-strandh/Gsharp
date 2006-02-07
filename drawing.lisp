@@ -297,7 +297,8 @@ right of the center of its timeline"))
                  then (+ xx (max (smallest-gap timeline)
 				 (* force (elasticity timeline))))
         do (loop for element in (elements timeline)
-		 do (setf (final-absolute-element-xoffset element) xx)))
+		 do (setf (final-absolute-element-xoffset element)
+			  (+ xx (score-pane:staff-step (xoffset element))))))
   (loop for bar in (measure-bars measure)
 	do (compute-bar-coordinates bar x y (size-at-force (elasticity-function measure) force))))
 
@@ -456,16 +457,6 @@ right of the center of its timeline"))
 	  (if (eq (final-stem-direction element) :up)
 	      (+ top-note-pos length)
 	      (- bot-note-pos length)))))
-
-(defun compute-element-x-positions (bar x time-alist)
-  (let ((start-time 0))
-    (mapc (lambda (element)
-	    (setf (final-absolute-element-xoffset element)
-		  (round (+ x
-			    (score-pane:staff-step (xoffset element))
-			    (cdr (assoc start-time time-alist)))))
-	    (incf start-time (duration element)))
-	  (elements bar))))
 
 ;;; the dominating note among a bunch of notes is the 
 ;;; one that is closest to the beam, i.e. the one 
