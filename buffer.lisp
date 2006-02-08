@@ -276,6 +276,65 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Key signature
+
+(defgeneric alterations (key-signature)
+  (:documentation "return the alterations in the form of a 
+7-element array where each element is either :natural,
+:sharp, or :flat according to how each staff position 
+should be altered"))
+
+(defgeneric more-sharps (key-signature &optional n)
+  (:documentation "make the key signature N alterations
+sharper by removing some flats and/or adding some sharps"))
+
+(defgeneric more-flats (key-signature &optional n)
+  (:documentation "make the key signature N alterations
+flatter by removing some sharps and/or adding some flats"))
+
+(defclass key-signature (melody-element)
+  ((%staff :initarg :staff :reader staff)
+   (%alterations :initform (make-array 7 :initial-element :natural) 
+		 :initarg :alterations :reader alterations)))
+
+(defmethod more-sharps ((sig key-signature) &optional (n 1))
+  (let ((alt (alterations sig)))
+    (loop repeat n
+	  do (cond ((eq (aref alt 3) :flat) (setf (aref alt 3) :natural))
+		   ((eq (aref alt 0) :flat) (setf (aref alt 0) :natural))
+		   ((eq (aref alt 4) :flat) (setf (aref alt 4) :natural))
+		   ((eq (aref alt 1) :flat) (setf (aref alt 1) :natural))
+		   ((eq (aref alt 5) :flat) (setf (aref alt 5) :natural))
+		   ((eq (aref alt 2) :flat) (setf (aref alt 2) :natural))
+		   ((eq (aref alt 6) :flat) (setf (aref alt 6) :natural))
+		   ((eq (aref alt 3) :natural) (setf (aref alt 3) :sharp))
+		   ((eq (aref alt 0) :natural) (setf (aref alt 0) :sharp))
+		   ((eq (aref alt 4) :natural) (setf (aref alt 4) :sharp))
+		   ((eq (aref alt 1) :natural) (setf (aref alt 1) :sharp))
+		   ((eq (aref alt 5) :natural) (setf (aref alt 5) :sharp))
+		   ((eq (aref alt 2) :natural) (setf (aref alt 2) :sharp))
+		   ((eq (aref alt 6) :natural) (setf (aref alt 6) :sharp))))))
+
+(defmethod more-flats ((sig key-signature) &optional (n 1))
+  (let ((alt (alterations sig)))
+    (loop repeat n
+	  do (cond ((eq (aref alt 6) :sharp) (setf (aref alt 6) :natural))
+		   ((eq (aref alt 2) :sharp) (setf (aref alt 2) :natural))
+		   ((eq (aref alt 5) :sharp) (setf (aref alt 5) :natural))
+		   ((eq (aref alt 1) :sharp) (setf (aref alt 1) :natural))
+		   ((eq (aref alt 4) :sharp) (setf (aref alt 4) :natural))
+		   ((eq (aref alt 0) :sharp) (setf (aref alt 0) :natural))
+		   ((eq (aref alt 3) :sharp) (setf (aref alt 3) :natural))
+		   ((eq (aref alt 6) :natural) (setf (aref alt 6) :flat))
+		   ((eq (aref alt 2) :natural) (setf (aref alt 2) :flat))
+		   ((eq (aref alt 5) :natural) (setf (aref alt 5) :flat))
+		   ((eq (aref alt 1) :natural) (setf (aref alt 1) :flat))
+		   ((eq (aref alt 4) :natural) (setf (aref alt 4) :flat))
+		   ((eq (aref alt 0) :natural) (setf (aref alt 0) :flat))
+		   ((eq (aref alt 3) :natural) (setf (aref alt 3) :flat))))))
+									      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Cluster
 
 ;;; Return a list of the notes of the cluster
