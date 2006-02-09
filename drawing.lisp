@@ -47,7 +47,7 @@
       (loop for pitch in '(6 2 5 1 4 0 3)
 	    for line in '(0 3 -1 2 -2 1 -3)
 	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2)
-	    while (eq (aref (keysig staff) pitch) :flat)
+	    while (eq (aref (alterations (keysig staff)) pitch) :flat)
 	    do (score-pane:draw-accidental pane :flat x (+ line yoffset))))
     (let ((yoffset (ecase (name (clef staff))
 		     (:bass (lineno (clef staff)))
@@ -56,7 +56,7 @@
       (loop for pitch in '(3 0 4 1 5 2 6)
 	    for line in '(0 -3 1 -2 -5 -1 -4)
 	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2.5)
-	    while (eq (aref (keysig staff) pitch) :sharp)
+	    while (eq (aref (alterations (keysig staff)) pitch) :sharp)
 	    do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))
   (present staff
 	   `((score-pane:fiveline-staff)
@@ -332,13 +332,13 @@ right of the center of its timeline"))
 				   (loop for staff in staves
 					 maximize
 					 (if (typep staff 'fiveline-staff)
-					     (count :flat (keysig staff))
+					     (count :flat (alterations (keysig staff)))
 					     0)))
 				(* (score-pane:staff-step 2.5)
 				   (loop for staff in staves
 					 maximize
 					 (if (typep staff 'fiveline-staff)
-					     (count :sharp (keysig staff))
+					     (count :sharp (alterations (keysig staff)))
 					     0)))))
 	   (method (let ((old-method (buffer-cost-method buffer)))
 		     (make-measure-cost-method (min-width old-method)

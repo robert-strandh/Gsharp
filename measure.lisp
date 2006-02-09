@@ -8,6 +8,20 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; Key signature
+
+(defmethod more-sharps :after ((sig key-signature) &optional n)
+  (declare (ignore n))
+  (let ((staff (staff sig)))
+    (invalidate-everything-using-staff (buffer staff) staff)))
+
+(defmethod more-flats :after ((sig key-signature) &optional n)
+  (declare (ignore n))
+  (let ((staff (staff sig)))
+    (invalidate-everything-using-staff (buffer staff) staff)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; Staff
 
 (define-added-mixin rstaff () staff
@@ -207,7 +221,7 @@
   (loop for note in group do
 	(setf (final-accidental note)
 	      (if (eq (accidentals note)
-		      (aref (keysig (staff note)) (mod (pitch note) 7)))
+		      (aref (alterations (keysig (staff note))) (mod (pitch note) 7)))
 		  nil
 		  (accidentals note)))))
 

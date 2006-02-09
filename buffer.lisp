@@ -86,9 +86,16 @@
 (defclass fiveline-staff (staff)
   ((print-character :allocation :class :initform #\=)
    (clef :accessor clef :initarg :clef :initform (make-clef :treble))
-   (keysig :accessor keysig :initarg :keysig
-	   :initform (make-array 7 :initial-element :natural))))
+   (%keysig :accessor keysig :initarg :keysig
+	    :initform (make-array 7 :initial-element :natural))))
 	   
+(defmethod initialize-instance :after ((obj fiveline-staff) &rest args)
+  (declare (ignore args))
+  (with-slots (%keysig) obj
+    (when (vectorp %keysig)
+      (setf %keysig
+	    (make-instance 'key-signature :staff obj :alterations %keysig)))))
+
 (defun make-fiveline-staff (&rest args &key name clef keysig)
   (declare (ignore name clef keysig))
   (apply #'make-instance 'fiveline-staff args))
@@ -219,48 +226,63 @@
 ;;; currently does not belong to any bar. 
 (defgeneric bar (element))
 
-;;; Return the notehead of the element.  With setf, set the notehead
-;;; of the element. 
-(defgeneric notehead (element))
-(defgeneric (setf notehead) (notehead element))
-
-;;; Return the number of right beams of the element.  With setf, set
-;;; the number of right beams of the element.
-(defgeneric rbeams (element))
-(defgeneric (setf rbeams) (rbeams element))
-
-;;; Return the number of left beams of the element.  With setf, set
-;;; the number of left beams of the element.
-(defgeneric lbeams (element))
-(defgeneric (setf lbeams) (lbeams element))
-
-;;; Return the number of dots of the element.  With setf, set the
-;;; number of dots of the element. 
-(defgeneric dots (element))
-(defgeneric (setf dots) (dots element))
-
 (defclass element (gsharp-object)
   ((bar :initform nil :initarg :bar :accessor bar)
-   (notehead :initform :whole :initarg :notehead :accessor notehead)
-   (rbeams :initform 0 :initarg :rbeams :accessor rbeams)
-   (lbeams :initform 0 :initarg :lbeams :accessor lbeams)
-   (dots :initform 0 :initarg :dots :accessor dots)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)))
-   
+
 (defmethod print-gsharp-object :after ((e element) stream)
   (with-slots (notehead rbeams lbeams dots xoffset) e
     (format stream
-	    "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W ~_:xoffset ~W "
-	    notehead rbeams lbeams dots xoffset)))
+	    "~_:xoffset ~W " xoffset)))
 
-(defmethod undotted-duration ((element element))
+(defmethod duration ((element element)) 0)
+(defmethod rbeams ((element element)) 0)
+(defmethod lbeams ((element element)) 0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Rhythmic element
+
+;;; Return the notehead of the element.  With setf, set the notehead
+;;; of the element. 
+(defgeneric notehead (rhythmic-element))
+(defgeneric (setf notehead) (notehead rhythmic-element))
+
+;;; Return the number of right beams of the element.  With setf, set
+;;; the number of right beams of the element.
+(defgeneric rbeams (rhythmic-element))
+(defgeneric (setf rbeams) (rbeams rhythmic-element))
+
+;;; Return the number of left beams of the element.  With setf, set
+;;; the number of left beams of the element.
+(defgeneric lbeams (rhythmic-element))
+(defgeneric (setf lbeams) (lbeams rhythmic-element))
+
+;;; Return the number of dots of the element.  With setf, set the
+;;; number of dots of the element. 
+(defgeneric dots (rhythmic-element))
+(defgeneric (setf dots) (dots rhythmic-element))
+
+(defclass rhythmic-element (element)
+  ((notehead :initform :whole :initarg :notehead :accessor notehead)
+   (rbeams :initform 0 :initarg :rbeams :accessor rbeams)
+   (lbeams :initform 0 :initarg :lbeams :accessor lbeams)
+   (dots :initform 0 :initarg :dots :accessor dots)))
+   
+(defmethod print-gsharp-object :after ((e rhythmic-element) stream)
+  (with-slots (notehead rbeams lbeams dots) e
+    (format stream
+	    "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W "
+	    notehead rbeams lbeams dots)))
+
+(defmethod undotted-duration ((element rhythmic-element))
   (ecase (notehead element)
     (:whole 1)
     (:half 1/2)
     (:filled (/ (expt 2 (+ 2 (max (rbeams element)
 				  (lbeams element))))))))
 
-(defmethod duration ((element element))
+(defmethod duration ((element rhythmic-element))
   (let ((duration (undotted-duration element)))
     (do ((dot-duration (/ duration 2) (/ dot-duration 2))
 	 (nb-dots (dots element) (1- nb-dots)))
@@ -272,7 +294,7 @@
 ;;;
 ;;; Melody element
 
-(defclass melody-element (element) ())
+(defclass melody-element (rhythmic-element) ())
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -292,10 +314,20 @@ sharper by removing some flats and/or adding some sharps"))
   (:documentation "make the key signature N alterations
 flatter by removing some sharps and/or adding some flats"))
 
-(defclass key-signature (melody-element)
+(defclass key-signature (element)
   ((%staff :initarg :staff :reader staff)
    (%alterations :initform (make-array 7 :initial-element :natural) 
 		 :initarg :alterations :reader alterations)))
+
+(defun make-key-signature (staff &rest args &key alterations)
+  (declare (type (or null (simple-vector 7)) alterations)
+	   (ignore alterations))
+  (apply #'make-instance 'key-signature :staff staff args))
+
+(defmethod print-gsharp-object :after ((k key-signature) stream)
+  (with-slots (%staff %alterations) k
+    (format stream
+	    "~_:staff ~W ~_:alterations ~W " %staff %alterations)))
 
 (defmethod more-sharps ((sig key-signature) &optional (n 1))
   (let ((alt (alterations sig)))
@@ -478,7 +510,7 @@ flatter by removing some sharps and/or adding some flats"))
 ;;;
 ;;; Lyrics element
 
-(defclass lyrics-element (element)
+(defclass lyrics-element (rhythmic-element)
   ((print-character :allocation :class :initform #\A)
    (staff :initarg :staff :reader staff)
    (text :initarg :text

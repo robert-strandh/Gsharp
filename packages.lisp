@@ -100,6 +100,7 @@
 	   #:remove-staff-from-layer
 	   #:stem-direction #:undotted-duration #:duration
 	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
+	   #:key-signature #:alterations #:more-sharps #:more-flats
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
 	   ))
@@ -137,8 +138,7 @@
 	   #:group-notes-by-staff #:final-relative-note-xoffset
 	   #:final-accidental #:final-relative-accidental-xoffset
 	   #:timeline #:timelines #:elasticity
-	   #:smallest-gap #:elasticity-function
-	   #:invalidate-everything-using-staff))
+	   #:smallest-gap #:elasticity-function))
 
 (defpackage :gsharp-postscript
   (:use :clim :clim-lisp)
