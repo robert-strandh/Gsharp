@@ -14,8 +14,17 @@
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))
 (set-key 'com-rotate-notehead 'global-gsharp-table '((#\r :control)))
 (set-key 'com-load-file 'global-gsharp-table '((#\x :control) (#\f :control)))
+(set-key 'com-istate-more-dots 'global-gsharp-table '((#\i) (#\.)))
+(set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
+(set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))
+(set-key 'com-istate-rotate-notehead 'global-gsharp-table '((#\i) (#\h)))
+(set-key 'com-istate-rotate-stem-direction 'global-gsharp-table '((#\i) (#\s)))
+(set-key 'com-istate-fewer-dots 'global-gsharp-table '((#\i) (#\x) (#\.)))
+(set-key 'com-istate-fewer-lbeams 'global-gsharp-table '((#\i) (#\x) (#\[)))
+(set-key 'com-istate-fewer-rbeams 'global-gsharp-table '((#\i) (#\x) (#\])))
 
-;;; melody table
+;;; the melody table contains commands that are specific to the 
+;;; melody layer
 
 (define-command-table melody-table)
 
@@ -30,36 +39,38 @@
 (set-key 'com-insert-note-g 'melody-table '(#\g))
 (set-key 'com-insert-rest 'melody-table '((#\,)))
 (set-key 'com-insert-empty-cluster 'melody-table '((#\Space)))
-(set-key 'com-add-note-c 'melody-table '(#\C))
-(set-key 'com-add-note-d 'melody-table '(#\D))
-(set-key 'com-add-note-e 'melody-table '(#\E))
-(set-key 'com-add-note-f 'melody-table '(#\F))
-(set-key 'com-add-note-g 'melody-table '(#\G))
-(set-key 'com-add-note-a 'melody-table '(#\A))
-(set-key 'com-add-note-b 'melody-table '(#\B))
 (set-key 'com-current-increment 'melody-table '((#\p)))
 (set-key 'com-current-decrement 'melody-table '((#\n)))
-(set-key 'com-istate-more-dots 'melody-table '((#\i) (#\.)))
-(set-key 'com-istate-more-lbeams 'melody-table '((#\i) (#\[)))
-(set-key 'com-istate-more-rbeams 'melody-table '((#\i) (#\])))
-(set-key 'com-istate-rotate-notehead 'melody-table '((#\i) (#\h)))
-(set-key 'com-istate-rotate-stem-direction 'melody-table '((#\i) (#\s)))
-(set-key 'com-istate-fewer-dots 'melody-table '((#\i) (#\x) (#\.)))
-(set-key 'com-istate-fewer-lbeams 'melody-table '((#\i) (#\x) (#\[)))
-(set-key 'com-istate-fewer-rbeams 'melody-table '((#\i) (#\x) (#\])))
 (set-key 'com-fewer-dots 'melody-table '((#\x) (#\.)))
 (set-key 'com-fewer-lbeams 'melody-table '((#\x) (#\[)))
 (set-key 'com-fewer-rbeams 'melody-table '((#\x) (#\])))
 (set-key 'com-erase-element 'melody-table '((#\h :control)))
 (set-key 'com-rotate-notehead 'melody-table '((#\h :meta)))
 (set-key 'com-rotate-stem-direction 'melody-table '((#\s :meta)))
-(set-key 'com-sharper 'melody-table '((#\#)))
-(set-key 'com-flatter 'melody-table '(#\@))
 (set-key 'com-more-sharps 'melody-table '((#\# :meta)))
 (set-key 'com-more-sharps 'melody-table '((#\# :meta :shift)))
 (set-key 'com-more-flats 'melody-table '((#\@ :meta :shift)))
-(set-key 'com-up 'melody-table '((#\u :meta)))
-(set-key 'com-down 'melody-table '((#\d :meta)))
+
+;;; the cluster table contains commands that are specific to 
+;;; clusters
+
+(define-command-table cluster-table)
+
+(set-key 'com-sharper 'cluster-table '((#\#)))
+(set-key 'com-flatter 'cluster-table '(#\@))
+(set-key 'com-add-note-c 'cluster-table '(#\C))
+(set-key 'com-add-note-d 'cluster-table '(#\D))
+(set-key 'com-add-note-e 'cluster-table '(#\E))
+(set-key 'com-add-note-f 'cluster-table '(#\F))
+(set-key 'com-add-note-g 'cluster-table '(#\G))
+(set-key 'com-add-note-a 'cluster-table '(#\A))
+(set-key 'com-add-note-b 'cluster-table '(#\B))
+(set-key 'com-up 'cluster-table '((#\u :meta)))
+(set-key 'com-down 'cluster-table '((#\d :meta)))
+(set-key 'com-tie-note-left 'cluster-table '((#\{)))
+(set-key 'com-tie-note-right 'cluster-table '((#\})))
+(set-key 'com-untie-note-left 'cluster-table '((#\x) (#\{)))
+(set-key 'com-untie-note-right 'cluster-table '((#\x) (#\})))
 
 ;;; lyrics mode table
 

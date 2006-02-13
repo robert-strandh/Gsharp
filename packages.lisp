@@ -103,6 +103,7 @@
 	   #:key-signature #:alterations #:more-sharps #:more-flats
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
+	   #:tie-right #:tie-left
 	   ))
 
 (defpackage :gsharp-numbering

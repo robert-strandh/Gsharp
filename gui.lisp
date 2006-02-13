@@ -14,6 +14,8 @@
 
 (define-command-table total-melody-table
     :inherit-from (melody-table global-gsharp-table gsharp))
+(define-command-table total-cluster-table
+    :inherit-from (cluster-table melody-table global-gsharp-table gsharp))
 (define-command-table total-lyrics-table
     :inherit-from (lyrics-table global-gsharp-table gsharp))
 
@@ -410,12 +412,24 @@
     (declare (ignore string))
     (if success layer (error 'no-such-layer))))
 
+(defgeneric find-applicable-gsharp-command-table (layer element))
+
+(defmethod find-applicable-gsharp-command-table ((layer melody-layer) element)
+  (declare (ignore element))
+  (find-command-table 'total-melody-table))
+
+(defmethod find-applicable-gsharp-command-table ((layer melody-layer) (element cluster))
+  (find-command-table 'total-cluster-table))
+
+(defmethod find-applicable-gsharp-command-table ((layer lyrics-layer) element)
+  (declare (ignore element))
+  (find-command-table 'total-lyrics-table))
+
 (defmethod find-applicable-command-table ((frame gsharp))
-  (let* ((layer (layer (current-cursor))))
-    ;; F-A-C-T-WITH-LAYER?
-    (typecase layer
-      (lyrics-layer (find-command-table 'total-lyrics-table))
-      (melody-layer (find-command-table 'total-melody-table)))))
+  (let* ((cursor (current-cursor))
+	 (layer (layer cursor))
+	 (element (if (beginning-of-bar-p cursor) nil (current-element cursor))))
+    (find-applicable-gsharp-command-table layer element)))
 
 (define-gsharp-command (com-select-layer :name t) ()
   (let ((selected-layer (accept 'layer :prompt "Select layer")))
@@ -824,6 +838,26 @@
                                (cluster-upper-bound cluster note)))
       (unless *current-note*
         (com-erase-element)))))
+
+(define-gsharp-command com-tie-note-left ()
+  (let ((note (cur-note)))
+    (when note
+      (setf (tie-left note) t))))
+
+(define-gsharp-command com-untie-note-left ()
+  (let ((note (cur-note)))
+    (when note
+      (setf (tie-left note) nil))))
+
+(define-gsharp-command com-tie-note-right ()
+  (let ((note (cur-note)))
+    (when note
+      (setf (tie-right note) t))))
+
+(define-gsharp-command com-untie-note-right ()
+  (let ((note (cur-note)))
+    (when note
+      (setf (tie-right note) nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

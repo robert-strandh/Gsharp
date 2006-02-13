@@ -183,7 +183,9 @@
 		:type (member :natural :flat :double-flat
 			      :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
-	 :type (or (integer 0 3) null))))
+	 :type (or (integer 0 3) null))
+   (%tie-right :initform nil :initarg :tie-right :accessor tie-right)
+   (%tie-left :initform nil :initarg :tie-left :accessor tie-left)))
 
 (defun make-note (pitch staff &rest args &key head (accidentals :natural) dots)
   (declare (type (integer 0 127) pitch)
@@ -515,7 +517,9 @@ flatter by removing some sharps and/or adding some flats"))
    (staff :initarg :staff :reader staff)
    (text :initarg :text
 	 :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
-	 :reader text)))
+	 :reader text)
+   (%tie-right :initform nil :initarg :tie-right :accessor tie-right)
+   (%tie-left :initform nil :initarg :tie-left :accessor tie-left)))
 
 (defmethod initialize-instance :after ((elem lyrics-element) &rest args)
   (declare (ignore args))
