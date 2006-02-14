@@ -321,9 +321,37 @@ right of the center of its timeline"))
 	do (compute-measure-coordinates measure x y force)
 	do (incf x (size-at-force (elasticity-function measure) force))))
 
+;;; draw the ties in BARS starting at BAR and at most LENGTH bars
+(defun draw-ties (pane bars bar length)
+  (loop until (eq bar (car bars))
+	do (pop bars))
+  (score-pane:with-vertical-score-position
+      (pane (system-y-position (car bars)))
+    (loop with elements = (mapcan (lambda (bar) (copy-seq (elements bar)))
+				  (loop for bar in bars
+					repeat length
+					collect bar))
+	  for (e1 e2) on elements
+	  do (when (and (typep e1 'cluster) (typep e2 'cluster) (not (null e2)))
+	       (loop for n1 in (notes e1)
+		     do (when (tie-right n1)
+			  (loop for n2 in (notes e2)
+				do (when (and (tie-left n2)
+					      (= (pitch n1) (pitch n2))
+					      (eq (staff n1) (staff n2))
+					      (accidentals n1) (accidentals n2))
+				     (let ((x1 (final-absolute-note-xoffset n1))
+					   (x2 (final-absolute-note-xoffset n2))
+					   (y (- (score-pane:staff-step (note-position n1)))))
+				       (score-pane:with-vertical-score-position (pane (staff-yoffset (staff n1)))
+					 (score-pane:draw-tie pane x1 x2 y)))))))))))
+
 (defun draw-system (pane measures)
   (loop for measure in measures do
-	(draw-measure pane measure)))
+	(draw-measure pane measure))
+  (loop with length = (length measures)
+	for bar in (measure-bars (car measures))
+	do (draw-ties pane (bars (slice bar)) bar length)))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6

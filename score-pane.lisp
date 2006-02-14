@@ -627,6 +627,10 @@
 	      (draw-horizontal-beam pane xx1 y1 xx2)
 	      (draw-sloped-beam medium xx1 y1 xx2 y2))))))
 
+;;; FIXME obviously
+(defun draw-tie (pane x1 x2 y)
+  (draw-rectangle* pane x1 (1- y) x2 (1+ y) :ink +blue+))  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; convenience macros

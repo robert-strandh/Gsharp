@@ -55,6 +55,7 @@
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
 	   #:draw-flags-up #:draw-flags-down
+	   #:draw-tie
 	   #:with-score-pane #:with-vertical-score-position
 	   #:with-staff-size #:with-notehead-right-offsets
 	   #:with-suspended-note-offset
