@@ -198,9 +198,9 @@
 (make-command-table
  'file-command-table
  :errorp nil
- :menu '(("Load" :command com-load-file)
+ :menu '(("Find" :command com-find-file)
 	 ("Save" :command com-save-buffer)
-	 ("Save as" :command com-save-buffer-as)
+	 ("Save as" :command com-write-buffer)
 	 ("Quit" :command com-quit)))
 
 (define-gsharp-command (com-new-buffer :name t) ()
@@ -216,101 +216,6 @@
     (setf (input-state *application-frame*) input-state
 	  (staves (car (layers (car (segments buffer))))) (list staff))))
 
-(define-presentation-type completable-pathname ()
-  :inherit-from 'pathname)
-
-(define-condition file-not-found (gsharp-condition) ()
-  (:report
-   (lambda (condition stream)
-     (declare (ignore condition))
-     (format stream "File nont found"))))
-
-(defun filename-completer (so-far mode)
-  (flet ((remove-trail (s)
-	   (subseq s 0 (let ((pos (position #\/ s :from-end t)))
-			 (if pos (1+ pos) 0)))))
-    (let* ((directory-prefix
-	    (if (and (plusp (length so-far)) (eql (aref so-far 0) #\/))
-		""
-		(namestring #+sbcl (car (directory ".")) #+cmu (ext:default-directory))))
-	   (full-so-far (concatenate 'string directory-prefix so-far))
-	   (pathnames
-	    (loop with length = (length full-so-far)
-		  for path in (directory (concatenate 'string
-						       (remove-trail so-far)
-						      "*.*"))
-		  when (let ((mismatch (mismatch (namestring path) full-so-far)))
-			 (or (null mismatch) (= mismatch length)))
-		    collect path))
-	   (strings (mapcar #'namestring pathnames))
-	   (first-string (car strings))
-	   (length-common-prefix nil)
-	   (completed-string nil)
-	   (full-completed-string nil))
-      (unless (null pathnames)
-	(setf length-common-prefix
-	      (loop with length = (length first-string)
-		    for string in (cdr strings)
-		    do (setf length (min length (or (mismatch string first-string) length)))
-		    finally (return length))))
-      (unless (null pathnames)
-	(setf completed-string
-	      (subseq first-string (length directory-prefix)
-		      (if (null (cdr pathnames)) nil length-common-prefix)))
-	(setf full-completed-string
-	      (concatenate 'string directory-prefix completed-string)))
-      (case mode
-	((:complete-limited :complete-maximal)
-	 (cond ((null pathnames)
-		(values so-far nil nil 0 nil))
-	       ((null (cdr pathnames))
-		(values completed-string t (car pathnames) 1 nil))
-	       (t
-		(values completed-string nil nil (length pathnames) nil))))
-	(:complete
-	 (cond ((null pathnames)
-		(values so-far nil nil 0 nil))
-	       ((null (cdr pathnames))
-		(values completed-string t (car pathnames) 1 nil))
-	       ((find full-completed-string strings :test #'string-equal)
-		(let ((pos (position full-completed-string strings :test #'string-equal)))
-		  (values completed-string
-			  t (elt pathnames pos) (length pathnames) nil)))
-	       (t
-		(values completed-string nil nil (length pathnames) nil))))
-	(:possibilities
-	 (values nil nil nil (length pathnames)
-		 (loop with length = (length directory-prefix)
-		       for name in pathnames
-		       collect (list (subseq (namestring name) length nil)
-				     name))))))))
-
-
-(define-presentation-method accept
-    ((type completable-pathname) stream (view textual-view) &key)
-  (multiple-value-bind (pathname success string)
-      (complete-input stream
-		      #'filename-completer
-		      :partial-completers '(#\Space)
-		      :allow-any-input t)
-    (declare (ignore success))
-    (or pathname string)))
-
-(define-gsharp-command (com-load-file :name t) ()
-  (let* ((stream (frame-standard-input *application-frame*))
-	 (filename (handler-case (accept 'completable-pathname :stream stream
-					 :prompt "File Name")
-		     (simple-parse-error () (error 'file-not-found))))
-	 (buffer (read-everything filename))
-	 (input-state (make-input-state))
-	 (cursor (make-initial-cursor buffer))
-	 (view (make-instance 'orchestra-view 
-			      :buffer buffer
-			      :cursor cursor)))
-    (setf (view (car (windows *application-frame*))) view)
-    (setf (input-state *application-frame*) input-state)
-    (select-layer cursor (car (layers (segment (current-cursor)))))))
-
 (defmethod find-file :around (filepath (application-frame gsharp))
   (declare (ignore filepath))
   (let* ((buffer (call-next-method))
@@ -323,15 +228,6 @@
 	  (input-state *application-frame*) input-state
 	  (filepath buffer) filepath)
     (select-layer cursor (car (layers (segment (current-cursor)))))))
-
-(define-gsharp-command (com-save-buffer-as :name t) ()
-  (let* ((stream (frame-standard-input *application-frame*))
-	 (filename (handler-case (accept 'completable-pathname :stream stream
-					 :prompt "File Name")
-		     (simple-parse-error () (error 'file-not-found)))))
-    (with-open-file (stream filename :direction :output)
-      (save-buffer-to-stream (current-buffer *application-frame*) stream)
-      (message "Saved buffer to ~A~%" filename))))
 
 (define-gsharp-command (com-quit :name t) ()
   (frame-exit *application-frame*))
