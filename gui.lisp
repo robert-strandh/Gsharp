@@ -26,6 +26,38 @@
 (defclass gsharp-pane (score-pane:score-pane)
   ((view :initarg :view :accessor view)))	  
 
+(defvar *info-bg-color* +gray85+)
+(defvar *info-fg-color* +black+)
+
+(defclass gsharp-info-pane (info-pane)
+  ()
+  (:default-initargs
+      :height 20 :max-height 20 :min-height 20
+      :display-function 'display-info
+      :incremental-redisplay t))
+
+(defun display-info (frame pane)
+  (declare (ignore frame))
+  (let* ((master-pane (master-pane pane))
+	 (view (view master-pane))
+	 (buffer (buffer view)))
+    (princ "   " pane)
+    (princ (cond ((and (needs-saving buffer)
+		       (read-only-p buffer)
+		       "%*"))
+		 ((needs-saving buffer) "**")
+		 ((read-only-p buffer) "%%")
+		 (t "--"))
+	   pane)
+    (princ "  " pane)
+    (with-text-face (pane :bold)
+      (format pane "~25A" (name buffer)))
+    (with-text-family (pane :sans-serif)
+      (princ (if (recordingp *application-frame*)
+		 "Def"
+		 "")
+	     pane))))
+
 (define-application-frame gsharp (standard-application-frame
 				  esa-frame-mixin)
   ((views :initarg :views :initform '() :accessor views)
@@ -33,16 +65,24 @@
   (:menu-bar menubar-command-table :height 25)
   (:pointer-documentation t)
   (:panes
-   (score (let ((win (make-pane 'gsharp-pane
-				:width 400 :height 500
-				:name "score"
-				;; :incremental-redisplay t
-				:double-buffering t
-				:display-function 'display-score
-				:command-table 'total-melody-table)))
+   (score (let* ((win (make-pane 'gsharp-pane
+				 :width 400 :height 500
+				 :name "score"
+				 ;; :incremental-redisplay t
+				 :double-buffering t
+				 :display-function 'display-score
+				 :command-table 'total-melody-table))
+		 (info (make-pane 'gsharp-info-pane
+				  :master-pane win
+				  :background *info-bg-color*
+				  :foreground *info-fg-color*)))
 	    (setf (windows *application-frame*) (list win))
 	    (setf (view win) (car (views *application-frame*)))
-	    win))
+	    (vertically () 
+	      (scrolling (:width 750 :height 500
+			  :min-height 400 :max-height 20000)
+		win)
+	      info)))
    (state (make-pane 'score-pane:score-pane
 		     :width 50 :height 200
 		     :name "state"
@@ -57,9 +97,7 @@
    (default
      (vertically ()
        (horizontally ()
-	 (scrolling (:width 750 :height 500
-		     :min-height 400 :max-height 20000)
-		    score)
+	 score
 	 (vertically ()
 		     (scrolling (:width 80 :height 200) state)
 		     (scrolling (:width 80 :height 300
