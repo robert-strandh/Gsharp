@@ -1,7 +1,7 @@
 (in-package :gsharp)
 
 (define-command-table global-gsharp-table
-    :inherit-from (global-esa-table keyboard-macro-table))
+    :inherit-from (global-esa-table esa-io-table keyboard-macro-table))
 
 (set-key `(com-forward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control)))
 (set-key `(com-backward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control)))
@@ -13,7 +13,7 @@
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))
 (set-key 'com-rotate-notehead 'global-gsharp-table '((#\r :control)))
-(set-key 'com-load-file 'global-gsharp-table '((#\x :control) (#\f :control)))
+;;; (set-key 'com-load-file 'global-gsharp-table '((#\x :control) (#\f :control)))
 (set-key 'com-istate-more-dots 'global-gsharp-table '((#\i) (#\.)))
 (set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
 (set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))

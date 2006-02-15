@@ -11,6 +11,22 @@
 	   #:set-key
            #:find-applicable-command-table))
 
+(defpackage :esa-buffer
+  (:use :clim-lisp :clim :esa)
+  (:export #:make-buffer-from-stream #:save-buffer-to-stream
+	   #:filepath #:name #:needs-saving
+	   #:esa-buffer-mixin
+	   #:make-new-buffer
+	   #:read-only-p))
+
+(defpackage :esa-io
+  (:use :clim-lisp :clim :esa :esa-buffer)
+  (:export #:buffers #:current-buffer
+	   #:find-file #:find-file-read-only
+	   #:set-visited-filename
+	   #:save-buffer #:write-buffer
+	   #:esa-io-table))
+
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
   (:use :clim-lisp :clim-mop)
@@ -64,7 +80,7 @@
 	   #:score-view))
 
 (defpackage :gsharp-buffer
-  (:use :common-lisp :gsharp-utilities)
+  (:use :common-lisp :gsharp-utilities :esa-buffer)
   (:shadow #:rest)
   (:export #:clef #:name #:lineno #:make-clef
 	   #:staff #:fiveline-staff #:make-fiveline-staff
@@ -100,12 +116,13 @@
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
 	   #:stem-direction #:undotted-duration #:duration
-	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything #:save-buffer-to-stream
+	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything
+	   #:read-buffer-from-stream
 	   #:key-signature #:alterations #:more-sharps #:more-flats
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
 	   #:tie-right #:tie-left
-	   ))
+	   #:needs-saving))
 
 (defpackage :gsharp-numbering
   (:use :gsharp-utilities :gsharp-buffer :clim-lisp)
@@ -226,7 +243,7 @@
 	   #:play-buffer))
 
 (defpackage :gsharp
-  (:use :clim :clim-lisp :gsharp-utilities :esa
+  (:use :clim :clim-lisp :gsharp-utilities :esa :esa-buffer :esa-io
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
 	:gsharp-measure :sdl :midi
 	:gsharp-play)

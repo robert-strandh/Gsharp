@@ -24,6 +24,8 @@
    "packages"
    "clim-patches"
    "esa"
+   "esa-buffer"
+   "esa-io"
    "utilities"
    "gf"
    "sdl"

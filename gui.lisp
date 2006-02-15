@@ -68,8 +68,11 @@
        interactor)))
   (:top-level (esa-top-level)))
 
-(defun current-buffer ()
-  (buffer (view (car (windows *application-frame*)))))
+(defmethod buffers ((application-frame gsharp))
+  (remove-duplicates (mapcar #'buffer (views application-frame)) :test #'eq))
+
+(defmethod current-buffer ((application-frame gsharp))
+  (buffer (view (car (windows application-frame)))))
 
 (defun current-cursor ()
   (cursor (view (car (windows *application-frame*)))))
@@ -308,13 +311,26 @@
     (setf (input-state *application-frame*) input-state)
     (select-layer cursor (car (layers (segment (current-cursor)))))))
 
+(defmethod find-file :around (filepath (application-frame gsharp))
+  (declare (ignore filepath))
+  (let* ((buffer (call-next-method))
+    	 (input-state (make-input-state))
+	 (cursor (make-initial-cursor buffer))
+	 (view (make-instance 'orchestra-view 
+			      :buffer buffer
+			      :cursor cursor)))
+    (setf (view (car (windows *application-frame*))) view
+	  (input-state *application-frame*) input-state
+	  (filepath buffer) filepath)
+    (select-layer cursor (car (layers (segment (current-cursor)))))))
+
 (define-gsharp-command (com-save-buffer-as :name t) ()
   (let* ((stream (frame-standard-input *application-frame*))
 	 (filename (handler-case (accept 'completable-pathname :stream stream
 					 :prompt "File Name")
 		     (simple-parse-error () (error 'file-not-found)))))
     (with-open-file (stream filename :direction :output)
-      (save-buffer-to-stream (current-buffer) stream)
+      (save-buffer-to-stream (current-buffer *application-frame*) stream)
       (message "Saved buffer to ~A~%" filename))))
 
 (define-gsharp-command (com-quit :name t) ()
@@ -354,13 +370,13 @@
 
 (define-gsharp-command (com-insert-segment-before :name t) ()
   (let ((cursor (current-cursor)))
-    (insert-segment-before (make-instance 'segment :staff (car (staves (current-buffer))))
+    (insert-segment-before (make-instance 'segment :staff (car (staves (current-buffer *application-frame*))))
 			   cursor)
     (backward-segment cursor)))
 
 (define-gsharp-command (com-insert-segment-after :name t) ()
   (let ((cursor (current-cursor)))
-    (insert-segment-after (make-instance 'segment :staff (car (staves (current-buffer))))
+    (insert-segment-after (make-instance 'segment :staff (car (staves (current-buffer *application-frame*))))
 			  cursor)
     (forward-segment cursor)))
 
@@ -996,7 +1012,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       (staves (current-buffer))
+				       (staves (current-buffer *application-frame*))
 				       '()
 				       :action mode
 				       :predicate (constantly t)
@@ -1013,7 +1029,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       (staves (current-buffer))
+				       (staves (current-buffer *application-frame*))
 				       '()
 				       :action mode
 				       :predicate (lambda (obj) (typep obj 'fiveline-staff))
@@ -1080,7 +1096,7 @@
 
 (defun acquire-unique-staff-name (prompt)
   (let ((name (accept 'string :prompt prompt)))
-    (assert (not (member name (staves (current-buffer)) :test #'string= :key #'name))
+    (assert (not (member name (staves (current-buffer *application-frame*)) :test #'string= :key #'name))
 	    () `staff-name-not-unique)
     name))
 
@@ -1096,21 +1112,21 @@
 (define-gsharp-command (com-insert-staff-before :name t) ()
   (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")
 			  (acquire-new-staff)
-			  (current-buffer)))
+			  (current-buffer *application-frame*)))
 
 (define-gsharp-command (com-insert-staff-after :name t) ()
   (add-staff-after-staff (accept 'score-pane:staff :prompt "Insert staff after staff")
 			 (acquire-new-staff)
-			 (current-buffer)))
+			 (current-buffer *application-frame*)))
 
 (define-gsharp-command (com-delete-staff :name t) ()
   (remove-staff-from-buffer (accept 'score-pane:staff :prompt "Staff")
-			    (current-buffer)))
+			    (current-buffer *application-frame*)))
 
 (define-gsharp-command (com-rename-staff :name t) ()
   (let* ((staff (accept 'score-pane:staff :prompt "Rename staff"))
 	 (name (acquire-unique-staff-name "New name of staff"))
-	 (buffer (current-buffer)))
+	 (buffer (current-buffer *application-frame*)))
     (rename-staff name staff buffer)))
 
 (define-gsharp-command (com-add-staff-to-layer :name t) ()
@@ -1145,3 +1161,13 @@
     (insert-element element cursor)
     (forward-element cursor)
     element))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; I/O
+
+(defmethod make-buffer-from-stream (stream (frame gsharp))
+  (read-buffer-from-stream stream))
+
+(defmethod make-new-buffer ((frame gsharp))
+  (make-instance 'buffer))
