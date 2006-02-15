@@ -113,6 +113,10 @@
   (declare (ignore direction))
   (mark-modified element))
 
+(defmethod append-char :after ((element lyrics-element) char)
+  (declare (ignore char))
+  (mark-modified element))
+
 (defmethod note-position ((note note))
   (let ((clef (clef (staff note))))
     (+ (- (pitch note)
@@ -763,7 +767,8 @@
 	      (1- (nb-measures (segmentno buf (1- (nb-segments buf)))))))
 
 (defmethod mark-modified ((buffer rbuffer))
-  (setf (modified-p buffer) t))
+  (setf (modified-p buffer) t)
+  (setf (needs-saving buffer) t))
 
 (defmethod add-segment :after ((segment segment) (buffer rbuffer) position)
   (declare (ignore position))
