@@ -7,12 +7,12 @@
 (set-key `(com-backward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control)))
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
 (set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
-(set-key 'com-more-dots 'global-gsharp-table '((#\.)))
-(set-key 'com-more-lbeams 'global-gsharp-table '((#\[)))
-(set-key 'com-more-rbeams 'global-gsharp-table '((#\])))
+(set-key 'com-erase-element 'global-gsharp-table '((#\h :control)))
+
+;;; FIXME where are the corresponding commands?
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))
-(set-key 'com-rotate-notehead 'global-gsharp-table '((#\r :control)))
+
 (set-key 'com-istate-more-dots 'global-gsharp-table '((#\i) (#\.)))
 (set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
 (set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))
@@ -38,22 +38,28 @@
 (set-key 'com-insert-note-g 'melody-table '(#\g))
 (set-key 'com-insert-rest 'melody-table '((#\,)))
 (set-key 'com-insert-empty-cluster 'melody-table '((#\Space)))
-(set-key 'com-current-increment 'melody-table '((#\p)))
-(set-key 'com-current-decrement 'melody-table '((#\n)))
-(set-key 'com-fewer-dots 'melody-table '((#\x) (#\.)))
-(set-key 'com-fewer-lbeams 'melody-table '((#\x) (#\[)))
-(set-key 'com-fewer-rbeams 'melody-table '((#\x) (#\])))
-(set-key 'com-erase-element 'melody-table '((#\h :control)))
-(set-key 'com-rotate-notehead 'melody-table '((#\h :meta)))
-(set-key 'com-rotate-stem-direction 'melody-table '((#\s :meta)))
 (set-key 'com-more-sharps 'melody-table '((#\# :meta)))
 (set-key 'com-more-sharps 'melody-table '((#\# :meta :shift)))
 (set-key 'com-more-flats 'melody-table '((#\@ :meta :shift)))
 
+;;; the rhythmic table contains command that are specific 
+;;; to rhythmic elements
+(define-command-table rhythmic-table)
+
+(set-key 'com-more-dots 'rhythmic-table '((#\.)))
+(set-key 'com-more-lbeams 'rhythmic-table '((#\[)))
+(set-key 'com-more-rbeams 'rhythmic-table '((#\])))
+(set-key 'com-fewer-dots 'rhythmic-table '((#\x) (#\.)))
+(set-key 'com-fewer-lbeams 'rhythmic-table '((#\x) (#\[)))
+(set-key 'com-fewer-rbeams 'rhythmic-table '((#\x) (#\])))
+(set-key 'com-rotate-notehead 'rhythmic-table '((#\h :meta)))
+(set-key 'com-rotate-notehead 'rhythmic-table '((#\r :control))) ; why this one too?
+
 ;;; the cluster table contains commands that are specific to 
 ;;; clusters
 
-(define-command-table cluster-table)
+(define-command-table cluster-table
+    :inherit-from (rhythmic-table))
 
 (set-key 'com-sharper 'cluster-table '((#\#)))
 (set-key 'com-flatter 'cluster-table '(#\@))
@@ -70,10 +76,14 @@
 (set-key 'com-tie-note-right 'cluster-table '((#\})))
 (set-key 'com-untie-note-left 'cluster-table '((#\x) (#\{)))
 (set-key 'com-untie-note-right 'cluster-table '((#\x) (#\})))
+(set-key 'com-rotate-stem-direction 'cluster-table '((#\s :meta)))
+(set-key 'com-current-increment 'cluster-table '((#\p)))
+(set-key 'com-current-decrement 'cluster-table '((#\n)))
 
 ;;; lyrics mode table
 
-(define-command-table lyrics-table)
+(define-command-table lyrics-table
+    :inherit-from (rhythmic-table))
 
 (set-key (lambda () (erase-char (cur-element))) 'lyrics-table '((#\h :control)))
 (set-key 'com-erase-element 'lyrics-table '((#\h :meta)))
