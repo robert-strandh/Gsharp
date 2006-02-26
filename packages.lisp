@@ -61,7 +61,87 @@
 	   #:+glyph-flags-down-one+ #:+glyph-flags-down-two+ #:+glyph-flags-down-three+
 	   #:+glyph-flags-down-four+ #:+glyph-flags-down-five+ #:+glyph-flags-up-one+
 	   #:+glyph-flags-up-two+ #:+glyph-flags-up-three+ #:+glyph-flags-up-four+
-	   #:+glyph-flags-up-five+))
+	   #:+glyph-flags-up-five+
+	   #:+glyph-small-tie-one-up+
+	   #:+glyph-small-tie-one-up-light+
+	   #:+glyph-small-tie-two-up+
+	   #:+glyph-small-tie-two-up-light+
+	   #:+glyph-small-tie-three-up+
+	   #:+glyph-small-tie-three-up-light+
+	   #:+glyph-small-tie-four-up+
+	   #:+glyph-small-tie-four-up-light+
+	   #:+glyph-small-tie-five-up+
+	   #:+glyph-small-tie-five-up-light+
+	   #:+glyph-small-tie-six-up+
+	   #:+glyph-small-tie-six-up-light+
+	   #:+glyph-small-tie-seven-up+
+	   #:+glyph-small-tie-seven-up-light+
+	   #:+glyph-small-tie-eight-up+
+	   #:+glyph-small-tie-eight-up-light+
+	   #:+glyph-small-tie-one-down+
+	   #:+glyph-small-tie-one-down-light+
+	   #:+glyph-small-tie-two-down+
+	   #:+glyph-small-tie-two-down-light+
+	   #:+glyph-small-tie-three-down+
+	   #:+glyph-small-tie-three-down-light+
+	   #:+glyph-small-tie-four-down+
+	   #:+glyph-small-tie-four-down-light+
+	   #:+glyph-small-tie-five-down+
+	   #:+glyph-small-tie-five-down-light+
+	   #:+glyph-small-tie-six-down+
+	   #:+glyph-small-tie-six-down-light+
+	   #:+glyph-small-tie-seven-down+
+	   #:+glyph-small-tie-seven-down-light+
+	   #:+glyph-small-tie-eight-down+
+	   #:+glyph-small-tie-eight-down-light+
+	   #:+glyph-large-tie-one-up+
+	   #:+glyph-large-tie-one-up-light+
+	   #:+glyph-large-tie-two-up+
+	   #:+glyph-large-tie-two-up-light+
+	   #:+glyph-large-tie-three-up+
+	   #:+glyph-large-tie-three-up-light+
+	   #:+glyph-large-tie-four-up+
+	   #:+glyph-large-tie-four-up-light+
+	   #:+glyph-large-tie-five-up+
+	   #:+glyph-large-tie-five-up-light+
+	   #:+glyph-large-tie-six-up+
+	   #:+glyph-large-tie-six-up-light+
+	   #:+glyph-large-tie-seven-up+
+	   #:+glyph-large-tie-seven-up-light+
+	   #:+glyph-large-tie-eight-up+
+	   #:+glyph-large-tie-eight-up-light+
+	   #:+glyph-large-tie-nine-up+
+	   #:+glyph-large-tie-nine-up-light+
+	   #:+glyph-large-tie-ten-up+
+	   #:+glyph-large-tie-ten-up-light+
+	   #:+glyph-large-tie-left-up+
+	   #:+glyph-large-tie-left-up-light+
+	   #:+glyph-large-tie-right-up+
+	   #:+glyph-large-tie-right-up-light+
+	   #:+glyph-large-tie-one-down+
+	   #:+glyph-large-tie-one-down-light+
+	   #:+glyph-large-tie-two-down+
+	   #:+glyph-large-tie-two-down-light+
+	   #:+glyph-large-tie-three-down+
+	   #:+glyph-large-tie-three-down-light+
+	   #:+glyph-large-tie-four-down+
+	   #:+glyph-large-tie-four-down-light+
+	   #:+glyph-large-tie-five-down+
+	   #:+glyph-large-tie-five-down-light+
+	   #:+glyph-large-tie-six-down+
+	   #:+glyph-large-tie-six-down-light+
+	   #:+glyph-large-tie-seven-down+
+	   #:+glyph-large-tie-seven-down-light+
+	   #:+glyph-large-tie-eight-down+
+	   #:+glyph-large-tie-eight-down-light+
+	   #:+glyph-large-tie-nine-down+
+	   #:+glyph-large-tie-nine-down-light+
+	   #:+glyph-large-tie-ten-down+
+	   #:+glyph-large-tie-ten-down-light+
+	   #:+glyph-large-tie-left-down+
+	   #:+glyph-large-tie-left-down-light+
+	   #:+glyph-large-tie-right-down+
+	   #:+glyph-large-tie-right-down-light+))
 
 (defpackage :score-pane
   (:use :clim :clim-extensions :clim-lisp :sdl :esa)
@@ -71,7 +151,7 @@
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
 	   #:draw-flags-up #:draw-flags-down
-	   #:draw-tie
+	   #:draw-tie-up #:draw-tie-down
 	   #:with-score-pane #:with-vertical-score-position
 	   #:with-staff-size #:with-notehead-right-offsets
 	   #:with-suspended-note-offset
