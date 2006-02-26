@@ -4,11 +4,15 @@ begingroup
     (round(0.33 * staff_line_distance));
   local_variable(numeric)(small_tie_height)
     (round(0.5 * staff_line_distance));
+  local_variable(numeric)(large_tie_height)
+    (round(1.0 * staff_line_distance));
 
   save small_tie_up;
   def small_tie_up(expr width) =
     local_variable(numeric)(top)
-      (round(0.33 * staff_line_distance)-1);
+      (round(0.5 * (staff_line_distance +
+	            staff_line_thickness +
+		    small_tie_height)));
     fill ((0, top){right} ..
 	  (width, top-small_tie_height) --
 	  (width-1, top-small_tie_height) ..
@@ -29,7 +33,9 @@ begingroup
   save small_tie_down;
   def small_tie_down(expr width) =
     local_variable(numeric)(bot)
-      (round(0.33 * staff_line_distance));
+      (round(0.5 * (staff_line_distance -
+	            staff_line_thickness +
+		    small_tie_height)));
     fill ((0, -bot){right} ..
           (width, small_tie_height-bot) --
 	  (width-1, small_tie_height-bot) ..
@@ -175,127 +181,111 @@ begingroup
     small_tie_down_light(round(2.67 * staff_line_distance));
   end_character;
 
-  local_variable(numeric)(large_tie_line_height)
-    (round(0.5 * staff_line_distance));
-
-  local_variable(numeric)(large_tie_space_height)
-    (round(0.5 * staff_line_distance));
-
   save large_tie_up;
-  def large_tie_up(expr width_multiplier, height) =
+  def large_tie_up(expr width_multiplier) =
     local_variable(numeric)(top)
-      (round(0.33 * staff_line_distance)-1);
+      (round(11.0/6.0 * staff_line_distance));
     local_variable(numeric)(width)
       (round(width_multiplier * staff_line_distance));
     fill ((0, top){right} ..
-	  (width, top-height) --
-	  (width-1, top-height) ..
+	  (width, top-large_tie_height) --
+	  (width-1, top-large_tie_height) ..
 	  (0.3*width, top-tie_thickness) ..
 	  (0, top-tie_thickness) ..
 	  (-0.3*width, top-tie_thickness) ..
-	  (-(width-1), top-height) --
-	  (-width, top-height) .. cycle)
+	  (-(width-1), top-large_tie_height) --
+	  (-width, top-large_tie_height) .. cycle)
     scaled magnification;
   enddef;
 
   save large_tie_up_light;
-  def large_tie_up_light(expr width, height) =
-    large_tie_up(width, height);
-    stripes(width, 2*height);
+  def large_tie_up_light(expr width) =
+    large_tie_up(width);
+    stripes(width, 2*large_tie_height);
   enddef;
 
-  save large_tie_line_up;
-  def large_tie_line_up(expr width_multiplier) =
-    large_tie_up(width_multiplier, round(1.0 * staff_line_distance));
-  enddef;
-
-  save large_tie_line_up_light;
-  def large_tie_line_up_light(expr width_multiplier) =
-    large_tie_up_light(width_multiplier, round(1.0 * staff_line_distance));
-  enddef;
-
-  begin_character(large_tie_line_one_up)
-    large_tie_line_up(2.0);
+  begin_character(large_tie_one_up)
+    large_tie_up(2.0);
   end_character;
 
-  begin_character(large_tie_line_one_up_light)
-    large_tie_line_up_light(2.0);
+  begin_character(large_tie_one_up_light)
+    large_tie_up_light(2.0);
   end_character;
 
-  begin_character(large_tie_line_two_up)
-    large_tie_line_up(2.33);
+  begin_character(large_tie_two_up)
+    large_tie_up(2.33);
   end_character;
 
-  begin_character(large_tie_line_two_up_light)
-    large_tie_line_up_light(2.33);
+  begin_character(large_tie_two_up_light)
+    large_tie_up_light(2.33);
   end_character;
 
-  begin_character(large_tie_line_three_up)
-    large_tie_line_up(2.67);
+  begin_character(large_tie_three_up)
+    large_tie_up(2.67);
   end_character;
 
-  begin_character(large_tie_line_three_up_light)
-    large_tie_line_up_light(2.67);
+  begin_character(large_tie_three_up_light)
+    large_tie_up_light(2.67);
   end_character;
 
-  begin_character(large_tie_line_four_up)
-    large_tie_line_up(3.0);
+  begin_character(large_tie_four_up)
+    large_tie_up(3.0);
   end_character;
 
-  begin_character(large_tie_line_four_up_light)
-    large_tie_line_up_light(3.0);
+  begin_character(large_tie_four_up_light)
+    large_tie_up_light(3.0);
   end_character;
 
-  begin_character(large_tie_line_five_up)
-    large_tie_line_up(3.33);
+  begin_character(large_tie_five_up)
+    large_tie_up(3.33);
   end_character;
 
-  begin_character(large_tie_line_five_up_light)
-    large_tie_line_up_light(3.33);
+  begin_character(large_tie_five_up_light)
+    large_tie_up_light(3.33);
   end_character;
 
-  begin_character(large_tie_line_six_up)
-    large_tie_line_up(3.67);
+  begin_character(large_tie_six_up)
+    large_tie_up(3.67);
   end_character;
 
-  begin_character(large_tie_line_six_up_light)
-    large_tie_line_up_light(3.67);
+  begin_character(large_tie_six_up_light)
+    large_tie_up_light(3.67);
   end_character;
 
-  begin_character(large_tie_line_seven_up)
-    large_tie_line_up(4.0);
+  begin_character(large_tie_seven_up)
+    large_tie_up(4.0);
   end_character;
 
-  begin_character(large_tie_line_seven_up_light)
-    large_tie_line_up_light(4.0);
+  begin_character(large_tie_seven_up_light)
+    large_tie_up_light(4.0);
   end_character;
 
-  begin_character(large_tie_line_eight_up)
-    large_tie_line_up(4.33);
+  begin_character(large_tie_eight_up)
+    large_tie_up(4.33);
   end_character;
 
-  begin_character(large_tie_line_eight_up_light)
-    large_tie_line_up_light(4.33);
+  begin_character(large_tie_eight_up_light)
+    large_tie_up_light(4.33);
   end_character;
 
-  begin_character(large_tie_line_nine_up)
-    large_tie_line_up(4.67);
+  begin_character(large_tie_nine_up)
+    large_tie_up(4.67);
   end_character;
 
-  begin_character(large_tie_line_nine_up_light)
-    large_tie_line_up_light(4.67);
+  begin_character(large_tie_nine_up_light)
+    large_tie_up_light(4.67);
   end_character;
 
-  begin_character(large_tie_line_ten_up)
-    large_tie_line_up(5.0);
+  begin_character(large_tie_ten_up)
+    large_tie_up(5.0);
   end_character;
 
-  begin_character(large_tie_line_ten_up_light)
-    large_tie_line_up_light(5.0);
+  begin_character(large_tie_ten_up_light)
+    large_tie_up_light(5.0);
   end_character;
 
-  begin_character(large_tie_line_left_up)
-    large_tie_line_up(5.0);
+  begin_character(large_tie_left_up)
+    large_tie_up(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (6 * staff_line_distance, -2 * staff_line_distance) --
                 (6 * staff_line_distance, 2 * staff_line_distance) --
@@ -303,8 +293,8 @@ begingroup
 	      scaled magnification;
   end_character;	    
 
-  begin_character(large_tie_line_left_up_light)
-    large_tie_line_up(5.0);
+  begin_character(large_tie_left_up_light)
+    large_tie_up(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (6 * staff_line_distance, -2 * staff_line_distance) --
                 (6 * staff_line_distance, 2 * staff_line_distance) --
@@ -313,8 +303,8 @@ begingroup
     stripes(6 * staff_line_distance, 2 * staff_line_distance);
   end_character;	    
 
-  begin_character(large_tie_line_right_up)
-    large_tie_line_up(5.0);
+  begin_character(large_tie_right_up)
+    large_tie_up(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (-6 * staff_line_distance, -2 * staff_line_distance) --
                 (-6 * staff_line_distance, 2 * staff_line_distance) --
@@ -322,136 +312,8 @@ begingroup
 	      scaled magnification;
   end_character;	    
 
-  begin_character(large_tie_line_right_up_light)
-    large_tie_line_up(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (-6 * staff_line_distance, -2 * staff_line_distance) --
-                (-6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-    stripes(6 * staff_line_distance, 2 * staff_line_distance);
-  end_character;	    
-
-  save large_tie_space_up;
-  def large_tie_space_up(expr width_multiplier) =
-    large_tie_up(width_multiplier, round(1.33 * staff_line_distance));
-  enddef;
-
-  save large_tie_space_up_light;
-  def large_tie_space_up_light(expr width_multiplier) =
-    large_tie_up_light(width_multiplier, round(1.33 * staff_line_distance));
-  enddef;
-
-  begin_character(large_tie_space_one_up)
-    large_tie_space_up(2.0);
-  end_character;
-
-  begin_character(large_tie_space_one_up_light)
-    large_tie_space_up_light(2.0);
-  end_character;
-
-  begin_character(large_tie_space_two_up)
-    large_tie_space_up(2.33);
-  end_character;
-
-  begin_character(large_tie_space_two_up_light)
-    large_tie_space_up_light(2.33);
-  end_character;
-
-  begin_character(large_tie_space_three_up)
-    large_tie_space_up(2.67);
-  end_character;
-
-  begin_character(large_tie_space_three_up_light)
-    large_tie_space_up_light(2.67);
-  end_character;
-
-  begin_character(large_tie_space_four_up)
-    large_tie_space_up(3.0);
-  end_character;
-
-  begin_character(large_tie_space_four_up_light)
-    large_tie_space_up_light(3.0);
-  end_character;
-
-  begin_character(large_tie_space_five_up)
-    large_tie_space_up(3.33);
-  end_character;
-
-  begin_character(large_tie_space_five_up_light)
-    large_tie_space_up_light(3.33);
-  end_character;
-
-  begin_character(large_tie_space_six_up)
-    large_tie_space_up(3.67);
-  end_character;
-
-  begin_character(large_tie_space_six_up_light)
-    large_tie_space_up_light(3.67);
-  end_character;
-
-  begin_character(large_tie_space_seven_up)
-    large_tie_space_up(4.0);
-  end_character;
-
-  begin_character(large_tie_space_seven_up_light)
-    large_tie_space_up_light(4.0);
-  end_character;
-
-  begin_character(large_tie_space_eight_up)
-    large_tie_space_up(4.33);
-  end_character;
-
-  begin_character(large_tie_space_eight_up_light)
-    large_tie_space_up_light(4.33);
-  end_character;
-
-  begin_character(large_tie_space_nine_up)
-    large_tie_space_up(4.67);
-  end_character;
-
-  begin_character(large_tie_space_nine_up_light)
-    large_tie_space_up_light(4.67);
-  end_character;
-
-  begin_character(large_tie_space_ten_up)
-    large_tie_space_up(5.0);
-  end_character;
-
-  begin_character(large_tie_space_ten_up_light)
-    large_tie_space_up_light(5.0);
-  end_character;
-
-  begin_character(large_tie_space_left_up)
-    large_tie_space_up(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (6 * staff_line_distance, -2 * staff_line_distance) --
-                (6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-  end_character;	    
-
-  begin_character(large_tie_space_left_up_light)
-    large_tie_space_up(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (6 * staff_line_distance, -2 * staff_line_distance) --
-                (6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-    stripes(6 * staff_line_distance, 2 * staff_line_distance);
-  end_character;	    
-
-  begin_character(large_tie_space_right_up)
-    large_tie_space_up(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (-6 * staff_line_distance, -2 * staff_line_distance) --
-                (-6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-  end_character;	    
-
-  begin_character(large_tie_space_right_up_light)
-    large_tie_space_up(5.0);
+  begin_character(large_tie_right_up_light)
+    large_tie_up(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (-6 * staff_line_distance, -2 * staff_line_distance) --
                 (-6 * staff_line_distance, 2 * staff_line_distance) --
@@ -459,122 +321,113 @@ begingroup
 	      scaled magnification;
     stripes(6 * staff_line_distance, 2 * staff_line_distance);
   end_character;	    
+
 
   save large_tie_down;
-  def large_tie_down(expr width_multiplier, height) =
+  def large_tie_down(expr width_multiplier) =
     local_variable(numeric)(bot)
-      (round(0.33 * staff_line_distance));
+      (round(11.0/6.0 * staff_line_distance) - staff_line_thickness);
     local_variable(numeric)(width)
       (round(width_multiplier * staff_line_distance));
     fill ((0, -bot){right} ..
-	  (width, height-bot) --
-	  (width-1, height-bot) ..
+	  (width, large_tie_height-bot) --
+	  (width-1, large_tie_height-bot) ..
 	  (0.3*width, tie_thickness-bot) ..
 	  (0, tie_thickness-bot) ..
 	  (-0.3*width, tie_thickness-bot) ..
-	  (-(width-1), height-bot) --
-	  (-width, height-bot) .. cycle)
+	  (-(width-1), large_tie_height-bot) --
+	  (-width, large_tie_height-bot) .. cycle)
     scaled magnification;
   enddef;
 
   save large_tie_down_light;
-  def large_tie_down_light(expr width, height) =
-    large_tie_down(width, height);
-    stripes(width, 2*height);
+  def large_tie_down_light(expr width) =
+    large_tie_down(width);
+    stripes(width, 2*large_tie_height);
   enddef;
 
-  save large_tie_line_down;
-  def large_tie_line_down(expr width_multiplier) =
-    large_tie_down(width_multiplier, round(1.0 * staff_line_distance));
-  enddef;
-
-  save large_tie_line_down_light;
-  def large_tie_line_down_light(expr width_multiplier) =
-    large_tie_down_light(width_multiplier, round(1.0 * staff_line_distance));
-  enddef;
-
-  begin_character(large_tie_line_one_down)
-    large_tie_line_down(2.0);
+  begin_character(large_tie_one_down)
+    large_tie_down(2.0);
   end_character;
 
-  begin_character(large_tie_line_one_down_light)
-    large_tie_line_down_light(2.0);
+  begin_character(large_tie_one_down_light)
+    large_tie_down_light(2.0);
   end_character;
 
-  begin_character(large_tie_line_two_down)
-    large_tie_line_down(2.33);
+  begin_character(large_tie_two_down)
+    large_tie_down(2.33);
   end_character;
 
-  begin_character(large_tie_line_two_down_light)
-    large_tie_line_down_light(2.33);
+  begin_character(large_tie_two_down_light)
+    large_tie_down_light(2.33);
   end_character;
 
-  begin_character(large_tie_line_three_down)
-    large_tie_line_down(2.67);
+  begin_character(large_tie_three_down)
+    large_tie_down(2.67);
   end_character;
 
-  begin_character(large_tie_line_three_down_light)
-    large_tie_line_down_light(2.67);
+  begin_character(large_tie_three_down_light)
+    large_tie_down_light(2.67);
   end_character;
 
-  begin_character(large_tie_line_four_down)
-    large_tie_line_down(3.0);
+  begin_character(large_tie_four_down)
+    large_tie_down(3.0);
   end_character;
 
-  begin_character(large_tie_line_four_down_light)
-    large_tie_line_down_light(3.0);
+  begin_character(large_tie_four_down_light)
+    large_tie_down_light(3.0);
   end_character;
 
-  begin_character(large_tie_line_five_down)
-    large_tie_line_down(3.33);
+  begin_character(large_tie_five_down)
+    large_tie_down(3.33);
   end_character;
 
-  begin_character(large_tie_line_five_down_light)
-    large_tie_line_down_light(3.33);
+  begin_character(large_tie_five_down_light)
+    large_tie_down_light(3.33);
   end_character;
 
-  begin_character(large_tie_line_six_down)
-    large_tie_line_down(3.67);
+  begin_character(large_tie_six_down)
+    large_tie_down(3.67);
   end_character;
 
-  begin_character(large_tie_line_six_down_light)
-    large_tie_line_down_light(3.67);
+  begin_character(large_tie_six_down_light)
+    large_tie_down_light(3.67);
   end_character;
 
-  begin_character(large_tie_line_seven_down)
-    large_tie_line_down(4.0);
+  begin_character(large_tie_seven_down)
+    large_tie_down(4.0);
   end_character;
 
-  begin_character(large_tie_line_seven_down_light)
-    large_tie_line_down_light(4.0);
+  begin_character(large_tie_seven_down_light)
+    large_tie_down_light(4.0);
   end_character;
 
-  begin_character(large_tie_line_eight_down)
-    large_tie_line_down(4.33);
+  begin_character(large_tie_eight_down)
+    large_tie_down(4.33);
   end_character;
 
-  begin_character(large_tie_line_eight_down_light)
-    large_tie_line_down_light(4.33);
+  begin_character(large_tie_eight_down_light)
+    large_tie_down_light(4.33);
   end_character;
 
-  begin_character(large_tie_line_nine_down)
-    large_tie_line_down(4.67);
+  begin_character(large_tie_nine_down)
+    large_tie_down(4.67);
   end_character;
 
-  begin_character(large_tie_line_nine_down_light)
-    large_tie_line_down_light(4.67);
+  begin_character(large_tie_nine_down_light)
+    large_tie_down_light(4.67);
   end_character;
 
-  begin_character(large_tie_line_ten_down)
-    large_tie_line_down(5.0);
+  begin_character(large_tie_ten_down)
+    large_tie_down(5.0);
   end_character;
 
-  begin_character(large_tie_line_ten_down_light)
-    large_tie_line_down_light(5.0);
+  begin_character(large_tie_ten_down_light)
+    large_tie_down_light(5.0);
   end_character;
 
-  begin_character(large_tie_line_left_down)
-    large_tie_line_down(5.0);
+  begin_character(large_tie_left_down)
+    large_tie_down(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (6 * staff_line_distance, -2 * staff_line_distance) --
                 (6 * staff_line_distance, 2 * staff_line_distance) --
@@ -582,8 +435,8 @@ begingroup
 	      scaled magnification;
   end_character;	    
 
-  begin_character(large_tie_line_left_down_light)
-    large_tie_line_down(5.0);
+  begin_character(large_tie_left_down_light)
+    large_tie_down(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (6 * staff_line_distance, -2 * staff_line_distance) --
                 (6 * staff_line_distance, 2 * staff_line_distance) --
@@ -592,8 +445,8 @@ begingroup
     stripes(6 * staff_line_distance, 2 * staff_line_distance);
   end_character;	    
 
-  begin_character(large_tie_line_right_down)
-    large_tie_line_down(5.0);
+  begin_character(large_tie_right_down)
+    large_tie_down(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (-6 * staff_line_distance, -2 * staff_line_distance) --
                 (-6 * staff_line_distance, 2 * staff_line_distance) --
@@ -601,136 +454,8 @@ begingroup
 	      scaled magnification;
   end_character;	    
 
-  begin_character(large_tie_line_right_down_light)
-    large_tie_line_down(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (-6 * staff_line_distance, -2 * staff_line_distance) --
-                (-6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-    stripes(6 * staff_line_distance, 2 * staff_line_distance);
-  end_character;	    
-
-  save large_tie_space_down;
-  def large_tie_space_down(expr width_multiplier) =
-    large_tie_down(width_multiplier, round(1.33 * staff_line_distance));
-  enddef;
-
-  save large_tie_space_down_light;
-  def large_tie_space_down_light(expr width_multiplier) =
-    large_tie_down_light(width_multiplier, round(1.33 * staff_line_distance));
-  enddef;
-
-  begin_character(large_tie_space_one_down)
-    large_tie_space_down(2.0);
-  end_character;
-
-  begin_character(large_tie_space_one_down_light)
-    large_tie_space_down_light(2.0);
-  end_character;
-
-  begin_character(large_tie_space_two_down)
-    large_tie_space_down(2.33);
-  end_character;
-
-  begin_character(large_tie_space_two_down_light)
-    large_tie_space_down_light(2.33);
-  end_character;
-
-  begin_character(large_tie_space_three_down)
-    large_tie_space_down(2.67);
-  end_character;
-
-  begin_character(large_tie_space_three_down_light)
-    large_tie_space_down_light(2.67);
-  end_character;
-
-  begin_character(large_tie_space_four_down)
-    large_tie_space_down(3.0);
-  end_character;
-
-  begin_character(large_tie_space_four_down_light)
-    large_tie_space_down_light(3.0);
-  end_character;
-
-  begin_character(large_tie_space_five_down)
-    large_tie_space_down(3.33);
-  end_character;
-
-  begin_character(large_tie_space_five_down_light)
-    large_tie_space_down_light(3.33);
-  end_character;
-
-  begin_character(large_tie_space_six_down)
-    large_tie_space_down(3.67);
-  end_character;
-
-  begin_character(large_tie_space_six_down_light)
-    large_tie_space_down_light(3.67);
-  end_character;
-
-  begin_character(large_tie_space_seven_down)
-    large_tie_space_down(4.0);
-  end_character;
-
-  begin_character(large_tie_space_seven_down_light)
-    large_tie_space_down_light(4.0);
-  end_character;
-
-  begin_character(large_tie_space_eight_down)
-    large_tie_space_down(4.33);
-  end_character;
-
-  begin_character(large_tie_space_eight_down_light)
-    large_tie_space_down_light(4.33);
-  end_character;
-
-  begin_character(large_tie_space_nine_down)
-    large_tie_space_down(4.67);
-  end_character;
-
-  begin_character(large_tie_space_nine_down_light)
-    large_tie_space_down_light(4.67);
-  end_character;
-
-  begin_character(large_tie_space_ten_down)
-    large_tie_space_down(5.0);
-  end_character;
-
-  begin_character(large_tie_space_ten_down_light)
-    large_tie_space_down_light(5.0);
-  end_character;
-
-  begin_character(large_tie_space_left_down)
-    large_tie_space_down(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (6 * staff_line_distance, -2 * staff_line_distance) --
-                (6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-  end_character;	    
-
-  begin_character(large_tie_space_left_down_light)
-    large_tie_space_down(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (6 * staff_line_distance, -2 * staff_line_distance) --
-                (6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-    stripes(6 * staff_line_distance, 2 * staff_line_distance);
-  end_character;	    
-
-  begin_character(large_tie_space_right_down)
-    large_tie_space_down(5.0);
-    erase fill ((0, -2 * staff_line_distance) -- 
-                (-6 * staff_line_distance, -2 * staff_line_distance) --
-                (-6 * staff_line_distance, 2 * staff_line_distance) --
-		(0, 2 * staff_line_distance) -- cycle)
-	      scaled magnification;
-  end_character;	    
-
-  begin_character(large_tie_space_right_down_light)
-    large_tie_space_down(5.0);
+  begin_character(large_tie_right_down_light)
+    large_tie_down(5.0);
     erase fill ((0, -2 * staff_line_distance) -- 
                 (-6 * staff_line_distance, -2 * staff_line_distance) --
                 (-6 * staff_line_distance, 2 * staff_line_distance) --
@@ -738,7 +463,6 @@ begingroup
 	      scaled magnification;
     stripes(6 * staff_line_distance, 2 * staff_line_distance);
   end_character;	    
-
 
 
 endgroup;
