@@ -199,10 +199,11 @@
   (apply #'make-instance 'note :pitch pitch :staff staff args))
 
 (defmethod print-gsharp-object :after ((n note) stream)
-  (with-slots (pitch staff head accidentals dots) n
+  (with-slots (pitch staff head accidentals dots %tie-right %tie-left) n
     (format stream
-	    "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W "
-	    pitch staff head accidentals dots)))
+	    "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W ~
+             ~@[~_:tie-right ~W ~]~@[~_:tie-left ~W ~]"
+	    pitch staff head accidentals dots %tie-right %tie-left)))
 
 (defun read-note-v3 (stream char n)
   (declare (ignore char n))
