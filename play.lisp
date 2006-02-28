@@ -24,13 +24,13 @@
 				     :time time
 				     :status (+ #x90 channel)
 				     :key (midi-pitch note) :velocity 100))
-		    (notes element))
+		    (remove-if #'tie-left (notes element)))
 	    (mapcar (lambda (note)
 		      (make-instance 'note-off-message
 				     :time (+ time (* 128 (duration element)))
 				     :status (+ #x80 channel)
 				     :key (midi-pitch note) :velocity 100))
-		    (notes element)))))
+		    (remove-if #'tie-right (notes element))))))
 
 (defun events-from-bar (bar time channel)
   (mapcan (lambda (element)
