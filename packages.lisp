@@ -169,7 +169,7 @@
 	   #:pitch #:accidentals #:dots #:note #:make-note
 	   #:note-less #:note-equal #:bar
 	   #:notehead #:rbeams #:lbeams #:dots #:element
-	   #:melody-element #:notes
+	   #:melody-element #:rhythmic-element #:notes
 	   #:add-note #:find-note #:remove-note
            #:cluster-upper-bound #:cluster-lower-bound
 	   #:cluster #:make-cluster

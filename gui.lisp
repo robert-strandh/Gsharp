@@ -14,6 +14,8 @@
 
 (define-command-table total-melody-table
     :inherit-from (melody-table global-gsharp-table gsharp))
+(define-command-table total-rhythmic-melody-table
+    :inherit-from (melody-table rhythmic-table global-gsharp-table gsharp))
 (define-command-table total-cluster-table
     :inherit-from (cluster-table melody-table global-gsharp-table gsharp))
 (define-command-table total-lyrics-table
@@ -367,6 +369,9 @@
 (defmethod find-applicable-gsharp-command-table ((layer melody-layer) element)
   (declare (ignore element))
   (find-command-table 'total-melody-table))
+
+(defmethod find-applicable-gsharp-command-table ((layer melody-layer) (element rhythmic-element))
+  (find-command-table 'total-rhythmic-melody-table))
 
 (defmethod find-applicable-gsharp-command-table ((layer melody-layer) (element cluster))
   (find-command-table 'total-cluster-table))
