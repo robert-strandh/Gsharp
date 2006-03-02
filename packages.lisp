@@ -183,7 +183,7 @@
 	   #:layer #:lyrics-layer #:melody-layer
 	   #:bars #:nb-bars #:barno #:add-bar #:remove-bar
 	   #:slice #:make-slice
-	   #:segment #:slices #:sliceno
+	   #:segment #:tempo #:slices #:sliceno
 	   #:make-layer-for-staff #:make-bar-for-staff
 	   #:head #:body #:tail #:make-layer #:buffer
 	   #:layers #:nb-layers #:layerno

@@ -4,7 +4,13 @@
   (+ (* 12 (+ (floor (pitch note) 7) 1))
      (ecase (mod (pitch note) 7) (0 0) (1 2) (2 4) (3 5) (4 7) (5 9) (6 11))
      (ecase (accidentals note)
-       (:double-flat -2) (:flat -1) (:natural 0) (:sharp 1) (:double-sharp 2))))
+       (:double-flat -2) 
+       (:flat -1) 
+       (:natural 0)
+       (:sharp 1)
+       (:double-sharp 2))))
+
+(defvar *tempo*)
 
 (defun measure-durations (slices)
   (let ((durations (mapcar (lambda (slice)
@@ -27,7 +33,7 @@
 		    (remove-if #'tie-left (notes element)))
 	    (mapcar (lambda (note)
 		      (make-instance 'note-off-message
-				     :time (+ time (* 128 (duration element)))
+				     :time (+ time (* *tempo* (duration element)))
 				     :status (+ #x80 channel)
 				     :key (midi-pitch note) :velocity 100))
 		    (remove-if #'tie-right (notes element))))))
@@ -35,7 +41,7 @@
 (defun events-from-bar (bar time channel)
   (mapcan (lambda (element)
 	    (prog1 (events-from-element element time channel)
-	      (incf time (* 128 (duration element)))))
+	      (incf time (* *tempo* (duration element)))))
 	  (elements bar)))
 
 (defun track-from-slice (slice channel durations)
@@ -44,12 +50,13 @@
 	(let ((time 0))
 	  (mapcan (lambda (bar duration)
 		    (prog1 (events-from-bar bar time channel)
-		      (incf time (* 128 duration))))
+		      (incf time (* *tempo* duration))))
 		  (bars slice) durations))))
 
 (defun play-segment (segment)
   (let* ((slices (mapcar #'body (layers segment)))
 	 (durations (measure-durations slices))
+         (*tempo* (tempo segment))
 	 (tracks (loop for slice in slices
 		       for i from 0
 		       collect (track-from-slice slice i durations)))

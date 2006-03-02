@@ -975,7 +975,8 @@ flatter by removing some sharps and/or adding some flats"))
 (defclass segment (gsharp-object)
   ((print-character :allocation :class :initform #\S)
    (buffer :initform nil :initarg :buffer :accessor buffer)
-   (layers :initform '() :initarg :layers :accessor layers)))
+   (layers :initform '() :initarg :layers :accessor layers)
+   (tempo :initform 128 :initarg :tempo :accessor tempo)))
 
 (defmethod initialize-instance :after ((s segment) &rest args &key staff)
   (declare (ignore args))
@@ -987,7 +988,7 @@ flatter by removing some sharps and/or adding some flats"))
 	  do (setf (segment layer) s))))
 
 (defmethod print-gsharp-object :after ((s segment) stream)
-  (format stream "~_:layers ~W " (layers s)))
+  (format stream "~_:layers ~W ~_:tempo ~W " (layers s) (tempo s)))
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))

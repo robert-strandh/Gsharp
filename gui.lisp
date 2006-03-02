@@ -315,6 +315,10 @@
 			  cursor)
     (forward-segment cursor)))
 
+(define-gsharp-command (com-set-segment-tempo :name t) ((tempo 'integer :prompt "Tempo"))
+  (let ((segment (segment (current-cursor))))
+    (setf (tempo segment) tempo)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; layer menu
