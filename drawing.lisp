@@ -321,6 +321,7 @@ right of the center of its timeline"))
 	do (compute-measure-coordinates measure x y force)
 	do (incf x (size-at-force (elasticity-function measure) force))))
 
+
 ;;; draw the ties in BARS starting at BAR and at most LENGTH bars
 (defun draw-ties (pane bars bar length)
   (loop until (eq bar (car bars))
@@ -344,14 +345,17 @@ right of the center of its timeline"))
 					   (x2 (- (final-absolute-note-xoffset n2) (score-pane:staff-step 1.5)))
 					   (pos (note-position n1)))
 				       (score-pane:with-vertical-score-position (pane (staff-yoffset (staff n1)))
-					 (score-pane:draw-tie-up pane x1 x2 (if (oddp pos) (1+ pos) pos))))))))))))
+					 (if (gsharp-cursor::cursors (slice (car bars)))
+					     (score-pane:draw-tie-up pane x1 x2 (if (oddp pos) (1+ pos) pos))
+					     (score-pane:with-light-glyphs pane
+					       (score-pane:draw-tie-up pane x1 x2 (if (oddp pos) (1+ pos) pos))))))))))))))
 
 (defun draw-system (pane measures)
-  (loop for measure in measures do
-	(draw-measure pane measure))
   (loop with length = (length measures)
 	for bar in (measure-bars (car measures))
-	do (draw-ties pane (bars (slice bar)) bar length)))
+	do (draw-ties pane (bars (slice bar)) bar length))
+  (loop for measure in measures do
+	(draw-measure pane measure)))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
