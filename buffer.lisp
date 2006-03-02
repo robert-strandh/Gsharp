@@ -43,21 +43,29 @@
 ;;; The bottom line of the staff is number 1. 
 (defgeneric lineno (clef))
 
+;;; for key signature drawing calcluations.  FIXME: in fact the layout
+;;; of key signatures isn't the same across all clefs.
+(defgeneric b-position (clef))
+(defgeneric f-position (clef))
+
+;;; the note number of the bottom line of this clef.
+(defgeneric bottom-line (clef))
+
 (defclass clef (gsharp-object name-mixin)
   ((print-character :allocation :class :initform #\K)
    (lineno :reader lineno :initarg :lineno
 	   :type (or (integer 2 6) null))))
 
 (defun make-clef (name &key lineno)
-  (declare (type (member :treble :bass :c :percussion) name)
+  (declare (type (member :treble :treble8 :bass :c :percussion) name)
 	   (type (or (integer 2 6) null) lineno))
   (when (null lineno)
     (setf lineno
 	  (ecase name
-	      (:treble 2)
-	      (:bass 6)
-	      (:c 4)
-	      (:percussion 3))))
+            ((:treble :treble8) 2)
+            (:bass 6)
+            (:c 4)
+            (:percussion 3))))
   (make-instance 'clef :name name :lineno lineno))
 
 (defmethod print-gsharp-object :after ((c clef) stream)
@@ -70,6 +78,26 @@
 (set-dispatch-macro-character #\[ #\K
   #'read-clef-v3
   *gsharp-readtable-v3*)
+
+(defmethod b-position ((clef clef))
+  (ecase (name clef)
+    (:bass (- (lineno clef) 4))
+    ((:treble :treble8) (+ (lineno clef) 2))
+    (:c (- (lineno clef) 1))))
+
+(defmethod f-position ((clef clef))
+  (ecase (name clef)
+    (:bass (lineno clef))
+    ((:treble :treble8) (+ (lineno clef) 6))
+    (:c (+ (lineno clef) 3))))
+
+(defmethod bottom-line ((clef clef))
+  (- (ecase (name clef)
+       (:treble 32)
+       (:bass 24)
+       (:c 28)
+       (:treble8 25))
+     (lineno clef)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

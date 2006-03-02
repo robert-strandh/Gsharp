@@ -249,7 +249,10 @@
 
 (define-pixmap-recording (draw-clef (name))
     (ecase name
-      (:treble +glyph-g-clef+)
+      ;; FIXME: while using the same glyph for :TREBLE and :TREBLE8 is
+      ;; fine from a musical point of view, some differentiation (by
+      ;; putting an italic 8 underneath, for instance) would be good.
+      ((:treble :treble8) +glyph-g-clef+)
       (:bass +glyph-f-clef+)
       (:c +glyph-c-clef+)))
 

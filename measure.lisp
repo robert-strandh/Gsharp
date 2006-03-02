@@ -119,9 +119,8 @@
 
 (defmethod note-position ((note note))
   (let ((clef (clef (staff note))))
-    (+ (- (pitch note)
-	  (ecase (name clef) (:treble 32) (:bass 24) (:c 28)))
-       (lineno clef))))
+    (- (pitch note)
+       (bottom-line clef))))
 
 ;;; given a list of notes, return the one that is at the top
 (defun top-note (notes)

@@ -196,7 +196,8 @@
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
 	   #:stem-direction #:undotted-duration #:duration
-	   #:clef #:keysig #:staff-pos #:xoffset #:read-everything
+	   #:clef #:f-position #:b-position #:bottom-line
+           #:keysig #:staff-pos #:xoffset #:read-everything
 	   #:read-buffer-from-stream
 	   #:key-signature #:alterations #:more-sharps #:more-flats
 	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset

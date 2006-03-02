@@ -175,9 +175,8 @@
 
 (defmethod note-position ((note note))
   (let ((clef (clef (staff note))))
-    (+ (- (pitch note)
-	  (ecase (name clef) (:treble 32) (:bass 24) (:c 28)))
-       (lineno clef))))
+    (- (pitch note)
+       (bottom-line clef))))
 
 (defmethod display-element ((frame gsharp) pane)
   (when (handler-case (cur-cluster)
@@ -1015,7 +1014,7 @@
 				    (lambda (so-far mode)
 				      (complete-from-possibilities
 				       so-far
-				       '(:treble :bass :c :percussion)
+				       '(:treble :treble8 :bass :c :percussion)
 				       '()
 				       :action mode
 				       :predicate (constantly t)
