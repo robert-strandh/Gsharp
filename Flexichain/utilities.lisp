@@ -40,8 +40,11 @@ indicating whether an element was found or not."
 ;;;
 ;;; TODO: check other CL implementations behavior wrt. return values
 (defclass weak-pointer-container-mixin ()
-  (#+openmcl
-   (weak-hash :initform (make-hash-table :test #'eq :weak :value)))
+  (#+(or openmcl allegro)
+   (weak-hash :initform (make-hash-table :test #'eq
+					 ;; Get it together guys!
+					 #+openmcl :weak #+openmcl :value
+					 #+allegro :values #+allegro :weak)))
   (:documentation "Support for weak references, if needed"))
 
 (defgeneric make-weak-pointer (object container))
@@ -52,7 +55,7 @@ indicating whether an element was found or not."
     #+cmu (extensions:make-weak-pointer object)
     #+sbcl (sb-ext:make-weak-pointer object))
 
-#+openmcl
+#+(or openmcl allegro)
 (defmethod make-weak-pointer (object (container weak-pointer-container-mixin))
   (let ((key (cons nil nil)))
     (setf (gethash key (slot-value container 'weak-hash)) object)
@@ -66,15 +69,15 @@ indicating whether an element was found or not."
   #+cmu (extensions:weak-pointer-value weak-pointer)
   #+sbcl (sb-ext:weak-pointer-value weak-pointer))
 
-#+openmcl
+#+(or openmcl allegro)
 (defmethod weak-pointer-value
     (weak-pointer (container weak-pointer-container-mixin))
   (gethash weak-pointer (slot-value container 'weak-hash) nil))
 
-#-(or sbcl cmu openmcl)
+#-(or sbcl cmu openmcl allegro)
 (progn
   (eval-when (:evaluate :compile-toplevel :load-toplevel)
-    (warning "No support for weak pointers in this implementation. Things may
+    (warn "No support for weak pointers in this implementation. Things may
 get big and slow")
     )
   (defmethod make-weak-pointer (object container)

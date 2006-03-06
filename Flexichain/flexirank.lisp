@@ -75,5 +75,5 @@
 (defmethod insert-vector* :after ((chain flexirank-mixin) position vector)
   (loop for elem across vector
 	for pos from position
-	do (setf (index elem) (position-index pos)
+	do (setf (index elem) (position-index chain pos)
 		 (chain elem) chain)))
