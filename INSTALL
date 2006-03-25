@@ -1,3 +1,19 @@
+;;; Requirements
+
+* A Common Lisp.  Known to work: SBCL 0.9.10
+
+* McCLIM.  The "Laetare Sunday" release is needed, along with
+  ** spatial-trees;
+  ** at least one means of displaying graphics: CLX is recommended,
+     but the OpenMCL/Cocoa bridge is a possibility.
+
+* Flexichain.  ASDF-INSTALLable or from common-lisp.net CVS, the
+  flexichain project, flexichain module.
+
+* ESA.  From common-lisp.net CVS, the climacs project, esa module.
+
+Make sure ASDF knows how to find all of these projects.
+
 ;;; Compile the fonts
 
 $ (cd Fonts; make)
@@ -16,4 +32,3 @@ $ (cd Fonts; make)
 ;;; Run Gsharp
 
 (gsharp::gsharp)
-

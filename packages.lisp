@@ -1,32 +1,3 @@
-(defpackage :esa
-  (:use :clim-lisp :clim)
-  (:export #:minibuffer-pane #:display-message
-	   #:esa-pane-mixin #:previous-command
-	   #:info-pane #:master-pane
-	   #:esa-frame-mixin #:windows #:recordingp #:executingp
-	   #:*numeric-argument-p* #:*current-gesture*
-	   #:esa-top-level #:simple-command-loop
-	   #:global-esa-table #:keyboard-macro-table
-           #:help-table
-	   #:set-key
-           #:find-applicable-command-table))
-
-(defpackage :esa-buffer
-  (:use :clim-lisp :clim :esa)
-  (:export #:make-buffer-from-stream #:save-buffer-to-stream
-	   #:filepath #:name #:needs-saving
-	   #:esa-buffer-mixin
-	   #:make-new-buffer
-	   #:read-only-p))
-
-(defpackage :esa-io
-  (:use :clim-lisp :clim :esa :esa-buffer)
-  (:export #:buffers #:current-buffer
-	   #:find-file #:find-file-read-only
-	   #:set-visited-filename
-	   #:save-buffer #:write-buffer
-	   #:esa-io-table))
-
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
   (:use :clim-lisp :clim-mop)
