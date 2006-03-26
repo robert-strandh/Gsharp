@@ -345,11 +345,12 @@ right of the center of its timeline"))
 					       (score-pane:draw-tie-up pane x1 x2 (if (oddp pos) (1+ pos) pos))))))))))))))
 
 (defun draw-system (pane measures)
-  (loop with length = (length measures)
-	for bar in (measure-bars (car measures))
-	do (draw-ties pane (bars (slice bar)) bar length))
-  (loop for measure in measures do
-	(draw-measure pane measure)))
+  (with-new-output-record (pane)
+    (loop with length = (length measures)
+	  for bar in (measure-bars (car measures))
+	  do (draw-ties pane (bars (slice bar)) bar length))
+    (loop for measure in measures do
+	  (draw-measure pane measure))))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
@@ -745,28 +746,29 @@ right of the center of its timeline"))
 ;;; 3. If necessary, draw ledger lines for notes in a group
 ;;; 4. Draw the stem, if any
 (defmethod draw-element (pane (element cluster) &optional (flags t))
-  (unless (null (notes element))
-    (let ((direction (final-stem-direction element))
-	  (stem-pos (final-stem-position element))
-	  (stem-yoffset (final-stem-yoffset element))
-	  (groups (group-notes-by-staff (notes element)))
-	  (x (final-absolute-element-xoffset element)))
-      (when flags
-	(score-pane:with-vertical-score-position (pane stem-yoffset)
-	  (draw-flags pane element x direction stem-pos)))
-      (loop for group in groups do 
-	    (draw-notes pane group (dots element) (notehead element))
-	    (draw-ledger-lines pane x group))
-      (unless (eq (notehead element) :whole)
-	(if (eq direction :up)
-	    (score-pane:draw-right-stem
-	     pane x
-	     (- (bot-note-staff-yoffset element) (score-pane:staff-step (bot-note-pos element)))
-	     (- stem-yoffset (score-pane:staff-step stem-pos)))
-	    (score-pane:draw-left-stem
-	     pane x
-	     (- (top-note-staff-yoffset element) (score-pane:staff-step (top-note-pos element)))
-	     (- stem-yoffset (score-pane:staff-step stem-pos))))))))
+  (with-new-output-record (pane)
+    (unless (null (notes element))
+      (let ((direction (final-stem-direction element))
+	    (stem-pos (final-stem-position element))
+	    (stem-yoffset (final-stem-yoffset element))
+	    (groups (group-notes-by-staff (notes element)))
+	    (x (final-absolute-element-xoffset element)))
+	(when flags
+	  (score-pane:with-vertical-score-position (pane stem-yoffset)
+	    (draw-flags pane element x direction stem-pos)))
+	(loop for group in groups do 
+	      (draw-notes pane group (dots element) (notehead element))
+	      (draw-ledger-lines pane x group))
+	(unless (eq (notehead element) :whole)
+	  (if (eq direction :up)
+	      (score-pane:draw-right-stem
+	       pane x
+	       (- (bot-note-staff-yoffset element) (score-pane:staff-step (bot-note-pos element)))
+	       (- stem-yoffset (score-pane:staff-step stem-pos)))
+	      (score-pane:draw-left-stem
+	       pane x
+	       (- (top-note-staff-yoffset element) (score-pane:staff-step (top-note-pos element)))
+	       (- stem-yoffset (score-pane:staff-step stem-pos)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
