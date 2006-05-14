@@ -167,7 +167,18 @@
     (score-pane:with-score-pane pane
       (draw-buffer pane buffer (current-cursor)
 		   (left-margin buffer) 100)
-      (gsharp-drawing::draw-the-cursor pane (current-cursor) (cursor-element (current-cursor)) (last-note (input-state *application-frame*))))))
+      (gsharp-drawing::draw-the-cursor pane (current-cursor) (cursor-element (current-cursor)) (last-note (input-state *application-frame*)))
+      (multiple-value-bind (minx miny maxx maxy)
+          (bounding-rectangle* pane)
+        (declare (ignore minx maxx))
+        (change-space-requirements pane :height (- maxy miny))))))
+
+(defmethod window-clear ((pane score-pane:score-pane))
+  (let ((output-history (stream-output-history pane)))
+    (with-bounding-rectangle* (left top right bottom) output-history
+      (medium-clear-area (sheet-medium pane) left top right bottom))
+    (clear-output-record output-history))
+  (window-erase-viewport pane))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
