@@ -1,7 +1,7 @@
 (in-package :gsharp)
 
 (define-command-table global-gsharp-table
-    :inherit-from (global-esa-table esa-io-table keyboard-macro-table))
+    :inherit-from (global-esa-table esa-io-table keyboard-macro-table help-table))
 
 (set-key `(com-forward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control)))
 (set-key `(com-backward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control)))
