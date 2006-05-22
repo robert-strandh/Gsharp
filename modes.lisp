@@ -5,7 +5,10 @@
 
 (set-key `(com-forward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control)))
 (set-key `(com-backward-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control)))
+(set-key `(com-forward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control :meta)))
+(set-key `(com-backward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control :meta)))
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
+
 (set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
 (set-key 'com-erase-element 'global-gsharp-table '((#\h :control)))
 

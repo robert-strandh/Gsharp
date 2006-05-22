@@ -842,6 +842,22 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; motion by measure
+
+(define-gsharp-command com-forward-measure ((count 'integer :prompt "Number of Measures"))
+  (let ((cursor (current-cursor)))
+    (loop repeat count do
+          (loop do (forward-element cursor) 
+                until (end-of-bar-p cursor))))
+
+(define-gsharp-command com-backward-measure ((count 'integer :prompt "Number of Measures"))
+  (let ((cursor (current-cursor)))
+    (loop repeat count do
+          (loop do (backward-element cursor) 
+                until (beginning-of-bar-p cursor))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; delete commands
 
 (defun go-to-beginning-of-bar (cursor)
