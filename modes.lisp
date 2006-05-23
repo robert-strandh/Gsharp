@@ -8,9 +8,9 @@
 (set-key `(com-forward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control :meta)))
 (set-key `(com-backward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control :meta)))
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
+(set-key `(com-erase-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\h :control)))
 
 (set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
-(set-key 'com-erase-element 'global-gsharp-table '((#\h :control)))
 
 ;;; FIXME where are the corresponding commands?
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))

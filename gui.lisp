@@ -451,14 +451,8 @@
 (make-command-table
  'measure-command-table
  :errorp nil
- :menu '(("Forward" :command com-forward-measure)
-	 ("Backward" :command com-backward-measure)))
-
-(define-gsharp-command (com-forward-measure :name t) ()
-  (forward-bar (current-cursor)))
-
-(define-gsharp-command (com-backward-measure :name t) ()
-  (backward-bar (current-cursor)))
+ :menu '(("Forward" :command (com-forward-measure 1))
+	 ("Backward" :command (com-backward-measure 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -806,7 +800,7 @@
       (setf *current-note* (or (cluster-lower-bound cluster note)
                                (cluster-upper-bound cluster note)))
       (unless *current-note*
-        (com-erase-element)))))
+        (com-erase-element 1)))))
 
 (define-gsharp-command com-tie-note-left ()
   (let ((note (cur-note)))
@@ -832,11 +826,15 @@
 ;;;
 ;;; motion by element
 
-(define-gsharp-command com-forward-element ((count 'integer :prompt "Number of Elements"))
+(define-gsharp-command com-forward-element 
+    ((count 'integer :prompt "Number of Elements"))
+  "Move forward by element."
   (loop repeat count
 	do (forward-element (current-cursor))))
 
-(define-gsharp-command com-backward-element ((count 'integer :prompt "Number of Elements"))
+(define-gsharp-command com-backward-element 
+    ((count 'integer :prompt "Number of Elements"))
+  "Move backward by element."
   (loop repeat count
 	do (backward-element (current-cursor))))
 
@@ -844,17 +842,15 @@
 ;;;
 ;;; motion by measure
 
-(define-gsharp-command com-forward-measure ((count 'integer :prompt "Number of Measures"))
-  (let ((cursor (current-cursor)))
-    (loop repeat count do
-          (loop do (forward-element cursor) 
-                until (end-of-bar-p cursor))))
+(define-gsharp-command com-forward-measure 
+    ((count 'integer :prompt "Number of Measures"))
+  "Move forward by measure."
+  (loop repeat count do (forward-bar (current-cursor))))
 
-(define-gsharp-command com-backward-measure ((count 'integer :prompt "Number of Measures"))
-  (let ((cursor (current-cursor)))
-    (loop repeat count do
-          (loop do (backward-element cursor) 
-                until (beginning-of-bar-p cursor))))
+(define-gsharp-command com-backward-measure 
+    ((count 'integer :prompt "Number of Measures"))
+  "Move backward by measure."
+  (loop repeat count do (backward-bar (current-cursor))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -880,7 +876,9 @@
 	  (insert-element element cursor)
 	  (forward-element cursor))))
 
-(define-gsharp-command com-delete-element ((count 'integer :prompt "Number of Elements"))
+(define-gsharp-command com-delete-element 
+    ((count 'integer :prompt "Number of Elements"))
+  "Delete element forwards."
   (let ((cursor (current-cursor)))
     (loop repeat count
 	  do (progn
@@ -892,12 +890,16 @@
 		   (fuse-bar-with-next cursor)
 		   (delete-element cursor))))))
 
-(define-gsharp-command com-erase-element ()
+(define-gsharp-command com-erase-element 
+    ((count 'integer :prompt "Number of Elements"))
+  "Delete element backwards."
   (let ((cursor (current-cursor)))
-    (backward-element cursor)
-    (if (end-of-bar-p cursor)
-	(fuse-bar-with-next cursor)
-	(delete-element cursor))))
+    (loop repeat count
+          do (progn
+               (backward-element cursor)
+               (if (end-of-bar-p cursor)
+                   (fuse-bar-with-next cursor)
+                   (delete-element cursor))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
