@@ -99,7 +99,7 @@
    (default
      (vertically ()
        (horizontally ()
-	 score
+         score
 	 (vertically ()
 		     (scrolling (:width 80 :height 200) state)
 		     (scrolling (:width 80 :height 300
@@ -248,9 +248,9 @@
 (make-command-table
  'file-command-table
  :errorp nil
- :menu '(("Find" :command com-find-file)
-	 ("Save" :command com-save-buffer)
-	 ("Save as" :command com-write-buffer)
+ :menu `(("Find" :command (esa-io::com-find-file ,esa::*unsupplied-argument-marker*))
+	 ("Save" :command esa-io::com-save-buffer)
+	 ("Save as" :command (esa-io::com-write-buffer ,esa::*unsupplied-argument-marker*))
 	 ("Quit" :command com-quit)))
 
 (define-gsharp-command (com-new-buffer :name t) ()
