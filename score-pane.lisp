@@ -453,6 +453,7 @@
 
 (defclass beam-output-record (score-output-record)
   ((light-glyph-p :initarg :light-glyph-p)
+   (clipping-region :initarg :clipping-region)
    (thickness :initarg :thickness)))
 
 ;;; draw a horizontal beam around the vertical reference 
@@ -553,14 +554,15 @@
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink light-glyph-p) record
+    (with-slots (thickness ink clipping-region light-glyph-p) record
       (let ((medium (sheet-medium stream)))
 	(let ((*light-glyph* light-glyph-p))
-	  (with-drawing-options (medium :ink ink)
+	  (with-drawing-options 
+              (medium :ink ink :clipping-region clipping-region)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      (draw-downward-beam medium x1 y1 y2 thickness
-					(/ (- x2 x1) (- y2 y1))))))))))
+              (draw-downward-beam medium x1 y1 y2 thickness
+                                  (/ (- x2 x1) (- y2 y1))))))))))
 
 (defclass upward-beam-output-record (beam-output-record)
   ())
@@ -570,10 +572,11 @@
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink light-glyph-p) record
+    (with-slots (thickness ink clipping-region light-glyph-p) record
       (let ((medium (sheet-medium stream)))
 	(let ((*light-glyph* light-glyph-p))
-	  (with-drawing-options (medium :ink ink)
+	  (with-drawing-options 
+              (medium :ink ink :clipping-region clipping-region)
 	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
 		  (*darker-gray-progressions* (darker-gray-progressions stream)))
 	      (draw-upward-beam medium x1 y2 y1 thickness
@@ -596,7 +599,8 @@
 		    *pane* (make-instance 'downward-beam-output-record
 					  :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
 					  :light-glyph-p *light-glyph*
-					  :thickness thickness :ink (medium-ink medium))))))
+					  :thickness thickness :ink (medium-ink medium)
+                                          :clipping-region (medium-clipping-region medium))))))
 	     (when (stream-drawing-p *pane*)
 	       (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
 	    (t
@@ -609,7 +613,9 @@
 		    *pane* (make-instance 'upward-beam-output-record
 					  :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
 					  :light-glyph-p *light-glyph*
-					  :thickness thickness :ink (medium-ink medium))))))
+					  :thickness thickness 
+                                          :ink (medium-ink medium)
+                                          :clipping-region (medium-clipping-region medium))))))
 	     (when (stream-drawing-p *pane*)
 	       (draw-upward-beam medium x1 y1 y2 thickness inverse-slope)))))))
 
