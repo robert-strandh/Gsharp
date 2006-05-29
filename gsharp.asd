@@ -24,6 +24,8 @@
    "packages"
    "utilities"
    "gf"
+   "bezier"
+   "mf"
    "sdl"
    "charmap"
    "score-pane"

@@ -256,6 +256,19 @@
       (:bass +glyph-f-clef+)
       (:c +glyph-c-clef+)))
 
+(defun new-draw-clef (stream name x staff-step)
+  (sdl::draw-shape stream *font* 
+		   (ecase name
+		     ;; FIXME: while using the same glyph for :TREBLE and :TREBLE8 is
+		     ;; fine from a musical point of view, some differentiation (by
+		     ;; putting an italic 8 underneath, for instance) would be good.
+		     ((:treble :treble8) :g-clef)
+		     (:bass :f-clef)
+		     (:c :c-clef))
+		   x (staff-step staff-step)))
+		       
+
+
 (define-presentation-type clef () :options (name x staff-step))
 
 (define-presentation-method present
