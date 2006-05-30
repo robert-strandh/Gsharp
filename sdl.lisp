@@ -425,7 +425,8 @@ of a normal note.  This function always returns a positive value"))
 ;;;
 
 (defmethod compute-design ((font font) (shape (eql :g-clef)))
-  (with-slots ((sld staff-line-distance) staff-line-thickness stem-thickness) font
+  (with-slots ((sld staff-line-distance) staff-line-thickness
+	       stem-thickness yoffset) font
     (let* ((xf 0.0) (yf (* 0.5 sld))
 	   (xy (max 2.0 (round (* 0.4 sld)))) (yy (* 0.2 sld))
 	   (xb (+ xy (max 2.0 (round (* 0.4 sld))))) (yb (* 0.3 sld))
@@ -433,7 +434,7 @@ of a normal note.  This function always returns a positive value"))
 	   (xa (+ xcc (max 1.0 (* 0.2 sld)))) (ya (* -0.4 sld))
 	   (xc (+ xb (round (* 0.7 sld)))) (yc (+ sld (max 1.0 (* 0.15 sld))))
 	   (xd (+ xc sld)) (yd 0.0)
-	   (xe (* 1.5 sld)) (ye (- (+ staff-line-thickness sld)))
+	   (xe (* 1.5 sld)) (ye (- sld))
 	   (xg (round (* 1.8 sld))) (yg (* 3.8 sld))
 	   (xw (- xg (* 2.0 staff-line-thickness))) (yw (round (* 5.0 sld)))
 	   (xh xw) (yh (- yw (max 2.0 (round (* 0.4 sld)))))
@@ -450,7 +451,9 @@ of a normal note.  This function always returns a positive value"))
 	   (xl (+ xs stem-thickness)) (yl ys)
 	   (xm (- xp (* 1 staff-line-thickness))) (ym (round (* -2.75 sld)))
 	   (xr xm) (yr (+ ym staff-line-thickness))
-	   (xz xe) (yz (- staff-line-thickness sld))
+	   (xz xe)
+	   ;; yz should be slightly above the upper edge of the staff line
+	   (yz (+ (- sld) (* 1.2 staff-line-thickness)))
 	   (xaa (- xd (max 1 (round (* 0.3 sld))))) (yaa yd)
 	   (xbb xc) (ybb (- sld staff-line-thickness (max 2 (* 0.3 sld))))
 	   (xdd xp) (ydd (* 2 sld))
@@ -458,36 +461,37 @@ of a normal note.  This function always returns a positive value"))
 	   (xff (floor (* 1.4 sld))) (yff sld)
 	   (xgg (+ xff stem-thickness)) (ygg yff))
       (flet ((c (x y) (complex x y)))
-	(mf (c xa ya) ++ (c xb yb) up ++ (c xc yc) right ++
-	    (c xd yd) down ++ (c xe ye) left ++ (c xf yf) up ++
-	    (c xee yee) ++
-	    (c xg yg) up
-	    (tensions 1 1.8)
-	    (c xh yh)
-	    (tensions 1.8 1)
-	    (c xi yi)
-	    (tensions 1.8 1)
-	    (c xgg ygg) (direction #c(1 -4))
-	    (tensions 1 20)
-	    (c xl yl) down ++
-	    (c xm ym) left ++
-	    (c xn yn) up ++ (c xo yo) right ++ (c xp yp) down ++
-	    (c xq yq) &
-	    (c xq yq) ++ (c xr yr) right ++
-	    (c xs ys) up
-	    (tensions 20 1)
-	    (c xff yff) (direction #c(-1 4))
-	    (tensions 1 1.8)
-	    (c xv yv) up
-	    (tensions 1 1.8)
-	    (c xw yw) right
-	    (tensions 1.8 1)
-	    (c xx yx) down ++
-	    (c xdd ydd) ++
-	    (c xy yy) down ++ (c xz yz) right ++
-	    (c xaa yaa) up ++ (c xbb ybb) left ++
-	    (c xcc ycc) down ++ (c (+ xa 1) ya) &
-	    (c (+ xa 1) ya) ++ cycle))))) ; replace ++ by -- one day
+	(translate (mf (c xa ya) ++ (c xb yb) up ++ (c xc yc) right ++
+		       (c xd yd) down ++ (c xe ye) left ++ (c xf yf) up ++
+		       (c xee yee) ++
+		       (c xg yg) up
+		       (tensions 1 1.8)
+		       (c xh yh)
+		       (tensions 1.8 1)
+		       (c xi yi)
+		       (tensions 1.8 1)
+		       (c xgg ygg) (direction #c(1 -4))
+		       (tensions 1 20)
+		       (c xl yl) down ++
+		       (c xm ym) left ++
+		       (c xn yn) up ++ (c xo yo) right ++ (c xp yp) down ++
+		       (c xq yq) &
+		       (c xq yq) ++ (c xr yr) right ++
+		       (c xs ys) up
+		       (tensions 20 1)
+		       (c xff yff) (direction #c(-1 4))
+		       (tensions 1 1.8)
+		       (c xv yv) up
+		       (tensions 1 1.8)
+		       (c xw yw) right
+		       (tensions 1.8 1)
+		       (c xx yx) down ++
+		       (c xdd ydd) ++
+		       (c xy yy) down ++ (c xz yz) right ++
+		       (c xaa yaa) up ++ (c xbb ybb) left ++
+		       (c xcc ycc) down ++ (c (+ xa 1) ya) &
+		       (c (+ xa 1) ya) ++ cycle)
+		   (complex 0 yoffset)))))) ; replace ++ by -- one day
 
 ;;;
 ;;;                    xa  xb             

@@ -265,16 +265,14 @@
 		     ((:treble :treble8) :g-clef)
 		     (:bass :f-clef)
 		     (:c :c-clef))
-		   x (staff-step staff-step)))
+		   x (staff-step (- staff-step))))
 		       
-
-
 (define-presentation-type clef () :options (name x staff-step))
 
 (define-presentation-method present
     (object (type clef) stream (view score-view) &key)
   (with-output-as-presentation (stream object 'clef)
-    (draw-clef stream name x staff-step)))
+    (new-draw-clef stream name x staff-step)))
 
 ;;;;;;;;;;;;;;;;;; rest
 

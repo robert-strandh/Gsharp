@@ -63,10 +63,31 @@
 ;;; define the trampoline method from a sheet to a medium
 (def-graphic-op draw-design (design))
 
-;;; define output records, etc
-(def-grecording draw-design (() design) ()
-  (setf (slot-value climi::graphic 'design) design)
-  (bounding-rectangle* design))
+(defclass bezier-design-output-record (standard-graphics-displayed-output-record)
+  ((stream :initarg :stream)
+   (design :initarg :design)))
+
+(defmethod initialize-instance :after ((record bezier-design-output-record) &key)
+  (with-slots (design) record
+    (setf (rectangle-edges* record)
+	  (bounding-rectangle* design))))
+
+(defmethod medium-draw-design* :around ((stream output-recording-stream) design)
+  (with-sheet-medium (medium stream)
+    (let ((transformed-design (transform-region (medium-transformation medium) design)))
+      (when (stream-recording-p stream)
+	(let ((record (make-instance 'bezier-design-output-record
+				     :stream stream
+				     :design transformed-design)))
+	  (stream-add-output-record stream record)))
+      (when (stream-drawing-p stream)
+	(medium-draw-design* medium design)))))
+
+(defmethod replay-output-record ((record bezier-design-output-record) stream &optional
+				 (region +everywhere+) (x-offset 0) (y-offset 0))
+  (declare (ignore x-offset y-offset region))
+  (with-slots (design) record
+    (medium-draw-design* (sheet-medium stream) design)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
