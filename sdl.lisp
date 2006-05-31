@@ -149,11 +149,11 @@ of a normal note.  This function always returns a positive value"))
                beam-offset-down
 	       beam-offset-up
 	       beam-hang-sit-offset) font
+    (setf staff-line-thickness (round (/ (staff-line-distance font) 10)))
     (setf xoffset
 	  (if (oddp (round (* 1.5 staff-line-distance))) 1.5 0))
     (setf yoffset
-	  (if (oddp staff-line-distance) 0.5 0))
-    (setf staff-line-thickness (round (/ (staff-line-distance font) 10)))
+	  (if (oddp staff-line-thickness) 0.5 0))
     (setf dot-diameter
 	  (min (- staff-line-distance staff-line-thickness 2)
 	       (round (/ staff-line-distance 3))))
@@ -359,6 +359,11 @@ of a normal note.  This function always returns a positive value"))
 	(tr (clim:make-translation-transformation  x y)))
     (clim:draw-design sheet (clim:transform-region tr design))))
 
+;;; default method
+(defmethod compute-design ((font font) shape)
+  (with-slots (staff-line-distance) font
+    (scale +unit-square+ staff-line-distance)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Clefs
@@ -434,7 +439,7 @@ of a normal note.  This function always returns a positive value"))
 	   (xa (+ xcc (max 1.0 (* 0.2 sld)))) (ya (* -0.4 sld))
 	   (xc (+ xb (round (* 0.7 sld)))) (yc (+ sld (max 1.0 (* 0.15 sld))))
 	   (xd (+ xc sld)) (yd 0.0)
-	   (xe (* 1.5 sld)) (ye (- sld))
+	   (xe (* 1.5 sld)) (ye (+ (- sld) (- (* 0.5 staff-line-thickness))))
 	   (xg (round (* 1.8 sld))) (yg (* 3.8 sld))
 	   (xw (- xg (* 2.0 staff-line-thickness))) (yw (round (* 5.0 sld)))
 	   (xh xw) (yh (- yw (max 2.0 (round (* 0.4 sld)))))
@@ -453,7 +458,7 @@ of a normal note.  This function always returns a positive value"))
 	   (xr xm) (yr (+ ym staff-line-thickness))
 	   (xz xe)
 	   ;; yz should be slightly above the upper edge of the staff line
-	   (yz (+ (- sld) (* 1.2 staff-line-thickness)))
+	   (yz (+ (- sld) (* 0.7 staff-line-thickness)))
 	   (xaa (- xd (max 1 (round (* 0.3 sld))))) (yaa yd)
 	   (xbb xc) (ybb (- sld staff-line-thickness (max 2 (* 0.3 sld))))
 	   (xdd xp) (ydd (* 2 sld))
