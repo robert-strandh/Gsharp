@@ -8,10 +8,10 @@
 (define-application-frame fontview ()
   ((font :initform (make-instance 'sdl::font :staff-line-distance 6))
    (shape :initform :g-clef)
-   (grid :initform nil)
+   (grid :initform t)
    (staff :initform nil)
    (staff-offset :initform 0)
-   (view :initform :antialiased)
+   (view :initform :pixel)
    (zoom :initform 1)
    (hoffset :initform 300)
    (voffset :initform 300))
@@ -41,9 +41,39 @@
 				      (* 10 sld) (+ y down)))))))))
 
 (defun display-pixel-view (frame pane)
-  (declare (ignore pane))
   (with-slots (font shape grid zoom hoffset voffset) frame
-    nil))
+    (with-translation (pane hoffset voffset)
+      (let ((design (sdl::ensure-design font shape)))
+	(multiple-value-bind (min-x min-y max-x max-y) (bounding-rectangle* design)
+	  (setf min-x (* 4 (floor min-x))
+		min-y (* 4 (floor min-y))
+		max-x (* 4 (ceiling max-x))
+		max-y (* 4 (ceiling max-y)))
+	  (let ((array (climi::render-design-to-array design)))
+	    (loop for y from min-y below max-y
+		  for y-index from 0
+		  do (loop with x0 = nil
+			   for x from min-x below max-x
+			   for x-index from 0
+			   do (if (zerop (aref array y-index x-index))
+				  (when (null x0)
+				    (setf x0 x))
+				  (unless (null x0)
+				    (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom))
+				    (setf x0 nil)))
+			   finally (unless (null x0)
+				     (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom)))))
+	    (when grid
+	      (loop for y downfrom 0 above -300 by (* 4 zoom)
+		    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
+	      (loop for y from 0 below 300 by (* 4 zoom)
+		    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
+	      (loop for x downfrom 0 above -300 by (* 4 zoom)
+		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
+	      (loop for x from 0 below 300 by (* 4 zoom)
+		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
+	      (draw-rectangle* pane -300 0 300 1 :ink +red+)
+	      (draw-rectangle* pane 0 -300 1 300 :ink +red+))))))))
 
 (defun display-entry (frame pane)
   (with-slots (view) frame

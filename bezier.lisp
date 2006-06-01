@@ -662,23 +662,25 @@
 	  repeat (nb-lines lines)
 	  do (render-scan-lines array pixel-value i (crossings lines i) min-x min-y))))
 
-(defun render-to-array (positive-areas negative-areas min-x min-y max-x max-y)
-  (setf min-x (* 4 (floor min-x))
-	min-y (* 4 (floor min-y))
-	max-x (* 4 (ceiling max-x))
-	max-y (* 4 (ceiling max-y)))
-  (let ((result (make-array (list (- max-y min-y) (- max-x min-x))
-			    :element-type 'bit :initial-element 1))
-	(transformation (make-scaling-transformation* 4 4)))
-    (loop for area in positive-areas
-	  do (let* ((transformed-area (transform-region transformation area))
-		    (polygon (polygonalize transformed-area)))
-	       (render-polygon result polygon 0 min-x min-y)))
-    (loop for area in negative-areas
-	  do (let* ((transformed-area (transform-region transformation area))
-		    (polygon (polygonalize transformed-area)))
-	       (render-polygon result polygon 1 min-x min-y)))
-    result))
+(defun render-to-array (positive-areas negative-areas)
+  (multiple-value-bind (min-x min-y max-x max-y)
+      (bounding-rectangle-of-areas positive-areas)
+    (setf min-x (* 4 (floor min-x))
+	  min-y (* 4 (floor min-y))
+	  max-x (* 4 (ceiling max-x))
+	  max-y (* 4 (ceiling max-y)))
+    (let ((result (make-array (list (- max-y min-y) (- max-x min-x))
+			      :element-type 'bit :initial-element 1))
+	  (transformation (make-scaling-transformation* 4 4)))
+      (loop for area in positive-areas
+	    do (let* ((transformed-area (transform-region transformation area))
+		      (polygon (polygonalize transformed-area)))
+		 (render-polygon result polygon 0 min-x min-y)))
+      (loop for area in negative-areas
+	    do (let* ((transformed-area (transform-region transformation area))
+		      (polygon (polygonalize transformed-area)))
+		 (render-polygon result polygon 1 min-x min-y)))
+      result)))
 
 (defparameter *x* 0)
 (defparameter *y* 0)
@@ -699,12 +701,12 @@
 		      (+ (* a 1.0) (* 1-a b))))))
 
 (defun render-through-pixmap (design medium positive-areas negative-areas)
-  (multiple-value-bind (min-x min-y max-x max-y)
-      (bounding-rectangle-of-areas positive-areas)
+  (multiple-value-bind (min-x min-y)
+      (bounding-rectangle* design)
     (let ((pixmap (gethash (list (medium-sheet medium) (resolve-ink medium) design)
 			   *pixmaps*)))
       (when (null pixmap)
-	(let* ((picture (render-to-array positive-areas negative-areas min-x min-y max-x max-y))
+	(let* ((picture (render-to-array positive-areas negative-areas))
 	       (height (array-dimension picture 0))
 	       (width (array-dimension picture 1))
 	       (reduced-picture (make-array (list (/ height 4) (/ width 4)) :initial-element 16)))
@@ -740,6 +742,20 @@
 (defmethod medium-draw-design* (medium (design translated-region))
   (multiple-value-bind (*x* *y*) (transform-position (translation design) 0 0)
     (medium-draw-design* medium (original-region design))))
+
+(defgeneric render-design-to-array (design))
+
+(defmethod render-design-to-array ((design bezier-area))
+  (render-to-array (list design) '()))
+
+(defmethod render-design-to-array ((design bezier-union))
+  (render-to-array (areas design) '()))
+
+(defmethod render-design-to-array ((design bezier-difference))
+  (render-to-array (positive-areas design) (negative-areas design)))
+
+(defmethod render-design-to-array ((design translated-region))
+  (render-design-to-array (original-region design)))
 
 (defmethod draw-design (sheet design &rest args &key &allow-other-keys)
   (climi::with-medium-options (sheet args)
