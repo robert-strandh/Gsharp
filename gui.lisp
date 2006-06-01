@@ -233,6 +233,7 @@
  :errorp nil
  :menu '(("File" :menu file-command-table)
 	 ("Buffer" :menu buffer-command-table)
+	 ("Stuff" :menu segment-command-table)
 	 ("Segment" :menu segment-command-table)
 	 ("Layer" :menu layer-command-table)
 	 ("Slice" :menu slice-command-table)
