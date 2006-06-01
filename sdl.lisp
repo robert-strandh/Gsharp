@@ -151,7 +151,7 @@ of a normal note.  This function always returns a positive value"))
 	       beam-hang-sit-offset) font
     (setf staff-line-thickness (round (/ (staff-line-distance font) 10)))
     (setf xoffset
-	  (if (oddp (round (* 1.5 staff-line-distance))) 1.5 0))
+	  (if (oddp (round (* 1.5 staff-line-distance))) 0.5 0))
     (setf yoffset
 	  (if (oddp staff-line-thickness) 0.5 0))
     (setf dot-diameter
@@ -610,12 +610,12 @@ of a normal note.  This function always returns a positive value"))
 			       (mf (c xc (- staff-line-thickness)) -- (c xc 0)))))))
 	(clim:region-union
 	 (climi::close-path (mf (c 0 top) -- (c xa top) --
-				(c xa (- (- top) staff-line-thickness)) --
-				(c 0 (- (- top) staff-line-thickness)) -- (c 0 top)))
+				(c xa (- top)) --
+				(c 0 (- top)) -- (c 0 top)))
 	 (clim:region-union
 	  (climi::close-path (mf (c xb top) -- (c xc top) --
-				 (c xc (- (- top) staff-line-thickness)) --
-				 (c xb (- (- top) staff-line-thickness)) -- (c xb top)))
+				 (c xc (- top)) --
+				 (c xb (- top)) -- (c xb top)))
 	  (translate r (c 0 staff-line-thickness))))))))
 
 ;;;                                                                       
@@ -712,7 +712,7 @@ of a normal note.  This function always returns a positive value"))
 	       (complex xoffset yoffset))))
 
 (defmethod compute-design ((font font) (shape (eql :whole-notehead)))
-  (with-slots ((sld staff-line-distance)) font
+  (with-slots (xoffset yoffset (sld staff-line-distance)) font
     (let ((op (scale (superellipse #c(0.75 0.0) #c(0.0 0.58)
 				   #c(-0.75 0.0) #c(0.0 -0.58) 0.7)
 		     sld))
@@ -720,7 +720,8 @@ of a normal note.  This function always returns a positive value"))
 				   #c(-0.3 0.0) #c(0.0 -0.35) 0.8)
 			    -0.3)
 		     sld)))
-      (clim:region-difference op (climi::reverse-path ip)))))
+      (translate (clim:region-difference op (climi::reverse-path ip))
+		 (complex xoffset yoffset)))))
 
 (defmethod compute-design ((font font) (shape (eql :half-notehead)))
   (with-slots (xoffset yoffset (sld staff-line-distance)) font

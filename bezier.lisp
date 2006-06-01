@@ -703,6 +703,8 @@
 (defun render-through-pixmap (design medium positive-areas negative-areas)
   (multiple-value-bind (min-x min-y)
       (bounding-rectangle* design)
+    (setf min-x (floor min-x)
+	  min-y (floor min-y))
     (let ((pixmap (gethash (list (medium-sheet medium) (resolve-ink medium) design)
 			   *pixmaps*)))
       (when (null pixmap)

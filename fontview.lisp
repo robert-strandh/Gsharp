@@ -9,9 +9,9 @@
   ((font :initform (make-instance 'sdl::font :staff-line-distance 6))
    (shape :initform :g-clef)
    (grid :initform t)
-   (staff :initform nil)
+   (staff :initform t)
    (staff-offset :initform 0)
-   (view :initform :pixel)
+   (view :initform :antialiased)
    (zoom :initform 1)
    (hoffset :initform 300)
    (voffset :initform 300))
@@ -72,6 +72,24 @@
 		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
 	      (loop for x from 0 below 300 by (* 4 zoom)
 		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
+	      ;; draw the bounding rectangle
+	      (draw-rectangle* pane
+			       (* zoom min-x) (* zoom min-y)
+			       (* zoom max-x) (1+ (* zoom min-y))
+			       :ink +red+)
+	      (draw-rectangle* pane
+			       (* zoom min-x) (* zoom max-y)
+			       (* zoom max-x) (1+ (* zoom max-y))
+			       :ink +red+)
+	      (draw-rectangle* pane
+			       (* zoom min-x) (* zoom min-y)
+			       (1+ (* zoom min-x)) (* zoom max-y)
+			       :ink +red+)
+	      (draw-rectangle* pane
+			       (* zoom max-x) (* zoom min-y)
+			       (1+ (* zoom max-x)) (* zoom max-y)
+			       :ink +red+)
+	      ;; draw the reference point
 	      (draw-rectangle* pane -300 0 300 1 :ink +red+)
 	      (draw-rectangle* pane 0 -300 1 300 :ink +red+))))))))
 
