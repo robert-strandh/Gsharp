@@ -598,7 +598,7 @@ of a normal note.  This function always returns a positive value"))
 		    (c (+ xd (* 0.5 dot-width)) (+ yd dot-width)) right ++
 		    (c (+ xd dot-width) (+ yd (* 0.5 dot-width))) down ++
 		    (c (+ xd (* 0.5 dot-width)) yd) left ++
-		    (c xd (* yd (* 0.5 dot-width))) up ++ (c xf top) right ++
+		    (c xd (+ yd (* 0.5 dot-width))) up ++ (c xf top) right ++
 		    (c xk yk) down ++ (c xh (- yh staff-line-thickness)) ++
 		    (c xl yl) & (c xl yl) ++ down (c xi 0)))
 	     (q (translate (yscale p -1) (c 0 (- staff-line-thickness))))
