@@ -883,6 +883,36 @@ of a normal note.  This function always returns a positive value"))
 	  (c (- (- width 1.0)) (- top height)) --
 	  (c (- width) (- top height)) ++ cycle))))
 
+(defun large-tie-up-left (sld slt width-multiplier)
+  (declare (ignore slt))
+  (let* ((thickness (round (* 0.33 sld)))
+	 (height (round (* 1.0 sld)))
+	 (top (round (* 11/6 sld)))
+	 (width (* width-multiplier sld)))
+    (flet ((c (x y) (complex x y)))
+      (climi::close-path
+       (mf (c 0.0 top) left ++
+           (c (- width) (- top height)) --
+           (c (- (- width 1.0)) (- top height)) ++
+           (c (* -0.3 width) (- top thickness)) ++
+           (c 0.0 (- top thickness)) &
+           (c 0.0 (- top thickness)) -- (c 0.0 top))))))
+
+(defun large-tie-up-right (sld slt width-multiplier)
+  (declare (ignore slt))
+  (let* ((thickness (round (* 0.33 sld)))
+	 (height (round (* 1.0 sld)))
+	 (top (round (* 11/6 sld)))
+	 (width (* width-multiplier sld)))
+    (flet ((c (x y) (complex x y)))
+      (climi::close-path
+       (mf (c 0.0 top) right ++
+           (c width (- top height)) --
+           (c (- width 1.0) (- top height)) ++
+           (c (* 0.3 width) (- top thickness)) ++
+           (c 0.0 (- top thickness)) &
+           (c 0.0 (- top thickness)) -- (c 0.0 top))))))
+
 (defmethod compute-design ((font font) (shape (eql :large-tie-1-up)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
     (large-tie-up sld slt 2.0)))
@@ -923,6 +953,14 @@ of a normal note.  This function always returns a positive value"))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
     (large-tie-up sld slt 5.0)))
 
+(defmethod compute-design ((font font) (shape (eql :large-tie-up-left)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
+    (large-tie-up-left sld slt 5.0)))
+
+(defmethod compute-design ((font font) (shape (eql :large-tie-up-right)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
+    (large-tie-up-right sld slt 5.0)))
+
 (defun large-tie-down (sld slt width-multiplier)
   (let* ((thickness (round (* 0.33 sld)))
 	 (height (round (* 1.0 sld)))
@@ -937,6 +975,34 @@ of a normal note.  This function always returns a positive value"))
 	  (c (* -0.3 width) (- thickness bot)) ++
 	  (c (- (- width 1.0)) (- height bot)) --
 	  (c (- width) (- height bot)) ++ cycle))))
+
+(defun large-tie-down-left (sld slt width-multiplier)
+  (let* ((thickness (round (* 0.33 sld)))
+	 (height (round (* 1.0 sld)))
+	 (bot (- (round(* 11/6 sld)) slt))
+	 (width (* width-multiplier sld)))
+    (flet ((c (x y) (complex x y)))
+      (climi::close-path
+       (mf (c 0.0 (- bot)) left ++
+           (c (- width) (- height bot)) --
+           (c (- (- width 1.0)) (- height bot)) ++
+           (c (* -0.3 width) (- thickness bot)) ++
+           (c 0.0 (- thickness bot)) &
+           (c 0.0 (- thickness bot)) -- (c 0.0 (- bot)))))))
+
+(defun large-tie-down-right (sld slt width-multiplier)
+  (let* ((thickness (round (* 0.33 sld)))
+	 (height (round (* 1.0 sld)))
+	 (bot (- (round(* 11/6 sld)) slt))
+	 (width (* width-multiplier sld)))
+    (flet ((c (x y) (complex x y)))
+      (climi::close-path
+       (mf (c 0.0 (- bot)) right ++
+           (c width (- height bot)) --
+           (c (- width 1.0) (- height bot)) ++
+           (c (* 0.3 width) (- thickness bot)) ++
+           (c 0.0 (- thickness bot)) &
+           (c 0.0 (- thickness bot)) -- (c 0.0 (- bot)))))))
 
 (defmethod compute-design ((font font) (shape (eql :large-tie-1-down)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
@@ -977,6 +1043,14 @@ of a normal note.  This function always returns a positive value"))
 (defmethod compute-design ((font font) (shape (eql :large-tie-10-down)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
     (large-tie-down sld slt 5.0)))
+
+(defmethod compute-design ((font font) (shape (eql :large-tie-down-left)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
+    (large-tie-down-left sld slt 5.0)))
+
+(defmethod compute-design ((font font) (shape (eql :large-tie-down-right)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
+    (large-tie-down-right sld slt 5.0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
