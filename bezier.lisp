@@ -56,12 +56,9 @@
   (- (* (realpart z) (point-y v))
      (* (imagpart z) (point-x v))))
 
-;;; the CLIM spec does not mention the existence of
-;;; medium-draw-design*, but I assume it has to exist
-;;; RS 2006-05-27
+(defclass bezier-design (design) ())
 
-;;; define the trampoline method from a sheet to a medium
-(def-graphic-op draw-design (design))
+(defgeneric medium-draw-bezier-design* (stream design))
 
 (defclass bezier-design-output-record (standard-graphics-displayed-output-record)
   ((stream :initarg :stream)
@@ -72,7 +69,7 @@
     (setf (rectangle-edges* record)
 	  (bounding-rectangle* design))))
 
-(defmethod medium-draw-design* :around ((stream output-recording-stream) design)
+(defmethod medium-draw-bezier-design* :around ((stream output-recording-stream) design)
   (with-sheet-medium (medium stream)
     (let ((transformed-design (transform-region (medium-transformation medium) design)))
       (when (stream-recording-p stream)
@@ -81,13 +78,13 @@
 				     :design transformed-design)))
 	  (stream-add-output-record stream record)))
       (when (stream-drawing-p stream)
-	(medium-draw-design* medium design)))))
+	(medium-draw-bezier-design* medium design)))))
 
 (defmethod replay-output-record ((record bezier-design-output-record) stream &optional
 				 (region +everywhere+) (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-slots (design) record
-    (medium-draw-design* (sheet-medium stream) design)))
+    (medium-draw-bezier-design* (sheet-medium stream) design)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -193,11 +190,11 @@
 	(call-next-method))))
 
 ;;; A region that translates a different region
-(defclass translated-region (region)
+(defclass translated-bezier-design (region bezier-design)
   ((%translation :initarg :translation :reader translation)
    (%region :initarg :region :reader original-region)))
 
-(defmethod bounding-rectangle* ((region translated-region))
+(defmethod bounding-rectangle* ((region translated-bezier-design))
   (let ((translation (translation region)))
     (multiple-value-bind (min-x min-y max-x max-y)
 	(bounding-rectangle* (original-region region))
@@ -210,7 +207,7 @@
 (defgeneric really-transform-region (transformation region))
 
 ;;; an area defined as a closed path of Bezier curve segments
-(defclass bezier-area (area segments-mixin bounding-rectangle-mixin) ())
+(defclass bezier-area (area bezier-design segments-mixin bounding-rectangle-mixin) ())
 
 (defgeneric close-path (path))
 
@@ -243,7 +240,7 @@
 
 (defmethod transform-region (transformation (area bezier-area))
   (if (translation-transformation-p transformation)
-      (make-instance 'translated-region
+      (make-instance 'translated-bezier-design
 		     :translation transformation
 		     :region area)
       (really-transform-region transformation area)))
@@ -253,7 +250,7 @@
 ;;; Special cases of combined Bezier areas
 
 ;;; A union of bezier areas.  This is not itself a bezier area.
-(defclass bezier-union (area)
+(defclass bezier-union (area bezier-design)
   ((%areas :initarg :areas :initform '() :reader areas)))
 
 (defmethod really-transform-region (transformation (area bezier-union))
@@ -264,7 +261,7 @@
 
 (defmethod transform-region (transformation (area bezier-union))
   (if (translation-transformation-p transformation)
-      (make-instance 'translated-region
+      (make-instance 'translated-bezier-design
 		     :translation transformation
 		     :region area)
       (really-transform-region transformation area)))
@@ -300,7 +297,7 @@
   (make-instance 'bezier-union
 		 :areas (append (areas r1) (areas r2))))
 
-(defclass bezier-difference (area)
+(defclass bezier-difference (area bezier-design)
   ((%positive-areas :initarg :positive-areas :initform '() :reader positive-areas)
    (%negative-areas :initarg :negative-areas :initform '() :reader negative-areas)))
 
@@ -315,7 +312,7 @@
 
 (defmethod transform-region (transformation (area bezier-difference))
   (if (translation-transformation-p transformation)
-      (make-instance 'translated-region
+      (make-instance 'translated-bezier-design
 		     :translation transformation
 		     :region area)
       (really-transform-region transformation area)))
@@ -732,19 +729,6 @@
       (copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
 			(medium-sheet medium) (+ *x* min-x) (+ *y* min-y)))))
 
-(defmethod medium-draw-design* (medium (design bezier-area))
-  (render-through-pixmap design medium (list design) '()))
-
-(defmethod medium-draw-design* (medium (design bezier-union))
-  (render-through-pixmap design medium (areas design) '()))
-
-(defmethod medium-draw-design* (medium (design bezier-difference))
-  (render-through-pixmap design medium (positive-areas design) (negative-areas design)))
-
-(defmethod medium-draw-design* (medium (design translated-region))
-  (multiple-value-bind (*x* *y*) (transform-position (translation design) 0 0)
-    (medium-draw-design* medium (original-region design))))
-
 (defgeneric render-design-to-array (design))
 
 (defmethod render-design-to-array ((design bezier-area))
@@ -756,76 +740,134 @@
 (defmethod render-design-to-array ((design bezier-difference))
   (render-to-array (positive-areas design) (negative-areas design)))
 
-(defmethod render-design-to-array ((design translated-region))
+(defmethod render-design-to-array ((design translated-bezier-design))
   (render-design-to-array (original-region design)))
 
-(defmethod draw-design (sheet design &rest args &key &allow-other-keys)
-  (climi::with-medium-options (sheet args)
-    (medium-draw-design* medium design)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Generic drawing
+
+(defun draw-bezier-design* (sheet design &rest options)
+  (climi::with-medium-options (sheet options)
+    (medium-draw-bezier-design* sheet design)))
+
+(defmethod draw-design (medium (design bezier-design) &rest args &key &allow-other-keys)
+  (apply #'draw-bezier-design* medium design options))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Drawing bezier designs to screen
+
+
+;;; Fallback methods (suitable for CLX)
+(defmethod medium-draw-bezier-design* (medium (design bezier-area))
+  (render-through-pixmap design medium (list design) '()))
+(defmethod medium-draw-bezier-design* (medium (design bezier-union))
+  (render-through-pixmap design medium (areas design) '()))
+(defmethod medium-draw-bezier-design* (medium (design bezier-difference))
+  (render-through-pixmap design medium (positive-areas design) (negative-areas design)))
+(defmethod medium-draw-bezier-design* (medium (design translated-bezier-design))
+  (multiple-value-bind (*x* *y*) (transform-position (translation design) 0 0)
+    (medium-draw-bezier-design* medium (original-region design))))
+
+;;; Postscript methods
+(defmethod medium-draw-bezier-design*
+    ((medium clim-postscript::postscript-medium) (design bezier-area))
+  (let ((stream (clim-postscript::postscript-medium-file-stream medium))
+        (clim-postscript::*transformation* (sheet-native-transformation (medium-sheet medium))))
+    (clim-postscript::postscript-actualize-graphics-state stream medium :color)
+    (format stream "newpath~%")
+    (let ((p0 (slot-value (car (segments design)) 'p0)))
+      (clim-postscript::write-coordinates stream (point-x p0) (point-y p0))
+      (format stream "moveto~%"))
+    (loop for segment in (segments design)
+          do (with-slots (p1 p2 p3) segment
+               (clim-postscript::write-coordinates stream (point-x p1) (point-y
+p1))
+               (clim-postscript::write-coordinates stream (point-x p2) (point-y
+p2))
+               (clim-postscript::write-coordinates stream (point-x p3) (point-y
+p3))
+               (format stream "curveto~%")))
+    (format stream "fill~%")))
+(defmethod medium-draw-bezier-design*
+    ((medium clim-postscript::postscript-medium) (design bezier-union))
+  (dolist (area (areas design))
+    (medium-draw-bezier-design* medium area)))
+(defmethod medium-draw-bezier-design*
+    ((medium clim-postscript::postscript-medium) (design bezier-difference))
+  (dolist (area (positive-areas design))
+    (medium-draw-bezier-design* medium area))
+  (with-drawing-options (medium :ink +background-ink+)
+    (dolist (area (negative-areas design))
+      (medium-draw-bezier-design* medium area))))
+(defmethod medium-draw-bezier-design*
+    ((medium clim-postscript::postscript-medium) (design translated-bezier-design))
+  (medium-draw-bezier-design* medium (really-transform-region (translation design) (original-region design))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Special cases on region-union and region-intersection
 
-(defmethod region-union ((r1 translated-region) (r2 bezier-curve))
+(defmethod region-union ((r1 translated-bezier-design) (r2 bezier-curve))
   (region-union (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-union ((r1 translated-region) (r2 bezier-area))
+(defmethod region-union ((r1 translated-bezier-design) (r2 bezier-area))
   (region-union (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-union ((r1 translated-region) (r2 bezier-union))
+(defmethod region-union ((r1 translated-bezier-design) (r2 bezier-union))
   (region-union (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-union ((r1 translated-region) (r2 bezier-difference))
+(defmethod region-union ((r1 translated-bezier-design) (r2 bezier-difference))
   (region-union (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-union ((r1 bezier-curve) (r2 translated-region))
+(defmethod region-union ((r1 bezier-curve) (r2 translated-bezier-design))
   (region-union r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-union ((r1 bezier-area) (r2 translated-region))
+(defmethod region-union ((r1 bezier-area) (r2 translated-bezier-design))
   (region-union r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-union ((r1 bezier-union) (r2 translated-region))
+(defmethod region-union ((r1 bezier-union) (r2 translated-bezier-design))
   (region-union r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-union ((r1 bezier-difference) (r2 translated-region))
+(defmethod region-union ((r1 bezier-difference) (r2 translated-bezier-design))
   (region-union r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-union ((r1 translated-region) (r2 translated-region))
+(defmethod region-union ((r1 translated-bezier-design) (r2 translated-bezier-design))
   (region-union (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-difference ((r1 translated-region) (r2 bezier-curve))
+(defmethod region-difference ((r1 translated-bezier-design) (r2 bezier-curve))
   (region-difference (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-difference ((r1 translated-region) (r2 bezier-area))
+(defmethod region-difference ((r1 translated-bezier-design) (r2 bezier-area))
   (region-difference (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-difference ((r1 translated-region) (r2 bezier-union))
+(defmethod region-difference ((r1 translated-bezier-design) (r2 bezier-union))
   (region-difference (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-difference ((r1 translated-region) (r2 bezier-difference))
+(defmethod region-difference ((r1 translated-bezier-design) (r2 bezier-difference))
   (region-difference (really-transform-region (translation r1) (original-region r1)) r2))
 
-(defmethod region-difference ((r1 bezier-curve) (r2 translated-region))
+(defmethod region-difference ((r1 bezier-curve) (r2 translated-bezier-design))
   (region-difference r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-difference ((r1 bezier-area) (r2 translated-region))
+(defmethod region-difference ((r1 bezier-area) (r2 translated-bezier-design))
   (region-difference r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-difference ((r1 bezier-union) (r2 translated-region))
+(defmethod region-difference ((r1 bezier-union) (r2 translated-bezier-design))
   (region-difference r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-difference ((r1 bezier-difference) (r2 translated-region))
+(defmethod region-difference ((r1 bezier-difference) (r2 translated-bezier-design))
   (region-difference r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod region-difference ((r1 translated-region) (r2 translated-region))
+(defmethod region-difference ((r1 translated-bezier-design) (r2 translated-bezier-design))
   (region-difference r1 (really-transform-region (translation r2) (original-region r2))))
 
-(defmethod transform-region (transformation (region translated-region))
+(defmethod transform-region (transformation (region translated-bezier-design))
   (let ((combined-transformation (compose-transformations transformation
 							  (translation region))))
     (if (translation-transformation-p transformation)
-	(make-instance 'translated-region
+	(make-instance 'translated-bezier-design
 		       :translation combined-transformation
 		       :region (original-region region))
 	(transform-region combined-transformation (original-region region)))))
