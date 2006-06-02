@@ -751,7 +751,7 @@
   (climi::with-medium-options (sheet options)
     (medium-draw-bezier-design* sheet design)))
 
-(defmethod draw-design (medium (design bezier-design) &rest args &key &allow-other-keys)
+(defmethod draw-design (medium (design bezier-design) &rest options &key &allow-other-keys)
   (apply #'draw-bezier-design* medium design options))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

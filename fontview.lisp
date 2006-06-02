@@ -7,7 +7,7 @@
 
 (define-application-frame fontview ()
   ((font :initform (make-instance 'sdl::font :staff-line-distance 6))
-   (shape :initform :g-clef)
+   (shape :initarg :shape :initform :g-clef)
    (grid :initform t)
    (staff :initform t)
    (staff-offset :initform 0)
@@ -99,8 +99,8 @@
 	(display-antialiased-view frame pane)
 	(display-pixel-view frame pane))))
 
-(defun fontview ()
-  (let ((frame (make-application-frame 'fontview)))
+(defun fontview (&optional (shape :g-clef))
+  (let ((frame (make-application-frame 'fontview :shape shape)))
     (run-frame-top-level frame)))  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
