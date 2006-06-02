@@ -211,6 +211,8 @@
 
 ;;;;;;;;;;;;;;;;;; helper macro
 
+;;; This macro is currently not used.  (And probably never will be
+;;; used, now that we raster our own bezier curves.)
 (defmacro define-pixmap-recording ((draw-name args) &body body)
   `(defun ,draw-name (pane ,@args x staff-step)
      (let* ((extra (if *light-glyph* 1 0))
@@ -222,13 +224,15 @@
 
 ;;;;;;;;;;;;;;;;;; notehead
 
-(define-pixmap-recording (draw-notehead (name))
-    (ecase name
-      (:whole +glyph-whole+)
-      (:half +glyph-half+)
-      (:filled +glyph-filled+)))
-
 (define-presentation-type notehead () :options (name x staff-step))
+
+(defun draw-notehead (stream name x staff-step)
+  (sdl::draw-shape stream *font* 
+		   (ecase name
+		     (:whole :whole-notehead)
+		     (:half :half-notehead)
+		     (:filled :filled-notehead))
+		   x (staff-step (- staff-step))))
 
 (define-presentation-method present
     (object (type notehead) stream (view score-view) &key)
@@ -237,31 +241,19 @@
 
 ;;;;;;;;;;;;;;;;;; accidental
 
-(define-pixmap-recording (draw-accidental (name))
-    (ecase name
-      (:natural +glyph-natural+)
-      (:flat +glyph-flat+)
-      (:double-flat +glyph-double-flat+)
-      (:sharp +glyph-sharp+)
-      (:double-sharp +glyph-double-sharp+)))
+(defun draw-accidental (stream name x staff-step)
+  (sdl::draw-shape stream *font* name x (staff-step (- staff-step))))
 
 ;;;;;;;;;;;;;;;;;; clef
 
-(define-pixmap-recording (draw-clef (name))
-    (ecase name
-      ;; FIXME: while using the same glyph for :TREBLE and :TREBLE8 is
-      ;; fine from a musical point of view, some differentiation (by
-      ;; putting an italic 8 underneath, for instance) would be good.
-      ((:treble :treble8) +glyph-g-clef+)
-      (:bass +glyph-f-clef+)
-      (:c +glyph-c-clef+)))
-
-(defun new-draw-clef (stream name x staff-step)
+(defun draw-clef (stream name x staff-step)
   (sdl::draw-shape stream *font* 
 		   (ecase name
-		     ;; FIXME: while using the same glyph for :TREBLE and :TREBLE8 is
-		     ;; fine from a musical point of view, some differentiation (by
-		     ;; putting an italic 8 underneath, for instance) would be good.
+		     ;; FIXME: while using the same glyph for :TREBLE
+		     ;; and :TREBLE8 is fine from a musical point of
+		     ;; view, some differentiation (by putting an
+		     ;; italic 8 underneath, for instance) would be
+		     ;; good.
 		     ((:treble :treble8) :g-clef)
 		     (:bass :f-clef)
 		     (:c :c-clef))
@@ -272,45 +264,52 @@
 (define-presentation-method present
     (object (type clef) stream (view score-view) &key)
   (with-output-as-presentation (stream object 'clef)
-    (new-draw-clef stream name x staff-step)))
+    (draw-clef stream name x staff-step)))
 
 ;;;;;;;;;;;;;;;;;; rest
 
-(define-pixmap-recording (draw-rest (duration))
-    (ecase duration
-      (1 +glyph-whole-rest+)
-      (1/2 +glyph-half-rest+)
-      (1/4 +glyph-quarter-rest+)
-      (1/8 +glyph-eighth-rest+)
-      (1/16 +glyph-sixteenth-rest+)
-      (1/32 +glyph-thirtysecondth-rest+)
-      (1/64 +glyph-sixtyfourth-rest+)
-      (1/128 +glyph-onehundredandtwentyeigth-rest+)))
+(defun draw-rest (stream duration x staff-step)
+  (sdl::draw-shape stream *font*
+                   (ecase duration
+                     (1 :whole-rest)
+                     (1/2 :half-rest)
+                     (1/4 :quarter-rest)
+                     (1/8 :8th-rest)
+                     (1/16 :16th-rest)
+                     (1/32 :32nd-rest)
+                     (1/64 :64th-rest)
+                     ;; FIXME 128th
+                     )
+                   x (staff-step (- staff-step))))
 
 ;;;;;;;;;;;;;;;;;; flags down
 
-(define-pixmap-recording (draw-flags-down (nb))
-    (ecase nb
-      (1 +glyph-flags-down-one+)
-      (2 +glyph-flags-down-two+)
-      (3 +glyph-flags-down-three+)
-      (4 +glyph-flags-down-four+)
-      (5 +glyph-flags-down-five+)))
+(defun draw-flags-down (stream nb x staff-step)
+  (sdl::draw-shape stream *font*
+                   (ecase nb
+                     (1 :flags-down-1)
+                     (2 :flags-down-2)
+                     (3 :flags-down-3)
+                     (4 :flags-down-4)
+                     (5 :flags-down-5))
+                   x (staff-step (- staff-step))))
 
 ;;;;;;;;;;;;;;;;;; flags up
 
-(define-pixmap-recording (draw-flags-up (nb))
-    (ecase nb
-      (1 +glyph-flags-up-one+)
-      (2 +glyph-flags-up-two+)
-      (3 +glyph-flags-up-three+)
-      (4 +glyph-flags-up-four+)
-      (5 +glyph-flags-up-five+)))
+(defun draw-flags-up (stream nb x staff-step)
+  (sdl::draw-shape stream *font*
+                   (ecase nb
+                     (1 :flags-up-1)
+                     (2 :flags-up-2)
+                     (3 :flags-up-3)
+                     (4 :flags-up-4)
+                     (5 :flags-up-5))
+                   x (staff-step (- staff-step))))
 
 ;;;;;;;;;;;;;;;;;; dot
 
-(define-pixmap-recording (draw-dot ())
-    +glyph-dot+)
+(defun draw-dot (stream x staff-step)
+  (sdl::draw-shape stream *font* :dot x (staff-step (- staff-step))))
 
 ;;;;;;;;;;;;;;;;;; staff line
 
@@ -652,58 +651,60 @@
 	      (xx2 (round (- x2 (staff-step 10))))
 	      (y1 (- (round (staff-step (+ staff-step 11/3)))))
 	      (thickness (round (staff-step 2/3))))
-	  (draw-antialiased-glyph pane +glyph-large-tie-left-up+ xx1 staff-step)
-	  (draw-antialiased-glyph pane +glyph-large-tie-right-up+ xx2 staff-step)
+          (sdl::draw-shape pane *font* :large-tie-up-left xx1 (staff-step (- staff-step)))
+          (sdl::draw-shape pane *font* :large-tie-up-right xx2 (staff-step (- staff-step)))
 	  (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
-	(let ((glyph-no (cond ((> dist 18) +glyph-large-tie-ten-up+)
-			      ((> dist 17) +glyph-large-tie-nine-up+)
-			      ((> dist 16) +glyph-large-tie-eight-up+)
-			      ((> dist 15) +glyph-large-tie-seven-up+)
-			      ((> dist 14) +glyph-large-tie-six-up+)
-			      ((> dist 13) +glyph-large-tie-five-up+)
-			      ((> dist 12) +glyph-large-tie-four-up+)
-			      ((> dist 11) +glyph-large-tie-three-up+)
-			      ((> dist 10) +glyph-large-tie-two-up+)
-			      ((> dist 9) +glyph-large-tie-one-up+)
-			      ((> dist 8) +glyph-small-tie-eight-up+)
-			      ((> dist 7) +glyph-small-tie-seven-up+)
-			      ((> dist 6) +glyph-small-tie-six-up+)
-			      ((> dist 5) +glyph-small-tie-five-up+)
-			      ((> dist 4) +glyph-small-tie-four-up+)
-			      ((> dist 3) +glyph-small-tie-three-up+)
-			      ((> dist 2) +glyph-small-tie-two-up+)
-			      (t +glyph-small-tie-one-up+))))
-	  (draw-antialiased-glyph pane glyph-no (round (* 0.5 (+ x1 x2))) staff-step)))))
+	(let ((glyph-name (cond ((> dist 18) :large-tie-10-up)
+                                ((> dist 17) :large-tie-9-up)
+                                ((> dist 16) :large-tie-8-up)
+                                ((> dist 15) :large-tie-7-up)
+                                ((> dist 14) :large-tie-6-up)
+                                ((> dist 13) :large-tie-5-up)
+                                ((> dist 12) :large-tie-4-up)
+                                ((> dist 11) :large-tie-3-up)
+                                ((> dist 10) :large-tie-2-up)
+                                ((> dist 9) :large-tie-1-up)
+                                ((> dist 8) :small-tie-8-up)
+                                ((> dist 7) :small-tie-7-up)
+                                ((> dist 6) :small-tie-6-up)
+                                ((> dist 5) :small-tie-5-up)
+                                ((> dist 4) :small-tie-4-up)
+                                ((> dist 3) :small-tie-3-up)
+                                ((> dist 2) :small-tie-2-up)
+                                (t :small-tie-1-up))))
+	  (sdl::draw-shape pane *font* glyph-name 
+                           (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 (defun draw-tie-down (pane x1 x2 staff-step)
   (let ((dist (/ (- x2 x1) (staff-step 4/3))))
     (if (> dist 19)
 	(let ((xx1 (round (+ x1 (staff-step 10))))
 	      (xx2 (round (- x2 (staff-step 10))))
-	      (y1 (- (round (staff-step (+ staff-step 11/3)))))
+	      (y1 (- (round (staff-step (- staff-step 8/3)))))
 	      (thickness (round (staff-step 2/3))))
-	  (draw-antialiased-glyph pane +glyph-large-tie-left-down+ xx1 staff-step)
-	  (draw-antialiased-glyph pane +glyph-large-tie-right-down+ xx2 staff-step)
+          (sdl::draw-shape pane *font* :large-tie-down-left xx1 (staff-step (- staff-step)))
+          (sdl::draw-shape pane *font* :large-tie-down-right xx2 (staff-step (- staff-step)))
 	  (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
-	(let ((glyph-no (cond ((> dist 18) +glyph-large-tie-ten-down+)
-			      ((> dist 17) +glyph-large-tie-nine-down+)
-			      ((> dist 16) +glyph-large-tie-eight-down+)
-			      ((> dist 15) +glyph-large-tie-seven-down+)
-			      ((> dist 14) +glyph-large-tie-six-down+)
-			      ((> dist 13) +glyph-large-tie-five-down+)
-			      ((> dist 12) +glyph-large-tie-four-down+)
-			      ((> dist 11) +glyph-large-tie-three-down+)
-			      ((> dist 10) +glyph-large-tie-two-down+)
-			      ((> dist 9) +glyph-large-tie-one-down+)
-			      ((> dist 8) +glyph-small-tie-eight-down+)
-			      ((> dist 7) +glyph-small-tie-seven-down+)
-			      ((> dist 6) +glyph-small-tie-six-down+)
-			      ((> dist 5) +glyph-small-tie-five-down+)
-			      ((> dist 4) +glyph-small-tie-four-down+)
-			      ((> dist 3) +glyph-small-tie-three-down+)
-			      ((> dist 2) +glyph-small-tie-two-down+)
-			      (t +glyph-small-tie-one-down+))))
-	  (draw-antialiased-glyph pane glyph-no (round (* 0.5 (+ x1 x2))) staff-step)))))
+	(let ((glyph-name (cond ((> dist 18) :large-tie-10-down)
+                                ((> dist 17) :large-tie-9-down)
+                                ((> dist 16) :large-tie-8-down)
+                                ((> dist 15) :large-tie-7-down)
+                                ((> dist 14) :large-tie-6-down)
+                                ((> dist 13) :large-tie-5-down)
+                                ((> dist 12) :large-tie-4-down)
+                                ((> dist 11) :large-tie-3-down)
+                                ((> dist 10) :large-tie-2-down)
+                                ((> dist 9) :large-tie-1-down)
+                                ((> dist 8) :small-tie-8-down)
+                                ((> dist 7) :small-tie-7-down)
+                                ((> dist 6) :small-tie-6-down)
+                                ((> dist 5) :small-tie-5-down)
+                                ((> dist 4) :small-tie-4-down)
+                                ((> dist 3) :small-tie-3-down)
+                                ((> dist 2) :small-tie-2-down)
+                                (t :small-tie-1-down))))
+	  (sdl::draw-shape pane *font* glyph-name 
+                           (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
