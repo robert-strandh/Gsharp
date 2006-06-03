@@ -1225,18 +1225,20 @@ of a normal note.  This function always returns a positive value"))
 ;;; Rests
 
 (defmethod compute-design ((font font) (shape (eql :whole-rest)))
-  (with-slots ((sld staff-line-distance) notehead-width xoffset yoffset) font
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)
+	       notehead-width xoffset yoffset) font
     (flet ((c (x y) (complex x y)))
-      (translate (xyscale (translate +unit-square+ #c(-0.5 0))
+      (translate (xyscale +unit-square+
 			  notehead-width (* 0.5 sld))
-		 (c xoffset (+ yoffset (* 0.5 sld)))))))
+		 (c xoffset (+ yoffset sld (- (* 0.25 sld)) (- (* 0.5 slt))))))))
 
 (defmethod compute-design ((font font) (shape (eql :half-rest)))
-  (with-slots ((sld staff-line-distance) notehead-width xoffset yoffset) font
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)
+	       notehead-width xoffset yoffset) font
     (flet ((c (x y) (complex x y)))
-      (translate (xyscale (translate +unit-square+ #c(-0.5 0))
+      (translate (xyscale +unit-square+
 			  notehead-width (* 0.5 sld))
-		 (c xoffset yoffset)))))
+		 (c xoffset (+ yoffset (* 0.25 sld) (* 0.5 slt)))))))
 
 (defmethod compute-design ((font font) (shape (eql :quarter-rest)))
   (with-slots ((sld staff-line-distance) stem-thickness) font
