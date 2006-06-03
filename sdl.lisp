@@ -1322,7 +1322,6 @@ of a normal note.  This function always returns a positive value"))
 			   extreme-point &
 			   extreme-point ++
 			   (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
-			   (c (* 0.75 sld) (* -2.5 sld)) up ++
 			   (c 0 (* -1.3 sld)) &
 			   (c 0 (* -1.3 sld)) -- (c 0 0)))))
 
@@ -1333,7 +1332,6 @@ of a normal note.  This function always returns a positive value"))
 			   extreme-point &
 			   extreme-point ++
 			   (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
-			   (c (* 0.75 sld) (* -2.6 sld)) up ++
 			   (direction #c(-1 2)) (c 0 (* (- -1.3 0.625) sld)) &
 			   (c 0 (* (- -1.3 0.625) sld)) -- 
 			   (c 0 (* -1.4 sld))))))
