@@ -666,7 +666,7 @@ of a normal note.  This function always returns a positive value"))
 	     (xc (+ xa bigdot-diameter)) (yc ya)
 	     (xd xb)
 	     (xe (* 0.85 sld)) (ye (- sld (* 2.0 staff-line-thickness)))
-	     (xf (round (* 1.5 sld))) (yf (- 0.5 sld))
+	     (xf (round (* 1.5 sld))) (yf (- 0.3 sld))
 	     (xg 0.0) (yg (* -2.5 sld))
 	     (xh (+ xf (round (* 0.5 sld)))) (yh yf)
 	     (xi sld) (yi sld)
@@ -679,12 +679,12 @@ of a normal note.  This function always returns a positive value"))
 		    left (c xd yd) &
 		    (c xd yd) ++
 		    (c xe ye) right ++
-		    (c xf yf) down ++
+		    (c xf yf) (direction #c(-0.2 -1)) ++ (curl 3) 
 		    (c xg yg) &
 		    (c xg yg) --
 		    (c xg (1- yg)) &
-		    (c xg (1- yg)) ++
-		    (c xh yh) up ++
+		    (c xg (1- yg)) (curl 3) ++
+		    (c xh yh) (direction #c(0.2 1)) ++
 		    (c xi yi) left ++ cycle)))
 	(clim:region-union
 	 (translate p (c 0 staff-line-thickness))
