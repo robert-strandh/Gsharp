@@ -761,12 +761,14 @@ of a normal note.  This function always returns a positive value"))
 ;;; both vertically and horizontally. 
 
 ;;; Ross says the dot should be roughly a third of the staff line
-;;; distance.  We count on anti aliasing to save us from too ugly a
-;;; result when the edges do not fall on pixel boundaries. 
+;;; distance, but in his examples, it is closer to half a staff line
+;;; distance.  Compromise by using 0.4.  We count on anti aliasing to
+;;; save us from too ugly a result when the edges do not fall on pixel
+;;; boundaries.
 
 (defmethod compute-design ((font font) (shape (eql :dot)))
   (with-slots (yoffset staff-line-distance) font
-    (let ((diameter (* 0.33 staff-line-distance)))
+    (let ((diameter (* 0.4 staff-line-distance)))
       (translate (scale +full-circle+ diameter)
 		 (complex yoffset yoffset)))))
 
