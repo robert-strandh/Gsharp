@@ -429,13 +429,11 @@
 			     
 (defun draw-right-stem (pane x y1 y2)
   (multiple-value-bind (dx dy) (notehead-right-offsets *font*)
-    (declare (ignore dy))
-    (draw-stem pane (+ x dx) y1 y2)))
+    (draw-stem pane (+ x dx) (- y1 dy) y2)))
 
 (defun draw-left-stem (pane x y1 y2)
   (multiple-value-bind (dx dy) (notehead-left-offsets *font*)
-    (declare (ignore dy))
-    (draw-stem pane (+ x dx) y1 y2)))
+    (draw-stem pane (+ x dx) (- y1 dy) y2)))
 
 ;;;;;;;;;;;;;;;;;; ledger line
 
