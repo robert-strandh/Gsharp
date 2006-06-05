@@ -1,4 +1,0 @@
-input whole_rest;
-input half_rest;
-input quarter_rest;
-input eighth_rest;
