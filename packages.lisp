@@ -231,32 +231,6 @@
 	   #:timeline #:timelines #:elasticity
 	   #:smallest-gap #:elasticity-function))
 
-(defpackage :gsharp-postscript
-  (:use :clim :clim-lisp)
-  (:export #:postscript-path #:make-postscript-path
-	   #:draw-design #:medium-draw-design
-	   #:newpath #:lineto #:curveto #:moveto
-	   #:rlineto #:circle))
-
-(defpackage :gsharp-glyphs
-  (:use :clim :clim-lisp :gsharp-postscript)
-  (:export #:treble-clef #:percussion-clef #:c-clef #:bass-clef #:turn
-	   #:mordent #:double-mordent #:trill-section #:trill-sections
-	   #:arpeggio #:arpeggios #:tr #:accent #:tnecca #:breath-mark
-	   #:caesura #:fermata #:upside-down-fermata #:repeat-sign
-	   #:upper-bracket #:lower-bracket #:segno #:coda #:pedal-off
-	   #:ped #:left-paren #:right-paren #:wedge #:down-bow #:up-bow
-	   #:zero #:one #:two #:three #:four #:five #:six #:seven
-	   #:eight #:nine #:common-time #:cut-time #:plus #:sharp #:flat
-	   #:double-sharp #:natural #:double-flat #:f #:p #:lig-p #:m
-	   #:n #:niente #:subito #:z #:s #:r #:double-whole-note
-	   #:whole-note #:half-note #:quarter-note #:diamond #:diamond-1
-	   #:filled-diamond-1 #:rhythmx #:circled-x #:slash #:mslash
-	   #:triangle #:square #:8th-flag-up #:extend-flag-up
-	   #:8th-flag-down #:extend-flag-down #:whole-rest #:half-rest
-	   #:quarter-rest #:8th-rest #:16th-rest #:32nd-rest #:64th-rest
-	   #:128th-rest #:measure-rest #:double-whole-rest))
-
 (defpackage :gsharp-beaming
   (:use :common-lisp)
   (:export #:beaming-single #:beaming-double))

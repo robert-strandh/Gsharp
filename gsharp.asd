@@ -33,8 +33,6 @@
    "numbering"
    "Obseq/obseq"
    "measure"
-   "postscript"
-   "glyphs"
    "beaming"
    "elasticity"
    "drawing"
