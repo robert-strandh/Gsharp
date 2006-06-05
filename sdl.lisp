@@ -492,7 +492,7 @@ of a normal note.  This function always returns a positive value"))
 ;;; reflected + shifted the thickness of the staff line.
 
 (defmethod compute-design ((font font) (shape (eql :c-clef)))
-  (with-slots ((sld staff-line-distance) staff-line-thickness) font
+  (with-slots ((sld staff-line-distance) staff-line-thickness yoffset) font
     (flet ((c (x y) (complex x y)))
       (let* ( ;; define some x coordinates
 	     (xa (ceiling (* 0.5 sld)))
@@ -509,7 +509,8 @@ of a normal note.  This function always returns a positive value"))
 	     (xk (+ xj (ceiling (* 0.5 sld))))
 	     (xl (+ xe (round staff-line-thickness)))
 	     ;; define some y coordinates
-	     (top (* 2 sld))
+	     (ystart (* 0.5 staff-line-thickness))
+	     (top (+ (* 2 sld) (* 0.5 staff-line-thickness)))
 	     (yd (+ sld (max 1 (round (* 0.1 sld)))))
 	     (ye sld)
 	     (yg (- top (* 2 staff-line-thickness)))
@@ -517,7 +518,7 @@ of a normal note.  This function always returns a positive value"))
 	     (yj ye)
 	     (yk yj)
 	     (yl yh)
-	     (p (mf (c xc 0) (direction #c(2 1)) ++
+	     (p (mf (c xc ystart) (direction #c(2 1)) ++
 		    (direction #c(1 2)) (c xe ye) &
 		    (c xe ye) -- (c (1+ xe) ye) &
 		    (c (1+ xe) ye) (direction #c(1 -2)) ++
@@ -530,22 +531,23 @@ of a normal note.  This function always returns a positive value"))
 		    (c xd (+ yd (* 0.5 dot-width))) up ++ (c xf top) right ++
 		    (c xk yk) down ++ (c xh (- yh staff-line-thickness)) ++
 		    (c xl yl) & (c xl yl) ++ down (c xi 0)))
-	     (q (translate (yscale p -1) (c 0 (- staff-line-thickness))))
+	     (q (yscale p -1))
 	     (r (climi::close-path
 		 (reduce #'clim:region-union
 			 (list p
-			       (mf (c xi 0) -- (c xi (- staff-line-thickness)))
 			       (climi::reverse-path q)
-			       (mf (c xc (- staff-line-thickness)) -- (c xc 0)))))))
-	(clim:region-union
-	 (climi::close-path (mf (c 0 top) -- (c xa top) --
-				(c xa (- top)) --
-				(c 0 (- top)) -- (c 0 top)))
+			       (mf (c xc (- ystart)) -- (c xc ystart)))))))
+	(translate
 	 (clim:region-union
-	  (climi::close-path (mf (c xb top) -- (c xc top) --
-				 (c xc (- top)) --
-				 (c xb (- top)) -- (c xb top)))
-	  (translate r (c 0 staff-line-thickness))))))))
+	  (climi::close-path (mf (c 0 top) -- (c xa top) --
+				 (c xa (- top)) --
+				 (c 0 (- top)) -- (c 0 top)))
+	  (clim:region-union
+	   (climi::close-path (mf (c xb top) -- (c xc top) --
+				  (c xc (- top)) --
+				  (c xb (- top)) -- (c xb top)))
+	   r))
+	 (c 0 yoffset))))))
 
 ;;;                                                                       
 ;;;                                                                       
