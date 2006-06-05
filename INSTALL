@@ -1,6 +1,6 @@
 ;;; Requirements
 
-* A Common Lisp.  Known to work: SBCL 0.9.10
+* A Common Lisp.  Known to work: SBCL 0.9.12
 
 * McCLIM.  The "Laetare Sunday" release is needed, along with
   ** spatial-trees;
@@ -13,10 +13,6 @@
 * ESA.  From common-lisp.net CVS, the climacs project, esa module.
 
 Make sure ASDF knows how to find all of these projects.
-
-;;; Compile the fonts
-
-$ (cd Fonts; make)
 
 ;;; Start the lisp system
 
