@@ -27,7 +27,6 @@
    "bezier"
    "mf"
    "sdl"
-   "charmap"
    "score-pane"
    "buffer"
    "numbering"

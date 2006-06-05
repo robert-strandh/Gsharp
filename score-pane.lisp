@@ -174,41 +174,6 @@
 	    (y1 (- dy (staff-step staff-step))))
 	(draw-pixmap* pane pixmap x1 y1)))))
 
-;;; Given a pane, an x position (measured in pixels) a y position 
-;;; (measured in staff steps), a glyph to draw a the bottom of the stack
-;;; a glyph to draw at the top of the stack, a glyph to draws in the middle
-;;; of the stack, and the number of elements of the stack, draw the stack
-;;; by first drawing the lower glyph, then the intermediate glyphs, and
-;;; finally the upper glyph.  
-;;; It appears that this function increases the staff step in each iteration,
-;;; which seems incomptible with the way draw-antialiased-glyph appears to work.
-;;; This function is currently used only by the three draw-xxx-stack functions,
-;;; which in turn are currently not used.
-(defun draw-stack (pane glyph-lower glyph-upper glyph-two x staff-step how-many)
-  (draw-antialiased-glyph pane glyph-lower x staff-step)
-  (loop for ss from staff-step by 2
-	repeat (1- how-many) do
-	(draw-antialiased-glyph pane glyph-two x ss))
-  (draw-antialiased-glyph pane glyph-upper x (+ staff-step (* 2 (1- how-many)))))
-  
-;;; Draw a stack of whole-note noteheads
-;;; This function is currently not used.  
-(defun draw-whole-stack (pane x staff-step how-many)
-  (draw-stack pane +glyph-whole-lower+ +glyph-whole-upper+ +glyph-whole-two+
-	      x staff-step how-many))
-
-;;; draw a stack of half-note noteheads
-;;; This function is currently not used.  
-(defun draw-half-stack (pane x staff-step how-many)
-  (draw-stack pane +glyph-half-lower+ +glyph-half-upper+ +glyph-half-two+
-	      x staff-step how-many))
-
-;;; draw a stack of filled noteheads.  
-;;; This function is currently not used.  
-(defun draw-filled-stack (pane x staff-step how-many)
-  (draw-stack pane +glyph-filled-lower+ +glyph-filled-upper+ +glyph-filled-two+
-	      x staff-step how-many))
-
 ;;;;;;;;;;;;;;;;;; helper macro
 
 ;;; This macro is currently not used.  (And probably never will be
