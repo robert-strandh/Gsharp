@@ -4,15 +4,6 @@
   (:export #:ninsert-element #:define-added-mixin
 	   #:unicode-to-char #:char-to-unicode))
 
-(defpackage :gf
-  (:use :common-lisp)
-  (:export #:parse-gf-file #:gf-font-comment #:gf-font-chars #:gf-font-design-size
-	   #:gf-font-checksum #:gf-font-horizontal-ratio #:gf-font-vertical-ratio
-	   #:gf-font-min-column #:gf-font-max-column 
-	   #:gf-font-min-row #:gf-font-max-row 
-	   #:gf-char-no #:gf-char-min-m #:gf-char-max-m
-	   #:gf-char-min-n #:gf-char-max-n #:gf-char-matrix))
-	   
 (defpackage :mf
   (:use :cl)
   (:export #:make-bezier-segment #:bezier-segment
@@ -34,12 +25,12 @@
 	   #:left #:right #:up #:down))
 
 (defpackage :sdl
-  (:use :common-lisp :gf :mf)
+  (:use :common-lisp :mf)
   (:export #:glyph #:staff-line-distance #:staff-line-offsets
 	   #:stem-offsets #:bar-line-offsets
 	   #:ledger-line-x-offsets #:ledger-line-y-offsets
 	   #:notehead-right-offsets #:notehead-left-offsets
-	   #:load-font #:glyph-offsets #:suspended-note-offset
+	   #:make-font #:glyph-offsets #:suspended-note-offset
 	   #:beam-offsets #:beam-hang-sit-offset))
 
 (defpackage :score-pane

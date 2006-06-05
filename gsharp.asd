@@ -23,7 +23,6 @@
 (gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain :esa))
    "packages"
    "utilities"
-   "gf"
    "bezier"
    "mf"
    "sdl"

@@ -155,38 +155,6 @@
 (defun staff-step (n)
   (* n (/ (staff-line-distance *font*) 2)))
 
-;;; Given a pane, a glyph number, an x position (measured in pixels)
-;;; and a y position (measured in staff steps), draw the glyph
-;;; at the position in the pane. 
-;;; The font is organized so that the normal glyph is immediately
-;;; followed by a light version of the glyph.  Hence, we add 1
-;;; to the glyph number if a light version is desired. 
-;;; It appears that the resulting y-coordinate (in pixels) has the 
-;;; same sign as the staff-step argument, which suggests that this
-;;; function must be called with a negated staff-step.  It might be
-;;; better to have this function do the negation. 
-(defun draw-antialiased-glyph (pane glyph-no x staff-step)
-  (let* ((extra (if *light-glyph* 1 0))
-	 (matrix (glyph *font* (+ glyph-no extra)))
-	 (pixmap (pane-pixmap pane matrix)))
-    (multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
-      (let ((x1 (+ x dx))
-	    (y1 (- dy (staff-step staff-step))))
-	(draw-pixmap* pane pixmap x1 y1)))))
-
-;;;;;;;;;;;;;;;;;; helper macro
-
-;;; This macro is currently not used.  (And probably never will be
-;;; used, now that we raster our own bezier curves.)
-(defmacro define-pixmap-recording ((draw-name args) &body body)
-  `(defun ,draw-name (pane ,@args x staff-step)
-     (let* ((extra (if *light-glyph* 1 0))
-	    (glyph-no ,@body)
-	    (matrix (glyph *font* (+ glyph-no extra)))
-	    (pixmap (pane-pixmap pane matrix)))
-       (multiple-value-bind (dx dy) (glyph-offsets *font* (+ glyph-no extra))
-	 (draw-pixmap* pane pixmap (+ x dx) (- dy (staff-step staff-step)))))))
-
 ;;;;;;;;;;;;;;;;;; notehead
 
 (define-presentation-type notehead () :options (name x staff-step))
@@ -701,7 +669,7 @@
     `(let ((,size-var ,size))
       (unless (aref *fonts* ,size-var)
 	(setf (aref *fonts* ,size-var)
-	      (load-font ,size-var)))
+	      (make-font ,size-var)))
       (let ((*font* (aref *fonts* ,size-var)))
 	,@body))))  
 

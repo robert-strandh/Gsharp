@@ -1,16 +1,5 @@
 (in-package :sdl)
 
-(defvar *fonts-directory*
-  (merge-pathnames (make-pathname :directory '(:relative "Fonts"))
-		   (make-pathname :directory (pathname-directory *load-truename*))))
-
-(defgeneric glyph (font glyph-no))
-(defgeneric glyph-offsets (font glyph-no)
-  (:documentation "Return two values, DX and DY to be added to the reference point of
-a glyph in order to obtain its upper-left corner.  If (as is usually the case) 
-the reference point is somewhere inside the bounding box of the glyph, this
-means that both the values returned are negative"))
-
 (defgeneric staff-line-distance (font))
 (defgeneric staff-line-offsets (font))
 (defgeneric stem-offsets (font))
@@ -33,8 +22,7 @@ of a normal note.  This function always returns a positive value"))
 		   point of a hanging or sitting beam respectively"))
 
 (defclass font ()
-  ((gf-font :initarg :gf-font :reader gf-font)
-   ;; The distance in pixels between the upper edge of two 
+  (;; The distance in pixels between the upper edge of two 
    ;; adjacent staff lines. 
    (staff-line-distance :initarg :staff-line-distance :reader staff-line-distance)
    ;; An integer value indicating how many non-white pixels are 
@@ -120,8 +108,7 @@ of a normal note.  This function always returns a positive value"))
    (beam-offset-down)
    (beam-offset-up)
    (beam-hang-sit-offset :reader beam-hang-sit-offset)
-   (designs :initform (make-hash-table :test #'eq))
-   (glyphs :initarg :glyphs :reader glyphs)))
+   (designs :initform (make-hash-table :test #'eq))))
   
 (defmethod initialize-instance :after ((font font) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
@@ -200,53 +187,6 @@ of a normal note.  This function always returns a positive value"))
 	  (let ((beam-thickness (- beam-offset-down beam-offset-up)))
 	    (/ (- beam-thickness staff-line-thickness) 2)))))
 
-(defgeneric gf-char (glyph))
-(defgeneric pixmap (glyph))
-(defgeneric (setf pixmap) (glyph pixmap))
-
-(defclass glyph ()
-  ((gf-char :initarg :gf-char :reader gf-char)
-   (x-offset)
-   (y-offset)
-   (pixmap :initform nil :initarg :pixmap :accessor pixmap)))
-
-(defmethod initialize-instance :after ((glyph glyph) &rest initargs &key &allow-other-keys)
-  (declare (ignore initargs))
-  (with-slots (gf-char x-offset y-offset) glyph
-    (setf x-offset (floor (gf-char-min-m gf-char) 4)
-	  ;; adding 1 to gv-char-max-n is necessary because
-	  ;; of a discrepancy between the GF documentation
-	  ;; and the GF file format
-	  y-offset (- (ceiling (1+ (gf-char-max-n gf-char)) 4)))))
-
-(defmethod glyph ((font font) glyph-no)
-  (with-slots (gf-char pixmap) (aref (glyphs font) glyph-no)
-    (let ((left (floor (gf-char-min-m gf-char) 4))
-	  (right (ceiling (1+ (gf-char-max-m gf-char)) 4))
-	  (down (floor (gf-char-min-n gf-char) 4))
-	  ;; adding 1 to gv-char-max-n is necessary because
-	  ;; of a discrepancy between the GF documentation
-	  ;; and the GF file format
-	  (up (ceiling (1+ (gf-char-max-n gf-char)) 4))
-	  (matrix (gf-char-matrix gf-char)))
-      (unless pixmap
-	(setf pixmap (make-array (list (- up down) (- right left))
-					:element-type '(unsigned-byte 8)
-					:initial-element 16))
-	(loop for r from 0 below (car (array-dimensions matrix))
-	      for y downfrom (gf-char-max-n gf-char) by 1 do
-	      (loop for c from 0 below (cadr (array-dimensions matrix))
-		    for x from (gf-char-min-m gf-char) do
-		    (decf (aref pixmap
-				(- up (ceiling (1+ y) 4))
-				(- (floor x 4) left))
-			  (aref matrix r c))))))
-    pixmap))
-
-(defmethod glyph-offsets ((font font) glyph-no)
-  (with-slots (x-offset y-offset) (aref (glyphs font) glyph-no)
-    (values x-offset y-offset)))
-
 ;;; the DOWN staff line offset is a nonnegative integer, and the UP
 ;;; staff line offset is a negative integer.  This way, both of them
 ;;; should be ADDED to a reference y value to obtain the lower and
@@ -294,19 +234,8 @@ of a normal note.  This function always returns a positive value"))
   (with-slots (beam-offset-down beam-offset-up) font
     (values beam-offset-down beam-offset-up)))
 
-(defun load-font (staff-line-distance)
-  (let* ((gf-font (parse-gf-file (merge-pathnames
-				  (format nil "sdl~a.gf" staff-line-distance)
-				  *fonts-directory*)))
-	 (maxchar (reduce #'max (gf-font-chars gf-font) :key #'gf-char-no))
-	 (glyphs (make-array (list (1+ maxchar)) :initial-element nil)))
-    (loop for char in (gf-font-chars gf-font)
-	  do (setf (aref glyphs (gf-char-no char))
-		   (make-instance 'glyph :gf-char char)))
-    (make-instance 'font
-      :staff-line-distance staff-line-distance
-      :gf-font gf-font
-      :glyphs glyphs)))
+(defun make-font (staff-line-distance)
+  (make-instance 'font :staff-line-distance staff-line-distance))
 
 (defgeneric xyscale (thing kx ky))
 
