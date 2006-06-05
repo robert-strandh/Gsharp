@@ -89,7 +89,7 @@
     :inherit-from (rhythmic-table))
 
 (set-key (lambda () (erase-char (cur-element))) 'lyrics-table '((#\h :control)))
-(set-key 'com-erase-element 'lyrics-table '((#\h :meta)))
+(set-key `(com-erase-element *numeric-argument-marker*) 'lyrics-table '((#\h :meta)))
 (set-key 'insert-lyrics-element 'lyrics-table '((#\Space :control)))
 
 
