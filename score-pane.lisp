@@ -3,8 +3,7 @@
 (defclass score-view (view) ())  
 
 (defclass score-pane (esa-pane-mixin application-pane)
-  ((pixmaps :initform (make-hash-table :test #'eq) :reader pane-pixmaps)
-   (darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
+  ((darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
 			     :reader darker-gray-progressions)
    (lighter-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
 			      :reader lighter-gray-progressions)))
@@ -26,23 +25,6 @@
 	(setf (aref result i) (make-gray-color (/ i 16)))
 	finally (return result)))
 
-;;; Given a pane and a matrix representing a glyph in a font, return a server-side
-;;; pixmap that corresponds to that matrix for that pane.  Create pixmaps
-;;; on demand to avoid initial delays and too many pixmaps in the server.
-;;; The elements of the matrix are integers from 0 to 16 inclusive, representing how
-;;; many pixels are white in a 4x4 grid.
-(defun pane-pixmap (pane matrix)
-  (or (gethash matrix (pane-pixmaps pane))
-      (let* ((dimensions (array-dimensions matrix))
-	     (height (car dimensions))
-	     (width (cadr dimensions))
-	     (pixmap (with-output-to-pixmap (medium pane :height height :width width)
-		       (loop for r from 0 below height do
-			     (loop for c from 0 below width do
-				   (draw-point* medium c r
-						:ink (aref *gray-levels*
-							   (aref matrix r c))))))))
-	(setf (gethash matrix (pane-pixmaps pane)) pixmap))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
