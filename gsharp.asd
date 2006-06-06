@@ -39,4 +39,5 @@
    "midi"
    "modes"
    "play"
-   "gui")
+   "gui"
+   "fontview")
