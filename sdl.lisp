@@ -108,7 +108,8 @@ of a normal note.  This function always returns a positive value"))
    (beam-offset-down)
    (beam-offset-up)
    (beam-hang-sit-offset :reader beam-hang-sit-offset)
-   (designs :initform (make-hash-table :test #'eq))))
+   (designs :initform (make-hash-table :test #'eq))
+   (beam-designs :initform (make-hash-table :test #'eql))))
   
 (defmethod initialize-instance :after ((font font) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
@@ -292,6 +293,25 @@ of a normal note.  This function always returns a positive value"))
 (defmethod compute-design ((font font) shape)
   (with-slots (staff-line-distance) font
     (scale +unit-square+ staff-line-distance)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Beams
+
+(defun ensure-beam-segment-design (font direction width)
+  (with-slots ((sld staff-line-distance)) font
+    (let* ((key (* (if (eq direction :down) 1 -1) width))
+	   (thickness (/ sld 2)))
+      (or (gethash key (slot-value font 'beam-designs))
+	  (setf (gethash width (slot-value font 'beam-designs))
+		(climi::close-path 
+		 (if (eq direction :down)
+		     (mf #c(0 0) -- (complex width 1) --
+			 (complex width (+ thickness 1)) --
+			 (complex 0 thickness) -- #c(0 0))
+		     (mf #c(0 0) -- (complex width -1) --
+			 (complex width (- (- thickness) 1)) --
+			 (complex 0 (- thickness)) -- #c(0 0)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
