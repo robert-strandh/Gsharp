@@ -659,25 +659,41 @@
 	  repeat (nb-lines lines)
 	  do (render-scan-lines array pixel-value i (crossings lines i) min-x min-y))))
 
-(defun render-to-array (positive-areas negative-areas)
-  (multiple-value-bind (min-x min-y max-x max-y)
-      (bounding-rectangle-of-areas positive-areas)
-    (setf min-x (* 4 (floor min-x))
-	  min-y (* 4 (floor min-y))
-	  max-x (* 4 (ceiling max-x))
-	  max-y (* 4 (ceiling max-y)))
-    (let ((result (make-array (list (- max-y min-y) (- max-x min-x))
-			      :element-type 'bit :initial-element 1))
-	  (transformation (make-scaling-transformation* 4 4)))
-      (loop for area in positive-areas
-	    do (let* ((transformed-area (transform-region transformation area))
-		      (polygon (polygonalize transformed-area)))
-		 (render-polygon result polygon 0 min-x min-y)))
-      (loop for area in negative-areas
-	    do (let* ((transformed-area (transform-region transformation area))
-		      (polygon (polygonalize transformed-area)))
-		 (render-polygon result polygon 1 min-x min-y)))
-      result)))
+(defgeneric positive-negative-areas (design))
+
+(defmethod positive-negative-areas ((design bezier-area))
+  (values (list design) '()))
+
+(defmethod positive-negative-areas ((design bezier-union))
+  (values (areas design) '()))
+
+(defmethod positive-negative-areas ((design bezier-difference))
+  (values (positive-areas design) (negative-areas design)))
+
+(defmethod positive-negative-areas ((design translated-bezier-design))
+  (positive-negative-areas (original-region design)))
+
+(defun render-to-array (design)
+  (multiple-value-bind (positive-areas negative-areas)
+      (positive-negative-areas design)
+    (multiple-value-bind (min-x min-y max-x max-y)
+	(bounding-rectangle-of-areas positive-areas)
+      (setf min-x (* 4 (floor min-x))
+	    min-y (* 4 (floor min-y))
+	    max-x (* 4 (ceiling max-x))
+	    max-y (* 4 (ceiling max-y)))
+      (let ((result (make-array (list (- max-y min-y) (- max-x min-x))
+				:element-type 'bit :initial-element 1))
+	    (transformation (make-scaling-transformation* 4 4)))
+	(loop for area in positive-areas
+	      do (let* ((transformed-area (transform-region transformation area))
+			(polygon (polygonalize transformed-area)))
+		   (render-polygon result polygon 0 min-x min-y)))
+	(loop for area in negative-areas
+	      do (let* ((transformed-area (transform-region transformation area))
+			(polygon (polygonalize transformed-area)))
+		   (render-polygon result polygon 1 min-x min-y)))
+	result))))
 
 (defparameter *x* 0)
 (defparameter *y* 0)
@@ -697,51 +713,47 @@
 		      (+ (* a 1.0) (* 1-a g))
 		      (+ (* a 1.0) (* 1-a b))))))
 
-(defun render-through-pixmap (design medium positive-areas negative-areas)
+(defgeneric ensure-pixmap (medium design))
+
+(defmethod ensure-pixmap (medium design)
+  (let ((pixmap (gethash (list (medium-sheet medium) (resolve-ink medium) design)
+			 *pixmaps*)))
+    (when (null pixmap)
+      (let* ((picture (render-to-array design))
+	     (height (array-dimension picture 0))
+	     (width (array-dimension picture 1))
+	     (reduced-picture (make-array (list (/ height 4) (/ width 4)) :initial-element 16)))
+	(loop for l from 0 below height
+	      do (loop for c from 0 below width
+		       do (when (zerop (aref picture l c))
+			    (decf (aref reduced-picture (floor l 4) (floor c 4))))))
+	(setf pixmap
+	      (with-output-to-pixmap (pixmap-medium
+				      (medium-sheet medium)
+				      :width (/ width 4) :height (/ height 4))
+		(loop for l from 0 below (/ height 4)
+		      do (loop for c from 0 below (/ width 4)
+			       do (draw-point*
+				   pixmap-medium c l
+				   :ink (make-ink
+					 medium
+					 (aref reduced-picture l c)))))))
+	(setf (gethash (list (medium-sheet medium) (resolve-ink medium) design)
+		       *pixmaps*)
+	      pixmap)))
+    pixmap))
+
+(defmethod ensure-pixmap (medium (design translated-bezier-design))
+  (ensure-pixmap medium (original-region design)))
+
+(defun render-through-pixmap (design medium)
   (multiple-value-bind (min-x min-y)
       (bounding-rectangle* design)
     (setf min-x (floor min-x)
 	  min-y (floor min-y))
-    (let ((pixmap (gethash (list (medium-sheet medium) (resolve-ink medium) design)
-			   *pixmaps*)))
-      (when (null pixmap)
-	(let* ((picture (render-to-array positive-areas negative-areas))
-	       (height (array-dimension picture 0))
-	       (width (array-dimension picture 1))
-	       (reduced-picture (make-array (list (/ height 4) (/ width 4)) :initial-element 16)))
-	  (loop for l from 0 below height
-		do (loop for c from 0 below width
-			 do (when (zerop (aref picture l c))
-			      (decf (aref reduced-picture (floor l 4) (floor c 4))))))
-	  (let ((new-pixmap (with-output-to-pixmap (pixmap-medium
-						    (medium-sheet medium)
-						    :width (/ width 4) :height (/ height 4))
-			      (loop for l from 0 below (/ height 4)
-				    do (loop for c from 0 below (/ width 4)
-					     do (draw-point*
-						 pixmap-medium c l
-						 :ink (make-ink
-						       medium
-						       (aref reduced-picture l c))))))))
-	    (setf (gethash (list (medium-sheet medium) (resolve-ink medium) design)
-			   *pixmaps*) new-pixmap
-		  pixmap new-pixmap))))
+    (let ((pixmap (ensure-pixmap medium design)))
       (copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
 			(medium-sheet medium) (+ *x* min-x) (+ *y* min-y)))))
-
-(defgeneric render-design-to-array (design))
-
-(defmethod render-design-to-array ((design bezier-area))
-  (render-to-array (list design) '()))
-
-(defmethod render-design-to-array ((design bezier-union))
-  (render-to-array (areas design) '()))
-
-(defmethod render-design-to-array ((design bezier-difference))
-  (render-to-array (positive-areas design) (negative-areas design)))
-
-(defmethod render-design-to-array ((design translated-bezier-design))
-  (render-design-to-array (original-region design)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -759,16 +771,9 @@
 ;;; Drawing bezier designs to screen
 
 
-;;; Fallback methods (suitable for CLX)
-(defmethod medium-draw-bezier-design* (medium (design bezier-area))
-  (render-through-pixmap design medium (list design) '()))
-(defmethod medium-draw-bezier-design* (medium (design bezier-union))
-  (render-through-pixmap design medium (areas design) '()))
-(defmethod medium-draw-bezier-design* (medium (design bezier-difference))
-  (render-through-pixmap design medium (positive-areas design) (negative-areas design)))
-(defmethod medium-draw-bezier-design* (medium (design translated-bezier-design))
-  (multiple-value-bind (*x* *y*) (transform-position (translation design) 0 0)
-    (medium-draw-bezier-design* medium (original-region design))))
+;;; Fallback method (suitable for CLX)
+(defmethod medium-draw-bezier-design* (medium design)
+  (render-through-pixmap design medium))
 
 ;;; Postscript methods
 (defmethod medium-draw-bezier-design*

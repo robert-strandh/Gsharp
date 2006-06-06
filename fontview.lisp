@@ -49,7 +49,7 @@
 		min-y (* 4 (floor min-y))
 		max-x (* 4 (ceiling max-x))
 		max-y (* 4 (ceiling max-y)))
-	  (let ((array (climi::render-design-to-array design)))
+	  (let ((array (climi::render-to-array design)))
 	    (loop for y from min-y below max-y
 		  for y-index from 0
 		  do (loop with x0 = nil
