@@ -307,11 +307,11 @@ of a normal note.  This function always returns a positive value"))
 	      (climi::close-path 
 	       (if (eq direction :down)
 		   (if (eq position :upper)
-		       (mf #c(0 0) -- (complex width -1) -- (complex 0 -1) -- #c(0 0))
-		       (mf #c(0 0) -- (complex width 0) -- (complex width -1) -- #c(0 0)))
+		       (mf #c(0 0) -- (complex width 1) -- (complex 0 1) -- #c(0 0))
+		       (mf #c(0 0) -- (complex width 0) -- (complex width 1) -- #c(0 0)))
 		   (if (eq position :upper)
-		       (mf #c(0 0) -- (complex width 1) -- (complex width 0) -- #c(0 0))
-		       (mf #c(0 0) -- (complex width 0) -- (complex 0 -1) -- #c(0 0)))))))))
+		       (mf #c(0 0) -- (complex width -1) -- (complex width 0) -- #c(0 0))
+		       (mf #c(0 0) -- (complex width 0) -- (complex 0 1) -- #c(0 0)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

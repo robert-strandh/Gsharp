@@ -476,9 +476,9 @@
     (loop for y from y1 below y2
 	  for x from x1 by inverse-slope do
 	  (let ((upper (sdl::ensure-beam-segment-design :down :upper (- (round (+ x inverse-slope)) (round x))))
-		(upper-tr (make-translation-transformation (round x) (1+ y))) ; don't know why the 1 is neccesary
+		(upper-tr (make-translation-transformation (round x) y))
 		(lower (sdl::ensure-beam-segment-design :down :lower (- (round (+ x inverse-slope)) (round x))))
-		(lower-tr (make-translation-transformation (round x) (+ y thickness 1)))) ; don't know why the 1 is neccesary
+		(lower-tr (make-translation-transformation (round x) (+ y thickness))))
 	    (climi::medium-draw-bezier-design* medium (transform-region upper-tr upper))
 	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
 	    (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
@@ -492,9 +492,9 @@
     (loop for y from y1 above y2
 	  for x from x1 by inverse-slope do
 	  (let ((upper (sdl::ensure-beam-segment-design :up :upper (- (round (+ x inverse-slope)) (round x))))
-		(upper-tr (make-translation-transformation (round x) (1- y))) ; don't know why the -1 is necessary
+		(upper-tr (make-translation-transformation (round x) y))
 		(lower (sdl::ensure-beam-segment-design :up :lower (- (round (+ x inverse-slope)) (round x))))
-		(lower-tr (make-translation-transformation (round x) (+ y thickness)))) ; don't know why +1 is not neccesary
+		(lower-tr (make-translation-transformation (round x) (+ y thickness -1))))
 	    (climi::medium-draw-bezier-design* medium (transform-region upper-tr upper))
 	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
 	    (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
