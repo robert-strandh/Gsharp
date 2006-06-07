@@ -650,12 +650,12 @@ of a normal note.  This function always returns a positive value"))
 ;;; Noteheads
 
 (defparameter *filled-path*
-  (mf #c(-0.75 -0.25) up ++ #c(0.33 0.58) right ++
-      #c(0.75 0.25) down ++ #c(-0.33 -0.58) left ++ cycle))
+  (mf #c(-0.75 -0.25) up ++ #c(0.33 0.53) right ++
+      #c(0.75 0.25) down ++ #c(-0.33 -0.53) left ++ cycle))
 
 (defparameter *half-path*
-  (mf #c(-0.75 -0.25) up (tension 0.8) #c(0.33 0.58) right ++
-      #c(0.75 0.25) down (tension 0.8) #c(-0.33 -0.58) left ++ cycle))
+  (mf #c(-0.75 -0.25) up (tension 0.8) #c(0.33 0.53) right ++
+      #c(0.75 0.25) down (tension 0.8) #c(-0.33 -0.53) left ++ cycle))
 
 (defmethod compute-design ((font font) (shape (eql :filled-notehead)))
   (with-slots (xoffset yoffset staff-line-distance) font
@@ -664,11 +664,11 @@ of a normal note.  This function always returns a positive value"))
 
 (defmethod compute-design ((font font) (shape (eql :whole-notehead)))
   (with-slots (xoffset yoffset (sld staff-line-distance)) font
-    (let ((op (scale (superellipse #c(0.75 0.0) #c(0.0 0.58)
-				   #c(-0.75 0.0) #c(0.0 -0.58) 0.7)
+    (let ((op (scale (superellipse #c(0.75 0.0) #c(0.0 0.53)
+				   #c(-0.75 0.0) #c(0.0 -0.53) 0.7)
 		     sld))
-	  (ip (scale (slant (superellipse #c(0.3 0.0) #c(0.0 0.35)
-				   #c(-0.3 0.0) #c(0.0 -0.35) 0.8)
+	  (ip (scale (slant (superellipse #c(0.3 0.0) #c(0.0 0.32)
+				   #c(-0.3 0.0) #c(0.0 -0.32) 0.8)
 			    -0.3)
 		     sld)))
       (translate (clim:region-difference op (climi::reverse-path ip))
