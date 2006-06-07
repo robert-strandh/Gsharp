@@ -12,7 +12,6 @@
   (declare (ignore args))
   (setf (stream-default-view pane) (make-instance 'score-view)))
 
-(defparameter *pane* nil)
 (defparameter *light-glyph* nil)
 (defparameter *font* nil)
 (defparameter *fonts* (make-array 100 :initial-element nil))
@@ -472,7 +471,7 @@
 (defclass downward-beam-output-record (beam-output-record)
   ())
 
-(defun medium-draw-downward-beam* (medium x1 y1 x2 y2 thickness)
+(defmethod medium-draw-downward-beam* (medium x1 y1 x2 y2 thickness)
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 below y2
 	  for x from x1 by inverse-slope do
@@ -484,7 +483,11 @@
 	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
 	    (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
 
-(defun medium-draw-upward-beam* (medium x1 y1 x2 y2 thickness)
+(defmethod medium-draw-downward-beam* 
+    ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
+  (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
+
+(defmethod medium-draw-upward-beam* (medium x1 y1 x2 y2 thickness)
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 above y2
 	  for x from x1 by inverse-slope do
@@ -496,7 +499,11 @@
 	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
 	    (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
 
-(defmethod replay-output-record ((record downward-beam-output-record) (stream score-pane)
+(defmethod medium-draw-upward-beam* 
+    ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
+  (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
+
+(defmethod replay-output-record ((record downward-beam-output-record) stream
 				 &optional (region +everywhere+)
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
@@ -510,7 +517,7 @@
 (defclass upward-beam-output-record (beam-output-record)
   ())
 
-(defmethod replay-output-record ((record upward-beam-output-record) (stream score-pane)
+(defmethod replay-output-record ((record upward-beam-output-record) stream
 				 &optional (region +everywhere+)
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
@@ -521,39 +528,54 @@
 	    (medium :ink ink :clipping-region clipping-region)
 	  (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
 
+(defun transform-beam-attributes (transformation x1 y1 x2 y2 down up thickness)
+  (multiple-value-bind (xx1 yy1)
+      (transform-position transformation x1 y1)
+    (multiple-value-bind (xx2 yy2)
+        (transform-position transformation x2 y2)
+      (multiple-value-bind (xd yd)
+          (transform-distance transformation 0 down)
+        (declare (ignore xd))
+        (multiple-value-bind (xu yu)
+            (transform-distance transformation 0 up)
+          (declare (ignore xu))
+          (multiple-value-bind (xt yt)
+              (transform-distance transformation 0 thickness)
+            (declare (ignore xt))
+            (values xx1 yy1 xx2 yy2 yd yu yt)))))))
+
 ;;; draw a sloped beam.  The vertical reference points 
 ;;; of the two end points are indicated by y1 and y2. 
 (defun draw-sloped-beam (medium x1 y1 x2 y2)
   (multiple-value-bind (down up) (beam-offsets *font*)
-    (let ((transformation (medium-transformation *pane*))
+    (let ((transformation (medium-transformation (medium-sheet medium)))
 	  (thickness (- down up)))
       (cond ((< y1 y2)
-	     (when (stream-recording-p *pane*)
-	       (multiple-value-bind (xx1 yy1)
-		   (transform-position transformation x1 y1)
-		 (multiple-value-bind (xx2 yy2)
-		     (transform-position transformation x2 y2)
-		   (stream-add-output-record
-		    *pane* (make-instance 'downward-beam-output-record
-					  :x1 xx1 :y1 (+ yy1 up) :x2 xx2 :y2 (+ yy2 down)
-					  :thickness thickness :ink (medium-ink medium)
-                                          :clipping-region (medium-clipping-region medium))))))
-	     (when (stream-drawing-p *pane*)
+	     (when (stream-recording-p (medium-sheet medium))
+               (multiple-value-bind (xx1 yy1 xx2 yy2 yd yu yt)
+                   (transform-beam-attributes transformation x1 y1 x2 y2
+                                              down up thickness)
+                 (stream-add-output-record
+                  (medium-sheet medium) 
+                  (make-instance 'downward-beam-output-record
+                                 :x1 xx1 :y1 (+ yy1 yu) :x2 xx2 :y2 (+ yy2 yd)
+                                 :thickness yt :ink (medium-ink medium)
+                                 :clipping-region (medium-clipping-region medium)))))
+	     (when (stream-drawing-p (medium-sheet medium))
 	       (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
 	    (t
-	     (when (stream-recording-p *pane*)
-	       (multiple-value-bind (xx1 yy1)
-		   (transform-position transformation x1 y1)
-		 (multiple-value-bind (xx2 yy2)
-		     (transform-position transformation x2 y2)
-		   (stream-add-output-record
-		    *pane* (make-instance 'upward-beam-output-record
-					  :x1 xx1 :y1 (+ yy2 up) :x2 xx2 :y2 (+ yy1 down)
-					  :thickness thickness 
-                                          :ink (medium-ink medium)
-                                          :clipping-region (medium-clipping-region medium))))))
-	     (when (stream-drawing-p *pane*)
-	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
+	     (when (stream-recording-p (medium-sheet medium))
+               (multiple-value-bind (xx1 yy1 xx2 yy2 yd yu yt)
+                   (transform-beam-attributes transformation x1 y1 x2 y2
+                                              down up thickness)
+                 (stream-add-output-record
+                  (medium-sheet medium) 
+                  (make-instance 'upward-beam-output-record
+                                 :x1 xx1 :y1 (+ yy2 yu) :x2 xx2 :y2 (+ yy1 yd)
+                                 :thickness yt :ink (medium-ink medium)
+                                 :clipping-region (medium-clipping-region medium)))))
+	     (when (stream-drawing-p (medium-sheet medium))
+	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness))))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
@@ -649,10 +671,9 @@
     ,@body))
 
 (defmacro with-score-pane (pane &body body)
-  `(let* ((*pane* ,pane)
-	  (*lighter-gray-progressions* (lighter-gray-progressions pane))
+  `(let* ((*lighter-gray-progressions* (lighter-gray-progressions pane))
 	  (*darker-gray-progressions* (darker-gray-progressions pane)))
-    (clear-output-record (stream-output-history *pane*))
+    (clear-output-record (stream-output-history pane))
     ,@body))
 
 (defmacro with-vertical-score-position ((pane yref) &body body)
