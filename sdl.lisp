@@ -108,9 +108,11 @@ of a normal note.  This function always returns a positive value"))
    (beam-offset-down)
    (beam-offset-up)
    (beam-hang-sit-offset :reader beam-hang-sit-offset)
-   (designs :initform (make-hash-table :test #'eq))
-   (beam-designs :initform (make-hash-table :test #'eql))))
+   (designs :initform (make-hash-table :test #'eq))))
   
+
+(defparameter *beam-designs* (make-hash-table :test #'equal))
+
 (defmethod initialize-instance :after ((font font) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (with-slots (staff-line-distance
@@ -298,20 +300,18 @@ of a normal note.  This function always returns a positive value"))
 ;;;
 ;;; Beams
 
-(defun ensure-beam-segment-design (font direction width)
-  (with-slots ((sld staff-line-distance)) font
-    (let* ((key (* (if (eq direction :down) 1 -1) width))
-	   (thickness (/ sld 2)))
-      (or (gethash key (slot-value font 'beam-designs))
-	  (setf (gethash width (slot-value font 'beam-designs))
-		(climi::close-path 
-		 (if (eq direction :down)
-		     (mf #c(0 0) -- (complex width 1) --
-			 (complex width (+ thickness 1)) --
-			 (complex 0 thickness) -- #c(0 0))
-		     (mf #c(0 0) -- (complex width -1) --
-			 (complex width (- (- thickness) 1)) --
-			 (complex 0 (- thickness)) -- #c(0 0)))))))))
+(defun ensure-beam-segment-design (direction position width)
+  (let* ((key (list direction position width)))
+    (or (gethash key *beam-designs*)
+	(setf (gethash key *beam-designs*)
+	      (climi::close-path 
+	       (if (eq direction :down)
+		   (if (eq position :upper)
+		       (mf #c(0 0) -- (complex width -1) -- (complex 0 -1) -- #c(0 0))
+		       (mf #c(0 0) -- (complex width 0) -- (complex width -1) -- #c(0 0)))
+		   (if (eq position :upper)
+		       (mf #c(0 0) -- (complex width 1) -- (complex width 0) -- #c(0 0))
+		       (mf #c(0 0) -- (complex width 0) -- (complex 0 -1) -- #c(0 0)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1407,3 +1407,18 @@ of a normal note.  This function always returns a positive value"))
 				       -1)
 			       xoffset))))))
 
+(defmethod compute-design ((font font) (shape (eql :beam-down-upper)))
+  (climi::close-path
+   (mf #c(0 0) -- (complex 16 -1) -- (complex 0 -1) -- #c(0 0))))
+
+(defmethod compute-design ((font font) (shape (eql :beam-down-lower)))
+  (climi::close-path
+   (mf #c(0 0) -- (complex 16 0) -- (complex 16 -1) -- #c(0 0))))
+
+(defmethod compute-design ((font font) (shape (eql :beam-up-upper)))
+  (climi::close-path
+   (mf #c(0 0) -- (complex 16 1) -- (complex 16 0) -- #c(0 0))))
+
+(defmethod compute-design ((font font) (shape (eql :beam-up-lower)))
+  (climi::close-path
+   (mf #c(0 0) -- (complex 16 0) -- (complex 0 -1) -- #c(0 0))))

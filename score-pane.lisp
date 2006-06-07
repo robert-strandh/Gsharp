@@ -472,20 +472,40 @@
 (defclass downward-beam-output-record (beam-output-record)
   ())
 
+(defun medium-draw-downward-beam* (medium x1 y1 x2 y2 thickness)
+  (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
+    (loop for y from y1 below y2
+	  for x from x1 by inverse-slope do
+	  (let ((upper (sdl::ensure-beam-segment-design :down :upper (- (round (+ x inverse-slope)) (round x))))
+		(upper-tr (make-translation-transformation (round x) (1+ y))) ; don't know why the 1 is neccesary
+		(lower (sdl::ensure-beam-segment-design :down :lower (- (round (+ x inverse-slope)) (round x))))
+		(lower-tr (make-translation-transformation (round x) (+ y thickness 1)))) ; don't know why the 1 is neccesary
+	    (climi::medium-draw-bezier-design* medium (transform-region upper-tr upper))
+	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
+	    (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
+
+(defun medium-draw-upward-beam* (medium x1 y1 x2 y2 thickness)
+  (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
+    (loop for y from y1 above y2
+	  for x from x1 by inverse-slope do
+	  (let ((upper (sdl::ensure-beam-segment-design :up :upper (- (round (+ x inverse-slope)) (round x))))
+		(upper-tr (make-translation-transformation (round x) (1- y))) ; don't know why the -1 is necessary
+		(lower (sdl::ensure-beam-segment-design :up :lower (- (round (+ x inverse-slope)) (round x))))
+		(lower-tr (make-translation-transformation (round x) (+ y thickness)))) ; don't know why +1 is not neccesary
+	    (climi::medium-draw-bezier-design* medium (transform-region upper-tr upper))
+	    (climi::medium-draw-bezier-design* medium (transform-region lower-tr lower))
+	    (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
+
 (defmethod replay-output-record ((record downward-beam-output-record) (stream score-pane)
 				 &optional (region +everywhere+)
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink clipping-region light-glyph-p) record
+    (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-	(let ((*light-glyph* light-glyph-p))
-	  (with-drawing-options 
-              (medium :ink ink :clipping-region clipping-region)
-	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
-		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-              (draw-downward-beam medium x1 y1 y2 thickness
-                                  (/ (- x2 x1) (- y2 y1))))))))))
+	(with-drawing-options 
+	    (medium :ink ink :clipping-region clipping-region)
+	  (medium-draw-downward-beam* medium x1 y1 x2 (- y2 thickness) thickness))))))
 
 (defclass upward-beam-output-record (beam-output-record)
   ())
@@ -495,22 +515,17 @@
 				 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
-    (with-slots (thickness ink clipping-region light-glyph-p) record
+    (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-	(let ((*light-glyph* light-glyph-p))
-	  (with-drawing-options 
-              (medium :ink ink :clipping-region clipping-region)
-	    (let ((*lighter-gray-progressions* (lighter-gray-progressions stream))
-		  (*darker-gray-progressions* (darker-gray-progressions stream)))
-	      (draw-upward-beam medium x1 y2 y1 thickness
-				  (/ (- x2 x1) (- y2 y1))))))))))
+	(with-drawing-options 
+	    (medium :ink ink :clipping-region clipping-region)
+	  (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
 
 ;;; draw a sloped beam.  The vertical reference points 
 ;;; of the two end points are indicated by y1 and y2. 
 (defun draw-sloped-beam (medium x1 y1 x2 y2)
   (multiple-value-bind (down up) (beam-offsets *font*)
     (let ((transformation (medium-transformation *pane*))
-	  (inverse-slope (abs (/ (- x2 x1) (- y2 y1))))
 	  (thickness (- down up)))
       (cond ((< y1 y2)
 	     (when (stream-recording-p *pane*)
@@ -520,12 +535,11 @@
 		     (transform-position transformation x2 y2)
 		   (stream-add-output-record
 		    *pane* (make-instance 'downward-beam-output-record
-					  :x1 xx1 :y1 yy1 :x2 xx2 :y2 yy2
-					  :light-glyph-p *light-glyph*
+					  :x1 xx1 :y1 (+ yy1 up) :x2 xx2 :y2 (+ yy2 down)
 					  :thickness thickness :ink (medium-ink medium)
                                           :clipping-region (medium-clipping-region medium))))))
 	     (when (stream-drawing-p *pane*)
-	       (draw-downward-beam medium x1 y1 y2 thickness inverse-slope)))
+	       (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
 	    (t
 	     (when (stream-recording-p *pane*)
 	       (multiple-value-bind (xx1 yy1)
@@ -534,13 +548,12 @@
 		     (transform-position transformation x2 y2)
 		   (stream-add-output-record
 		    *pane* (make-instance 'upward-beam-output-record
-					  :x1 xx1 :y1 yy2 :x2 xx2 :y2 yy1
-					  :light-glyph-p *light-glyph*
+					  :x1 xx1 :y1 (+ yy2 up) :x2 xx2 :y2 (+ yy1 down)
 					  :thickness thickness 
                                           :ink (medium-ink medium)
                                           :clipping-region (medium-clipping-region medium))))))
 	     (when (stream-drawing-p *pane*)
-	       (draw-upward-beam medium x1 y1 y2 thickness inverse-slope)))))))
+	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
