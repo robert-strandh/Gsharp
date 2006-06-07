@@ -560,7 +560,7 @@
                   (make-instance 'downward-beam-output-record
                                  :x1 xx1 :y1 (+ yy1 yu) :x2 xx2 :y2 (+ yy2 yd)
                                  :thickness yt :ink (medium-ink medium)
-                                 :clipping-region (medium-clipping-region medium)))))
+                                 :clipping-region (transform-region transformation (medium-clipping-region medium))))))
 	     (when (stream-drawing-p (medium-sheet medium))
 	       (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
 	    (t
@@ -573,9 +573,9 @@
                   (make-instance 'upward-beam-output-record
                                  :x1 xx1 :y1 (+ yy2 yu) :x2 xx2 :y2 (+ yy1 yd)
                                  :thickness yt :ink (medium-ink medium)
-                                 :clipping-region (medium-clipping-region medium)))))
+                                 :clipping-region (transform-region transformation (medium-clipping-region medium))))))
 	     (when (stream-drawing-p (medium-sheet medium))
-	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness))))))))
+	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
@@ -671,10 +671,12 @@
     ,@body))
 
 (defmacro with-score-pane (pane &body body)
-  `(let* ((*lighter-gray-progressions* (lighter-gray-progressions pane))
-	  (*darker-gray-progressions* (darker-gray-progressions pane)))
-    (clear-output-record (stream-output-history pane))
-    ,@body))
+  (let ((n-pane (gensym "PANE")))
+    `(let* ((,n-pane ,pane)
+            (*lighter-gray-progressions* (lighter-gray-progressions ,n-pane))
+            (*darker-gray-progressions* (darker-gray-progressions ,n-pane)))
+      (clear-output-record (stream-output-history pane))
+      ,@body)))
 
 (defmacro with-vertical-score-position ((pane yref) &body body)
   `(with-translation (,pane 0 ,yref)
