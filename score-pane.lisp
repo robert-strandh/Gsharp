@@ -2,28 +2,14 @@
 
 (defclass score-view (view) ())  
 
-(defclass score-pane (esa-pane-mixin application-pane)
-  ((darker-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
-			     :reader darker-gray-progressions)
-   (lighter-gray-progressions :initform (make-array 10 :initial-element nil :adjustable t)
-			      :reader lighter-gray-progressions)))
+(defclass score-pane (esa-pane-mixin application-pane) ())
 
 (defmethod initialize-instance :after ((pane score-pane) &rest args)
   (declare (ignore args))
   (setf (stream-default-view pane) (make-instance 'score-view)))
 
-(defparameter *light-glyph* nil)
 (defparameter *font* nil)
 (defparameter *fonts* (make-array 100 :initial-element nil))
-
-;;; Map integer levels of white, represented by the number of white pixels in 
-;;; a 4x4 pixel grid, to CLIM inks. 
-(defparameter *gray-levels*
-  (loop with result = (make-array '(17))
-	for i from 0 to 16 do
-	(setf (aref result i) (make-gray-color (/ i 16)))
-	finally (return result)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -384,89 +370,6 @@
   (multiple-value-bind (down up) (beam-offsets *font*)
     (draw-rectangle* medium x1 (+ y up) x2 (+ y down))))
 
-(defvar *darker-gray-progressions*)
-(defvar *lighter-gray-progressions*)
-
-;;; don't delete this yet, since I don't know how the other one will work out. 
-;; (defun ensure-gray-progressions (index)
-;;   (unless (aref *darker-gray-progressions* index)
-;;     (setf (aref *darker-gray-progressions* index)
-;; 	  (with-output-to-pixmap (medium *pane* :height 1 :width index)
-;; 	    (loop for i from 0 below index
-;; 		  for gray-level from 16 by (- (/ 16 index)) do
-;; 		  (draw-point* medium i 0 :ink (aref *gray-levels* (ceiling gray-level)))))))
-;;   (unless (aref *lighter-gray-progressions* index)
-;;     (setf (aref *lighter-gray-progressions* index)
-;; 	  (with-output-to-pixmap (medium *pane* :height 1 :width index)
-;; 	    (loop for i from 0 below index
-;; 		  for gray-level from 0 by (/ 16 index) do
-;; 		  (draw-point* medium i 0 :ink (aref *gray-levels* (floor gray-level))))))))
-
-;;; this version should be faster for long beam segments. It is also
-;;; more correct in its colors, but the visual impession is no better.
-(defun ensure-gray-progressions (pane-medium index)
-  (when (< (length *darker-gray-progressions*) (1+ index))
-    (adjust-array *darker-gray-progressions* (1+ index) :initial-element nil))
-  (unless (aref *darker-gray-progressions* index)
-    (setf (aref *darker-gray-progressions* index)
-	  (with-output-to-pixmap (medium (medium-sheet pane-medium) :height 1 :width index)
-	    ;; start by filling it with black
-	    (draw-rectangle* medium 0 0 index 1 :ink (aref *gray-levels* 0))
-	    (loop for start = 0 then end
-		  for end from (- (/ index 32) 1/2) by (/ index 16)
-		  for gray-level from 16 above 0
-		  do (unless (= start end)
-		       (draw-rectangle* medium start 0 end 1
-					:ink (aref *gray-levels* gray-level)))))))
-  (when (< (length *lighter-gray-progressions*) (1+ index))
-    (adjust-array *lighter-gray-progressions* (1+ index) :initial-element nil))
-  (unless (aref *lighter-gray-progressions* index)
-    (setf (aref *lighter-gray-progressions* index)
-	  (with-output-to-pixmap (medium (medium-sheet pane-medium) :height 1 :width index)
-	    ;; start by filling it with white
-	    (draw-rectangle* medium 0 0 index 1 :ink (aref *gray-levels* 16))
-	    (loop for start = 0 then end
-		  for end from (- (/ index 32) 1/2) by (/ index 16)
-		  for gray-level from 0 below 16
-		  do (unless (= start end)
-		       (draw-rectangle* medium start 0 end 1
-					:ink (aref *gray-levels* gray-level))))))))
-
-(defun draw-segment (medium x1 y x2 thickness progression1 progression2)
-  ;; make it a bit thicker to cover either the upper or the lower pixmap
-  (let ((extra (if *light-glyph* (- x2 x1) 0)))
-    (medium-draw-rectangle* medium x1  y x2 (- y thickness) t)
-    (ensure-gray-progressions medium (+ extra (- x2 x1)))
-    (copy-from-pixmap (aref progression1 (+ extra (- x2 x1)))
-		      (if (eq progression1 *lighter-gray-progressions*) extra 0)
-		      0
-		      (- x2 x1) 1
-		      medium x1 y)
-    (copy-from-pixmap (aref progression2 (+ extra (- x2 x1)))
-		      (if (eq progression2 *lighter-gray-progressions*) extra 0)
-		      0
-		      (- x2 x1) 1
-		      medium x1 (- y thickness))))
-
-(defun draw-downward-beam-segment (medium x1 y x2 thickness)
-  (draw-segment medium x1 (1+ y) x2 thickness
-		*darker-gray-progressions* *lighter-gray-progressions*))
-
-(defun draw-upward-beam-segment (medium x1 y x2 thickness)
-  (draw-segment medium x1 y x2 thickness
-		*lighter-gray-progressions* *darker-gray-progressions*))
-
-(defun draw-downward-beam (medium x1 y1 y2 thickness inverse-slope)
-  (loop for y from y1 below y2
-	for x from x1 by inverse-slope do
-	(draw-downward-beam-segment medium (round x) y
-				  (round (+ x inverse-slope)) thickness)))
-
-(defun draw-upward-beam (medium x1 y1 y2 thickness inverse-slope)
-  (loop for y from y1 above y2
-	for x from x1 by inverse-slope do
-	(draw-upward-beam-segment medium (round x) y
-				    (round (+ x inverse-slope)) thickness)))
 
 (defclass downward-beam-output-record (beam-output-record)
   ())
@@ -671,12 +574,9 @@
     ,@body))
 
 (defmacro with-score-pane (pane &body body)
-  (let ((n-pane (gensym "PANE")))
-    `(let* ((,n-pane ,pane)
-            (*lighter-gray-progressions* (lighter-gray-progressions ,n-pane))
-            (*darker-gray-progressions* (darker-gray-progressions ,n-pane)))
-      (clear-output-record (stream-output-history pane))
-      ,@body)))
+  `(progn
+     (clear-output-record (stream-output-history ,pane))
+     ,@body))
 
 (defmacro with-vertical-score-position ((pane yref) &body body)
   `(with-translation (,pane 0 ,yref)
@@ -692,6 +592,5 @@
 	,@body))))  
 
 (defmacro with-light-glyphs (pane &body body)
-  `(let ((*light-glyph* t))
-    (with-drawing-options (,pane :ink +gray50+)
-      ,@body)))
+  `(with-drawing-options (,pane :ink +gray50+)
+     ,@body))
