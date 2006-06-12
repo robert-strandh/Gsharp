@@ -90,7 +90,8 @@
            #:keysig #:staff-pos #:xoffset #:read-everything
 	   #:read-buffer-from-stream
 	   #:key-signature #:alterations #:more-sharps #:more-flats
-	   #:line-width #:min-width #:spacing-style #:right-edge #:left-offset
+	   #:line-width #:lines-per-page #:min-width #:spacing-style
+	   #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
 	   #:tie-right #:tie-left
 	   #:needs-saving))

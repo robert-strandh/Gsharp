@@ -352,55 +352,148 @@ right of the center of its timeline"))
     (loop for measure in measures do
 	  (draw-measure pane measure))))
 
+(defun draw-staves (pane staves x y right-edge)
+  (loop for staff in staves do
+	(score-pane:with-vertical-score-position
+	    (pane (+ y (staff-yoffset staff)))
+	  (if (member staff (staves (layer (slice (bar *cursor*)))))
+	      (draw-staff-and-clef pane staff x right-edge)
+	      (score-pane:with-light-glyphs pane
+		(draw-staff-and-clef pane staff x right-edge))))))  
+  
+
+(defun compute-and-draw-system (pane buffer staves measures method x y timesig-offset right-edge)
+  (compute-elasticities measures method)
+  (compute-gaps measures method pane)
+  (let* ((e-fun (compute-elasticity-functions measures method pane))
+	 ;; FIXME:  it would be much better to compress the system
+	 ;; proportionally, so that every smallest gap gets shrunk
+	 ;; by the same percentage
+	 (force (if (> (zero-force-size e-fun) (line-width method))
+		    0 
+		    (force-at-size e-fun (line-width method)))))
+    (compute-system-coordinates measures
+				(+ x (left-offset buffer) timesig-offset) y
+				force))
+  (draw-system pane measures)
+  (score-pane:draw-bar-line pane x
+			    (+ y (- (score-pane:staff-step 8)))
+			    (+ y (staff-yoffset (car (last staves)))))
+  (draw-staves pane staves x y right-edge))
+
+(defun compute-timesig-offset (staves)
+  (max (* (score-pane:staff-step 2)
+	  (loop for staff in staves
+		maximize
+		(if (typep staff 'fiveline-staff)
+		    (count :flat (alterations (keysig staff)))
+		    0)))
+       (* (score-pane:staff-step 2.5)
+	  (loop for staff in staves
+		maximize
+		(if (typep staff 'fiveline-staff)
+		    (count :sharp (alterations (keysig staff)))
+		    0)))))
+
+(defun split (sequence n method)
+  (labels ((sequence-size (start end)
+	     (natural-width method
+			    (reduce (lambda (seq-cost element)
+				      (combine-cost method seq-cost element))
+				    sequence :start start :end end
+				    :initial-value nil)))
+	   (split-aux (sequence start end n)
+	     (if (= n 1)
+		 (let ((width (sequence-size start end)))
+		   (values (list (subseq sequence start end)) width width))
+		 (let* ((nn (floor n 2))
+			(m (floor (* (- end start) nn) n)))
+		   (multiple-value-bind (best-left minl maxl)
+		       (split-aux sequence start (+ start m) nn)
+		     (multiple-value-bind (best-right minr maxr)
+			 (split-aux sequence (+ start m) end (- n nn))
+		       (let* ((best-min (min minl minr))
+			      (best-max (max maxl maxr))
+			      (best-cost (/ (- best-max best-min) 2))
+			      (best-splits (append best-left best-right)))
+			 (cond ((and (< minl minr)
+				     (< maxl maxr))
+				(loop do (incf m)
+				      while (and (< minl minr)
+						 (< maxl maxr)
+						 (< m (- end start)))
+				      do (multiple-value-bind (left new-minl new-maxl)
+					     (split-aux sequence start (+ start m) nn)
+					   (multiple-value-bind (right new-minr new-maxr)
+					       (split-aux sequence (+ start m) end (- n nn))
+					     (setf minl new-minl
+						   maxl new-maxl
+						   minr new-minr
+						   maxr new-maxr)
+					     (let ((cost (/ (- (max maxl maxr) (min minl minr)) 2)))
+					       (when (< cost best-cost)
+						 (setf best-min (min minl minr)
+						       best-max (max maxl maxr)
+						       best-cost cost
+						       best-splits (append left right))))))))
+			       ((and (> minl minr)
+				     (> maxl maxr))
+				(loop do (decf m)
+				      while (and (> minl minr)
+						 (> maxl maxr)
+						 (> m 0))
+				      do (multiple-value-bind (left new-minl new-maxl)
+					     (split-aux sequence start (+ start m) nn)
+					   (multiple-value-bind (right new-minr new-maxr)
+					       (split-aux sequence (+ start m) end (- n nn))
+					     (setf minl new-minl
+						   maxl new-maxl
+						   minr new-minr
+						   maxr new-maxr)
+					     (let ((cost (/ (- (max maxl maxr) (min minl minr)) 2)))
+					       (when (< cost best-cost)
+						 (setf best-min (min minl minr)
+						       best-max (max maxl maxr)
+						       best-cost cost
+						       best-splits (append left right)))))))))
+			 (values best-splits best-min best-max))))))))
+    (split-aux sequence 0 (length sequence) n)))
+		     
+					
+
+	
+
+(defun layout-page (measures n method)
+  (if (<= (length measures) n)
+      (mapcar #'list measures)
+      (split measures n method)))
+
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
-	   (timesig-offset (max (* (score-pane:staff-step 2)
-				   (loop for staff in staves
-					 maximize
-					 (if (typep staff 'fiveline-staff)
-					     (count :flat (alterations (keysig staff)))
-					     0)))
-				(* (score-pane:staff-step 2.5)
-				   (loop for staff in staves
-					 maximize
-					 (if (typep staff 'fiveline-staff)
-					     (count :sharp (alterations (keysig staff)))
-					     0)))))
+	   (timesig-offset (compute-timesig-offset staves))
 	   (method (let ((old-method (buffer-cost-method buffer)))
 		     (make-measure-cost-method (min-width old-method)
 					       (spacing-style old-method)
-					       (- (line-width old-method) timesig-offset))))
-	   (right-edge (right-edge buffer)))
+					       (- (line-width old-method) timesig-offset)
+					       (lines-per-page old-method))))
+	   (right-edge (right-edge buffer))
+	   (systems-per-page (max 1 (floor 12 (length staves)))))
       (loop for staff in staves
 	    for offset from 0 by 90 do
 	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
-	 (lambda (measures)
-	   (compute-elasticities measures method)
-	   (compute-gaps measures method pane)
-	   (let* ((e-fun (compute-elasticity-functions measures method pane))
-		  ;; FIXME:  it would be much better to compress the system
-		  ;; proportionally, so that every smallest gap gets shrunk
-		  ;; by the same percentage
-		  (force (if (> (zero-force-size e-fun) (line-width method))
-			     0 
-			     (force-at-size e-fun (line-width method)))))
-	     (compute-system-coordinates measures
-					 (+ x (left-offset buffer) timesig-offset) yy
-					 force))
-	   (draw-system pane measures)
-	   (score-pane:draw-bar-line pane x
-				     (+ yy (- (score-pane:staff-step 8)))
-				     (+ yy (staff-yoffset (car (last staves)))))
-	   (loop for staff in staves do
-		 (score-pane:with-vertical-score-position (pane yy)
-		    (if (member staff (staves (layer (slice (bar *cursor*)))))
-			(draw-staff-and-clef pane staff x right-edge)
-			(score-pane:with-light-glyphs pane
-			  (draw-staff-and-clef pane staff x right-edge))))
-		 (incf yy 90)))
+	 (lambda (all-measures)
+	   (when (member-if (lambda (measure) (member (bar *cursor*)
+						      (measure-bars measure)
+						      :test #'eq))
+			    all-measures)
+	     (let ((measure-seqs (layout-page all-measures systems-per-page method)))
+	       (loop for measures in measure-seqs do 
+		     (compute-and-draw-system pane buffer staves measures
+					      method x yy timesig-offset right-edge)
+		     (incf yy (* 90 (length staves)))))))
 	 buffer)))))
 
 (define-added-mixin velement () melody-element

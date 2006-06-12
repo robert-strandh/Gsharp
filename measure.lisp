@@ -808,7 +808,8 @@
     (setf (obseq-cost-method buffer)
 	  (make-measure-cost-method
 	   (min-width buffer) (spacing-style buffer)
-	   (- (right-edge buffer) (left-margin buffer) (left-offset buffer))))
+	   (- (right-edge buffer) (left-margin buffer) (left-offset buffer))
+	   (floor 12 (length (staves buffer)))))
     (obseq-solve buffer)
     (setf (modified-p buffer) nil)))
 
@@ -824,13 +825,16 @@
    ;; the spaceing style is taken from the spacing style of the buffer
    (spacing-style :initarg :spacing-style :reader spacing-style)
    ;; the amount of horizontal space available to music material
-   (line-width :initarg :line-width :reader line-width)))
+   (line-width :initarg :line-width :reader line-width)
+   ;; number of lines that will fit on a page
+   (lines-per-page :initarg :lines-per-page :reader lines-per-page)))
 
-(defun make-measure-cost-method (min-width spacing-style line-width)
+(defun make-measure-cost-method (min-width spacing-style line-width lines-per-page)
   (make-instance 'measure-cost-method
 		 :min-width min-width
 		 :spacing-style spacing-style
-		 :line-width line-width))
+		 :line-width line-width
+		 :lines-per-page lines-per-page))
 				 
 ;;; As required by the obseq library, define a sequence cost, i.e., in
 ;;; this case the cost of a sequece of measures.
@@ -935,21 +939,22 @@
      (* (nb-measures seq-cost) (min-width method))))
 
 ;;; The compress factor indicates how by how much a sequence of
-;;; measures must be compressed in order to fit the line width at our
+;;; measures must be compressed in order to fit the width at our
 ;;; disposal.  Values > 1 indicate that the sequence of mesures must
 ;;; be stretched instead of compressed.
 (defmethod compress-factor ((method measure-cost-method)
 			    (seq-cost measure-seq-cost))
-  (/ (natural-width method seq-cost) (line-width method)))
+  (/ (natural-width method seq-cost)
+     (* (line-width method) (lines-per-page method))))
 
 ;;; As far as Gsharp is concerned, we define the cost of a sequence of
 ;;; measures as the max of the compress factor and its inverse.  In
-;;; other words, we consider it as bad to have to stretch a line by x%
+;;; other words, we consider it as bad to have to stretch a sequence by x%
 ;;; as it is to have to compress it by x%, and the more we have to
 ;;; compress or expand it, the worse it is.  This way of doing it is
 ;;; not great.  At some point, we need to severely penalize compressed
-;;; lines that become too short to display without overlaps, unless
-;;; the line contains a single measure, of course.
+;;; sequences that become too short to display without overlaps, unless
+;;; the sequence contains a single measure, of course.
 (defmethod measure-seq-cost ((method measure-cost-method)
 			     (seq-cost measure-seq-cost))
   (let ((c (compress-factor method seq-cost)))
