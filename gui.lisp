@@ -855,6 +855,26 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; motion by entire score
+
+(define-gsharp-command com-end-of-score ()
+  (loop until (last-segment-p (current-cursor))
+        do (forward-segment (current-cursor)))
+  (loop until (last-bar-p (current-cursor))
+        do (forward-bar (current-cursor)))
+  (loop until (end-of-bar-p (current-cursor))
+        do (forward-element (current-cursor))))
+
+(define-gsharp-command com-beginning-of-score ()
+  (loop until (first-segment-p (current-cursor))
+        do (backward-segment (current-cursor)))
+  (loop until (first-bar-p (current-cursor))
+        do (backward-bar (current-cursor)))
+  (loop until (beginning-of-bar-p (current-cursor))
+        do (backward-element (current-cursor))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; delete commands
 
 (defun go-to-beginning-of-bar (cursor)

@@ -12,6 +12,9 @@
 
 (set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
 
+(set-key 'com-end-of-score 'global-gsharp-table '((#\> :shift :meta)))
+(set-key 'com-beginning-of-score 'global-gsharp-table '((#\< :shift :meta)))
+
 ;;; FIXME where are the corresponding commands?
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))

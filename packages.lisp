@@ -150,6 +150,7 @@
 	   #:head-slice #:body-slice #:tail-slice
 	   #:in-last-slice #:in-first-slice
 	   #:select-layer #:delete-layer
+           #:first-segment-p #:last-segment-p
 	   #:forward-segment #:backward-segment
 	   #:insert-segment-before #:insert-segment-after
 	   #:delete-segment
