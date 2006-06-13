@@ -968,7 +968,7 @@
 (defmethod seq-cost-cannot-decrease ((method measure-cost-method)
 					    (seq-cost measure-seq-cost))
   (>= (natural-width method seq-cost)
-      (line-width method)))
+      (* (line-width method) (lines-per-page method))))
 
 ;;; Compare the cost of two sequences of measures
 (defmethod cost-less ((method measure-cost-method)
