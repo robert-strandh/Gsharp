@@ -47,7 +47,7 @@
 	   #:with-suspended-note-offset
 	   #:with-notehead-left-offsets #:with-light-glyphs #:score-pane
 	   #:clef #:staff #:fiveline-staff #:lyrics-staff #:notehead
-	   #:score-view))
+	   #:score-view #:number-of-pages #:current-page-number))
 
 (defpackage :gsharp-buffer
   (:use :common-lisp :gsharp-utilities :esa-buffer)

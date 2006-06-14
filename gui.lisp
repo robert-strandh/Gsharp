@@ -54,6 +54,11 @@
     (princ "  " pane)
     (with-text-face (pane :bold)
       (format pane "~25A" (name buffer)))
+    (princ "  " pane)
+    (format pane "[~a/~a]"
+	    (score-pane:current-page-number view)
+	    (score-pane:number-of-pages view))
+    (princ "  " pane)
     (with-text-family (pane :sans-serif)
       (princ (if (recordingp *application-frame*)
 		 "Def"
@@ -109,7 +114,9 @@
   (:top-level (esa-top-level)))
 
 (defmethod buffers ((application-frame gsharp))
-  (remove-duplicates (mapcar #'buffer (views application-frame)) :test #'eq))
+  (remove-duplicates (mapcar (lambda (window) (buffer (view window)))
+			     (windows application-frame))
+		     :test #'eq))
 
 (defmethod current-buffer ((application-frame gsharp))
   (buffer (view (car (windows application-frame)))))
@@ -161,9 +168,28 @@
 		    for dx from (+ right 5) by 5 do
 		    (score-pane:draw-dot pane (+ xpos dx) 4)))))))))
 
+(defun update-page-numbers (frame)
+  (loop for window in (windows frame)
+	do (let ((page-number 0)
+		 (view (view window)))
+	     (gsharp-measure::new-map-over-obseq-subsequences
+	      (lambda (all-measures)
+		(incf page-number)
+		(when (member-if (lambda (measure) (member (bar (cursor view))
+							   (measure-bars measure)
+							   :test #'eq))
+				 all-measures)
+		  (setf (score-pane:current-page-number view) page-number)))
+	      (buffer view))
+	     (setf (score-pane:number-of-pages view) page-number))))
+
+(defmethod redisplay-frame-panes :before ((frame gsharp) &key force-p)
+  (declare (ignore force-p))
+  (mapc #'recompute-measures (buffers frame))
+  (update-page-numbers frame))
+
 (defmethod display-score ((frame gsharp) pane)
   (let* ((buffer (buffer (view pane))))
-    (recompute-measures buffer)
     (score-pane:with-score-pane pane
       (draw-buffer pane buffer (current-cursor)
 		   (left-margin buffer) 100)

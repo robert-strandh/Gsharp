@@ -1,6 +1,8 @@
 (in-package :score-pane)
 
-(defclass score-view (view) ())  
+(defclass score-view (view)
+  ((%number-of-pages :initform "-" :accessor number-of-pages)
+   (%current-page-number :initform "-" :accessor current-page-number)))
 
 (defclass score-pane (esa-pane-mixin application-pane) ())
 
