@@ -85,6 +85,8 @@
 (set-key 'com-rotate-stem-direction 'cluster-table '((#\s :meta)))
 (set-key 'com-current-increment 'cluster-table '((#\p)))
 (set-key 'com-current-decrement 'cluster-table '((#\n)))
+(set-key 'com-octave-up 'cluster-table '((#\U :shift :meta)))
+(set-key 'com-octave-down 'cluster-table '((#\D :shift :meta)))
 
 ;;; lyrics mode table
 
