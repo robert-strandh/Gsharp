@@ -1,7 +1,7 @@
 G#V4
 
 [GSHARP-BUFFER:BUFFER
-   :min-width 17
+   :min-width 12
    :spacing-style 0.4
    :right-edge 700
    :left-offset 30
@@ -3149,6 +3149,14 @@ G#V4
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
                                                                          :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :staff #2#
+                                                              :staff-pos 4 ]
                                                            [GSHARP-BUFFER:CLUSTER
                                                               :xoffset 0
                                                               :notehead :FILLED
@@ -3293,7 +3301,757 @@ G#V4
                                                                          :accidentals :NATURAL
                                                                          :dots 0 ]) ]) ]
                                              [GSHARP-BUFFER:MELODY-BAR
-                                                :elements COMMON-LISP:NIL ]) ]
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 24
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 22
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 22
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 24
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 27
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :staff #2#
+                                                              :staff-pos 4 ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 0
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :staff #2#
+                                                              :staff-pos 4 ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :staff #2#
+                                                              :staff-pos 4 ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 27
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 27
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :FLAT
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 27
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :FLAT
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :staff #2#
+                                                              :staff-pos 4 ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 26
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 17
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 19
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 18
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 17
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 18
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 20
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 18
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 20
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :FLAT
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 22
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 20
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 18
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 20
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :FLAT
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 22
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 16
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 23
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 24
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 18
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 0
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 14
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 21
+                                                                         :staff #2#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]) ]
                              :tail [GSHARP-BUFFER:SLICE
                                       :bars ([GSHARP-BUFFER:MELODY-BAR
                                                 :elements COMMON-LISP:NIL ]) ] ]
@@ -4376,7 +5134,7 @@ G#V4
                                                               :xoffset 0
                                                               :notehead :FILLED
                                                               :rbeams 3
-                                                              :lbeams 2
+                                                              :lbeams 3
                                                               :dots 0
                                                               :stem-direction :AUTO
                                                               :notes ([GSHARP-BUFFER:NOTE
@@ -4389,7 +5147,7 @@ G#V4
                                                               :xoffset 0
                                                               :notehead :FILLED
                                                               :rbeams 3
-                                                              :lbeams 2
+                                                              :lbeams 3
                                                               :dots 0
                                                               :stem-direction :AUTO
                                                               :notes ([GSHARP-BUFFER:NOTE
@@ -4401,8 +5159,8 @@ G#V4
                                                            [GSHARP-BUFFER:CLUSTER
                                                               :xoffset 0
                                                               :notehead :FILLED
-                                                              :rbeams 1
-                                                              :lbeams 2
+                                                              :rbeams 0
+                                                              :lbeams 3
                                                               :dots 0
                                                               :stem-direction :AUTO
                                                               :notes ([GSHARP-BUFFER:NOTE
@@ -4520,7 +5278,7 @@ G#V4
                                                               :xoffset 0
                                                               :notehead :FILLED
                                                               :rbeams 1
-                                                              :lbeams 2
+                                                              :lbeams 3
                                                               :dots 0
                                                               :stem-direction :AUTO
                                                               :notes ([GSHARP-BUFFER:NOTE
@@ -7790,7 +8548,1026 @@ G#V4
                                                                          :staff #1#
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
-                                                                         :dots 0 ]) ]) ]) ]
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 34
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 30
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]
+                                                                      [GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 25
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 26
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 27
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 30
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 31
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 31
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 30
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 29
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 31
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 30
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 28
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 34
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :AUTO
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 41
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 40
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :SHARP
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :SHARP
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 40
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 3
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 39
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 38
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 37
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 36
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 34
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 2
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 33
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 34
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 1
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 32
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:CLUSTER
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 2
+                                                              :dots 0
+                                                              :stem-direction :UP
+                                                              :notes ([GSHARP-BUFFER:NOTE
+                                                                         :pitch 35
+                                                                         :staff #1#
+                                                                         :head :FILLED
+                                                                         :accidentals :NATURAL
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements COMMON-LISP:NIL ]) ]
                              :tail [GSHARP-BUFFER:SLICE
                                       :bars ([GSHARP-BUFFER:MELODY-BAR
                                                 :elements COMMON-LISP:NIL ]) ] ])
