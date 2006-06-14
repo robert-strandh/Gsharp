@@ -60,6 +60,8 @@
 (set-key 'com-fewer-rbeams 'rhythmic-table '((#\x) (#\])))
 (set-key 'com-rotate-notehead 'rhythmic-table '((#\h :meta)))
 (set-key 'com-rotate-notehead 'rhythmic-table '((#\r :control))) ; why this one too?
+(set-key 'com-up 'rhythmic-table '((#\u :meta)))
+(set-key 'com-down 'rhythmic-table '((#\d :meta)))
 
 ;;; the cluster table contains commands that are specific to 
 ;;; clusters
@@ -76,8 +78,6 @@
 (set-key 'com-add-note-g 'cluster-table '(#\G))
 (set-key 'com-add-note-a 'cluster-table '(#\A))
 (set-key 'com-add-note-b 'cluster-table '(#\B))
-(set-key 'com-up 'cluster-table '((#\u :meta)))
-(set-key 'com-down 'cluster-table '((#\d :meta)))
 (set-key 'com-tie-note-left 'cluster-table '((#\{)))
 (set-key 'com-tie-note-right 'cluster-table '((#\})))
 (set-key 'com-untie-note-left 'cluster-table '((#\x) (#\{)))
