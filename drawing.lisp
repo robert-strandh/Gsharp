@@ -480,7 +480,7 @@ right of the center of its timeline"))
 	   (right-edge (right-edge buffer))
 	   (systems-per-page (max 1 (floor 12 (length staves)))))
       (loop for staff in staves
-	    for offset from 0 by 90 do
+	    for offset from 0 by 70 do
 	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
 	(gsharp-measure::new-map-over-obseq-subsequences
@@ -493,7 +493,7 @@ right of the center of its timeline"))
 	       (loop for measures in measure-seqs do 
 		     (compute-and-draw-system pane buffer staves measures
 					      method x yy timesig-offset right-edge)
-		     (incf yy (* 90 (length staves)))))))
+		     (incf yy (+ 20 (* 70 (length staves))))))))
 	 buffer)))))
 
 (define-added-mixin velement () melody-element
