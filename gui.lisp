@@ -25,13 +25,17 @@
   ((cursor :initarg :cursor :reader cursor)
    (buffer :initarg :buffer :reader buffer)))
 
-(defclass gsharp-pane (score-pane:score-pane)
+;;; exists for the sole purpose of a :before method that updates the
+;;; measures of each modified buffer.
+(defclass gsharp-pane-mixin () ())
+
+(defclass gsharp-pane (score-pane:score-pane gsharp-pane-mixin)
   ((view :initarg :view :accessor view)))	  
 
 (defvar *info-bg-color* +gray85+)
 (defvar *info-fg-color* +black+)
 
-(defclass gsharp-info-pane (info-pane)
+(defclass gsharp-info-pane (info-pane gsharp-pane-mixin)
   ()
   (:default-initargs
       :height 20 :max-height 20 :min-height 20
@@ -183,8 +187,11 @@
 	      (buffer view))
 	     (setf (score-pane:number-of-pages view) page-number))))
 
-(defmethod redisplay-frame-panes :before ((frame gsharp) &key force-p)
-  (declare (ignore force-p))
+;;; I tried making this a :before method on redisplay-frame-panes,
+;;; but it turns out that McCLIM calls redisplay-frame-pane from 
+;;; places other than redisplay-frame-panes. 
+(defmethod redisplay-frame-pane :before ((frame gsharp) (pane gsharp-pane-mixin) &key force-p)
+  (declare (ignore pane force-p))
   (mapc #'recompute-measures (buffers frame))
   (update-page-numbers frame))
 
