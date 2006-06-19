@@ -224,7 +224,7 @@
   (loop for note in group do
 	(setf (final-accidental note)
 	      (if (eq (accidentals note)
-		      (aref (alterations (keysig (staff note))) (mod (pitch note) 7)))
+		      (aref (alterations (keysig note)) (mod (pitch note) 7)))
 		  nil
 		  (accidentals note)))))
 

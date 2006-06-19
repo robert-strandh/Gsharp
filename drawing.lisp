@@ -150,6 +150,31 @@ right of the center of its timeline"))
       (score-pane:staff-step 5)
       (score-pane:staff-step 2)))
 
+(defmethod right-bulge ((keysig gsharp-buffer::key-signature) pane)
+  ;; FIXME: shares much code with DRAW-ELEMENT (KEY-SIGNATURE).
+  (let ((old-keysig (keysig keysig)))
+    (let ((bulge 0))
+      (loop with advance = 0
+            for pitch in '(6 2 5 1 4 0 3)
+            when (and (eq (aref (alterations old-keysig) pitch) :flat)
+                      (not (eq (aref (alterations keysig) pitch) 
+                               :flat)))
+            do (incf advance (score-pane:staff-step 2))
+            finally (incf bulge (if (= advance 0) 0 (+ advance (score-pane:staff-step 2)))))
+      (loop with advance = 0
+            for pitch in '(3 0 4 1 5 2 6)
+            when (and (eq (aref (alterations old-keysig) pitch) :sharp)
+                      (not (eq (aref (alterations keysig) pitch) :sharp)))
+            do (incf advance (score-pane:staff-step 2))
+            finally (incf bulge (if (= advance 0) 0 (+ advance (score-pane:staff-step 2)))))
+      (loop for pitch in '(6 2 5 1 4 0 3)
+            while (eq (aref (alterations keysig) pitch) :flat)
+            do (incf bulge (score-pane:staff-step 2)))
+      (loop for pitch in '(3 0 4 1 5 2 6)
+            while (eq (aref (alterations keysig) pitch) :sharp)
+            do (incf bulge (score-pane:staff-step 2.5)))
+      bulge)))
+
 ;;; As it turns out, the spacing algorithm would be very complicated
 ;;; if we were to take into account exactly how elements with
 ;;; arbitrarily many timelines between them might influence the
@@ -496,6 +521,9 @@ right of the center of its timeline"))
 		     (incf yy (+ 20 (* 70 (length staves))))))))
 	 buffer)))))
 
+(define-added-mixin xelement () element
+  ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
+
 (define-added-mixin velement () melody-element
   (;; the position, in staff steps, of the end of the stem
    ;; that is not attached to a note, independent of the
@@ -509,11 +537,10 @@ right of the center of its timeline"))
    (top-note-staff-yoffset :accessor top-note-staff-yoffset)
    ;; the yoffset of the staff that contains the bottom note of
    ;; the element
-   (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)
-   (final-absolute-xoffset :accessor final-absolute-element-xoffset)))
+   (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)))
 
 (define-added-mixin welement () lyrics-element
-  ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
+  ())
 
 ;;; Compute and store several important pieces of information
 ;;; about an element:
@@ -600,6 +627,11 @@ right of the center of its timeline"))
 	  notes))
 
 (defun draw-beam-group (pane elements)
+  (let ((e (car elements)))
+    (when (typep e 'gsharp-buffer::key-signature)
+      (assert (null (cdr elements)))
+      (return-from draw-beam-group
+        (draw-element pane e (final-absolute-element-xoffset e)))))
   (mapc #'compute-top-bot-yoffset elements)
   (if (null (cdr elements))
       (let ((element (car elements)))
@@ -885,3 +917,46 @@ right of the center of its timeline"))
       (with-text-family (pane :serif)
 	(draw-text* pane (map 'string 'code-char (text element))
 		    x 0 :align-x :center)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Key signature element
+
+(defmethod draw-element (pane (keysig key-signature) &optional flags)
+  (let ((staff (staff keysig))
+        (old-keysig (keysig keysig))
+        (x (final-absolute-element-xoffset keysig)))
+    (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
+      (let ((yoffset (b-position (clef staff))))
+        (loop with advance = 0
+              for pitch in '(6 2 5 1 4 0 3)
+              for line in '(0 3 -1 2 -2 1 -3)
+              when (and (eq (aref (alterations old-keysig) pitch) :flat)
+                        (not (eq (aref (alterations keysig) pitch) 
+                                 :flat)))
+              do (score-pane:draw-accidental 
+                  pane :natural (+ x advance) (+ line yoffset))
+              and do (incf advance (score-pane:staff-step 2))
+              finally (incf x (if (= advance 0) 0 (+ advance (score-pane:staff-step 2))))))
+      (let ((yoffset (f-position (clef staff))))
+        (loop with advance = 0
+              for pitch in '(3 0 4 1 5 2 6)
+              for line in '(0 -3 1 -2 -5 -1 -4)
+              when (and (eq (aref (alterations old-keysig) pitch) :sharp)
+                        (not (eq (aref (alterations keysig) pitch) :sharp)))
+              do (score-pane:draw-accidental pane :natural (+ x advance) (+ line yoffset))
+              and do (incf advance (score-pane:staff-step 2))
+              finally (incf x (if (= advance 0) 0 (+ advance (score-pane:staff-step 2))))))
+
+      (let ((yoffset (b-position (clef staff))))
+        (loop for pitch in '(6 2 5 1 4 0 3)
+              for line in '(0 3 -1 2 -2 1 -3)
+              for x from x by (score-pane:staff-step 2)
+              while (eq (aref (alterations keysig) pitch) :flat)
+              do (score-pane:draw-accidental pane :flat x (+ line yoffset))))
+      (let ((yoffset (f-position (clef staff))))
+        (loop for pitch in '(3 0 4 1 5 2 6)
+              for line in '(0 -3 1 -2 -5 -1 -4)
+              for x from x by (score-pane:staff-step 2.5)
+              while (eq (aref (alterations keysig) pitch) :sharp)
+              do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))))

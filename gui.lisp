@@ -591,7 +591,7 @@
 	 (staff (car (staves (layer (slice (bar cluster))))))
 	 (note (make-note pitch staff
 		 :head (notehead state)
-		 :accidentals (aref (alterations (keysig staff)) (mod pitch 7))
+		 :accidentals (aref (alterations (keysig (current-cursor))) (mod pitch 7))
 		 :dots (dots state))))
     (setf *current-cluster* cluster
 	  *current-note* note)
@@ -857,6 +857,92 @@
                                (cluster-upper-bound cluster note)))
       (unless *current-note*
         (com-erase-element 1)))))
+
+(defun insert-keysig ()
+  (let* ((state (input-state *application-frame*))
+	 (cursor (current-cursor))
+         (staff (car (staves (layer cursor))))
+	 (keysig (if (keysig cursor)
+                     (gsharp-buffer::make-key-signature 
+                      staff :alterations (copy-seq (alterations (keysig cursor))))
+                     (gsharp-buffer::make-key-signature staff))))
+    ;; FIXME: should only invalidate elements temporally after the
+    ;; cursor.
+    (gsharp-measure::invalidate-everything-using-staff (current-buffer *application-frame*) staff)
+    (insert-element keysig cursor)
+    (forward-element cursor)
+    keysig))
+
+(define-gsharp-command com-insert-keysig ()
+  (insert-keysig))
+
+(defmethod remove-element :before ((keysig gsharp-buffer::key-signature))
+  (let ((staff (staff keysig)))
+    (setf (gsharp-buffer::key-signatures staff)
+          (remove keysig (gsharp-buffer::key-signatures staff)))
+    (gsharp-measure::invalidate-everything-using-staff (current-buffer *application-frame*) staff)))
+
+;;; FIXME: this function does not work for finding a key signature in
+;;; a different layer (but on the same staff).  This will bite in
+;;; polyphonic music with key signature changes (e.g. Piano music)
+(defun %keysig (staff key-signatures bar bars element-or-nil)
+  ;; common case
+  (when (null key-signatures)
+    (return-from %keysig (keysig staff)))
+  ;; earlier in the same bar?
+  (let ((k nil))
+    (dolist (e (elements bar) (when k (return-from %keysig k)))
+      (when (eq e element-or-nil)
+        (if k 
+            (return-from %keysig k)
+            (return nil)))
+      (when (and (typep e 'gsharp-buffer::key-signature)
+                 (eq (staff e) staff))
+        (setq k e))))
+  ;; must be an earlier bar.
+  (let ((bars (nreverse (loop for b in bars until (eq b bar) collect b))))
+    (dolist (b bars (keysig staff))
+      (when (find b key-signatures :key #'bar)
+        (dolist (e (reverse (elements b)) (error "inconsistency"))
+          (when (and (typep e 'key-signature)
+                     (eq (staff e) staff))
+            (return-from %keysig e)))))))
+
+(defmethod keysig ((cursor gsharp-cursor))
+  ;; FIXME: not just a cursor but _the_ cursor (i.e. in a given staff)
+  ;; otherwise the operation for getting the staff [(CAR (STAVES
+  ;; (LAYER CURSOR)))] need not return the staff that we're interested
+  ;; in.
+  (assert (eq cursor (current-cursor)))
+  (let* ((staff (car (staves (layer cursor))))
+         (key-signatures (gsharp-buffer::key-signatures staff))
+         (bar (bar cursor))
+         (slice (slice bar))
+         (bars (bars slice))
+         (element-or-nil (cursor-element cursor)))
+    (%keysig staff key-signatures bar bars element-or-nil)))
+
+(defmethod keysig ((note note))
+  (let* ((staff (staff note))
+         (key-signatures (gsharp-buffer::key-signatures staff))
+         (bar (bar (cluster note)))
+         (slice (slice bar))
+         (bars (bars slice))
+         (element-or-nil (cluster note)))
+    (%keysig staff key-signatures bar bars element-or-nil)))
+
+(defmethod keysig ((cluster cluster))
+  (error "Called ~S (a staff-scope operation) on an element with no ~
+          associated staff: ~S" 
+         'keysig cluster))
+
+(defmethod keysig ((element element))
+  (let* ((staff (staff element))
+         (key-signatures (gsharp-buffer::key-signatures staff))
+         (bar (bar element))
+         (slice (slice bar))
+         (bars (bars slice)))
+    (%keysig staff key-signatures bar bars element)))
 
 (define-gsharp-command com-tie-note-left ()
   (let ((note (cur-note)))
@@ -1188,10 +1274,10 @@
     (remove-staff-from-layer staff layer)))
 
 (define-gsharp-command com-more-sharps ()
-  (more-sharps (keysig (car (staves (layer (current-cursor)))))))
+  (more-sharps (keysig (current-cursor))))
 
 (define-gsharp-command com-more-flats ()
-  (more-flats  (keysig (car (staves (layer (current-cursor)))))))
+  (more-flats (keysig (current-cursor))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

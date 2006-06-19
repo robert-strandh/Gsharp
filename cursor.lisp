@@ -166,6 +166,12 @@
 	(when (> (pos cursor) position)
 	  (incf (pos cursor)))))
 
+(defmethod add-element :after 
+    ((keysig gsharp-buffer::key-signature) bar position)
+  (setf (gsharp-buffer::key-signatures (staff keysig))
+        ;; FIXME: unordered
+        (cons keysig (gsharp-buffer::key-signatures (staff keysig)))))
+
 (defmethod remove-element :before ((element element))
   (let ((elemno (number element)))
     (loop for cursor in (cursors (bar element)) do

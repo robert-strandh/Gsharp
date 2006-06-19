@@ -115,7 +115,8 @@
   ((print-character :allocation :class :initform #\=)
    (clef :accessor clef :initarg :clef :initform (make-clef :treble))
    (%keysig :accessor keysig :initarg :keysig
-	    :initform (make-array 7 :initial-element :natural))))
+	    :initform (make-array 7 :initial-element :natural))
+   (key-signatures :accessor key-signatures :initform nil)))
 	   
 (defmethod initialize-instance :after ((obj fiveline-staff) &rest args)
   (declare (ignore args))
