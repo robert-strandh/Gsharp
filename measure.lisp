@@ -56,7 +56,11 @@
 				      :accessor final-relative-accidental-xoffset)
    (final-accidental :initform nil :accessor final-accidental)
    ;; the relative x offset of the note with respect to the cluster
-   (final-relative-note-xoffset :accessor final-relative-note-xoffset)))
+   (final-relative-note-xoffset :accessor final-relative-note-xoffset)
+   ;; the absolute y position of any dot, or NIL if dots should not be
+   ;; drawn
+   (final-absolute-dot-ypos :accessor final-absolute-dot-ypos :initform nil)
+))
 
 ;;; given a list of notes, group them so that every note in the group
 ;;; is displayed on the same staff.  Return the list of groups. 
@@ -158,7 +162,7 @@
 
 (define-added-mixin rcluster () cluster
   ((final-stem-direction :accessor final-stem-direction)
-   ;; the position, in staff steps, of the top not in the element.
+   ;; the position, in staff steps, of the top note in the element.
    (top-note-pos :accessor top-note-pos)
    ;; the position, in staff steps, of the bottom note in the element.
    (bot-note-pos :accessor bot-note-pos)))
@@ -216,6 +220,22 @@
     (loop for element in elements
 	  when (non-empty-cluster-p element)
 	  do (setf (final-stem-direction element) stem-direction))))
+
+(defun compute-final-dot-positions (group)
+  (setf group (sort (copy-list group) #'> :key #'note-position))
+  (let ((so-far nil))
+    (dolist (note group)
+      (let* ((position (note-position note))
+             (ideal (if (oddp position) position (1+ position))))
+        (cond
+          ;; if there's no dot at our ideal position, use that
+          ((not (member ideal so-far)) (push (setf (final-absolute-dot-ypos note) ideal) so-far))
+          ;; if the note in question is on a line and we haven't
+          ;; got a dot in the space underneath, use that
+          ((and (evenp position) (not (member (- ideal 2) so-far)))
+           (push (setf (final-absolute-dot-ypos note) (- ideal 2)) so-far))
+          ;; otherwise, give up for this note
+          (t (setf (final-absolute-dot-ypos note) nil)))))))
 
 ;;; Given a list of notes to be displayed on the same staff line, for
 ;;; each note, compute the accidental to be displayed as a function of
@@ -550,6 +570,7 @@
 
 (defun compute-staff-group-parameters (staff-group stem-direction)
   (compute-final-relative-note-xoffsets staff-group stem-direction)
+  (compute-final-dot-positions staff-group)
   (compute-final-accidentals staff-group)
   (compute-final-relative-accidental-xoffset staff-group stem-direction))
 
@@ -622,7 +643,7 @@
 
 (defmethod compute-bar-parameters ((bar melody-bar))
   (loop for group in (beam-groups (elements bar))
-	do (compute-beam-group-parameters group)))	
+	do (compute-beam-group-parameters group)))
 
 ;;; From a list of simultaneous bars (and some other stuff), create a
 ;;; measure.  The `other stuff' is the spacing style, which is needed

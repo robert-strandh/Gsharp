@@ -76,6 +76,9 @@
 (defun final-absolute-accidental-xoffset (note)
   (+ (final-absolute-element-xoffset (cluster note)) (final-relative-accidental-xoffset note)))
 
+(defun final-absolute-dot-xoffset (cluster)
+  (+ (final-absolute-element-xoffset cluster) (score-pane:staff-step (final-relative-dot-xoffset cluster))))
+
 (defvar *cursor* nil)
 
 ;;; Compute the elasticity of each timeline in each measure of the
@@ -832,9 +835,13 @@ right of the center of its timeline"))
       (loop for pos from -2 downto bot-note-pos by 2
 	    do (score-pane:draw-ledger-line pane x pos)))))
 
-(defun draw-flags (pane element x direction pos)
+(defun flags-drawn-p (element)
   (let ((nb (max (rbeams element) (lbeams element))))
-    (when (and (> nb 0) (eq (notehead element) :filled))
+    (and (> nb 0) (eq (notehead element) :filled) nb)))
+
+(defun draw-flags (pane element x direction pos)
+  (let ((nb (flags-drawn-p element)))
+    (when nb
       (if (eq direction :up)
 	  (score-pane:with-notehead-right-offsets (right up)
 	    (declare (ignore up))
@@ -843,23 +850,23 @@ right of the center of its timeline"))
 	    (declare (ignore down))
 	    (score-pane:draw-flags-up pane nb (+ x left) pos))))))
   
-(defun draw-dots (pane nb-dots x pos)
-  (let ((staff-step (score-pane:staff-step 1)))
-    (loop with dotpos = (if (evenp pos) (1+ pos) pos)
-	  repeat nb-dots
-	  for xx from (+ x (* 2 staff-step)) by staff-step do
-	  (score-pane:draw-dot pane xx dotpos))))
+(defun draw-dots (pane nb-dots x dot-xoffset dot-pos)
+  (when dot-pos
+    (let ((staff-step (score-pane:staff-step 1)))
+      (loop repeat nb-dots
+            for xx from dot-xoffset by staff-step do
+            (score-pane:draw-dot pane xx dot-pos)))))
 
-(defun draw-note (pane note notehead nb-dots x pos)
+(defun draw-note (pane note notehead nb-dots x pos dot-xoffset dot-pos)
   (score-pane:with-vertical-score-position (pane (staff-yoffset (staff note)))
     (score-pane:draw-notehead pane notehead x pos)
     (when (final-accidental note)
       (score-pane:draw-accidental pane (final-accidental note) (final-absolute-accidental-xoffset note) pos))
-    (draw-dots pane nb-dots x pos)))
+    (draw-dots pane nb-dots x dot-xoffset dot-pos)))
 
-(defun draw-notes (pane notes dots notehead)
+(defun draw-notes (pane notes dots notehead dot-xoffset)
   (loop for note in notes do
-	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note))))
+	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note) dot-xoffset (final-absolute-dot-ypos note))))
 
 (defun element-has-suspended-notes (element)
   (not (apply #'= (mapcar #'final-relative-note-xoffset (notes element)))))
@@ -873,17 +880,23 @@ right of the center of its timeline"))
 (defmethod draw-element (pane (element cluster) &optional (flags t))
   (with-new-output-record (pane)
     (unless (null (notes element))
-      (let ((direction (final-stem-direction element))
-	    (stem-pos (final-stem-position element))
-	    (stem-yoffset (final-stem-yoffset element))
-	    (groups (group-notes-by-staff (notes element)))
-	    (x (final-absolute-element-xoffset element)))
+      (let* ((direction (final-stem-direction element))
+             (stem-pos (final-stem-position element))
+             (stem-yoffset (final-stem-yoffset element))
+             (groups (group-notes-by-staff (notes element)))
+             (x (final-absolute-element-xoffset element))
+             (dot-xoffset 
+              (let ((basic-xoffset (+ (score-pane:staff-step 2)
+                                      (reduce #'max (mapcar #'final-absolute-note-xoffset (notes element))))))
+                (if (and flags (eq direction :up) (flags-drawn-p element))
+                    (max basic-xoffset (+ (score-pane:staff-step 4) x))
+                    basic-xoffset))))
 	(when flags
 	  (score-pane:with-vertical-score-position (pane stem-yoffset)
 	    (draw-flags pane element x direction stem-pos)))
-	(loop for group in groups do 
-	      (draw-notes pane group (dots element) (notehead element))
-	      (draw-ledger-lines pane x group))
+        (loop for group in groups do 
+              (draw-notes pane group (dots element) (notehead element) dot-xoffset)
+              (draw-ledger-lines pane x group))
 	(unless (eq (notehead element) :whole)
 	  (if (eq direction :up)
 	      (score-pane:draw-right-stem

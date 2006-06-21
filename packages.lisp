@@ -128,6 +128,7 @@
 	   #:beam-groups #:final-stem-direction
 	   #:group-notes-by-staff #:final-relative-note-xoffset
 	   #:final-accidental #:final-relative-accidental-xoffset
+           #:final-relative-dot-xoffset #:final-absolute-dot-ypos
 	   #:timeline #:timelines #:elasticity
 	   #:smallest-gap #:elasticity-function))
 
