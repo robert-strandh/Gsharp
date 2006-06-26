@@ -56,6 +56,14 @@ G#V4
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
                                                                          :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 0
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :staff #1#
+                                                              :staff-pos 4 ]
                                                            [GSHARP-BUFFER:CLUSTER
                                                               :xoffset 0
                                                               :notehead :FILLED
@@ -81,6 +89,14 @@ G#V4
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
                                                                          :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :FILLED
+                                                              :rbeams 1
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :staff #1#
+                                                              :staff-pos 4 ]
                                                            [GSHARP-BUFFER:CLUSTER
                                                               :xoffset 0
                                                               :notehead :FILLED
@@ -106,6 +122,14 @@ G#V4
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
                                                                          :dots 0 ]) ]
+                                                           [GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :HALF
+                                                              :rbeams 0
+                                                              :lbeams 0
+                                                              :dots 1
+                                                              :staff #1#
+                                                              :staff-pos 4 ]
                                                            [GSHARP-BUFFER:CLUSTER
                                                               :xoffset 0
                                                               :notehead :FILLED
@@ -493,7 +517,16 @@ G#V4
                                                                          :staff #1#
                                                                          :head :FILLED
                                                                          :accidentals :NATURAL
-                                                                         :dots 0 ]) ]) ]) ]
+                                                                         :dots 0 ]) ]) ]
+                                             [GSHARP-BUFFER:MELODY-BAR
+                                                :elements ([GSHARP-BUFFER:REST
+                                                              :xoffset 0
+                                                              :notehead :WHOLE
+                                                              :rbeams 0
+                                                              :lbeams 0
+                                                              :dots 3
+                                                              :staff #1#
+                                                              :staff-pos 4 ]) ]) ]
                              :tail [GSHARP-BUFFER:SLICE
                                       :bars ([GSHARP-BUFFER:MELODY-BAR
                                                 :elements COMMON-LISP:NIL ]) ] ])

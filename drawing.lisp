@@ -917,7 +917,7 @@ right of the center of its timeline"))
   (let ((x (final-absolute-element-xoffset element)))
     (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
       (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
-      (draw-dots pane (dots element) x (1+ (staff-pos element))))))
+      (draw-dots pane (dots element) x (+ x (score-pane:staff-step 2)) (1+ (staff-pos element))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
