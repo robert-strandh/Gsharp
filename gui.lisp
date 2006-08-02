@@ -1117,7 +1117,7 @@
 (define-gsharp-command com-lower ()
   (decf (last-note (input-state *application-frame*)) 7))
 
-(define-gsharp-command com-insert-measure-bar ()
+(define-gsharp-command com-insert-barline ()
   (let ((cursor (current-cursor))
 	(elements '()))
     (loop until (end-of-bar-p cursor)

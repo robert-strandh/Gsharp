@@ -10,7 +10,7 @@
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
 (set-key `(com-erase-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\h :control)))
 
-(set-key 'com-insert-measure-bar 'global-gsharp-table '(#\|))
+(set-key 'com-insert-barline 'global-gsharp-table '(#\|))
 
 (set-key 'com-end-of-score 'global-gsharp-table '((#\> :shift :meta)))
 (set-key 'com-beginning-of-score 'global-gsharp-table '((#\< :shift :meta)))
