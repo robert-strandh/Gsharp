@@ -1242,13 +1242,13 @@
 		   (make-fiveline-staff :name name :clef clef)))
       (:lyrics (make-lyrics-staff :name name)))))
 
-(define-gsharp-command (com-insert-staff-before :name t) ()
-  (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff before staff")
+(define-gsharp-command (com-insert-staff-above :name t) ()
+  (add-staff-before-staff (accept 'score-pane:staff :prompt "Insert staff above staff")
 			  (acquire-new-staff)
 			  (current-buffer *application-frame*)))
 
-(define-gsharp-command (com-insert-staff-after :name t) ()
-  (add-staff-after-staff (accept 'score-pane:staff :prompt "Insert staff after staff")
+(define-gsharp-command (com-insert-staff-below :name t) ()
+  (add-staff-after-staff (accept 'score-pane:staff :prompt "Insert staff below staff")
 			 (acquire-new-staff)
 			 (current-buffer *application-frame*)))
 
