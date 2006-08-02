@@ -2,7 +2,7 @@
 \chapter{The beaming algorithm}
 
 The beaming algorithm of {\gs} was inspired by the book by Ross.
-Unfortunately, his method is not easily converted int an algorithm,
+Unfortunately, his method is not easily converted into an algorithm,
 and his examples occasionally break his own rules.  We thus had to
 invent our own algorithms that is as close to what we believe Ross
 intended as we could possibly achieve. 
@@ -46,7 +46,7 @@ cluster.
 
 In the description that follows, we use the {\gs} method of naming
 staff positions which is that we count in half staff steps above the lowest
-line of the staff).  For example The first ledger line below the staff has
+line of the staff.  For example, the first ledger line below the staff has
 position -2 and the upper line of the staff has position 8. 
 
 The primary beam can not be lower than the middle staff line (position
@@ -75,7 +75,7 @@ cases):
   (position -2) we raise the beam a little, but it is still entirely
   on the middle staff line:
   \begin{itemize}
-  \item if the left note is also has position -2, both sides of the
+  \item if the left note also has position -2, both sides of the
     beam will straddle the middle line.
   \item if the left note has position -3, then the beam hangs the line
     on the left and straddles the line on the right.

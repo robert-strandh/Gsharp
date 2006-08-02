@@ -198,15 +198,16 @@ object in the score pane.
 \subsection{Other panes}
 
 In the upper-right corner, you will see a the pane that determines the
-\emph{input state}\index{input state}\index{pane!input state|)}
-The input state shows a stylized version of a notehead, possibly with
-a stem, augmentation dots, and beaming information.  If the stem is
-down, all the new clusters entered will have their stems down.  If the
-stem is up, all the new clusters entered will have their stems up.  If
-the input state shows both a stem up and a stem down, all new
-clusters will have a stem direction of \emph{auto}, indicating that
-{\gs} will determine stem direction based on position of the notes on
-the staff and beaming information. 
+\emph{input state}\index{input state}\index{pane!input state|)} The
+input state shows a stylized version of a notehead, possibly with a
+stem, augmentation dots, and beaming information.  If the stem is
+down, all the new clusters (a cluster is rougly the same thing as a
+chord) entered will have their stems down.  If the stem is up, all the
+new clusters entered will have their stems up.  If the input state
+shows both a stem up and a stem down, all new clusters will have a
+stem direction of \emph{auto}, indicating that {\gs} will determine
+stem direction based on position of the notes on the staff and beaming
+information.
 
 In the lower-right corner, you will see a pane that gives more detail
 about \emph{current element}\index{current
@@ -432,12 +433,12 @@ it is \emph{half}, it will change to \emph{filled}, and if it is
 
 \chapter{Operations on measures}
 
-You add a measure bar at the cursor location by typing \kbd{|}.  As
+You add a barline at the cursor location by typing \kbd{|}.  As
 with other element, the cursor will be positioned right after the
-newly created measure bar.  In fact, a measure bar is just like any
+newly created barline.  In fact, a barline is just like any
 other element as far as editing operations are concerned.
 
-Thus, to delete a measure bar, you simply use the ordinary commands
+Thus, to delete a barline, you simply use the ordinary commands
 for erasing or deleting elements.
 
 \chapter{Operations on staves}
@@ -479,14 +480,14 @@ the mouse to select one from a menu.
 {\gs} imposes an \emph{order} on the staves of a score.  This order is
 the one used to display the staves from top to bottom.  There are two
 commands available for inserting new staves, \command{Insert Staff
-  After} to insert a staff \emph{after} an existing one, and \command{Insert
-  Staff Before} to insert a staff \emph{before} an existing one. 
+  Below} to insert a staff \emph{below} an existing one, and \command{Insert
+  Staff Above} to insert a staff \emph{above} an existing one. 
 
 In both cases, you will be prompted for some required information, in
 order for {\gs} to be able to create the new staff.  First, you will
-be prompted for an existing staff after which (in the case of
-\command{Insert Staff After} or before which (in the case of
-\command{Insert Staff Before} you would like to insert the new staff.
+be prompted for an existing staff below which (in the case of
+\command{Insert Staff Below} or above which (in the case of
+\command{Insert Staff Above} you would like to insert the new staff.
 As usual, you can either click on a visual representation of the staff
 in the score pane (see section \ref{sec-score-pane}) or type its name
 in the minibuffer with completion (see section
@@ -530,7 +531,7 @@ To alter the key signature of a staff, use the commands \kbd{Meta-\#}
 \chapter{Operations on layers}
 
 {\gs} organizes musical material into \emph{layers}\index{layer}.  A
-{\gs} layer corresponds roughly to a \emph{void}\index{voice} in
+{\gs} layer corresponds roughly to a \emph{voice}\index{voice} in
 traditional music terminology.  The reason a different term was chosen
 is that there might be some notations that require a voice to be split
 into several layers.  Each layer can be displayed on one or more
@@ -585,8 +586,8 @@ the minibuffer.
 \section{Adding a new layer}
 
 Before adding a new layer, make sure you have created one of the
-staves on which you would its material to be displayed (see section
-\ref{sec-inserting-staff}).  
+staves on which you would like for its material to be displayed (see
+section \ref{sec-inserting-staff}).
 
 Adding a new layer is done by issuing the command \command{Add
   Layer}.  You will be prompted for a unique name of the new layer,
@@ -642,12 +643,12 @@ The implementation of the user model pretty much reflects the model
 itself, except that the implementation of the \emph{slice} is not a
 simple sequence of elements.
 
-Instead, a \emph{slice} is a sequences of a user-invisible type called
+Instead, a \emph{slice} is a sequence of a user-invisible type called
 a \emph{bar}.  We introduced this additional type to simplify the
-layout algorithm.  A bar contains all the non-measure-bar elements
-between two measure bars.  The layout algorithm therefore does not
-have to start by finding the measure bars in the sequence, but can
-directly line up the material between measure bars.
+layout algorithm.  A bar contains all the non-barline elements
+between two barlines.  The layout algorithm therefore does not
+have to start by finding the barlines in the sequence, but can
+directly line up the material between barlines.
 
 The implementation of the model is actually spread out in three
 different files:
@@ -721,7 +722,7 @@ moment, we have no reason to believe that it will be necessary.
 \section{The importance of segments}
 
 The importance of the concept of a segment should now be clear.
-If the user deletes a measure bar, all measures to the right of the
+If the user deletes a barline, all measures to the right of the
 point of deletion \emph{within the same segment} must be recomputed,
 since the musical material will no longer line up the same way.  Had
 the score been a single segment, we would have had to potentially
@@ -741,7 +742,7 @@ corresponding layer, the layout algorithm must align them with the
 last measure of the previous segment and the first measure of the
 next segment.  To make it impossible for those slices to stick out
 arbitrarily far, we do not allow for head and tail slices to contain
-measure bars.  This limits the stick-out to the previous and the
+barlines.  This limits the stick-out to the previous and the
 next segments.  We have not yet decided how to manage these slices.
 Probably, a modification would have to mark the previous or the next
 segment as damaged, or at least the last measure or the first measure
@@ -910,7 +911,7 @@ create fonts specifically useful for anti-aliasing.
 
 The font used by {\gs} (called SDL, for Score Drawing Library), is
 created by a {\metafont} program that generates glyphs that are
-magnified a factor four.  The resulting \texttt{gf} filed is parsed by
+magnified a factor four.  The resulting \texttt{gf} file is parsed by
 a {\commonlisp} library that creates a {\clim} pixmap which contains an
 anti-aliased version of the glyph.  
 

@@ -49,7 +49,7 @@ The difference between a layer and a part ({\gs} does not know about
 parts) is that a layer has a particular \emph{instrument}
 \index{instrument} assigned to it, whereas a part can have several
 different instruments, for instance when the same musician plays
-several instruments (though not simultaneously).  This different poses
+several instruments (though not simultaneously).  This difference poses
 no problem, because it is possible to organize {\gs} layers so that
 their musical material does not overlap in time, even though layers
 conceptually do. 
@@ -71,9 +71,9 @@ Each layer has exactly three parts, referred to as \emph{slices}
 
 Each slice is a sequence of \emph{elements}\index{element}.  There are
 different kinds of element, \emph{clusters}\index{cluster},
-\emph{silences}\index{silence}, and \emph{measure bars}\index{measure
-bar}.  For the remainder of this section, we ignore the possibility of
-an element being a measure bar, since a measure bar does not have any
+\emph{silences}\index{silence}, and \emph{barlines}\index{barline}.
+For the remainder of this section, we ignore the possibility of
+an element being a barline, since a barline does not have any
 interesting properties such as duration.
 
 In the body slice, the first element starts at time zero from the
@@ -83,7 +83,7 @@ slice. \unimp{We do not yet have a tail slice} The head slice is
 different, in that it is aligned from the \emph{end of the preceding
 slice}.  \unimp{We do not yet have a head slice}.
 
-Each element (except the measure bar) has a particular \emph{duration}
+Each element (except the barline) has a particular \emph{duration}
 \index{duration}.  The duration is indicated by a \emph{notehead}
 \index{notehead} and a \emph{number of dots}. \index{number of dots}
 \index{dots!number of|)} Notice that the notehead property exists even
@@ -131,18 +131,17 @@ notehead, which is used in this case to compute the duration of the
 silence, and thus what character to use to display it and to determine
 spacing. 
 
-\section{Measure bar}
+\section{Barline}
 
-A measure bar is another kind of element.  It has no interesting
+A barline is another kind of element.  It has no interesting
 properties in itself.  Apart from being displayed, it is used to align
 musical material in different layers.  Thus, {\gs} does not bother to
-verify that each layer has the same duration between two measure
-bars.  It simply lines up every measure bar in every layer.  If some
+verify that each layer has the same duration between two barlines.
+It simply lines up every measure bar in every layer.  If some
 layer has a measure that has a shorter duration than the corresponding
 measure in a different layer, the shorter one will be padded by empty
 space so that they line up. 
 
-Also, {\gs} does not verify that there is the same number of measure
-bars in each layer.  When a layer runs out of measure bars, the
-remaining ones are lined up without taking into account the layer that
-ran out. 
+Also, {\gs} does not verify that there is the same number of barlines
+in each layer.  When a layer runs out of measure bars, the remaining
+ones are lined up without taking into account the layer that ran out.

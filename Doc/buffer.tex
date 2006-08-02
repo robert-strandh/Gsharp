@@ -11,7 +11,7 @@ indicating where (on which staff step) notes are to be rendered on the
 staff.  The \emph{name}\index{clef!name of|}\index{name!of a clef|} of
 the clef is one of \lispobj{:treble}, \lispobj{:bass}, \lispobj{:c},
 and \lispobj{:percussion}.  The \emph{line number}\index{clef!line
-  number of|}\index{line number!of a clef|} of the clef indicates what
+  number of|}\index{line number!of a clef|} of the clef indicates the
 staff line on which the clef should be rendered. 
 
 The name of the clef (except \lispobj{:percussion}) corresponds to a
@@ -163,9 +163,9 @@ where 0 indicates a C in the lowest octave.  The staff is an instance
 of the class \lispobj{staff} and indicates what staff the note is to
 be displayed on.  
 
-The \lispobj{head} argument indicates what kind of note-head is wanted
+The \lispobj{head} argument indicates what kind of notehead is wanted
 in the form of one of the keywords \lispobj{:whole}, \lispobj{:half},
-and \lispobj{:filled}, or nil, where nil means that the note-head is
+and \lispobj{:filled}, or nil, where nil means that the notehead is
 taken from the cluster to which the note belongs.
 
 The \lispobj{accidentals} argument indicates which, if any,
@@ -190,9 +190,9 @@ A note is printed (by \lispobj{print-object}
 %-------------------------------------------------------------------
 \subsection{Description}
 
-A cluster is a roughly the same as a chord, in that it is a collection
-of notes that share a stem  (unless the note heads are whole note
-heads, in which case there is no stem at all).  
+A cluster is roughly the same as a chord, in that it is a collection
+of notes that share a stem (unless the noteheads are whole noteheads,
+in which case there is no stem at all).
 
 %-------------------------------------------------------------------
 \subsection{Protocol classes and functions}
