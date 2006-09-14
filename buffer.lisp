@@ -1253,7 +1253,7 @@ flatter by removing some sharps and/or adding some flats"))
 	  (*readtable* readtable))
       (read stream))))
 
-(defmethod save-buffer-to-stream ((buffer buffer) stream)
+(defmethod frame-save-buffer-to-stream (application-frame (buffer buffer) stream)
   (let ((*print-circle* t)
 	(*package* (find-package :keyword)))
     ;;    (format stream "G#V3~%")

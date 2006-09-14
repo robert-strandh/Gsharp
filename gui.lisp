@@ -122,7 +122,7 @@
 			     (windows application-frame))
 		     :test #'eq))
 
-(defmethod current-buffer ((application-frame gsharp))
+(defmethod frame-current-buffer ((application-frame gsharp))
   (buffer (view (car (windows application-frame)))))
 
 (defun current-cursor ()
@@ -300,7 +300,7 @@
     (setf (input-state *application-frame*) input-state
 	  (staves (car (layers (car (segments buffer))))) (list staff))))
 
-(defmethod find-file :around (filepath (application-frame gsharp))
+(defmethod frame-find-file :around ((application-frame gsharp) filepath)
   (declare (ignore filepath))
   (let* ((buffer (call-next-method))
     	 (input-state (make-input-state))
@@ -1299,8 +1299,8 @@
 ;;;
 ;;; I/O
 
-(defmethod make-buffer-from-stream (stream (frame gsharp))
+(defmethod frame-make-buffer-from-stream ((frame gsharp) stream)
   (read-buffer-from-stream stream))
 
-(defmethod make-new-buffer ((frame gsharp))
+(defmethod frame-make-new-buffer ((frame gsharp) &key &allow-other-keys)
   (make-instance 'buffer))
