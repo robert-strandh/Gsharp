@@ -69,8 +69,8 @@
 		 "")
 	     pane))))
 
-(define-application-frame gsharp (standard-application-frame
-				  esa-frame-mixin)
+(define-application-frame gsharp (esa-frame-mixin
+				  standard-application-frame)
   ((views :initarg :views :initform '() :accessor views)
    (input-state :initarg :input-state :accessor input-state))
   (:menu-bar menubar-command-table :height 25)
