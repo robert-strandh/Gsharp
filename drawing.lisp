@@ -629,6 +629,16 @@ right of the center of its timeline"))
 			  (if (< (pitch n1) (pitch n2)) n1 n2))))))
 	  notes))
 
+(defun cluster-p (element)
+  (typep element 'cluster))
+
+(defun map-over-cluster-pairs (fun list)
+  (loop for sublist on list
+	do (when (cluster-p (car sublist))
+	     (let ((second (find-if #'cluster-p (cdr sublist))))
+	       (when second
+		 (funcall fun (car sublist) second))))))
+
 (defun draw-beam-group (pane elements)
   (let ((e (car elements)))
     (when (typep e 'gsharp-buffer::key-signature)
@@ -694,28 +704,29 @@ right of the center of its timeline"))
 		    (loop for beams from (1+ min-nb-beams) to max-nb-beams
 			  for ss from (* 2 min-nb-beams) by 2
 			  for offset from min-nb-beams
-			  do (loop for (e1 e2) on elements
-				   do (when (not (null e2))
-					(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
-					       (setf region 
-						     (region-union region
-								   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
-										    (+ (final-absolute-element-xoffset e2) right) 10000))))
-					      ((>= (rbeams e1) beams)
-					       (setf region
-						     (region-union region 
-								   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
-										    (+ (final-absolute-element-xoffset e1) right (score-pane:staff-step 2)) 10000))))
-					      ((>= (lbeams e2) beams)
-					       (setf region
-						     (region-union region 
-								   (make-rectangle* (+ (final-absolute-element-xoffset e2) right (score-pane:staff-step -2)) -10000
-										    (+ (final-absolute-element-xoffset e2) right) 10000))))
-					      (t nil))))
-			     (with-drawing-options (pane :clipping-region region)
-			       (score-pane:draw-beam pane
-						     (+ (final-absolute-element-xoffset (car elements)) right) (- ss1 ss) (+ offset1 offset)
-						     (+ (final-absolute-element-xoffset (car (last elements))) right) (- ss2 ss) (+ offset2 offset))))))
+			  do (map-over-cluster-pairs
+			      (lambda (e1 e2)
+				(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
+				       (setf region 
+					     (region-union region
+							   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
+									    (+ (final-absolute-element-xoffset e2) right) 10000))))
+				      ((>= (rbeams e1) beams)
+				       (setf region
+					     (region-union region 
+							   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
+									    (+ (final-absolute-element-xoffset e1) right (score-pane:staff-step 2)) 10000))))
+				      ((>= (lbeams e2) beams)
+				       (setf region
+					     (region-union region 
+							   (make-rectangle* (+ (final-absolute-element-xoffset e2) right (score-pane:staff-step -2)) -10000
+									    (+ (final-absolute-element-xoffset e2) right) 10000))))
+				      (t nil)))
+			      elements)
+			    (with-drawing-options (pane :clipping-region region)
+			      (score-pane:draw-beam pane
+						    (+ (final-absolute-element-xoffset (car elements)) right) (- ss1 ss) (+ offset1 offset)
+						    (+ (final-absolute-element-xoffset (car (last elements))) right) (- ss2 ss) (+ offset2 offset))))))
 		(score-pane:with-notehead-left-offsets (left down)
 		  (declare (ignore down))
 		  (loop repeat min-nb-beams
@@ -728,24 +739,25 @@ right of the center of its timeline"))
 		    (loop for beams from (1+ min-nb-beams) to max-nb-beams
 			  for ss from (* 2 min-nb-beams) by 2
 			  for offset from min-nb-beams
-			  do (loop for (e1 e2) on elements
-				   do (when (not (null e2))
-					(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
-					       (setf region 
-						     (region-union region
-								   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
-										    (+ (final-absolute-element-xoffset e2) left) 10000))))
-					      ((>= (rbeams e1) beams)
-					       (setf region
-						     (region-union region 
-								   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
-										    (+ (final-absolute-element-xoffset e1) left (score-pane:staff-step 2)) 10000))))
-					      ((>= (lbeams e2) beams)
-					       (setf region
-						     (region-union region 
-								   (make-rectangle* (+ (final-absolute-element-xoffset e2) left (score-pane:staff-step -2)) -10000
-										    (+ (final-absolute-element-xoffset e2) left) 10000))))
-					      (t nil))))
+			  do (map-over-cluster-pairs
+			      (lambda (e1 e2)
+				(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
+				       (setf region 
+					     (region-union region
+							   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
+									    (+ (final-absolute-element-xoffset e2) left) 10000))))
+				      ((>= (rbeams e1) beams)
+				       (setf region
+					     (region-union region 
+							   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
+									    (+ (final-absolute-element-xoffset e1) left (score-pane:staff-step 2)) 10000))))
+				      ((>= (lbeams e2) beams)
+				       (setf region
+					     (region-union region 
+							   (make-rectangle* (+ (final-absolute-element-xoffset e2) left (score-pane:staff-step -2)) -10000
+									    (+ (final-absolute-element-xoffset e2) left) 10000))))
+				      (t nil)))
+			      elements)
 			     (with-drawing-options (pane :clipping-region region)
 			       (score-pane:draw-beam pane
 						     (+ (final-absolute-element-xoffset (car elements)) left) (+ ss1 ss) (- offset1 offset)
