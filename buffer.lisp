@@ -54,14 +54,14 @@
 (defclass clef (gsharp-object name-mixin)
   ((print-character :allocation :class :initform #\K)
    (lineno :reader lineno :initarg :lineno
-	   :type (or (integer 2 6) null))))
+           :type (or (integer 2 6) null))))
 
 (defun make-clef (name &key lineno)
   (declare (type (member :treble :treble8 :bass :c :percussion) name)
-	   (type (or (integer 2 6) null) lineno))
+           (type (or (integer 2 6) null) lineno))
   (when (null lineno)
     (setf lineno
-	  (ecase name
+          (ecase name
             ((:treble :treble8) 2)
             (:bass 6)
             (:c 4)
@@ -115,15 +115,15 @@
   ((print-character :allocation :class :initform #\=)
    (clef :accessor clef :initarg :clef :initform (make-clef :treble))
    (%keysig :accessor keysig :initarg :keysig
-	    :initform (make-array 7 :initial-element :natural))
+            :initform (make-array 7 :initial-element :natural))
    (key-signatures :accessor key-signatures :initform nil)))
-	   
+           
 (defmethod initialize-instance :after ((obj fiveline-staff) &rest args)
   (declare (ignore args))
   (with-slots (%keysig) obj
     (when (vectorp %keysig)
       (setf %keysig
-	    (make-instance 'key-signature :staff obj :alterations %keysig)))))
+            (make-instance 'key-signature :staff obj :alterations %keysig)))))
 
 (defun make-fiveline-staff (&rest args &key name clef keysig)
   (declare (ignore name clef keysig))
@@ -207,32 +207,32 @@
    (pitch :initarg :pitch :reader pitch :type (integer 0 127))
    (staff :initarg :staff :reader staff :type staff)
    (head :initform nil :initarg :head :reader head
-	 :type (or (member :whole :half :filled) null))
+         :type (or (member :whole :half :filled) null))
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
-		:type (member :natural :flat :double-flat
-			      :sharp :double-sharp))
+                :type (member :natural :flat :double-flat
+                              :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
-	 :type (or (integer 0 3) null))
+         :type (or (integer 0 3) null))
    (%tie-right :initform nil :initarg :tie-right :accessor tie-right)
    (%tie-left :initform nil :initarg :tie-left :accessor tie-left)))
 
 (defun make-note (pitch staff &rest args &key head (accidentals :natural) dots)
   (declare (type (integer 0 127) pitch)
-	   (type staff staff)
-	   (type (or (member :whole :half :filled) null) head)
-	   (type (member :natural :flat :double-flat
-			 :sharp :double-sharp)
-		 accidentals)
-	   (type (or (integer 0 3) null) dots)
-	   (ignore head accidentals dots))
+           (type staff staff)
+           (type (or (member :whole :half :filled) null) head)
+           (type (member :natural :flat :double-flat
+                         :sharp :double-sharp)
+                 accidentals)
+           (type (or (integer 0 3) null) dots)
+           (ignore head accidentals dots))
   (apply #'make-instance 'note :pitch pitch :staff staff args))
 
 (defmethod print-gsharp-object :after ((n note) stream)
   (with-slots (pitch staff head accidentals dots %tie-right %tie-left) n
     (format stream
-	    "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W ~
+            "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W ~
              ~@[~_:tie-right ~W ~]~@[~_:tie-left ~W ~]"
-	    pitch staff head accidentals dots %tie-right %tie-left)))
+            pitch staff head accidentals dots %tie-right %tie-left)))
 
 (defun read-note-v3 (stream char n)
   (declare (ignore char n))
@@ -265,7 +265,7 @@
 (defmethod print-gsharp-object :after ((e element) stream)
   (with-slots (notehead rbeams lbeams dots xoffset) e
     (format stream
-	    "~_:xoffset ~W " xoffset)))
+            "~_:xoffset ~W " xoffset)))
 
 (defmethod duration ((element element)) 0)
 (defmethod rbeams ((element element)) 0)
@@ -304,21 +304,21 @@
 (defmethod print-gsharp-object :after ((e rhythmic-element) stream)
   (with-slots (notehead rbeams lbeams dots) e
     (format stream
-	    "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W "
-	    notehead rbeams lbeams dots)))
+            "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W "
+            notehead rbeams lbeams dots)))
 
 (defmethod undotted-duration ((element rhythmic-element))
   (ecase (notehead element)
     (:whole 1)
     (:half 1/2)
     (:filled (/ (expt 2 (+ 2 (max (rbeams element)
-				  (lbeams element))))))))
+                                  (lbeams element))))))))
 
 (defmethod duration ((element rhythmic-element))
   (let ((duration (undotted-duration element)))
     (do ((dot-duration (/ duration 2) (/ dot-duration 2))
-	 (nb-dots (dots element) (1- nb-dots)))
-	((zerop nb-dots))
+         (nb-dots (dots element) (1- nb-dots)))
+        ((zerop nb-dots))
       (incf duration dot-duration))
     duration))
 
@@ -349,54 +349,54 @@ flatter by removing some sharps and/or adding some flats"))
 (defclass key-signature (element)
   ((%staff :initarg :staff :reader staff)
    (%alterations :initform (make-array 7 :initial-element :natural) 
-		 :initarg :alterations :reader alterations)))
+                 :initarg :alterations :reader alterations)))
 
 (defun make-key-signature (staff &rest args &key alterations)
   (declare (type (or null (simple-vector 7)) alterations)
-	   (ignore alterations))
+           (ignore alterations))
   (apply #'make-instance 'key-signature :staff staff args))
 
 (defmethod print-gsharp-object :after ((k key-signature) stream)
   (with-slots (%staff %alterations) k
     (format stream
-	    "~_:staff ~W ~_:alterations ~W " %staff %alterations)))
+            "~_:staff ~W ~_:alterations ~W " %staff %alterations)))
 
 (defmethod more-sharps ((sig key-signature) &optional (n 1))
   (let ((alt (alterations sig)))
     (loop repeat n
-	  do (cond ((eq (aref alt 3) :flat) (setf (aref alt 3) :natural))
-		   ((eq (aref alt 0) :flat) (setf (aref alt 0) :natural))
-		   ((eq (aref alt 4) :flat) (setf (aref alt 4) :natural))
-		   ((eq (aref alt 1) :flat) (setf (aref alt 1) :natural))
-		   ((eq (aref alt 5) :flat) (setf (aref alt 5) :natural))
-		   ((eq (aref alt 2) :flat) (setf (aref alt 2) :natural))
-		   ((eq (aref alt 6) :flat) (setf (aref alt 6) :natural))
-		   ((eq (aref alt 3) :natural) (setf (aref alt 3) :sharp))
-		   ((eq (aref alt 0) :natural) (setf (aref alt 0) :sharp))
-		   ((eq (aref alt 4) :natural) (setf (aref alt 4) :sharp))
-		   ((eq (aref alt 1) :natural) (setf (aref alt 1) :sharp))
-		   ((eq (aref alt 5) :natural) (setf (aref alt 5) :sharp))
-		   ((eq (aref alt 2) :natural) (setf (aref alt 2) :sharp))
-		   ((eq (aref alt 6) :natural) (setf (aref alt 6) :sharp))))))
+          do (cond ((eq (aref alt 3) :flat) (setf (aref alt 3) :natural))
+                   ((eq (aref alt 0) :flat) (setf (aref alt 0) :natural))
+                   ((eq (aref alt 4) :flat) (setf (aref alt 4) :natural))
+                   ((eq (aref alt 1) :flat) (setf (aref alt 1) :natural))
+                   ((eq (aref alt 5) :flat) (setf (aref alt 5) :natural))
+                   ((eq (aref alt 2) :flat) (setf (aref alt 2) :natural))
+                   ((eq (aref alt 6) :flat) (setf (aref alt 6) :natural))
+                   ((eq (aref alt 3) :natural) (setf (aref alt 3) :sharp))
+                   ((eq (aref alt 0) :natural) (setf (aref alt 0) :sharp))
+                   ((eq (aref alt 4) :natural) (setf (aref alt 4) :sharp))
+                   ((eq (aref alt 1) :natural) (setf (aref alt 1) :sharp))
+                   ((eq (aref alt 5) :natural) (setf (aref alt 5) :sharp))
+                   ((eq (aref alt 2) :natural) (setf (aref alt 2) :sharp))
+                   ((eq (aref alt 6) :natural) (setf (aref alt 6) :sharp))))))
 
 (defmethod more-flats ((sig key-signature) &optional (n 1))
   (let ((alt (alterations sig)))
     (loop repeat n
-	  do (cond ((eq (aref alt 6) :sharp) (setf (aref alt 6) :natural))
-		   ((eq (aref alt 2) :sharp) (setf (aref alt 2) :natural))
-		   ((eq (aref alt 5) :sharp) (setf (aref alt 5) :natural))
-		   ((eq (aref alt 1) :sharp) (setf (aref alt 1) :natural))
-		   ((eq (aref alt 4) :sharp) (setf (aref alt 4) :natural))
-		   ((eq (aref alt 0) :sharp) (setf (aref alt 0) :natural))
-		   ((eq (aref alt 3) :sharp) (setf (aref alt 3) :natural))
-		   ((eq (aref alt 6) :natural) (setf (aref alt 6) :flat))
-		   ((eq (aref alt 2) :natural) (setf (aref alt 2) :flat))
-		   ((eq (aref alt 5) :natural) (setf (aref alt 5) :flat))
-		   ((eq (aref alt 1) :natural) (setf (aref alt 1) :flat))
-		   ((eq (aref alt 4) :natural) (setf (aref alt 4) :flat))
-		   ((eq (aref alt 0) :natural) (setf (aref alt 0) :flat))
-		   ((eq (aref alt 3) :natural) (setf (aref alt 3) :flat))))))
-									      
+          do (cond ((eq (aref alt 6) :sharp) (setf (aref alt 6) :natural))
+                   ((eq (aref alt 2) :sharp) (setf (aref alt 2) :natural))
+                   ((eq (aref alt 5) :sharp) (setf (aref alt 5) :natural))
+                   ((eq (aref alt 1) :sharp) (setf (aref alt 1) :natural))
+                   ((eq (aref alt 4) :sharp) (setf (aref alt 4) :natural))
+                   ((eq (aref alt 0) :sharp) (setf (aref alt 0) :natural))
+                   ((eq (aref alt 3) :sharp) (setf (aref alt 3) :natural))
+                   ((eq (aref alt 6) :natural) (setf (aref alt 6) :flat))
+                   ((eq (aref alt 2) :natural) (setf (aref alt 2) :flat))
+                   ((eq (aref alt 5) :natural) (setf (aref alt 5) :flat))
+                   ((eq (aref alt 1) :natural) (setf (aref alt 1) :flat))
+                   ((eq (aref alt 4) :natural) (setf (aref alt 4) :flat))
+                   ((eq (aref alt 0) :natural) (setf (aref alt 0) :flat))
+                   ((eq (aref alt 3) :natural) (setf (aref alt 3) :flat))))))
+                                                                              
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Cluster
@@ -425,19 +425,19 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod initialize-instance :after ((c cluster) &rest args)
   (declare (ignore args))
   (loop for note in (notes c)
-	do (setf (cluster note) c)))
+        do (setf (cluster note) c)))
 
 (defun make-cluster (&rest args
-		     &key (notehead :filled) (lbeams 0) (rbeams 0) (dots 0)
-		     (xoffset 0) notes (stem-direction :auto))
+                     &key (notehead :filled) (lbeams 0) (rbeams 0) (dots 0)
+                     (xoffset 0) notes (stem-direction :auto))
   (declare (type (member :whole :half :filled) notehead)
-	   (type (integer 0 5) lbeams)
-	   (type (integer 0 5) rbeams)
-	   (type (integer 0 3) dots)
-	   (type number xoffset)
-	   (type list notes)
-	   (type (member :up :down :auto) stem-direction)
-	   (ignore notehead lbeams rbeams dots xoffset notes stem-direction))
+           (type (integer 0 5) lbeams)
+           (type (integer 0 5) rbeams)
+           (type (integer 0 3) dots)
+           (type number xoffset)
+           (type list notes)
+           (type (member :up :down :auto) stem-direction)
+           (ignore notehead lbeams rbeams dots xoffset notes stem-direction))
   (apply #'make-instance 'cluster args))
 
 (defmethod print-gsharp-object :after ((c cluster) stream)
@@ -463,10 +463,10 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod add-note ((cluster cluster) (note note))
   (with-slots (notes) cluster
     (assert (not (find note notes :test #'note-equal))
-	    ()
-	    'note-already-in-cluster)
+            ()
+            'note-already-in-cluster)
     (setf notes (merge 'list notes (list note) #'note-less)
-	  (cluster note) cluster)))
+          (cluster note) cluster)))
 
 (defmethod find-note ((cluster cluster) (note note))
   (with-slots (notes) cluster
@@ -513,18 +513,18 @@ flatter by removing some sharps and/or adding some flats"))
    (staff-pos :initarg :staff-pos :initform 4 :reader staff-pos)))
 
 (defun make-rest (staff &rest args
-		  &key (staff-pos 4) (notehead :filled) (lbeams 0) (rbeams 0)
-		  (dots 0) (xoffset 0))
+                  &key (staff-pos 4) (notehead :filled) (lbeams 0) (rbeams 0)
+                  (dots 0) (xoffset 0))
   (declare (type staff staff)
-	   (type integer staff-pos)
-	   (type (member :whole :half :filled) notehead)
-	   (type (integer 0 5) lbeams)
-	   (type (integer 0 5) rbeams)
-	   (type (integer 0 3) dots)
-	   (type number xoffset)
-	   (ignore staff-pos notehead lbeams rbeams dots xoffset))
+           (type integer staff-pos)
+           (type (member :whole :half :filled) notehead)
+           (type (integer 0 5) lbeams)
+           (type (integer 0 5) rbeams)
+           (type (integer 0 3) dots)
+           (type number xoffset)
+           (ignore staff-pos notehead lbeams rbeams dots xoffset))
   (apply #'make-instance 'rest
-	 :staff staff args))
+         :staff staff args))
 
 (defmethod print-gsharp-object :after ((s rest) stream)
   (with-slots (staff staff-pos) s
@@ -546,8 +546,8 @@ flatter by removing some sharps and/or adding some flats"))
   ((print-character :allocation :class :initform #\A)
    (staff :initarg :staff :reader staff)
    (text :initarg :text
-	 :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
-	 :reader text)
+         :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
+         :reader text)
    (%tie-right :initform nil :initarg :tie-right :accessor tie-right)
    (%tie-left :initform nil :initarg :tie-left :accessor tie-left)))
 
@@ -556,21 +556,21 @@ flatter by removing some sharps and/or adding some flats"))
   (with-slots (text) elem
      (unless (adjustable-array-p text)
        (let ((length (length text)))
-	 (setf text (make-array length :adjustable t :element-type 'fixnum
-				:fill-pointer length :initial-contents text))))))
+         (setf text (make-array length :adjustable t :element-type 'fixnum
+                                :fill-pointer length :initial-contents text))))))
 
 (defun make-lyrics-element (staff &rest args
-			    &key (notehead :filled) (lbeams 0) (rbeams 0)
-			    (dots 0) (xoffset 0))
+                            &key (notehead :filled) (lbeams 0) (rbeams 0)
+                            (dots 0) (xoffset 0))
   (declare (type staff staff)
-	   (type (member :whole :half :filled) notehead)
-	   (type (integer 0 5) lbeams)
-	   (type (integer 0 5) rbeams)
-	   (type (integer 0 3) dots)
-	   (type number xoffset)
-	   (ignore notehead lbeams rbeams dots xoffset))
+           (type (member :whole :half :filled) notehead)
+           (type (integer 0 5) lbeams)
+           (type (integer 0 5) rbeams)
+           (type (integer 0 3) dots)
+           (type number xoffset)
+           (ignore notehead lbeams rbeams dots xoffset))
   (apply #'make-instance 'lyrics-element
-	 :staff staff args))
+         :staff staff args))
 
 (defmethod print-gsharp-object :after ((elem lyrics-element) stream)
   (with-slots (staff text) elem
@@ -625,7 +625,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod initialize-instance :after ((b bar) &rest args)
   (declare (ignore args))
   (loop for element in (elements b)
-	do (setf (bar element) b)))
+        do (setf (bar element) b)))
 
 (defmethod print-gsharp-object :after ((b bar) stream)
   (format stream "~_:elements ~W " (elements b)))
@@ -678,7 +678,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defun make-melody-bar (&rest args &key elements)
   (declare (type list elements)
-	   (ignore elements))
+           (ignore elements))
   (apply #'make-instance 'melody-bar args))
 
 (defmethod make-bar-for-staff ((staff fiveline-staff) &rest args &key elements)
@@ -698,7 +698,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defun make-lyrics-bar (&rest args &key elements)
   (declare (type list elements)
-	   (ignore elements))
+           (ignore elements))
   (apply #'make-instance 'lyrics-bar args))
 
 (defmethod make-bar-for-staff ((staff lyrics-staff) &rest args &key elements)
@@ -743,11 +743,11 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod initialize-instance :after ((s slice) &rest args)
   (declare (ignore args))
   (loop for bar in (bars s)
-	do (setf (slice bar) s)))
+        do (setf (slice bar) s)))
 
 (defun make-slice (&rest args &key bars)
   (declare (type list bars)
-	   (ignore bars))
+           (ignore bars))
   (apply #'make-instance 'slice args))
 
 (defmethod print-gsharp-object :after ((s slice) stream)
@@ -792,8 +792,8 @@ flatter by removing some sharps and/or adding some flats"))
     (with-slots (bars) slice
       (setf bars (delete bar bars :test #'eq))
       (unless bars
-	;; make sure there is one bar left
-	(add-bar (make-melody-bar) slice 0)))
+        ;; make sure there is one bar left
+        (add-bar (make-melody-bar) slice 0)))
     (setf slice nil)))
 
 (defmethod remove-bar ((bar lyrics-bar))
@@ -802,8 +802,8 @@ flatter by removing some sharps and/or adding some flats"))
     (with-slots (bars) slice
       (setf bars (delete bar bars :test #'eq))
       (unless bars
-	;; make sure there is one bar left
-	(add-bar (make-lyrics-bar) slice 0)))
+        ;; make sure there is one bar left
+        (add-bar (make-lyrics-bar) slice 0)))
     (setf slice nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -853,21 +853,21 @@ flatter by removing some sharps and/or adding some flats"))
     (unless tail
       (setf (tail l) (make-slice :bars (list (make-bar-for-staff staff))))))
   (setf (layer (head l)) l
-	(layer (body l)) l
-	(layer (tail l)) l))
+        (layer (body l)) l
+        (layer (tail l)) l))
 
 (defmethod print-gsharp-object :after ((l layer) stream)
   (with-slots (head body tail staves) l
     (format stream "~_:staves ~W ~_:head ~W ~_:body ~W ~_:tail ~W "
-	    staves head body tail)))
+            staves head body tail)))
 
 (defgeneric make-layer-for-staff (staff &rest args &key staves head body tail &allow-other-keys))
 
 (defun make-layer (staves &rest args &key head body tail &allow-other-keys)
   (declare (type list staves)
-	   (type (or slice null) head body tail)
-	   (ignore head body tail))
-  (apply #'make-layer-for-staff (car staves) :staves staves args))	   
+           (type (or slice null) head body tail)
+           (ignore head body tail))
+  (apply #'make-layer-for-staff (car staves) :staves staves args))         
 
 ;;; melody layer
 
@@ -933,16 +933,16 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defmethod add-staff-to-layer ((staff staff) (layer layer))
   (assert (not (member staff (staves layer) :test #'eq))
-	  () 'staff-already-in-layer)
+          () 'staff-already-in-layer)
   (push staff (staves layer)))
 
 (defmethod remove-staff-from-layer ((staff staff) (layer layer))
   (assert (not (null (staves layer)))
-	  () 'only-staff-in-layer)
+          () 'only-staff-in-layer)
   (assert (member staff (staves layer) :test #'eq)
-	  () 'staff-not-in-layer)
+          () 'staff-not-in-layer)
   (setf (staves layer)
-	(delete staff (staves layer) :test #'eq)))
+        (delete staff (staves layer) :test #'eq)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -986,7 +986,7 @@ flatter by removing some sharps and/or adding some flats"))
       (assert (not (null staff)))
       (push (make-layer (list staff)) layers))
     (loop for layer in layers
-	  do (setf (segment layer) s))))
+          do (setf (segment layer) s))))
 
 (defmethod print-gsharp-object :after ((s segment) stream)
   (format stream "~_:layers ~W ~_:tempo ~W " (layers s) (tempo s)))
@@ -1031,8 +1031,8 @@ flatter by removing some sharps and/or adding some flats"))
       (setf layers (delete layer layers :test #'eq))
       ;; make sure there is one layer left
       (unless layers
-	(add-layer (make-layer (staves (buffer segment)))
-		   segment)))
+        (add-layer (make-layer (staves (buffer segment)))
+                   segment)))
     (setf segment nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1077,7 +1077,7 @@ flatter by removing some sharps and/or adding some flats"))
   ((print-character :allocation :class :initform #\B)
    (segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff))
-	   :initarg :staves :accessor staves)
+           :initarg :staves :accessor staves)
    ;; the min width determines the preferred geographic distance after the
    ;; timeline with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
@@ -1091,7 +1091,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defun set-buffer-of-staves (buffer)
   (loop for staff in (staves buffer)
-	do (setf (buffer staff) buffer)))
+        do (setf (buffer staff) buffer)))
 
 (defmethod (setf staves) :after (staves (buffer buffer))
   (declare (ignore staves))
@@ -1104,13 +1104,13 @@ flatter by removing some sharps and/or adding some flats"))
     (when (null segments)
       (add-segment (make-instance 'segment :staff (car (staves b))) b 0))
     (loop for segment in segments
-	  do (setf (buffer segment) b))))
+          do (setf (buffer segment) b))))
 
 (defmethod print-gsharp-object :after ((b buffer) stream)
   (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
     (format stream 
-	    "~_:min-width ~W ~_:spacing-style ~W ~_:right-edge ~W ~_:left-offset ~W ~_:left-margin ~W ~_:staves ~W ~_:segments ~W "
-	    min-width spacing-style right-edge left-offset left-margin staves segments )))
+            "~_:min-width ~W ~_:spacing-style ~W ~_:right-edge ~W ~_:left-offset ~W ~_:left-margin ~W ~_:staves ~W ~_:segments ~W "
+            min-width spacing-style right-edge left-offset left-margin staves segments )))
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))
@@ -1154,7 +1154,7 @@ flatter by removing some sharps and/or adding some flats"))
       (setf segments (delete segment segments :test #'eq))
       ;; make sure there is one segment left
       (unless segments
-	(add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)))
+        (add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)))
     (setf buffer nil)))
 
 (define-condition staff-already-in-buffer (gsharp-condition) ()
@@ -1182,7 +1182,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defmethod add-staff-before-staff (staff newstaff (buffer buffer))
   (setf (staves buffer)
-	(add-staff-before newstaff staff (staves buffer))))
+        (add-staff-before newstaff staff (staves buffer))))
   
 (defun add-staff-after (newstaff staff staves)
   (assert (not (null staves)))  
@@ -1193,7 +1193,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defmethod add-staff-after-staff (staff newstaff (buffer buffer))
   (setf (staves buffer)
-	(add-staff-after newstaff staff (staves buffer))))
+        (add-staff-after newstaff staff (staves buffer))))
   
 (defmethod rename-staff (staff-name (staff staff) (buffer buffer))
   (assert (not (find-staff staff-name buffer nil)) () 'staff-already-in-buffer)
@@ -1207,13 +1207,13 @@ flatter by removing some sharps and/or adding some flats"))
 
 (defmethod remove-staff-from-buffer (staff (buffer buffer))
   (assert (notany (lambda (segment)
-		    (some (lambda (layer)
-			    (member staff (staves layer)))
-			  (layers segment)))
-		  (segments buffer))
-	  () 'staff-in-use)
+                    (some (lambda (layer)
+                            (member staff (staves layer)))
+                          (layers segment)))
+                  (segments buffer))
+          () 'staff-in-use)
   (setf (staves buffer)
-	(delete staff (staves buffer) :test #'eq)))
+        (delete staff (staves buffer) :test #'eq)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1239,23 +1239,23 @@ flatter by removing some sharps and/or adding some flats"))
   (assert (probe-file filename) () 'file-does-not-exist)
   (with-open-file (stream filename :direction :input)
     (let* ((version (read-line stream))
-	   (readtable (cdr (assoc version *readtables* :test #'string=))))
+           (readtable (cdr (assoc version *readtables* :test #'string=))))
       (assert readtable () 'unknown-file-version)
       (let ((*read-eval* nil)
-	    (*readtable* readtable))
-	(read stream)))))
+            (*readtable* readtable))
+        (read stream)))))
 
 (defun read-buffer-from-stream (stream)
   (let* ((version (read-line stream))
-	 (readtable (cdr (assoc version *readtables* :test #'string=))))
+         (readtable (cdr (assoc version *readtables* :test #'string=))))
     (assert readtable () 'unknown-file-version)
     (let ((*read-eval* nil)
-	  (*readtable* readtable))
+          (*readtable* readtable))
       (read stream))))
 
 (defmethod frame-save-buffer-to-stream (application-frame (buffer buffer) stream)
   (let ((*print-circle* t)
-	(*package* (find-package :keyword)))
+        (*package* (find-package :keyword)))
     ;;    (format stream "G#V3~%")
     (format stream "G#V4~%")
     (pprint buffer stream)
