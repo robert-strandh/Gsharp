@@ -81,12 +81,17 @@
   #'read-clef-v3
   *gsharp-readtable-v3*)
 
+;;; given a clef, return the staff step of the B that should have
+;;; the first flat sign in key signatures with flats
 (defmethod b-position ((clef clef))
   (ecase (name clef)
     (:bass (- (lineno clef) 4))
     ((:treble :treble8) (+ (lineno clef) 2))
     (:c (- (lineno clef) 1))))
 
+
+;;; given a clef, return the staff step of the F that should have
+;;; the first sharp sign in key signatures with sharps
 (defmethod f-position ((clef clef))
   (ecase (name clef)
     (:bass (lineno clef))
