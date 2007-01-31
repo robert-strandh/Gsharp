@@ -20,7 +20,7 @@
 						     :defaults *gsharp-directory*))
 			     collect `(:file ,(pathname-name p) :pathname ,p))))))
 
-(gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain))
+(gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain :midi))
    "packages"
    "utilities"
    "bezier"
@@ -36,7 +36,6 @@
    "drawing"
    "cursor"
    "input-state"
-   "midi"
    "modes"
    "play"
    "gui"

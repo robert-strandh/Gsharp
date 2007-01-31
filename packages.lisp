@@ -168,21 +168,6 @@
   (:shadowing-import-from :gsharp-buffer #:rest)
   (:export #:draw-buffer #:draw-the-cursor))
 
-(defpackage :midi
-  (:use :common-lisp)
-  (:export #:read-midi-file #:write-midi-file
-	   #:midifile
-	   #:midifile-format #:midifile-tracks #:midifile-division
-	   #:message #:note-off-message #:note-on-message #:tempo-message
-	   #:program-change-message
-	   #:key-signature-message #:time-signature-message
-	   #:smpte-offset-message
-	   #:message-channel #:message-key #:message-time
-	   #:message-velocity #:message-numerator #:message-denominator
-	   #:message-sf #:message-mi #:message-tempo
-	   #:header #:header-type
-	   #:unknown-event #:status #:data-byte))
-
 (defpackage :gsharp-play
   (:use :common-lisp :midi :gsharp-buffer)
   (:shadowing-import-from :gsharp-buffer #:rest)
