@@ -15,10 +15,11 @@
 (defclass gsharp-object () ())
 
 (defgeneric print-gsharp-object (obj stream)
-  (:method-combination progn :most-specific-last))
+  (:method-combination progn))
 
-(defmethod print-gsharp-object progn ((obj gsharp-object) stream)
-  (format stream "~s ~2i" (class-name (class-of obj))))
+(defmethod print-gsharp-object :around ((obj gsharp-object) stream)
+  (format stream "~s ~2i" (class-name (class-of obj)))
+  (call-next-method))
 
 ;;; (defmethod print-object :around ((obj gsharp-object) stream)
 ;;;  (format stream "[~a " (slot-value obj 'print-character))
