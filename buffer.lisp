@@ -27,8 +27,10 @@
 ;;;   (format stream "] "))
 
 (defmethod print-object ((obj gsharp-object) stream)
-  (pprint-logical-block (stream nil :prefix "[" :suffix "]")
-    (print-gsharp-object obj stream)))
+  (if *print-circle*
+      (pprint-logical-block (stream nil :prefix "[" :suffix "]")
+        (print-gsharp-object obj stream))
+      (print-unreadable-object (obj stream :type t :identity t))))
 
 (defgeneric name (obj))
 
