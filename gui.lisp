@@ -1016,6 +1016,98 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; motion by layout (page or line)
+
+;;; support routines, needed because we're not cacheing the page
+;;; breaks (other than in the buffer Obseq) nor the linebreaks (at
+;;; all)
+(defun position-containing-current-bar (sequence)
+  (let ((bar (bar (current-cursor))))
+    (position-if (lambda (measure) (member bar (measure-bars measure)))
+                 sequence)))
+(defun get-page-lines (buffer page-measures)
+  (score-pane:with-staff-size 6
+    (let* (;; all this untimely ripp'd from DRAW-BUFFER in
+	   ;; drawing.lisp.  Needs to be kept in sync, otherwise the
+	   ;; layout for motion will be different from the layout on
+	   ;; the screen...
+           (staves (staves buffer))
+           (timesig-offset (gsharp-drawing::compute-timesig-offset staves))
+           (method (let ((old-method (buffer-cost-method buffer)))
+                     (make-measure-cost-method (min-width old-method)
+                                               (spacing-style old-method)
+                                               (- (line-width old-method) timesig-offset)
+                                               (lines-per-page old-method))))
+           (systems-per-page (max 1 (floor 12 (length staves)))))
+      (gsharp-drawing::layout-page page-measures systems-per-page method))))
+
+;;; FIXME: these routines should implement numeric-argument handling
+(define-gsharp-command (com-forward-page :name t)
+    ()
+  (let ((cursor (current-cursor)))
+    (gsharp-measure::new-map-over-obseq-subsequences
+     (lambda (page-measures)
+       (let ((position (position-containing-current-bar page-measures)))
+         (when position
+           (loop repeat (- (length page-measures) position)
+                 if (last-bar-p cursor)
+                 do (go-to-end-of-bar cursor) (return-from com-forward-page)
+                 else do (forward-bar cursor)
+                 finally (return-from com-forward-page)))))
+     (current-buffer))))
+(define-gsharp-command (com-backward-page :name t)
+    ()
+  (let ((cursor (current-cursor)))
+    (gsharp-measure::new-map-over-obseq-subsequences
+     (let ((last 0))
+       (lambda (page-measures)
+         (let ((position (position-containing-current-bar page-measures)))
+           (when position
+             (loop repeat (+ position last)
+                   do (backward-bar cursor)
+                   finally (progn
+                             (go-to-beginning-of-bar cursor)
+                             (return-from com-backward-page)))))
+         (setf last (length page-measures))))
+     (current-buffer))))
+
+(define-gsharp-command (com-end-of-line :name t)
+    ()    
+  (let ((buffer (current-buffer))
+        (cursor (current-cursor)))
+    (gsharp-measure::new-map-over-obseq-subsequences
+     (lambda (page-measures)
+       (when (position-containing-current-bar page-measures)
+         (let ((lines (get-page-lines buffer page-measures)))
+           (dolist (line lines)
+             (let ((position (position-containing-current-bar line)))
+               (when position
+                 (loop repeat (- (length line) position 1)
+                       do (forward-bar cursor)
+                       finally (progn
+                                 (go-to-end-of-bar cursor)
+                                 (return-from com-end-of-line)))))))))
+     buffer)))
+(define-gsharp-command (com-beginning-of-line :name t)
+    ()    
+  (let ((buffer (current-buffer))
+        (cursor (current-cursor)))
+    (gsharp-measure::new-map-over-obseq-subsequences
+     (lambda (page-measures)
+       (when (position-containing-current-bar page-measures)
+         (let ((lines (get-page-lines buffer page-measures)))
+           (dolist (line lines)
+             (let ((position (position-containing-current-bar line)))
+               (when position
+                 (loop repeat position
+                       do (backward-bar cursor)
+                       finally (progn
+                                 (go-to-beginning-of-bar cursor)
+                                 (return-from com-beginning-of-line)))))))))
+     buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; delete commands
 
 (defun go-to-beginning-of-bar (cursor)

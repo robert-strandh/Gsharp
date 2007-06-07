@@ -8,7 +8,14 @@
 (set-key `(com-forward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\f :control :meta)))
 (set-key `(com-backward-measure ,*numeric-argument-marker*) 'global-gsharp-table '((#\b :control :meta)))
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\d :control)))
-(set-key `(com-erase-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\h :control)))
+(set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\Rubout)))
+(set-key `(com-erase-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\Backspace)))
+
+;;; FIXME: implement numeric arg handling
+(set-key 'com-forward-page 'global-gsharp-table '((#\x :control) #\]))
+(set-key 'com-backward-page 'global-gsharp-table '((#\x :control) #\[))
+(set-key 'com-end-of-line 'global-gsharp-table '((#\e :control)))
+(set-key 'com-beginning-of-line 'global-gsharp-table '((#\a :control)))
 
 (set-key 'com-insert-barline 'global-gsharp-table '(#\|))
 
