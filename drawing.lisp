@@ -311,6 +311,13 @@ right of the center of its timeline"))
 		 finally (setf (elasticity-function measure) result)))
   (reduce #'add-elasticities measures :key #'elasticity-function))
 
+(defun single-whole-rest-in-bar-p (element)
+  (let* ((bar (bar element))
+         (elements (elements bar)))
+    (and (null (cdr elements))
+         (typep element 'rest)
+         (eq (notehead element) :whole))))
+
 (defun compute-measure-coordinates (measure x y force)
   (loop with timelines = (timelines measure)
 	for i from 0 below (flexichain:nb-elements timelines)
@@ -320,7 +327,9 @@ right of the center of its timeline"))
 				 (* force (elasticity timeline))))
         do (loop for element in (elements timeline)
 		 do (setf (final-absolute-element-xoffset element)
-			  (round (+ xx (score-pane:staff-step (xoffset element)))))))
+                          (if (single-whole-rest-in-bar-p element)
+                              (round (+ x (/ (size-at-force (elasticity-function measure) force) 2)))
+                              (round (+ xx (score-pane:staff-step (xoffset element))))))))
   (loop for bar in (measure-bars measure)
 	do (compute-bar-coordinates bar x y (size-at-force (elasticity-function measure) force))))
 
@@ -487,10 +496,6 @@ right of the center of its timeline"))
 			 (values best-splits best-min best-max))))))))
     (split-aux sequence 0 (length sequence) n)))
 		     
-					
-
-	
-
 (defun layout-page (measures n method)
   (if (<= (length measures) n)
       (mapcar #'list measures)
