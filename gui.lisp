@@ -1108,6 +1108,38 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; selecting layers based on layout (next/previous staff)
+
+;;; FIXME: numeric argument handling again
+(define-gsharp-command (com-previous-staff :name t)
+    ()
+  (let ((staff (car (staves (layer (current-cursor))))))
+    (loop for (prev curr) on (staves (current-buffer))
+	  if (eq curr staff)
+	  do (let ((layers (layers (segment (current-cursor)))))
+	       (dolist (layer layers)
+		 (when (member prev (staves layer))
+		   (select-layer (current-cursor) layer)
+		   (do ()
+		       ((eq prev (car (staves layer))))
+		     (com-rotate-staves))
+		   (return-from com-previous-staff)))))))
+(define-gsharp-command (com-next-staff :name t)
+    ()
+  (let ((staff (car (staves (layer (current-cursor))))))
+    (loop for (curr next) on (staves (current-buffer))
+	  if (eq curr staff)
+	  do (let ((layers (layers (segment (current-cursor)))))
+	       (dolist (layer layers)
+		 (when (member next (staves layer))
+		   (select-layer (current-cursor) layer)
+		   (do ()
+		       ((eq next (car (staves layer))))
+		     (com-rotate-staves))
+		   (return-from com-next-staff)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; delete commands
 
 (defun go-to-beginning-of-bar (cursor)

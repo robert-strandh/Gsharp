@@ -17,6 +17,10 @@
 (set-key 'com-end-of-line 'global-gsharp-table '((#\e :control)))
 (set-key 'com-beginning-of-line 'global-gsharp-table '((#\a :control)))
 
+;;; FIXME: implement numeric arg handling
+(set-key 'com-previous-staff 'global-gsharp-table '((:up :control)))
+(set-key 'com-next-staff 'global-gsharp-table '((:down :control)))
+
 (set-key 'com-insert-barline 'global-gsharp-table '(#\|))
 
 (set-key 'com-end-of-score 'global-gsharp-table '((#\> :shift :meta)))
