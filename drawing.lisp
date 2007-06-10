@@ -772,35 +772,54 @@ right of the center of its timeline"))
 
 (defun draw-the-cursor (pane cursor cursor-element last-note)
   (let* ((staff (car (staves (layer cursor))))
-	 (bar (bar cursor)))
+	 (bar (bar cursor))
+	 (sy (system-y-position bar))
+	 (yoffset (- (gsharp-drawing::staff-yoffset staff))))
+    (let ((region (pane-viewport-region pane)))
+      (when region
+	;; FIXME: adjusting the viewport at this point leads to ugly
+	;; jumps in the display when going across pages, as the page
+	;; is first laid out and drawn, then the viewport is moved.
+	;; If we instead cleared the pane, laid out the page, adjusted
+	;; the viewport, and finally drew the page (and cursor) then
+	;; that jump would probably go away.
+	;;
+	;; FIXME: this calculation only takes account of the centre of
+	;; the cursor.  Refactor this whole DRAW-THE-CURSOR function
+	;; so that it's easy to take account of the vertical extent of
+	;; the cursor.
+	(unless (< (bounding-rectangle-min-y region)
+		   (- sy yoffset)
+		   (bounding-rectangle-max-y region))
+	  (let ((maxy (- (bounding-rectangle-max-y pane) (bounding-rectangle-height region))))
+	    (scroll-extent pane 0 (max 0 (min maxy
+					      (- sy (floor (bounding-rectangle-height region) 2)))))))))
+				       
     (flet ((draw-cursor (x)
-	     (let* ((sy (system-y-position bar))
-		    ;; Why (- STAFF-YOFFSET)?  dunno.  -- CSR, 2005-10-28
-		    (yoffset (- (gsharp-drawing::staff-yoffset staff))))
-	       (if (typep staff 'fiveline-staff)
-		   (let* ((clef (clef staff))
-			  (bottom-line (bottom-line clef))
-			  (lnote-offset (score-pane:staff-step (- last-note bottom-line))))
-		     (draw-line* pane
-				 x (+ sy (- (+ (score-pane:staff-step 12) yoffset)))
-				 x (+ sy (- (+ (score-pane:staff-step -4) yoffset)))
-				 :ink +yellow+)
-		     (draw-line* pane
-				 (- x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
-				 (- x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
-				 :ink +red+)
-		     (draw-line* pane
-				 (+ x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
-				 (+ x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
-				 :ink +red+))
-		   (progn (draw-line* pane
-				      (+ x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
-				      (+ x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
-				      :ink +red+)
-			  (draw-line* pane
-				      (- x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
-				      (- x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
-				      :ink +red+))))))
+	     (if (typep staff 'fiveline-staff)
+		 (let* ((clef (clef staff))
+			(bottom-line (bottom-line clef))
+			(lnote-offset (score-pane:staff-step (- last-note bottom-line))))
+		   (draw-line* pane
+			       x (+ sy (- (+ (score-pane:staff-step 12) yoffset)))
+			       x (+ sy (- (+ (score-pane:staff-step -4) yoffset)))
+			       :ink +yellow+)
+		   (draw-line* pane
+			       (- x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
+			       (- x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
+			       :ink +red+)
+		   (draw-line* pane
+			       (+ x 1) (+ sy (- (+ (score-pane:staff-step -3.4) yoffset lnote-offset)))
+			       (+ x 1) (+ sy (- (+ (score-pane:staff-step 3.6) yoffset lnote-offset)))
+			       :ink +red+))
+		 (progn (draw-line* pane
+				    (+ x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
+				    (+ x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
+				    :ink +red+)
+			(draw-line* pane
+				    (- x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
+				    (- x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
+				    :ink +red+)))))
       (score-pane:with-staff-size 6
 	(let* ((x (final-absolute-measure-xoffset bar))
 	       (width (final-width bar))
