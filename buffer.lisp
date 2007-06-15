@@ -646,7 +646,7 @@ flatter by removing some sharps and/or adding some flats"))
 ;;; kind of cache, in order to avoid looping over each 
 ;;; element and computing the duration of each one each time.
 (defmethod duration ((bar bar))
-  (reduce #'+ (mapcar #'duration (elements bar))))
+  (reduce #'+ (elements bar) :key #'duration))
 
 (defgeneric make-bar-for-staff (staff &rest args &key elements))
 

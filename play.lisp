@@ -14,9 +14,7 @@
 
 (defun measure-durations (slices)
   (let ((durations (mapcar (lambda (slice)
-			     (mapcar (lambda (bar)
-				       (reduce #'+ (elements bar)
-					       :key #'duration))
+			     (mapcar #'duration
 				     (bars slice)))
 			   slices)))
     (loop while durations
@@ -80,11 +78,11 @@
 		     :format 1
 		     :division 25
 		     :tracks tracks)))
-    (write-midi-file midifile "test.mid")
+    (write-midi-file midifile "/tmp/test.mid")
     #+cmu
-    (ext:run-program "timidity" '("test.mid"))
+    (ext:run-program "timidity" '("/tmp/test.mid"))
     #+sbcl
-    (sb-ext:run-program "timidity" '("test.mid") :search t)
+    (sb-ext:run-program "timidity" '("/tmp/test.mid") :search t)
     #-(or cmu sbcl)
     (error "write compatibility layer for RUN-PROGRAM")))
 
