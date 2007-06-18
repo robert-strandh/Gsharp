@@ -260,6 +260,89 @@
 (defun note-equal (note1 note2)
   (= (pitch note1) (pitch note2)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Tuning (support for microtonal and historical tunings/temperaments)
+
+;;; FIXME: add name-mixin also?
+(defclass tuning (gsharp-object)
+  ((master-pitch-note :initform (make-instance 'note :pitch 33 ; a above middle c
+                                                     :staff (make-instance 'staff))
+                      :initarg :master-pitch-note
+                      :type note
+                      :accessor master-pitch-note)
+   (master-pitch-freq :initform 440
+                      :initarg :master-pitch-freq
+                      :accessor master-pitch-freq)))
+
+(defmethod print-gsharp-object progn ((tuning tuning) stream)
+  (format stream "~_:master-pitch-note ~W ~_:master-pitch-freq ~W "
+          (master-pitch-note tuning) (master-pitch-freq tuning)))
+
+;;; Returns how a note should be tuned in a given tuning
+;;; in terms of a cent value.
+(defgeneric note-cents (note tuning))
+
+;;; 12-edo is provided for efficiency only. It is a 
+;;; special case of a regular temperament. Perhaps it
+;;; should be removed?
+(defclass 12-edo (tuning)
+  ())
+
+(defmethod print-gsharp-object progn ((tuning 12-edo) stream)
+  ;; no parameters to save
+  )
+
+(defmethod note-cents ((note note) (tuning 12-edo))
+  (multiple-value-bind (octave pitch) (floor (pitch note) 7)
+    (+ (* 1200 (1+ octave))
+       (ecase pitch (0 0) (1 200) (2 400) (3 500) (4 700) (5 900) (6 1100))
+       (ecase (accidentals note)
+         (:double-flat -200)
+         (:flat -100)
+         (:natural 0)
+         (:sharp 100)
+         (:double-sharp 200)))))
+
+;;; regular temperaments are temperaments that
+;;; retain their interval sizes regardless of modulation, as opposed to
+;;; irregular temperaments.
+(defclass regular-temperament (tuning)
+  ((octave-cents :initform 1200 :initarg :octave-cents :accessor octave-cents)
+   (fifth-cents :initform 700 :initarg :fifth-cents :accessor fifth-cents))
+  ;; TODO: Add cent sizes of various microtonal accidentals, perhaps in an alist?
+  )
+
+(defmethod print-gsharp-object progn ((tuning regular-temperament) stream)
+  (format stream "~_:octave-cents ~W ~_:fifth-cents ~W "
+          (octave-cents tuning) (fifth-cents tuning)))
+
+(defmethod note-cents ((note note) (tuning regular-temperament))
+  (let ((octave-cents (octave-cents tuning))
+        (fifth-cents (fifth-cents tuning)))        
+    (multiple-value-bind (octave pitch) (floor (pitch note) 7)
+      (+ (* octave-cents (1+ octave))
+         (ecase pitch
+           (0 0)
+           (1 (+ (* -1 octave-cents) (* 2 fifth-cents)))
+           (2 (+ (* -2 octave-cents) (* 4 fifth-cents)))
+           (3 (- octave-cents fifth-cents))
+           (4 fifth-cents)
+           (5 (+ (* -1 octave-cents) (* 3 fifth-cents)))
+           (6 (+ (* -2 octave-cents) (* 5 fifth-cents))))
+         (* (ecase (accidentals note)
+              (:double-flat -2)
+              (:flat -1)
+              (:natural 0)
+              (:sharp 1)
+              (:double-sharp 2))
+            (- (* 7 fifth-cents)
+               (* 4 octave-cents)))))))
+ 
+;;; TODO: (defclass irregular-temperament ...)
+ 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Element
@@ -987,7 +1070,9 @@ flatter by removing some sharps and/or adding some flats"))
   ((print-character :allocation :class :initform #\S)
    (buffer :initform nil :initarg :buffer :accessor buffer)
    (layers :initform '() :initarg :layers :accessor layers)
-   (tempo :initform 128 :initarg :tempo :accessor tempo)))
+   (tempo :initform 128 :initarg :tempo :accessor tempo)
+   (tuning :initform (make-instance '12-edo)
+           :initarg :tuning :accessor tuning)))
 
 (defmethod initialize-instance :after ((s segment) &rest args &key staff)
   (declare (ignore args))
@@ -999,7 +1084,8 @@ flatter by removing some sharps and/or adding some flats"))
           do (setf (segment layer) s))))
 
 (defmethod print-gsharp-object progn ((s segment) stream)
-  (format stream "~_:layers ~W ~_:tempo ~W " (layers s) (tempo s)))
+  (format stream "~_:layers ~W ~_:tempo ~W ~_:tuning ~W "
+          (layers s) (tempo s) (tuning s)))
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))

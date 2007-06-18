@@ -94,7 +94,9 @@
 	   #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char
 	   #:tie-right #:tie-left
-	   #:needs-saving))
+	   #:needs-saving
+           #:tuning #:master-pitch-note #:master-pitch-freq
+           #:note-cents #:12-edo #:regular-temperament))
 
 (defpackage :gsharp-numbering
   (:use :gsharp-utilities :gsharp-buffer :clim-lisp)
