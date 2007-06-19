@@ -4,7 +4,7 @@
 (defvar *tempo*)
 
 (defun midi-pitch (note)
-  (round (+ (+ 6700 ; a above middle c, 440 Hz
+  (round (+ (+ 6900 ; a above middle c, 440 Hz
                (* 1200 (log (/ (master-pitch-freq *tuning*) 440) 2)))
             (- (note-cents note *tuning*)
                (note-cents (master-pitch-note *tuning*) *tuning*)))
