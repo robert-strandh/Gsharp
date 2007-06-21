@@ -248,48 +248,57 @@
 		  nil
 		  (accidentals note)))))
 
-;;; table of x offsets (in staff steps) of accendentals.
-;;; The first index represents a notehead or a type of accidental.
-;;; The second index represents a type of accidentsl.
-;;; The third index is a vertical distance, measured in difference
-;;; in staff steps between the two. 
-;;; The table entry gives how much the accidental represented by
-;;; the second parameter must be positioned to the left of the 
-;;; first one. 
-;;; Entries in the table are offset by 5 in the last dimension
-;;; so that vertical distances between -5 and 5 can be represented
-(defparameter *accidental-offset*
-  ;;;     -5  -4  -3  -2  -1   0   1   2   3   4   5
-  #3A(((   0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)    ; notehead - dbl flat
-       (   0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)    ; notehead - flat
-       (   0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)    ; notehead - natural
-       (   0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)    ; notehead - sharp
-       (   0   0   0 3.5 3.5 3.5 3.5 3.5   0   0   0))   ; notehead - dbl sharp
-      (( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - dbl flat
-       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - flat
-       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)    ; dbl flat - natural
-       (   4   4   4   4   4   4   4   4   4 3.5   0)    ; dbl flat - sharp
-       ( 3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   0   0   0))   ; dbl flat - dbl sharp
-      ((   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - dbl flat
-       (   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - flat
-       (   2   2   2   2   2   2   2   2 1.5   1   0)    ; flat - natural
-       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 1.5   0)    ; flat - sharp
-       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0   0))   ; flat - dbl sharp
-      ((   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - dbl flat
-       (   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - flat
-       (   2   2   2   2   2   2   2   2   2 1.5 1.5)    ; natural - natural
-       (   2   2   2   2   2   2   2   2   2   2   2)    ; natural - sharp
-       (   2   2   2   2   2   2   2   2   1   1   1))   ; natural - dbl sharp
-      ((   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - dbl flat
-       (   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - flat
-       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)    ; sharp - natural
-       ( 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 2.0)    ; sharp - sharp
-       (   0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0))   ; sharp - dbl sharp
-      ((   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - dbl flat
-       (   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - flat
-       (   0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)    ; dbl sharp - natural
-       (   0 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8   0)    ; dbl sharp - sharp
-       (   0   0   0 2.8 2.8 2.8 2.8 2.8   0   0   0)))) ; dbl sharp - dbl sharp
+(defmacro define-accidental-kerning (left right table)
+  `(let ((plist (getf (symbol-plist 'accidental-kerning) ',right)))
+    (setf (getf (symbol-plist 'accidental-kerning) ',right)
+          (cons (cons ',left ',table)
+	        (remove ',left plist :key #'car)))))
+(defmacro define-default-accidental-kerning (right table)
+  `(define-accidental-kerning default ,right ,table))
+
+(macrolet ((define-kernings (&rest args)
+	       `(progn ,@(loop for (left right table) on args by #'cdddr
+			       collect `(define-accidental-kerning ,left ,right ,table)))))
+  (define-kernings
+    :double-flat  :notehead     #(  0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)
+    :flat         :notehead     #(  0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)
+    :natural      :notehead     #(  0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)
+    :sharp        :notehead     #(  0 3.5 3.5 3.5 3.5 3.5 3.5 3.5   1   1   0)
+    :double-sharp :notehead     #(  0   0   0 3.5 3.5 3.5 3.5 3.5   0   0   0)
+
+    :double-flat  :double-flat  #(3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)
+    :flat         :double-flat  #(3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)
+    :natural      :double-flat  #(3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   3   3   0)
+    :sharp        :double-flat  #(  4   4   4   4   4   4   4   4   4 3.5   0)
+    :double-sharp :double-flat  #(3.8 3.8 3.8 3.8 3.8 3.8 3.8 3.8   0   0   0)
+
+    :double-flat  :flat         #(  2   2   2   2   2   2   2   2 1.5   1   0)
+    :flat         :flat         #(  2   2   2   2   2   2   2   2 1.5   1   0)
+    :natural      :flat         #(  2   2   2   2   2   2   2   2 1.5   1   0)
+    :sharp        :flat         #(2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 1.5   0)
+    :double-sharp :flat         #(2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0   0)
+
+    :double-flat  :natural      #(  2   2   2   2   2   2   2   2   2 1.5 1.5)
+    :flat         :natural      #(  2   2   2   2   2   2   2   2   2 1.5 1.5)
+    :natural      :natural      #(  2   2   2   2   2   2   2   2   2 1.5 1.5)
+    :sharp        :natural      #(  2   2   2   2   2   2   2   2   2   2   2)
+    :double-sharp :natural      #(  2   2   2   2   2   2   2   2   1   1   1)
+
+    :double-flat  :sharp        #(  0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)
+    :flat         :sharp        #(  0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)
+    :natural      :sharp        #(2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0 1.5 1.0)
+    :sharp        :sharp        #(2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.0)
+    :double-sharp :sharp        #(  0 2.4 2.4 2.4 2.4 2.4 2.4 2.4 2.4   0   0)
+
+    :double-flat  :double-sharp #(  0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)
+    :flat         :double-sharp #(  0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)
+    :natural      :double-sharp #(  0   0 2.4 2.4 2.4 2.4 2.4 2.4   2   1   0)
+    :sharp        :double-sharp #(  0 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8 2.8   0)
+    :double-sharp :double-sharp #(  0   0   0 2.8 2.8 2.8 2.8 2.8   0   0   0)
+    ))
+
+(defvar *default-accidental-kerning* 
+  #(4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0))
 
 ;;; given 1) a type of accidental 2) its position (in staff steps) 3)
 ;;; a type of accidental or a type of notehead, and 4) its position,
@@ -297,24 +306,16 @@
 ;;; steps to the left that it must be moved in order to avoid overlap
 ;;; with the second one.
 (defun accidental-distance (acc1 pos1 acc2 pos2)
-  (let ((dist (- pos2 pos1)))
-    (if (> (abs dist) 5)
-	0
-	(aref *accidental-offset*
-	      (ecase acc2
-		(:notehead 0)
-		(:double-flat 1)
-		(:flat 2)
-		(:natural 3)
-		(:sharp 4)
-		(:double-sharp 5))
-	      (ecase acc1
-		(:double-flat 0)
-		(:flat 1)
-		(:natural 2)
-		(:sharp 3)
-		(:double-sharp 4))
-	      (+ dist 5)))))		
+  (let* ((dist (- pos2 pos1))
+	 (right-info (getf (symbol-plist 'accidental-kerning) acc2))
+	 (left-right-info (cdr (assoc acc1 right-info)))
+	 (default-right-info (cdr (assoc 'default right-info))))
+    (cond
+      ((> (abs dist) 5) 0)
+      ((or (not right-info) (and (not left-right-info) (not default-right-info)))
+       (aref *default-accidental-kerning* (+ dist 5)))
+      ((not left-right-info) (aref default-right-info (+ dist 5)))
+      (t (aref left-right-info (+ dist 5))))))
 
 ;;; given two notes (where the first one has an accidental, and the
 ;;; second one may or may not have an accidental) and the conversion

@@ -822,17 +822,61 @@
       (add-note element new-note)
       (setf *current-note* new-note))))
 
+(defmacro define-microtonal-accidentals (&rest microaccidentals)
+  `(progn
+    (setf (symbol-plist 'microsharpen)
+          ',(loop for (a b) on microaccidentals
+		  if b collect a and collect b
+		  else collect a and collect a))
+    (setf (symbol-plist 'microflatten)
+          ',(loop for (a b) on (reverse microaccidentals)
+		  if b collect a and collect b
+		  else collect a and collect a))
+    (deftype accidental () '(member ,@microaccidentals))
+    (defun microsharpen (accidental)
+      (or (getf (symbol-plist 'microsharpen) accidental)
+	  (error 'type-error :datum accidental :expected-type 'microaccidental)))
+    (defun microflatten (accidental)
+      (or (getf (symbol-plist 'microflatten) accidental)
+	  (error 'type-error :datum accidental :expected-type 'microaccidental)))))
+
+(defmacro define-accidentals (&rest accidentals)
+  `(progn
+    (deftype accidental () '(member ,@accidentals))
+    (defun sharpen (accidental)
+      (do ((a (microsharpen accidental) (microsharpen a))
+	   (olda accidental a))
+	  ((or (eq a olda) (member a ',accidentals)) a)))
+    (defun flatten (accidental)
+      (do ((a (microflatten accidental) (microflatten a))
+	   (olda accidental a))
+	  ((or (eq a olda) (member a ',accidentals)) a)))))
+
+(define-microtonal-accidentals :double-flat :sesquiflat :flat :semiflat
+			       :natural 
+			       :semisharp :sharp :sesquisharp :double-sharp)
+
+(define-accidentals :double-flat :flat :natural :sharp :double-sharp)
+    
 (define-gsharp-command com-sharper ()
   (let* ((cluster (cur-cluster))
          (note (cur-note))
          (new-note (make-note (pitch note) (staff note)
                      :head (head note)
-                     :accidentals (ecase (accidentals note)
-                                    (:double-sharp :double-sharp)
-                                    (:sharp :double-sharp)
-                                    (:natural :sharp)
-                                    (:flat :natural)
-                                    (:double-flat :flat))
+                     :accidentals (sharpen (accidentals note))
+                     :dots (dots note))))
+    (remove-note note)
+    (add-note cluster new-note)
+    (setf *current-note* new-note)))
+
+(define-gsharp-command com-microsharper ()
+  ;; FIXME: what are CUR-CLUSTER and CUR-NOTE and how do they relate
+  ;; to CURRENT-CLUSTER &c?
+  (let* ((cluster (cur-cluster))
+         (note (cur-note))
+         (new-note (make-note (pitch note) (staff note)
+                     :head (head note)
+                     :accidentals (microsharpen (accidentals note))
                      :dots (dots note))))
     (remove-note note)
     (add-note cluster new-note)
@@ -843,12 +887,18 @@
          (note (cur-note))
          (new-note (make-note (pitch note) (staff note)
                      :head (head note)
-                     :accidentals (ecase (accidentals note)
-                                    (:double-sharp :sharp)
-                                    (:sharp :natural)
-                                    (:natural :flat)
-                                    (:flat :double-flat)
-                                    (:double-flat :double-flat))
+                     :accidentals (flatten (accidentals note))
+                     :dots (dots note))))
+    (remove-note note)
+    (add-note cluster new-note)
+    (setf *current-note* new-note)))
+
+(define-gsharp-command com-microflatter ()
+  (let* ((cluster (cur-cluster))
+         (note (cur-note))
+         (new-note (make-note (pitch note) (staff note)
+                     :head (head note)
+                     :accidentals (microflatten (accidentals note))
                      :dots (dots note))))
     (remove-note note)
     (add-note cluster new-note)

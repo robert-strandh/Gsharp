@@ -1009,6 +1009,56 @@ of a normal note.  This function always returns a positive value"))
 ;;;
 ;;; Accidentals
 
+(defmethod compute-design ((font font) (shape (eql :semisharp)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       stem-thickness
+	       yoffset) font
+    (let* (;; A factor that determines the space between the vertical
+	   ;; bars and the outer edge of the character as a fraction of
+	   ;; the staff line distance
+	   (edge-distance-multiplier 0.2)
+	   ;; A factor that determines the height of the thin part as a
+	   ;; fraction of the staff line distance
+	   (height-multiplier 2.5)
+	   ;; A factor that determines the width of the hole as a fraction of the
+	   ;; staff line distance.
+	   (hole-width-multiplier 0.33)
+	   (hole-width (round (* hole-width-multiplier sld)))
+	   ;; Hope that half a pixel will not be visible and will not influence 
+	   ;; the required distance to the noteheads.  
+	   ;;
+	   ;; FIXME: this is the only real difference between the
+	   ;; :semisharp and :sesquisharp glyph calculations, and the
+	   ;; :sharp glyph.  Find a way to unify the glyph
+	   ;; computations in a proper metafonty way.
+	   (xoffset (if (oddp hole-width) 0.5 0.5))
+	   (edge-distance (* edge-distance-multiplier sld))
+	   (width (+ hole-width (* 2 stem-thickness) (* 2 edge-distance)))
+	   ;; FIXME: this leads to a blurry glyph at most sizes:
+	   ;; choose a coordinate which lies on a pixel boundary in
+	   ;; preference.
+	   (xleft (* -0.25 width))
+	   (xright (- xleft))
+	   (yleft (* -0.15 width))
+	   (yright (- yleft))
+	   ;; The path for the thick part symmetric around (0, 0)
+	   (thickpart (mf (complex xleft yleft) -- (complex xright yright)))
+	   ;; Determine the y coordinate of the previous path at the
+	   ;; cross point of the thin part.  Use congruent triangles.
+	   (ythin (/ (* (- xright edge-distance) yright) xright))
+	   (height (* height-multiplier sld))
+	   ;; The path for the thin part symmetric around (0, 0)
+	   (thinpart (mf (complex 0 (* 0.5 height)) -- (complex 0 (* -0.5 height)))))
+      (clim:region-union
+       (with-pen (rotate (scale +razor+ (* 0.4 sld)) (/ pi 2))
+	 (clim:region-union (draw-path (translate thickpart
+						  (complex xoffset (+ yoffset (* 0.5 sld)))))
+			    (draw-path (translate thickpart
+						  (complex xoffset (+ yoffset (* -0.5 sld)))))))
+       (with-pen (scale +razor+ stem-thickness)
+	 (draw-path (translate thinpart (complex xoffset yoffset))))))))
+
 (defmethod compute-design ((font font) (shape (eql :sharp)))
   (with-slots ((sld staff-line-distance)
 	       (slt staff-line-thickness)
@@ -1060,6 +1110,58 @@ of a normal note.  This function always returns a positive value"))
 							      (* 0.5 stem-thickness))
 							   (+ yoffset ythin))))))))))
 
+(defmethod compute-design ((font font) (shape (eql :sesquisharp)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       stem-thickness
+	       yoffset) font
+    (let* (;; A factor that determines the space between the vertical
+	   ;; bars and the outer edge of the character as a fraction of
+	   ;; the staff line distance
+	   (edge-distance-multiplier 0.2)
+	   ;; A factor that determines the height of the thin part as a
+	   ;; fraction of the staff line distance
+	   (height-multiplier 2.5)
+	   ;; A factor that determines the width of the hole as a fraction of the
+	   ;; staff line distance.
+	   (hole-width-multiplier 0.33)
+	   (hole-width (round (* hole-width-multiplier sld)))
+	   ;; Hope that half a pixel will not be visible and will not
+	   ;; influence the required distance to the noteheads.
+	   ;;
+	   ;; FIXME: see note in :semisharp glyph at this point
+	   (xoffset (if (oddp hole-width) 0.5 0.5))
+	   (edge-distance (* edge-distance-multiplier sld))
+	   (width (+ hole-width (* 2 stem-thickness) (* 2 edge-distance)))
+	   (xleft (* -0.75 width))
+	   (xright (- xleft))
+	   (yleft (* -0.15 width))
+	   (yright (- yleft))
+	   ;; The path for the thick part symmetric around (0, 0)
+	   (thickpart (mf (complex xleft yleft) -- (complex xright yright)))
+	   ;; Determine the y coordinate of the previous path at the
+	   ;; cross point of the thin part.  Use congruent triangles.
+	   (ythin (/ (* (- xright edge-distance) yright) xright))
+	   (height (* height-multiplier sld))
+	   ;; The path for the thin part symmetric around (0, 0)
+	   (thinpart (mf (complex 0 (* 0.5 height)) -- (complex 0 (* -0.5 height)))))
+      (clim:region-union
+       (with-pen (rotate (scale +razor+ (* 0.4 sld)) (/ pi 2))
+	 (clim:region-union (draw-path (translate thickpart
+						  (complex xoffset (+ yoffset (* 0.5 sld)))))
+			    (draw-path (translate thickpart
+						  (complex xoffset (+ yoffset (* -0.5 sld)))))))
+       (with-pen (scale +razor+ stem-thickness)
+	 (clim:region-union 
+	  (clim:region-union
+	   (draw-path (translate thinpart
+				 (complex (- xoffset hole-width (* 1 stem-thickness))
+					  (- yoffset ythin))))
+	   (draw-path (translate thinpart (complex (- xoffset (* 0 stem-thickness)) yoffset))))
+	  (draw-path (translate thinpart
+				(complex (+ xoffset hole-width (* 1 stem-thickness))
+					 (+ yoffset ythin))))))))))
+
 (defmethod compute-design ((font font) (shape (eql :double-sharp)))
   (with-slots ((sld staff-line-distance) xoffset yoffset) font
     (flet ((c (x y) (complex x y)))
@@ -1075,13 +1177,38 @@ of a normal note.  This function always returns a positive value"))
 		      (translate (rotate leg (* pi 1.0)) (c xoffset yoffset))
 		      (translate (rotate leg (* pi 1.5)) (c xoffset yoffset))))))))
 
+(defmethod compute-design ((font font) (shape (eql :semiflat)))
+  (with-slots ((sld staff-line-distance) stem-thickness) font
+    (flet ((c (x y) (complex x y)))
+      (let* ((outer (xyscale (translate (rotate +half-circle+ pi) #c(-0.5 0))
+			     (* 1 sld) (* 1 sld)))
+	     ;; FIXME: 1.2 here (and in the :sesquiflat glyph, below)
+	     ;; represents the difference in width between the
+	     ;; :semiflat bulge and the regular :flat bulge.  Find a
+	     ;; way to share code between the glyphs.
+	     (inner (xyscale (translate (rotate +half-circle+ pi) #c(-0.6 0))
+			     (* 0.75 sld) (* (/ 0.75 1.2) sld)))
+	     (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
+	     (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
+	     (combined (climi::close-path
+			(reduce #'clim:region-union
+				(list outer middle (climi::reverse-path inner) finish)))))
+	(clim:region-union (translate (rotate (slant combined 0.6) (- (/ pi 2)))
+				      (c (round (- (* -0.2 sld) stem-thickness)) (* -0.5 sld)))
+			   (with-pen (scale +razor+ stem-thickness)
+			     (draw-path (mf (c (- (round (* -0.2 sld)) (* 0.5 stem-thickness))
+					       (* 1.5 sld))
+					    --
+					    (c (- (round (* -0.2 sld)) (* 0.5 stem-thickness))
+					       (* -0.5 sld))))))))))
+
 (defmethod compute-design ((font font) (shape (eql :flat)))
   (with-slots ((sld staff-line-distance) stem-thickness) font
     (flet ((c (x y) (complex x y)))
       (let* ((outer (xyscale (translate +half-circle+ #c(-0.5 0))
 			     sld (* 1.2 sld)))
 	     (inner (scale (translate +half-circle+ #c(-0.6 0))
-			   (* 0.8 sld)))
+			   (* 0.75 sld)))
 	     (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
 	     (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
 	     (combined (climi::close-path
@@ -1089,6 +1216,38 @@ of a normal note.  This function always returns a positive value"))
 				(list outer middle (climi::reverse-path inner) finish)))))
 	(clim:region-union (translate (rotate (slant combined -0.6) (- (/ pi 2)))
 				      (c (round (* -0.2 sld)) (* -0.5 sld)))
+			   (with-pen (scale +razor+ stem-thickness)
+			     (draw-path (mf (c (- (round (* -0.2 sld)) (* 0.5 stem-thickness))
+					       (* 1.5 sld))
+					    --
+					    (c (- (round (* -0.2 sld)) (* 0.5 stem-thickness))
+					       (* -0.5 sld))))))))))
+
+(defmethod compute-design ((font font) (shape (eql :sesquiflat)))
+  (with-slots ((sld staff-line-distance) stem-thickness) font
+    (flet ((c (x y) (complex x y)))
+      (let* ((outer (xyscale (translate (rotate +half-circle+ pi) #c(-0.5 0))
+			     (* 1 sld) (* 1 sld)))
+	     (inner (xyscale (translate (rotate +half-circle+ pi) #c(-0.6 0))
+			     (* 0.75 sld) (* (/ 0.75 1.2) sld)))
+	     (middle (mf (climi::path-end outer) -- (climi::path-end inner)))
+	     (finish (mf (climi::path-start inner) -- (climi::path-start outer)))
+	     (combined (climi::close-path
+			(reduce #'clim:region-union
+				(list outer middle (climi::reverse-path inner) finish))))
+	     (outer1 (xyscale (translate +half-circle+ #c(-0.5 0))
+			     sld (* 1.2 sld)))
+	     (inner1 (scale (translate +half-circle+ #c(-0.6 0))
+			   (* 0.75 sld)))
+	     (middle1 (mf (climi::path-end outer1) -- (climi::path-end inner1)))
+	     (finish1 (mf (climi::path-start inner1) -- (climi::path-start outer1)))
+	     (combined1 (climi::close-path
+			 (reduce #'clim:region-union
+				 (list outer1 middle1 (climi::reverse-path inner1) finish1)))))
+	(clim:region-union (clim:region-union (translate (rotate (slant combined (* 0.6 1.2)) (- (/ pi 2)))
+							 (c (round (- (* -0.2 sld) stem-thickness)) (* -0.5 sld)))
+					      (translate (rotate (slant combined1 -0.6) (- (/ pi 2)))
+							 (c (round (* -0.2 sld)) (* -0.5 sld))))
 			   (with-pen (scale +razor+ stem-thickness)
 			     (draw-path (mf (c (- (round (* -0.2 sld)) (* 0.5 stem-thickness))
 					       (* 1.5 sld))

@@ -219,8 +219,10 @@
    (head :initform nil :initarg :head :reader head
          :type (or (member :whole :half :filled) null))
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
-                :type (member :natural :flat :double-flat
-                              :sharp :double-sharp))
+		;; FIXME: we want :TYPE ACCIDENTAL here but need to
+		;; sort out order of definition for that to be useful.
+		#+nil #+nil 
+                :type (member :natural :flat :double-flat :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
          :type (or (integer 0 3) null))
    (%tie-right :initform nil :initarg :tie-right :accessor tie-right)
@@ -230,8 +232,9 @@
   (declare (type (integer 0 127) pitch)
            (type staff staff)
            (type (or (member :whole :half :filled) null) head)
-           (type (member :natural :flat :double-flat
-                         :sharp :double-sharp)
+	   ;; FIXME: :TYPE ACCIDENTAL
+	   #+nil #+nil
+           (type (member :natural :flat :double-flat :sharp :double-sharp)
                  accidentals)
            (type (or (integer 0 3) null) dots)
            (ignore head accidentals dots))
@@ -300,9 +303,13 @@
        (ecase pitch (0 0) (1 200) (2 400) (3 500) (4 700) (5 900) (6 1100))
        (ecase (accidentals note)
          (:double-flat -200)
+	 (:sesquiflat -150)
          (:flat -100)
+	 (:semiflat -50)
          (:natural 0)
+	 (:semisharp 50)
          (:sharp 100)
+	 (:sesquisharp 150)
          (:double-sharp 200)))))
 
 ;;; regular temperaments are temperaments that
