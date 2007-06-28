@@ -84,7 +84,7 @@
 
 (set-key 'com-sharper 'cluster-table '((#\#)))
 (set-key 'com-flatter 'cluster-table '(#\@))
-(set-key 'com-microsharper 'cluster-table '((#\# :control)))
+(set-key 'com-microsharper 'cluster-table '((#\# :control :shift)))
 (set-key 'com-microflatter 'cluster-table '((#\@ :control :shift)))
 (set-key 'com-add-note-c 'cluster-table '(#\C))
 (set-key 'com-add-note-d 'cluster-table '(#\D))

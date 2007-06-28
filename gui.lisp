@@ -366,12 +366,14 @@
 
 (define-gsharp-command (com-set-segment-tuning-regular-temperament :name t)
     ((octave-cents 'cl:number :prompt "Octave size in cents")
-     (fifth-cents 'cl:number :prompt "Fifth size in cents"))
+     (fifth-cents 'cl:number :prompt "Fifth size in cents")
+     (quartertone-cents 'cl:number :prompt "Quartertone size in cents"))
   ;; TODO: prompt for sizes of various microtonal accidentals
   (let ((segment (segment (current-cursor))))
     (setf (tuning segment) (make-instance 'regular-temperament
                                           :octave-cents octave-cents
-                                          :fifth-cents fifth-cents))))
+                                          :fifth-cents fifth-cents
+                                          :quartertone-cents quartertone-cents))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
