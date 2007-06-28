@@ -1,5 +1,9 @@
 (in-package :gsharp-play)
 
+(defparameter *midi-temp-file* "/tmp/timidity.mid")
+(defparameter *midi-player* "timidity")
+(defparameter *midi-player-arguments* '())
+
 (defvar *tuning*)
 (defvar *tempo*)
 
@@ -73,6 +77,28 @@
 		      (incf time (* *tempo* duration))))
 		  (bars slice) durations))))
 
+(defun play-tracks (tracks)
+  (let ((midifile (make-instance 'midifile
+		     :format 1
+		     :division 25
+		     :tracks tracks)))
+    (write-midi-file midifile *midi-temp-file*)
+    #+cmu
+    (ext:run-program *midi-player*
+                     (append *midi-player-arguments*
+                             (list *midi-temp-file*)))
+    #+sbcl
+    (sb-ext:run-program *midi-player*
+                        (append *midi-player-arguments*
+                                (list *midi-temp-file*))
+                        :search t)
+    #+clisp
+    (ext:run-program *midi-player*
+                     :arguments (append *midi-player-arguments*
+                                        (list *midi-temp-file*)))
+    #-(or cmu sbcl clisp)
+    (error "write compatibility layer for RUN-PROGRAM")))
+
 (defun play-segment (segment)
   (let* ((slices (mapcar #'body (layers segment)))
 	 (durations (measure-durations slices))
@@ -80,31 +106,13 @@
          (*tuning* (gsharp-buffer:tuning segment))
 	 (tracks (loop for slice in slices
 		       for i from 0
-		       collect (track-from-slice slice i durations)))
-	 (midifile (make-instance 'midifile
-		     :format 1
-		     :division 25
-		     :tracks tracks)))
-    (write-midi-file midifile "/tmp/test.mid")
-    #+cmu
-    (ext:run-program "timidity" '("/tmp/test.mid"))
-    #+sbcl
-    (sb-ext:run-program "timidity" '("/tmp/test.mid") :search t)
-    #-(or cmu sbcl)
-    (error "write compatibility layer for RUN-PROGRAM")))
+		       collect (track-from-slice slice i durations))))
+    (play-tracks tracks)))
 
 (defun play-layer (layer)
   (let* ((slice (body layer))
 	 (durations (measure-durations (list slice)))
-	 (tracks (list (track-from-slice slice 0 durations)))
-	 (midifile (make-instance 'midifile
-		     :format 1
-		     :division 25
-		     :tracks tracks)))
-    (write-midi-file midifile "/tmp/test.mid")
-    #+cmu
-    (ext:run-program "timidity" '("/tmp/test.mid"))
-    #+sbcl
-    (sb-ext:run-program "timidity" '("/tmp/test.mid") :search t)
-    #-(or cmu sbcl)
-    (error "write compatibility layer for RUN-PROGRAM")))
+         (*tempo* (tempo (segment layer)))
+         (*tuning* (gsharp-buffer:tuning (segment layer)))
+	 (tracks (list (track-from-slice slice 0 durations))))
+    (play-tracks tracks)))
