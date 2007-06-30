@@ -85,7 +85,7 @@ recomputed.
 Recomputing the measures of a segment is a complicated operation.
 First music events that occur simultaneously must be grouped together
 into \emph{timelines}.  Then the spacing between timelines must be
-computed.  Such spacing is a monotonically increason function of the
+computed.  Such spacing is a monotonically increasing function of the
 temporal distance, but the function is usually not linear. 
 
 Based on the spacing between timelines, measures are then grouped into
@@ -134,10 +134,10 @@ the looks of a line.
 The \emph{natural width} of a timeline with temporal distance $d$ to
 the next timeline (or to the end of the measure) in a line on which
 the smallest temporal distance is $d_{min}$ is defined as 
-$s_{min} (d / d_min) ^ k$.
+$s_{min} (d / d_{min}) ^ k$.
 
 The \emph{natural width} of a measure is the sum of the natural widths
-of each timeline of the measure plus $s_min$.  The reason for the
+of each timeline of the measure plus $s_{min}$.  The reason for the
 additional term is that this much space must be inserted before the
 first timeline of the measure.
 
@@ -178,7 +178,7 @@ where $n$ is the number of measures on the line.
 
 The advantage of using normalized widths is twofold.  First, the
 normalized with of a measure is independent of $d_{min}$, so it is a
-property intrinsic to the measure and not dependendt on the line on
+property intrinsic to the measure and not dependent on the line on
 which it is located.  This information can be computed once and for
 all when a measure is recomputed by redisplay.  Second, as redisplay
 accumulates measures into potential lines, the sum of the normalized
@@ -191,7 +191,7 @@ measure as it is recomputed by redisplay.
 If modification information is kept on a segment by segment basis,
 we typically only have to recompute the measures within a segment at
 each invocation of redisplay.  Thus, even for arbitrarily large
-scores, we are able to obtain a sequence of mesures each with its
+scores, we are able to obtain a sequence of measures each with its
 normalized width and its $d_{min}$ in a time proportional to the
 size of a segment. 
 
@@ -212,7 +212,7 @@ one we used to compute the penalty of a line.  Thus, we determine a
 available for music material and compute the penalty as the maximum of
 the compression factor and the stretch factor. 
 
-To compute the natural hieght of a page, several methods can be used.
+To compute the natural height of a page, several methods can be used.
 The simplest is to consider a line to take up space proportional to
 the number of staves, lyric lines and other components, and to add the
 space taken up by each line to obtain the natural height of the page. 
@@ -350,7 +350,7 @@ user is more likely to accept short pauses for complicated
 operations.  For all simple operations such as insertion or deletion
 of a single note, our computation is very fast.
 
-\section{Conclusions and Futur Work}
+\section{Conclusions and Future Work}
 
 We have described an incremental method for computing optimal line
 breaks in an interactive editor for musical scores.  While it should
