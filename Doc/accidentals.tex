@@ -3,14 +3,14 @@
 The rules of Ross essentially boil down to the following: 
 
 \begin{itemize}
-\item If there are no suspended notes with accidentals on the right
-  side of the stem, place all the accidentals in the order of the
+\item If there are no suspended notes on the right side of the stem
+  that have accidentals, place all the accidentals in the order of the
   topmost one that can be placed closest to the stem.
-\item If there are suspended notes with accidentals on the right side
-  of the stem (stem is up and there is an interval of a second), start
-  by placing the accidental of the topmost suspended note with an
-  accidental as close as possible to the stem, then place the other
-  notes according to the previous rule.
+\item If there is at least one suspended note on the right side of the
+  stem (stem is up and there is an interval of a second) with an
+  accidental, start by placing the accidental of the topmost suspended
+  note with an accidental as close as possible to the stem, then place
+  the other notes according to the previous rule.
 \end{itemize}
 
 To implement this algorithm, we keep a table of smallest distances
