@@ -32,7 +32,15 @@
     (object (type score-pane:lyrics-staff) stream (view textual-view) &key)
    (format stream "[lyrics staff ~a]" (name object)))
 
-(defmethod draw-staff-and-clef (pane (staff fiveline-staff) x1 x2)
+(defun key-signature-for-staff (staff measures)
+  (let ((key-signatures (gsharp-buffer::key-signatures staff))
+	(barno (gsharp-numbering:number (car (measure-bars (car measures))))))
+    (or (and key-signatures
+	     (find barno key-signatures :from-end t :test #'> 
+		   :key (lambda (x) (gsharp-numbering:number (bar x)))))
+	(keysig staff))))
+
+(defmethod draw-staff-and-clef (pane (staff fiveline-staff) measures x1 x2)
   (when (clef staff)
     (present (clef staff)
 	     `((score-pane:clef)
@@ -40,24 +48,25 @@
 	       :x ,(+ x1 10)
 	       :staff-step ,(lineno (clef staff)))
 	     :stream pane)
-    (let ((yoffset (b-position (clef staff))))
-      (loop for pitch in '(6 2 5 1 4 0 3)
-	    for line in '(0 3 -1 2 -2 1 -3)
-	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2)
-	    while (eq (aref (alterations (keysig staff)) pitch) :flat)
-	    do (score-pane:draw-accidental pane :flat x (+ line yoffset))))
-    (let ((yoffset (f-position (clef staff))))
-      (loop for pitch in '(3 0 4 1 5 2 6)
-	    for line in '(0 -3 1 -2 -5 -1 -4)
-	    for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2.5)
-	    while (eq (aref (alterations (keysig staff)) pitch) :sharp)
-	    do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))
-  (present staff
-	   `((score-pane:fiveline-staff)
-	     :x1 ,x1 :x2 ,x2)
-	   :stream pane))
+    (let ((keysig (key-signature-for-staff staff measures)))
+      (let ((yoffset (b-position (clef staff))))
+	(loop for pitch in '(6 2 5 1 4 0 3)
+	      for line in '(0 3 -1 2 -2 1 -3)
+	      for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2)
+	      while (eq (aref (alterations keysig) pitch) :flat)
+	      do (score-pane:draw-accidental pane :flat x (+ line yoffset))))
+      (let ((yoffset (f-position (clef staff))))
+	(loop for pitch in '(3 0 4 1 5 2 6)
+	      for line in '(0 -3 1 -2 -5 -1 -4)
+	      for x from (+ x1 10 (score-pane:staff-step 8)) by (score-pane:staff-step 2.5)
+	      while (eq (aref (alterations keysig) pitch) :sharp)
+	      do (score-pane:draw-accidental pane :sharp x (+ line yoffset)))))
+    (present staff
+	     `((score-pane:fiveline-staff)
+	       :x1 ,x1 :x2 ,x2)
+	     :stream pane)))
 
-(defmethod draw-staff-and-clef (pane (staff lyrics-staff) x1 x2)
+(defmethod draw-staff-and-clef (pane (staff lyrics-staff) measures x1 x2)
   (present staff
 	   `((score-pane:lyrics-staff)
 	     :x1 ,x1 :x2 ,x2)
@@ -389,14 +398,14 @@ right of the center of its timeline"))
     (loop for measure in measures do
 	  (draw-measure pane measure))))
 
-(defun draw-staves (pane staves x y right-edge)
+(defun draw-staves (pane staves measures x y right-edge)
   (loop for staff in staves do
 	(score-pane:with-vertical-score-position
 	    (pane (+ y (staff-yoffset staff)))
 	  (if (member staff (staves (layer (slice (bar *cursor*)))))
-	      (draw-staff-and-clef pane staff x right-edge)
+	      (draw-staff-and-clef pane staff measures x right-edge)
 	      (score-pane:with-light-glyphs pane
-		(draw-staff-and-clef pane staff x right-edge))))))  
+		(draw-staff-and-clef pane staff measures x right-edge))))))  
   
 
 (defun compute-and-draw-system (pane buffer staves measures method x y timesig-offset right-edge)
@@ -416,20 +425,20 @@ right of the center of its timeline"))
   (score-pane:draw-bar-line pane x
 			    (+ y (- (score-pane:staff-step 8)))
 			    (+ y (staff-yoffset (car (last staves)))))
-  (draw-staves pane staves x y right-edge))
+  (draw-staves pane staves measures x y right-edge))
 
-(defun compute-timesig-offset (staves)
+(defun compute-timesig-offset (staves measures)
   (max (* (score-pane:staff-step 2)
 	  (loop for staff in staves
 		maximize
 		(if (typep staff 'fiveline-staff)
-		    (count :flat (alterations (keysig staff)))
+		    (count :flat (alterations (key-signature-for-staff staff measures)))
 		    0)))
        (* (score-pane:staff-step 2.5)
 	  (loop for staff in staves
 		maximize
 		(if (typep staff 'fiveline-staff)
-		    (count :sharp (alterations (keysig staff)))
+		    (count :sharp (alterations (key-signature-for-staff staff measures)))
 		    0)))))
 
 (defun split (sequence n method)
@@ -504,11 +513,16 @@ right of the center of its timeline"))
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
-	   (timesig-offset (compute-timesig-offset staves))
+	   ;; FIXME: is this the right fudge factor?  We have a
+	   ;; circular dependency, as we can't know the optimal
+	   ;; splitting without knowing the staff key signatures, and
+	   ;; we can't know the key signatures until after the
+	   ;; splitting.
+	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
 	   (method (let ((old-method (buffer-cost-method buffer)))
 		     (make-measure-cost-method (min-width old-method)
 					       (spacing-style old-method)
-					       (- (line-width old-method) timesig-offset)
+					       (- (line-width old-method) max-timesig-offset)
 					       (lines-per-page old-method))))
 	   (right-edge (right-edge buffer))
 	   (systems-per-page (max 1 (floor 12 (length staves)))))
@@ -523,9 +537,15 @@ right of the center of its timeline"))
 						      :test #'eq))
 			    all-measures)
 	     (let ((measure-seqs (layout-page all-measures systems-per-page method)))
-	       (loop for measures in measure-seqs do 
+	       (loop for measures in measure-seqs 
+		     for timesig-offset = (compute-timesig-offset staves measures)
+		     for new-method = (make-measure-cost-method (min-width method)
+					       (spacing-style method)
+					       (- (+ (line-width method) max-timesig-offset) timesig-offset)
+					       (lines-per-page method))
+		     do 
 		     (compute-and-draw-system pane buffer staves measures
-					      method x yy timesig-offset right-edge)
+					      new-method x yy timesig-offset right-edge)
 		     (incf yy (+ 20 (* 70 (length staves))))))))
 	 buffer)))))
 

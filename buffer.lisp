@@ -725,7 +725,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defgeneric add-element (element bar position))
 
 ;;; Delete an element from the bar to which it belongs. 
-(defgeneric remove-element (element))
+(defgeneric remove-element (element bar))
 
 (defclass bar (gsharp-object)
   ((slice :initform nil :initarg :slice :accessor slice)
@@ -768,19 +768,43 @@ flatter by removing some sharps and/or adding some flats"))
     (with-slots (elements) b
       (setf elements (ninsert-element element elements position)))
     (setf bar b)))
-  
+
+(defun maybe-update-key-signatures (bar)
+  (let* ((layer (layer (slice bar)))
+	 (staves (staves layer)))
+    (dolist (staff staves)
+      (let ((key-signatures (key-signatures staff)))
+	(when (and key-signatures
+		   (find (gsharp-numbering:number bar) key-signatures 
+			 :key (lambda (x) (gsharp-numbering:number (bar x)))))
+	  ;; we actually only need to invalidate everything in the
+	  ;; current bar using the staff, not the entire staff, but...
+	  (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
+	  ;; there might be more than one key signature in the bar,
+	  ;; and they might have changed their relative order as a
+	  ;; result of the edit.
+	  (setf (key-signatures staff)
+		(sort (key-signatures staff)
+		      (lambda (x y) (gsharp::starts-before-p x (bar y) y)))))))))
+ 
+(defmethod add-element :after ((element element) (bar bar) position)
+  (maybe-update-key-signatures bar))
+ 
 (define-condition element-not-in-bar (gsharp-condition) ()
   (:report
    (lambda (condition stream)
      (declare (ignore condition))
      (format stream "Attempt to delete an element not in a bar"))))
 
-(defmethod remove-element ((element element))
+(defmethod remove-element ((element element) (b bar))
   (with-slots (bar) element
-    (assert bar () 'element-not-in-bar)
+    (assert (and bar (eq b bar)) () 'element-not-in-bar)
     (with-slots (elements) bar
       (setf elements (delete element elements :test #'eq)))
     (setf bar nil)))
+
+(defmethod remove-element :before ((element element) (bar bar))
+  (maybe-update-key-signatures bar))
 
 (defclass melody-bar (bar)
   ((print-character :allocation :class :initform #\|)))

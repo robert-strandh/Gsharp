@@ -397,9 +397,8 @@
   (declare (ignore position))
   (mark-modified bar))
 
-(defmethod remove-element :before ((element relement))
-  (when (bar element)
-    (mark-modified (bar element))))
+(defmethod remove-element :before ((element element) (bar rbar))
+  (mark-modified bar))
 
 (defmethod mark-modified ((bar rbar))
   (setf (modified-p bar) t)
@@ -859,7 +858,7 @@
 		 :lines-per-page lines-per-page))
 				 
 ;;; As required by the obseq library, define a sequence cost, i.e., in
-;;; this case the cost of a sequece of measures.
+;;; this case the cost of a sequence of measures.
 (defclass measure-seq-cost (seq-cost)
   ((min-dist :initarg :min-dist :reader min-dist)
    (coeff :initarg :coeff :reader coeff)

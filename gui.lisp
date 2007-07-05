@@ -597,12 +597,12 @@
 (defparameter *current-cluster* nil)
 (defparameter *current-note* nil)
 
-(defun insert-note (pitch cluster)
+(defun insert-note (pitch cluster accidentals)
   (let* ((state (input-state *application-frame*))
          (staff (car (staves (layer (slice (bar cluster))))))
          (note (make-note pitch staff
                  :head (notehead state)
-                 :accidentals (aref (alterations (keysig (current-cursor))) (mod pitch 7))
+                 :accidentals accidentals
                  :dots (dots state))))
     (setf *current-cluster* cluster
           *current-note* note)
@@ -618,8 +618,9 @@
                 (t diff)))))
 
 (defun insert-numbered-note-new-cluster (pitch)
-  (let ((new-pitch (compute-and-adjust-note pitch)))
-    (insert-note new-pitch (insert-cluster))))
+  (let* ((new-pitch (compute-and-adjust-note pitch))
+	 (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
+    (insert-note new-pitch (insert-cluster) accidentals)))
 
 (define-gsharp-command (com-insert-note-a :keystroke #\a) ()
   (insert-numbered-note-new-cluster 5))
@@ -686,8 +687,9 @@
       (setf *current-note* (nth (1- pos) notes)))))
   
 (defun insert-numbered-note-current-cluster (pitch)
-  (let ((new-pitch (compute-and-adjust-note pitch)))
-    (insert-note new-pitch (cur-cluster))))
+  (let* ((new-pitch (compute-and-adjust-note pitch))
+	 (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
+    (insert-note new-pitch (cur-cluster) accidentals)))
 
 (define-gsharp-command com-add-note-a ()
   (insert-numbered-note-current-cluster 5))
@@ -710,36 +712,30 @@
 (define-gsharp-command com-add-note-g ()
   (insert-numbered-note-current-cluster 4))
 
-(define-gsharp-command com-more-dots ()
-  (setf (dots (cur-element))
-        (min (1+ (dots (cur-element))) 3)))
-
-(define-gsharp-command com-fewer-dots ()
-  (setf (dots (cur-element))
-        (max (1- (dots (cur-element))) 0)))
-
-(define-gsharp-command com-more-rbeams ()
-  (setf (rbeams (cur-element))
-        (min (1+ (rbeams (cur-element))) 3)))
-  
-(define-gsharp-command com-fewer-lbeams ()
-  (setf (lbeams (cur-element))
-        (max (1- (lbeams (cur-element))) 0)))
-
-(define-gsharp-command com-more-lbeams ()
-  (setf (lbeams (cur-element))
-        (min (1+ (lbeams (cur-element))) 3)))
-  
-(define-gsharp-command com-fewer-rbeams ()
-  (setf (rbeams (cur-element))
-        (max (1- (rbeams (cur-element))) 0)))
-
-(define-gsharp-command com-rotate-notehead ()
-  (setf (notehead (cur-element))
-        (ecase (notehead (cur-element))
-          (:whole :half)
-          (:half :filled)
-          (:filled :whole))))
+(macrolet ((define-duration-altering-command (name &body body)
+	       `(define-gsharp-command ,name ()
+		 (let ((element (cur-element)))
+		   ,@body
+		   (gsharp-buffer::maybe-update-key-signatures
+		    (bar (current-cursor)))))))
+  (define-duration-altering-command com-more-dots ()
+    (setf (dots element) (min (1+ (dots element)) 3)))
+  (define-duration-altering-command com-fewer-dots ()
+    (setf (dots element) (max (1- (dots element)) 0)))
+  (define-duration-altering-command com-more-rbeams ()
+    (setf (rbeams element) (min (1+ (rbeams element)) 3)))
+  (define-duration-altering-command com-fewer-lbeams ()
+    (setf (lbeams element) (max (1- (lbeams element)) 0)))
+  (define-duration-altering-command com-more-lbeams ()
+    (setf (lbeams element) (min (1+ (lbeams element)) 3)))
+  (define-duration-altering-command com-fewer-rbeams ()
+    (setf (rbeams element) (max (1- (rbeams element)) 0)))
+  (define-duration-altering-command com-rotate-notehead ()
+    (setf (notehead element)
+	  (ecase (notehead element)
+	    (:whole :half)
+	    (:half :filled)
+	    (:filled :whole)))))
 
 (define-gsharp-command com-rotate-stem-direction ()
   (setf (stem-direction (cur-cluster))
@@ -937,37 +933,43 @@
 (define-gsharp-command com-insert-keysig ()
   (insert-keysig))
 
-(defmethod remove-element :before ((keysig gsharp-buffer::key-signature))
+(defmethod remove-element :before ((keysig gsharp-buffer::key-signature) (bar bar))
   (let ((staff (staff keysig)))
     (setf (gsharp-buffer::key-signatures staff)
           (remove keysig (gsharp-buffer::key-signatures staff)))
     (gsharp-measure::invalidate-everything-using-staff (current-buffer) staff)))
 
-;;; FIXME: this function does not work for finding a key signature in
-;;; a different layer (but on the same staff).  This will bite in
-;;; polyphonic music with key signature changes (e.g. Piano music)
-(defun %keysig (staff key-signatures bar bars element-or-nil)
-  ;; common case
-  (when (null key-signatures)
-    (return-from %keysig (keysig staff)))
-  ;; earlier in the same bar?
-  (let ((k nil))
-    (dolist (e (elements bar) (when k (return-from %keysig k)))
-      (when (eq e element-or-nil)
-        (if k 
-            (return-from %keysig k)
-            (return nil)))
-      (when (and (typep e 'gsharp-buffer::key-signature)
-                 (eq (staff e) staff))
-        (setq k e))))
-  ;; must be an earlier bar.
-  (let ((bars (nreverse (loop for b in bars until (eq b bar) collect b))))
-    (dolist (b bars (keysig staff))
-      (when (find b key-signatures :key #'bar)
-        (dolist (e (reverse (elements b)) (error "inconsistency"))
-          (when (and (typep e 'key-signature)
-                     (eq (staff e) staff))
-            (return-from %keysig e)))))))
+;;; FIXME: this isn't quite right (argh) for the case of two
+;;; temporally coincident zero-duration elements on the same staff in
+;;; different layers: essentially all bets are off.
+(defun starts-before-p (thing bar element-or-nil)
+  ;; does THING start before the temporal position denoted by BAR and
+  ;; ELEMENT-OR-NIL?
+  (assert (or (null element-or-nil) (eq (bar element-or-nil) bar)))
+  (let ((barno (number bar)))
+    (cond
+      ((> (number (bar thing)) barno) nil)
+      ((< (number (bar thing)) barno) t)
+      (t (let ((thing-start-time (loop for e in (elements (bar thing))
+				       if (eq e element-or-nil)
+				       do (return-from starts-before-p nil)
+				       until (eq e thing) sum (duration e)))
+	       (element-start-time 
+		;; this is actually the right answer for
+		;; ELEMENT-OR-NIL = NIL, which means "end of bar"
+		(loop for e in (elements bar)
+		      if (eq e thing) do (return-from starts-before-p t)
+		      until (eq e element-or-nil) sum (duration e))))
+	   (or (> element-start-time thing-start-time)
+	       (and (= element-start-time thing-start-time)
+		    (or (null element-or-nil)
+			(> (duration element-or-nil) 0)))))))))
+
+(defun %keysig (staff key-signatures bar element-or-nil)
+  (or (and key-signatures
+	   (find-if (lambda (x) (starts-before-p x bar element-or-nil))
+		    key-signatures :from-end t))
+      (keysig staff)))
 
 (defmethod keysig ((cursor gsharp-cursor))
   ;; FIXME: not just a cursor but _the_ cursor (i.e. in a given staff)
@@ -978,19 +980,15 @@
   (let* ((staff (car (staves (layer cursor))))
          (key-signatures (gsharp-buffer::key-signatures staff))
          (bar (bar cursor))
-         (slice (slice bar))
-         (bars (bars slice))
          (element-or-nil (cursor-element cursor)))
-    (%keysig staff key-signatures bar bars element-or-nil)))
+    (%keysig staff key-signatures bar element-or-nil)))
 
 (defmethod keysig ((note note))
   (let* ((staff (staff note))
          (key-signatures (gsharp-buffer::key-signatures staff))
          (bar (bar (cluster note)))
-         (slice (slice bar))
-         (bars (bars slice))
          (element-or-nil (cluster note)))
-    (%keysig staff key-signatures bar bars element-or-nil)))
+    (%keysig staff key-signatures bar element-or-nil)))
 
 (defmethod keysig ((cluster cluster))
   (error "Called ~S (a staff-scope operation) on an element with no ~
@@ -1000,10 +998,8 @@
 (defmethod keysig ((element element))
   (let* ((staff (staff element))
          (key-signatures (gsharp-buffer::key-signatures staff))
-         (bar (bar element))
-         (slice (slice bar))
-         (bars (bars slice)))
-    (%keysig staff key-signatures bar bars element)))
+         (bar (bar element)))
+    (%keysig staff key-signatures bar element)))
 
 (define-gsharp-command com-tie-note-left ()
   (let ((note (cur-note)))
@@ -1093,7 +1089,7 @@
 	   ;; layout for motion will be different from the layout on
 	   ;; the screen...
            (staves (staves buffer))
-           (timesig-offset (gsharp-drawing::compute-timesig-offset staves))
+           (timesig-offset (gsharp-drawing::compute-timesig-offset staves page-measures))
            (method (let ((old-method (buffer-cost-method buffer)))
                      (make-measure-cost-method (min-width old-method)
                                                (spacing-style old-method)

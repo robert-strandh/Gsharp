@@ -161,20 +161,21 @@
 (defcclass cbar bar
   ())
 
-(defmethod add-element :after ((element element) (bar bar) position)
+(defmethod add-element :after ((element element) (bar cbar) position)
   (loop for cursor in (cursors bar) do
 	(when (> (pos cursor) position)
 	  (incf (pos cursor)))))
 
 (defmethod add-element :after 
     ((keysig gsharp-buffer::key-signature) bar position)
-  (setf (gsharp-buffer::key-signatures (staff keysig))
-        ;; FIXME: unordered
-        (cons keysig (gsharp-buffer::key-signatures (staff keysig)))))
+  (let ((staff (staff keysig)))
+    (setf (gsharp-buffer::key-signatures staff)
+	  (merge 'list (list keysig) (gsharp-buffer::key-signatures staff) 
+		 (lambda (x y) (gsharp::starts-before-p x (bar y) y))))))
 
-(defmethod remove-element :before ((element element))
+(defmethod remove-element :before ((element element) (bar cbar))
   (let ((elemno (number element)))
-    (loop for cursor in (cursors (bar element)) do
+    (loop for cursor in (cursors bar) do
 	  (when (> (pos cursor) elemno)
 	    (decf (pos cursor))))))
 
@@ -195,7 +196,8 @@
 
 (defmethod delete-element ((cursor gsharp-cursor))
   (assert (not (end-of-bar-p cursor)) () 'end-of-bar)
-  (remove-element (elementno (bar cursor) (pos cursor))))
+  (let ((bar (bar cursor)))
+    (remove-element (elementno bar (pos cursor)) bar)))
 
 (defmethod cursor-bar ((cursor gsharp-cursor))
   (bar cursor))
