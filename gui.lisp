@@ -579,6 +579,26 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
+;;; development and debugging aids
+
+;;; FIXME: you might expect that this was in an ESA component, but in
+;;; fact it's not.  Maybe it should be?
+(define-gsharp-command (com-eval-expression :name t)
+    ((expression 'expression :prompt "Eval"))
+  "Prompt for and evaluate a lisp expression.
+Prints the results in the minibuffer."
+  (let* ((*package* (find-package :gsharp))
+         (values (multiple-value-list
+                  (handler-case (eval expression)
+                    (error (condition) 
+                      (beep)
+                      (display-message "~a" condition)
+                      (return-from com-eval-expression nil)))))
+         (result (format nil "~:[; No values~;~:*~{~S~^,~}~]" values)))
+    (display-message result)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
 ;;; note insertion commands
 
 (defun insert-cluster ()

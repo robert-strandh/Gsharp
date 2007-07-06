@@ -39,6 +39,9 @@
 (set-key 'com-istate-fewer-lbeams 'global-gsharp-table '((#\i) (#\x) (#\[)))
 (set-key 'com-istate-fewer-rbeams 'global-gsharp-table '((#\i) (#\x) (#\])))
 
+(set-key `(com-eval-expression ,*unsupplied-argument-marker*) 
+         'global-gsharp-table '((#\: :meta)))
+
 ;;; the melody table contains commands that are specific to the 
 ;;; melody layer
 
