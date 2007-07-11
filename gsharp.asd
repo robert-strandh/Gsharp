@@ -23,7 +23,6 @@
 (gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain :midi))
    "packages"
    "utilities"
-   "bezier"
    "mf"
    "sdl"
    "score-pane"
