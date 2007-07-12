@@ -773,19 +773,22 @@ flatter by removing some sharps and/or adding some flats"))
   (let* ((layer (layer (slice bar)))
 	 (staves (staves layer)))
     (dolist (staff staves)
-      (let ((key-signatures (key-signatures staff)))
-	(when (and key-signatures
-		   (find (gsharp-numbering:number bar) key-signatures 
-			 :key (lambda (x) (gsharp-numbering:number (bar x)))))
-	  ;; we actually only need to invalidate everything in the
-	  ;; current bar using the staff, not the entire staff, but...
-	  (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
-	  ;; there might be more than one key signature in the bar,
-	  ;; and they might have changed their relative order as a
-	  ;; result of the edit.
-	  (setf (key-signatures staff)
-		(sort (key-signatures staff)
-		      (lambda (x y) (gsharp::starts-before-p x (bar y) y)))))))))
+      ;; FIXME: this isn't the Right Thing: instead we should be using
+      ;; something like maybe-update-key-signatures-using-staff.
+      (when (typep staff 'fiveline-staff)
+	(let ((key-signatures (key-signatures staff)))
+	  (when (and key-signatures
+		     (find (gsharp-numbering:number bar) key-signatures 
+			   :key (lambda (x) (gsharp-numbering:number (bar x)))))
+	    ;; we actually only need to invalidate everything in the
+	    ;; current bar using the staff, not the entire staff, but...
+	    (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
+	    ;; there might be more than one key signature in the bar,
+	    ;; and they might have changed their relative order as a
+	    ;; result of the edit.
+	    (setf (key-signatures staff)
+		  (sort (key-signatures staff)
+			(lambda (x y) (gsharp::starts-before-p x (bar y) y))))))))))
  
 (defmethod add-element :after ((element element) (bar bar) position)
   (maybe-update-key-signatures bar))
