@@ -589,4 +589,4 @@
      ,@body))
 
 (defun draw-path (path)
-  (climi::convolute-regions *pen* path))
+  (climi::convolve-regions *pen* path))
