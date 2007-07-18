@@ -1046,7 +1046,6 @@ of a normal note.  This function always returns a positive value"))
 	   (thickpart (mf (complex xleft yleft) -- (complex xright yright)))
 	   ;; Determine the y coordinate of the previous path at the
 	   ;; cross point of the thin part.  Use congruent triangles.
-	   (ythin (/ (* (- xright edge-distance) yright) xright))
 	   (height (* height-multiplier sld))
 	   ;; The path for the thin part symmetric around (0, 0)
 	   (thinpart (mf (complex 0 (* 0.5 height)) -- (complex 0 (* -0.5 height)))))
@@ -1581,3 +1580,4 @@ of a normal note.  This function always returns a positive value"))
 (defmethod compute-design ((font font) (shape (eql :beam-up-lower)))
   (climi::close-path
    (mf #c(0 0) -- (complex 16 0) -- (complex 0 -1) -- #c(0 0))))
+

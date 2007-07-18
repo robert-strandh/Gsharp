@@ -2,7 +2,7 @@
 
 (defmacro defcclass (name base slots)
   `(progn 
-     (define-added-mixin ,name () ,base
+     (define-stealth-mixin ,name () ,base
        ((cursors :initform '() :accessor cursors)
 	,@slots))))
 

@@ -22,8 +22,8 @@
 (defmacro class-stealth-mixins (class)
   `(gethash ,class *stealth-mixins*))
 
-(defmacro define-added-mixin (name super-classes victim-class
-                              &rest for-defclass)
+(defmacro define-stealth-mixin (name super-classes victim-class
+				&rest for-defclass)
   "Like DEFCLASS but adds the newly defined class to the super classes
 of 'victim-class'."
   `(progn
@@ -45,7 +45,7 @@ of 'victim-class'."
     ;; When one wants to [re]define the victim class the new mixin
     ;; should be present too. We do this by 'patching' ensure-class:
     (defmethod clim-mop:ensure-class-using-class :around
-      ((name (eql ',victim-class)) class ;AMOP has these swaped ...
+      (class (name (eql ',victim-class))
        &rest arguments
        &key (direct-superclasses nil direct-superclasses-p)
        &allow-other-keys)
@@ -55,7 +55,7 @@ of 'victim-class'."
              (dolist (k (class-stealth-mixins name))
                (pushnew k direct-superclasses
                         :test #'class-equalp))
-             (apply #'call-next-method name class 
+             (apply #'call-next-method class name 
                     :direct-superclasses direct-superclasses
                     arguments))
             (t

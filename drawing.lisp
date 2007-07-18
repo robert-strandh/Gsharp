@@ -8,16 +8,16 @@
    (final-absolute-measure-xoffset :accessor final-absolute-measure-xoffset)
    (final-width :accessor final-width)))
 
-(define-added-mixin dbar (x-y-width-mixin) bar
+(define-stealth-mixin dbar (x-y-width-mixin) bar
   ())
 
-(define-added-mixin dmeasure (x-y-width-mixin) measure
+(define-stealth-mixin dmeasure (x-y-width-mixin) measure
   (;; an elasticity function that describes how the space right after
    ;; the initial barline of the measure behaves as a function of the
    ;; force that is applied to it.
    (prefix-elasticity-function :accessor prefix-elasticity-function)))
 
-(define-added-mixin dstaff () staff
+(define-stealth-mixin dstaff () staff
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
 (define-presentation-method present
@@ -549,10 +549,10 @@ right of the center of its timeline"))
 		     (incf yy (+ 20 (* 70 (length staves))))))))
 	 buffer)))))
 
-(define-added-mixin xelement () element
+(define-stealth-mixin xelement () element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
-(define-added-mixin velement () melody-element
+(define-stealth-mixin velement () melody-element
   (;; the position, in staff steps, of the end of the stem
    ;; that is not attached to a note, independent of the
    ;; staff on which it is located
@@ -567,7 +567,7 @@ right of the center of its timeline"))
    ;; the element
    (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)))
 
-(define-added-mixin welement () lyrics-element
+(define-stealth-mixin welement () lyrics-element
   ())
 
 ;;; Compute and store several important pieces of information
@@ -992,6 +992,7 @@ right of the center of its timeline"))
 ;;; Key signature element
 
 (defmethod draw-element (pane (keysig key-signature) &optional flags)
+  (declare (ignore flags))
   (let ((staff (staff keysig))
         (old-keysig (keysig keysig))
         (x (final-absolute-element-xoffset keysig)))
