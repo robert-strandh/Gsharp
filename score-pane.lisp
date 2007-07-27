@@ -1,7 +1,8 @@
 (in-package :score-pane)
 
 (defclass score-view (view)
-  ((%number-of-pages :initform "-" :accessor number-of-pages)
+  ((light-glyphs-ink :initform +gray50+ :initarg :light-glyphs-ink :accessor light-glyphs-ink)
+   (%number-of-pages :initform "-" :accessor number-of-pages)
    (%current-page-number :initform "-" :accessor current-page-number)))
 
 (defclass score-pane (esa-pane-mixin application-pane) ())
@@ -355,7 +356,8 @@
   (multiple-value-bind (left right) (bar-line-offsets *font*)
     (let ((x1 (+ x left))
 	  (x2 (+ x right)))
-      (draw-rectangle* pane x1 y1 x2 y2))))
+      ;; see comment in ROUND-COORDINATE in McCLIM's CLX backend
+      (draw-rectangle* pane (floor (+ x1 0.5)) y1 (floor (+ x2 0.5)) y2))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -594,5 +596,5 @@
 	,@body))))  
 
 (defmacro with-light-glyphs (pane &body body)
-  `(with-drawing-options (,pane :ink +gray50+)
+  `(with-drawing-options (,pane :ink (light-glyphs-ink (stream-default-view ,pane)))
      ,@body))
