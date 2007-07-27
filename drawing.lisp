@@ -406,7 +406,6 @@ right of the center of its timeline"))
 	      (draw-staff-and-clef pane staff measures x right-edge)
 	      (score-pane:with-light-glyphs pane
 		(draw-staff-and-clef pane staff measures x right-edge))))))  
-  
 
 (defun compute-and-draw-system (pane buffer staves measures method x y timesig-offset right-edge)
   (compute-elasticities measures method)
