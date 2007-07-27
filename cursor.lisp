@@ -341,7 +341,7 @@
 	 (newbarno (min (1- (nb-bars newslice)) oldbarno))
 	 (newbar (barno newslice newbarno)))
     (unset-cursor cursor)
-    (set-cursor cursor newbar 0)))
+    (set-cursor cursor newbar (nb-elements newbar))))
 
 (defcclass clayer layer
   ())
