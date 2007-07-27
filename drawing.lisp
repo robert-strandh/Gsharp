@@ -510,44 +510,42 @@ right of the center of its timeline"))
       (mapcar #'list measures)
       (split measures n method)))
 
+(defmacro dopages ((measures buffer) &body body)
+  `(gsharp-measure::new-map-over-obseq-subsequences
+    (lambda (,measures) ,@body)
+    ,buffer))
+
+(defun cursor-in-measures-p (cursor measures)
+  (member-if (lambda (measure) (member (bar cursor) (measure-bars measure)
+				       :test #'eq))
+	     measures))
+
+(defun method-for-timesig (method timesig-offset)
+  (make-measure-cost-method (min-width method) (spacing-style method)
+			    (- (line-width method) timesig-offset)
+			    (lines-per-page method)))
+
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
-	   ;; FIXME: is this the right fudge factor?  We have a
-	   ;; circular dependency, as we can't know the optimal
-	   ;; splitting without knowing the staff key signatures, and
-	   ;; we can't know the key signatures until after the
-	   ;; splitting.
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
-	   (method (let ((old-method (buffer-cost-method buffer)))
-		     (make-measure-cost-method (min-width old-method)
-					       (spacing-style old-method)
-					       (- (line-width old-method) max-timesig-offset)
-					       (lines-per-page old-method))))
+	   (method (method-for-timesig (buffer-cost-method buffer) max-timesig-offset))
 	   (right-edge (right-edge buffer))
 	   (systems-per-page (max 1 (floor 12 (length staves)))))
       (loop for staff in staves
 	    for offset from 0 by 70 do
 	    (setf (staff-yoffset staff) offset))
       (let ((yy y))
-	(gsharp-measure::new-map-over-obseq-subsequences
-	 (lambda (all-measures)
-	   (when (member-if (lambda (measure) (member (bar *cursor*)
-						      (measure-bars measure)
-						      :test #'eq))
-			    all-measures)
-	     (let ((measure-seqs (layout-page all-measures systems-per-page method)))
-	       (loop for measures in measure-seqs 
-		     for timesig-offset = (compute-timesig-offset staves measures)
-		     for new-method = (make-measure-cost-method (min-width method)
-					       (spacing-style method)
-					       (- (+ (line-width method) max-timesig-offset) timesig-offset)
-					       (lines-per-page method))
-		     do 
-		     (compute-and-draw-system pane buffer staves measures
-					      new-method x yy timesig-offset right-edge)
-		     (incf yy (+ 20 (* 70 (length staves))))))))
-	 buffer)))))
+	(dopages (page-measures buffer)
+	  (when (cursor-in-measures-p *cursor* page-measures)
+	    (let ((measure-seqs (layout-page page-measures systems-per-page method)))
+	      (dolist (measures measure-seqs)
+		(let* ((toffset (compute-timesig-offset staves measures))
+		       (method (method-for-timesig 
+				(buffer-cost-method buffer) toffset)))
+		  (compute-and-draw-system pane buffer staves measures
+					   method x yy toffset right-edge)
+		  (incf yy (+ 20 (* 70 (length staves)))))))))))))
 
 (define-stealth-mixin xelement () element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
