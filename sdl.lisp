@@ -721,7 +721,7 @@ of a normal note.  This function always returns a positive value"))
   (with-slots (yoffset staff-line-distance) font
     (let ((diameter (* 0.4 staff-line-distance)))
       (translate (scale +full-circle+ diameter)
-		 (complex yoffset yoffset)))))
+		 (complex (+ yoffset (/ diameter 2)) yoffset)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
