@@ -237,14 +237,40 @@
           ;; otherwise, give up for this note
           (t (setf (final-absolute-dot-ypos note) nil)))))))
 
+(defun find-prevailing-accidental (note)
+  (let* ((cluster (cluster note))
+         ;; KLUDGE: This computation looks at the current layer's
+         ;; elements, and the note's key signature.  While it's
+         ;; arguably right (in that accidentals in one layer don't
+         ;; affect accidentals in another) it's only arguable, and it
+         ;; would be nice if it weren't so unbelievably hard to do it
+         ;; the other way.
+         (bar (bar cluster))
+         ;; FIXME: I can never remember how to access bar elements
+         ;; nicely, and here we need to access them in reverse
+         ;; order...
+         (index (position cluster (elements bar)))
+         (keysig (keysig note)))
+    (assert index)
+    (loop for i downfrom (1- index) to 0
+          for element = (elt (elements bar) i)
+          while (gsharp::starts-before-p keysig bar element)
+          do (typecase element
+               (cluster
+                (loop for n in (notes element)
+                      when (and (eq (staff n) (staff note))
+                                (= (pitch n) (pitch note)))
+                      do (return-from find-prevailing-accidental
+                           (accidentals n))))))
+    (aref (alterations keysig) (mod (pitch note) 7))))
+
 ;;; Given a list of notes to be displayed on the same staff line, for
 ;;; each note, compute the accidental to be displayed as a function of
 ;;; the accidentals of the note and the key signature of the staff.
 (defun compute-final-accidentals (group)
   (loop for note in group do
 	(setf (final-accidental note)
-	      (if (eq (accidentals note)
-		      (aref (alterations (keysig note)) (mod (pitch note) 7)))
+	      (if (eq (accidentals note) (find-prevailing-accidental note))
 		  nil
 		  (accidentals note)))))
 

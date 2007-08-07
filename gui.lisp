@@ -967,6 +967,11 @@ Prints the results in the minibuffer."
   ;; does THING start before the temporal position denoted by BAR and
   ;; ELEMENT-OR-NIL?
   (assert (or (null element-or-nil) (eq (bar element-or-nil) bar)))
+  (when (null (bar thing))
+    ;; THING is probably the key signature at the start of the piece,
+    ;; in which case it is definitely before whatever else happens.
+    (assert (typep thing 'key-signature))
+    (return-from starts-before-p t))
   (let ((barno (number bar)))
     (cond
       ((> (number (bar thing)) barno) nil)
