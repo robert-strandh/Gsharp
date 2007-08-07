@@ -168,7 +168,7 @@
   (:use :clim :clim-lisp :gsharp-buffer :gsharp-measure :gsharp-cursor
 	:gsharp-utilities :sdl :gsharp-beaming :obseq)
   (:shadowing-import-from :gsharp-buffer #:rest)
-  (:export #:draw-buffer #:draw-the-cursor))
+  (:export #:draw-buffer #:draw-the-cursor #:print-buffer))
 
 (defpackage :gsharp-play
   (:use :common-lisp :midi :gsharp-buffer)

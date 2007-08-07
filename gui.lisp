@@ -200,7 +200,8 @@
     (score-pane:with-score-pane pane
       (draw-buffer pane buffer (current-cursor)
                    (left-margin buffer) 100)
-      (gsharp-drawing::draw-the-cursor pane (current-cursor) (cursor-element (current-cursor)) (last-note (input-state *application-frame*)))
+      (draw-the-cursor pane (current-cursor) (cursor-element (current-cursor))
+                       (last-note (input-state *application-frame*)))
       (multiple-value-bind (minx miny maxx maxy)
           (bounding-rectangle* pane)
         (declare (ignore minx maxx))
@@ -1505,3 +1506,36 @@ Prints the results in the minibuffer."
 
 (defmethod frame-make-new-buffer ((frame gsharp) &key &allow-other-keys)
   (make-instance 'buffer))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Printing
+
+(defun print-buffer-filename ()
+  (let* ((buffer (current-buffer))
+         (filepath (filepath buffer))
+         (name (name buffer))
+         (defaults (or filepath (merge-pathnames (make-pathname :name name)
+                                                 (user-homedir-pathname)))))
+    (merge-pathnames (make-pathname :type "ps") defaults)))
+
+(define-gsharp-command (com-print-buffer-to-file :name t)
+    ((filepath 'pathname
+               :prompt "Print To: " :prompt-mode :raw
+               :default (print-buffer-filename) :default-type 'pathname
+               :insert-default t))
+  (with-open-file (ps filepath :direction :output :if-exists :supersede)
+    (with-output-to-postscript-stream (s ps)
+      (setf (stream-default-view s)
+            ;; FIXME: should probably get the class of the view from
+            ;; the current buffer or window or something.
+            (make-instance 'orchestra-view :light-glyphs-ink +black+ 
+                           :buffer (current-buffer) :cursor (current-cursor)))
+      (setf (medium-transformation s)
+            ;; FIXME: This scaling works for me (A4 paper, default
+            ;; gsharp buffer sizes.
+            (compose-scaling-with-transformation (medium-transformation s)
+                                                 0.8 0.8))
+      (print-buffer s (current-buffer) (current-cursor) 
+                    (left-margin (current-buffer)) 100))))
+

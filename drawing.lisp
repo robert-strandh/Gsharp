@@ -541,27 +541,44 @@ right of the center of its timeline"))
 			    (- (line-width method) timesig-offset)
 			    (lines-per-page method)))
 
+(defun draw-page (pane buffer x y staves maxmethod page-measures)
+  (let* ((systems-per-page (max 1 (floor 12 (length staves))))
+         (measure-seqs (layout-page page-measures systems-per-page maxmethod)))
+    (dolist (measures measure-seqs)
+      (let* ((toffset (compute-timesig-offset staves measures))
+             (method (method-for-timesig (buffer-cost-method buffer) toffset)))
+        (compute-and-draw-system pane buffer staves measures method
+                                 x y toffset (right-edge buffer))
+        (incf y (+ 20 (* 70 (length staves))))))))
+
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
   (score-pane:with-staff-size 6
     (let* ((staves (staves buffer))
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
-	   (method (method-for-timesig (buffer-cost-method buffer) max-timesig-offset))
-	   (right-edge (right-edge buffer))
-	   (systems-per-page (max 1 (floor 12 (length staves)))))
+	   (method (method-for-timesig 
+                    (buffer-cost-method buffer) max-timesig-offset)))
       (loop for staff in staves
 	    for offset from 0 by 70 do
 	    (setf (staff-yoffset staff) offset))
-      (let ((yy y))
-	(dopages (page-measures buffer)
-	  (when (cursor-in-measures-p *cursor* page-measures)
-	    (let ((measure-seqs (layout-page page-measures systems-per-page method)))
-	      (dolist (measures measure-seqs)
-		(let* ((toffset (compute-timesig-offset staves measures))
-		       (method (method-for-timesig 
-				(buffer-cost-method buffer) toffset)))
-		  (compute-and-draw-system pane buffer staves measures
-					   method x yy toffset right-edge)
-		  (incf yy (+ 20 (* 70 (length staves)))))))))))))
+      (dopages (page-measures buffer)
+        (when (cursor-in-measures-p *cursor* page-measures)
+          (draw-page pane buffer x y staves method page-measures))))))
+
+(defmethod print-buffer (pane (buffer buffer) *cursor* x y)
+  (score-pane:with-staff-size 6
+    (let* ((staves (staves buffer))
+	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
+	   (method (method-for-timesig 
+                    (buffer-cost-method buffer) max-timesig-offset)))
+      (loop for staff in staves
+	    for offset from 0 by 70 do
+	    (setf (staff-yoffset staff) offset))
+      (let ((first t))
+        (dopages (page-measures buffer)
+          (unless first
+            (new-page pane))
+          (draw-page pane buffer x y staves method page-measures)
+          (setq first nil))))))
 
 (define-stealth-mixin xelement () element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
