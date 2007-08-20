@@ -185,7 +185,7 @@ of a normal note.  This function always returns a positive value"))
     (setf beam-offset-down
 	  (floor (/ staff-line-distance 2) 2))
     (setf beam-offset-up
-	  (- (ceiling (/ staff-line-distance 2) 2)))
+	  (- (+ beam-offset-down staff-line-thickness)))
     (setf beam-hang-sit-offset
 	  (let ((beam-thickness (- beam-offset-down beam-offset-up)))
 	    (/ (- beam-thickness staff-line-thickness) 2)))))
