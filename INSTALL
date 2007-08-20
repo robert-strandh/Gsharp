@@ -1,17 +1,25 @@
 ;;; Requirements
 
-* A Common Lisp.  Known to work: SBCL 0.9.12
+#|
+* A Common Lisp.  Known to work: SBCL 1.0.8
 
-* McCLIM.  The "Orthodox New Year" release is needed, along with
-  ** spatial-trees;
-  ** at least one means of displaying graphics: CLX is recommended,
-     but the OpenMCL/Cocoa bridge or the gtkairo backend are
-     possibilities.
+* Certain pieces of Lisp software:
 
-* Flexichain.  ASDF-INSTALLable or from common-lisp.net CVS, the
-  flexichain project, flexichain module.
+  ** McCLIM.  The "Orthodox New Year" release is needed, along with
+     *** spatial-trees;
 
-Make sure ASDF knows how to find all of these projects.
+     *** at least one means of displaying graphics: CLX is
+         recommended, but the OpenMCL/Cocoa bridge or the gtkairo
+         backend are possibilities.
+
+  ** Flexichain.  ASDF-INSTALLable or from common-lisp.net CVS, the
+     flexichain project, flexichain module.
+
+  ** MIDI.  ASDF-INSTALLable; current home at
+     <http://doc.gold.ac.uk/isms/lisp/midi/>
+
+  Make sure ASDF knows how to find all of these projects.
+|#
 
 ;;; Start the lisp system
 
