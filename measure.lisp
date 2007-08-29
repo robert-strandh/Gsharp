@@ -613,21 +613,17 @@
 	  do (compute-staff-group-parameters staff-group (final-stem-direction element)))))
 
 (defun compute-beam-group-parameters (elements)
-  (let ((any-element-modified nil))
-    (loop for element in elements
-	  do (when (modified-p element)
-	       (when (non-empty-cluster-p element)
-		 (compute-top-bot-pos element))
-	       (setf any-element-modified t)))
-    (when any-element-modified
-      (if (null (cdr elements))
-	  (when (non-empty-cluster-p (car elements))
-	    (compute-final-stem-direction (car elements)))
-	  (compute-final-stem-directions elements)))
-    (loop for element in elements
-	  do (when (modified-p element)
-	       (compute-element-parameters element)
-	       (setf (modified-p element) nil)))))
+  (loop for element in elements
+        do (when (modified-p element)
+             (when (non-empty-cluster-p element)
+               (compute-top-bot-pos element))))
+  (if (null (cdr elements))
+      (when (non-empty-cluster-p (car elements))
+        (compute-final-stem-direction (car elements)))
+      (compute-final-stem-directions elements))
+  (loop for element in elements
+        do (compute-element-parameters element)
+        do (setf (modified-p element) nil)))
 
 ;;; Given a list of the elements of a bar, return a list of beam
 ;;; groups.  A beam group is defined to be either a singleton list or
