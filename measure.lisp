@@ -215,7 +215,7 @@
 				  (bot-note-pos
 				   (loop for element in elements
 					 when (non-empty-cluster-p element)
-					 minimize (top-note-pos element))))
+					 minimize (bot-note-pos element))))
 			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
     (loop for element in elements
 	  when (non-empty-cluster-p element)
