@@ -59,11 +59,11 @@
 (defclass clef (gsharp-object name-mixin)
   ((print-character :allocation :class :initform #\K)
    (lineno :reader lineno :initarg :lineno
-           :type (or (integer 2 6) null))))
+           :type (or (integer 0 8) null))))
 
 (defun make-clef (name &key lineno)
   (declare (type (member :treble :treble8 :bass :c :percussion) name)
-           (type (or (integer 2 6) null) lineno))
+           (type (or (integer 0 8) null) lineno))
   (when (null lineno)
     (setf lineno
           (ecase name
