@@ -195,9 +195,9 @@
 ;;; 
 ;;; The staff is a staff object. 
 ;;; 
-;;; Head can be :whole, :half, :filled, or nil.  A value of nil means
-;;; that the notehead is determined by that of the cluster to which the
-;;; note belongs. 
+;;; Head can be :breve, :whole, :half, :filled, or nil.  A value of
+;;; nil means that the notehead is determined by that of the cluster
+;;; to which the note belongs.
 ;;; 
 ;;; Accidentals can be :natural :flat :double-flat :sharp or :double-sharp.
 ;;; The default is :natural.  Whether a note is actually displayed
@@ -217,7 +217,7 @@
    (pitch :initarg :pitch :reader pitch :type (integer 0 127))
    (staff :initarg :staff :reader staff :type staff)
    (head :initform nil :initarg :head :reader head
-         :type (or (member :whole :half :filled) null))
+         :type (or (member :breve :whole :half :filled) null))
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
 		;; FIXME: we want :TYPE ACCIDENTAL here but need to
 		;; sort out order of definition for that to be useful.
@@ -231,7 +231,7 @@
 (defun make-note (pitch staff &rest args &key head (accidentals :natural) dots)
   (declare (type (integer 0 127) pitch)
            (type staff staff)
-           (type (or (member :whole :half :filled) null) head)
+           (type (or (member :breve :whole :half :filled) null) head)
 	   ;; FIXME: :TYPE ACCIDENTAL
 	   #+nil #+nil
            (type (member :natural :flat :double-flat :sharp :double-sharp)
@@ -418,6 +418,7 @@
 
 (defmethod undotted-duration ((element rhythmic-element))
   (ecase (notehead element)
+    (:breve 2)
     (:whole 1)
     (:half 1/2)
     (:filled (/ (expt 2 (+ 2 (max (rbeams element)
@@ -539,7 +540,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defun make-cluster (&rest args
                      &key (notehead :filled) (lbeams 0) (rbeams 0) (dots 0)
                      (xoffset 0) notes (stem-direction :auto))
-  (declare (type (member :whole :half :filled) notehead)
+  (declare (type (member :breve :whole :half :filled) notehead)
            (type (integer 0 5) lbeams)
            (type (integer 0 5) rbeams)
            (type (integer 0 3) dots)
@@ -626,7 +627,7 @@ flatter by removing some sharps and/or adding some flats"))
                   (dots 0) (xoffset 0))
   (declare (type staff staff)
            (type integer staff-pos)
-           (type (member :whole :half :filled) notehead)
+           (type (member :breve :whole :half :filled) notehead)
            (type (integer 0 5) lbeams)
            (type (integer 0 5) rbeams)
            (type (integer 0 3) dots)
@@ -672,7 +673,7 @@ flatter by removing some sharps and/or adding some flats"))
                             &key (notehead :filled) (lbeams 0) (rbeams 0)
                             (dots 0) (xoffset 0))
   (declare (type staff staff)
-           (type (member :whole :half :filled) notehead)
+           (type (member :breve :whole :half :filled) notehead)
            (type (integer 0 5) lbeams)
            (type (integer 0 5) rbeams)
            (type (integer 0 3) dots)

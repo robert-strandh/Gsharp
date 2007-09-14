@@ -662,6 +662,23 @@ of a normal note.  This function always returns a positive value"))
     (translate (scale *filled-path* staff-line-distance)
 	       (complex xoffset yoffset))))
 
+(defmethod compute-design ((font font) (shape (eql :breve-notehead)))
+  (with-slots (xoffset yoffset (sld staff-line-distance) stem-thickness) font
+    (let ((top (translate (xyscale (translate +unit-square+ #c(0 0.5))
+                                   (* sld 1.5) (* sld (- 0.53 0.25)))
+                          (* sld #c(0 0.25))))
+          (bot (translate (xyscale (translate +unit-square+ #c(0 -0.5))
+                                   (* sld 1.5) (* sld (- 0.53 0.25)))
+                          (* sld #c(0 -0.25))))
+          (left (translate (xyscale +unit-square+ stem-thickness (* 1.3 sld))
+                           (+ (* sld #c(-0.75 0)) (/ stem-thickness 2))))
+          (right (translate (xyscale +unit-square+ stem-thickness (* 1.3 sld))
+                            (- (* sld #c(0.75 0)) (/ stem-thickness 2)))))
+      (translate
+       (reduce #'clim:region-union
+               (list top bot left right))
+       (complex xoffset yoffset)))))
+
 (defmethod compute-design ((font font) (shape (eql :whole-notehead)))
   (with-slots (xoffset yoffset (sld staff-line-distance)) font
     (let ((op (scale (superellipse #c(0.75 0.0) #c(0.0 0.53)
@@ -1334,6 +1351,12 @@ of a normal note.  This function always returns a positive value"))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Rests
+
+(defmethod compute-design ((font font) (shape (eql :breve-rest)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)
+               notehead-width xoffset yoffset) font
+    (translate (xyscale +unit-square+ (/ notehead-width 2) sld)
+               (complex xoffset (+ yoffset (+ (* 0.5 sld)) (- (* 0.5 slt)))))))
 
 (defmethod compute-design ((font font) (shape (eql :whole-rest)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)

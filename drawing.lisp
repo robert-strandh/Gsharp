@@ -325,7 +325,7 @@ right of the center of its timeline"))
          (elements (elements bar)))
     (and (null (cdr elements))
          (typep element 'rest)
-         (eq (notehead element) :whole))))
+         (member (notehead element) '(:breve :whole)))))
 
 (defun compute-measure-coordinates (measure x y force)
   (loop with timelines = (timelines measure)
@@ -984,7 +984,7 @@ right of the center of its timeline"))
         (loop for group in groups do 
               (draw-notes pane group (dots element) (notehead element) dot-xoffset)
               (draw-ledger-lines pane x group))
-	(unless (eq (notehead element) :whole)
+	(unless (member (notehead element) '(:whole :breve))
 	  (if (eq direction :up)
 	      (score-pane:draw-right-stem
 	       pane x

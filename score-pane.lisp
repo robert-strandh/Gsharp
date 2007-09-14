@@ -132,6 +132,7 @@
 (defun draw-notehead (stream name x staff-step)
   (sdl::draw-shape stream *font* 
 		   (ecase name
+		     (:breve :breve-notehead)
 		     (:whole :whole-notehead)
 		     (:half :half-notehead)
 		     (:filled :filled-notehead))
@@ -174,6 +175,7 @@
 (defun draw-rest (stream duration x staff-step)
   (sdl::draw-shape stream *font*
                    (ecase duration
+                     (2 :breve-rest)
                      (1 :whole-rest)
                      (1/2 :half-rest)
                      (1/4 :quarter-rest)
