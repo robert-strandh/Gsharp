@@ -203,9 +203,9 @@
       (draw-the-cursor pane (current-cursor) (cursor-element (current-cursor))
                        (last-note (input-state *application-frame*)))
       (multiple-value-bind (minx miny maxx maxy)
-          (bounding-rectangle* pane)
+          (bounding-rectangle* (stream-output-history pane))
         (declare (ignore minx maxx))
-        (change-space-requirements pane :height (- maxy miny))))))
+        (change-space-requirements pane :height (+ maxy miny))))))
 
 (defmethod window-clear ((pane score-pane:score-pane))
   (let ((output-history (stream-output-history pane)))
