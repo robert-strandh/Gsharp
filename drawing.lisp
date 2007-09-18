@@ -325,7 +325,7 @@ right of the center of its timeline"))
          (elements (elements bar)))
     (and (null (cdr elements))
          (typep element 'rest)
-         (member (notehead element) '(:breve :whole)))))
+         (member (notehead element) '(:long :breve :whole)))))
 
 (defun compute-measure-coordinates (measure x y force)
   (loop with timelines = (timelines measure)

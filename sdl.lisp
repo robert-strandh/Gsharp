@@ -1352,6 +1352,12 @@ of a normal note.  This function always returns a positive value"))
 ;;;
 ;;; Rests
 
+(defmethod compute-design ((font font) (shape (eql :long-rest)))
+  (with-slots ((sld staff-line-distance) (slt staff-line-thickness)
+               notehead-width xoffset yoffset) font
+    (translate (xyscale +unit-square+ (/ notehead-width 2) (* 2 sld))
+               (complex xoffset (+ yoffset (- (* 0.5 slt)))))))
+
 (defmethod compute-design ((font font) (shape (eql :breve-rest)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)
                notehead-width xoffset yoffset) font
