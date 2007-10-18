@@ -20,7 +20,7 @@
 						     :defaults *gsharp-directory*))
 			     collect `(:file ,(pathname-name p) :pathname ,p))))))
 
-(gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain :midi))
+(gsharp-defsystem (:gsharp :depends-on (:mcclim :flexichain :midi :puri :cxml))
    "packages"
    "utilities"
    "mf"
@@ -38,4 +38,6 @@
    "modes"
    "play"
    "gui"
-   "fontview")
+   "fontview"
+   "Mxml/mxml"
+   "Mxml/commands")

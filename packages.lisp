@@ -177,6 +177,10 @@
 	   #:play-segment
 	   #:play-buffer))
 
+(defpackage :gsharp-mxml
+  (:use :cl :gsharp-buffer :gsharp-measure)
+  (:shadowing-import-from :gsharp-buffer #:rest))
+
 (defpackage :gsharp
   (:use :clim :clim-lisp :gsharp-utilities :esa :esa-buffer :esa-io
 	:gsharp-buffer :gsharp-cursor :gsharp-drawing :gsharp-numbering
