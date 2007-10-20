@@ -77,6 +77,16 @@
 		      (incf time (* *tempo* duration))))
 		  (bars slice) durations))))
 
+(define-condition midi-player-failed (gsharp-condition)
+  ((midi-player :initarg :midi-player)
+   (exit-code :initarg :exit-code))
+  (:report
+   (lambda (condition stream)
+     (with-slots (midi-player exit-code) condition
+     (format stream
+             "Midi player ~S returned exit code ~S, indicating that an error occurred."
+             midi-player exit-code)))))
+
 (defun play-tracks (tracks)
   (let ((midifile (make-instance 'midifile
 		     :format 1
@@ -88,10 +98,16 @@
                      (append *midi-player-arguments*
                              (list *midi-temp-file*)))
     #+sbcl
-    (sb-ext:run-program *midi-player*
-                        (append *midi-player-arguments*
-                                (list *midi-temp-file*))
-                        :search t)
+    (let ((process
+           (sb-ext:run-program *midi-player*
+                               (append *midi-player-arguments*
+                                       (list *midi-temp-file*))
+                               :search t)))
+      (sb-ext:process-wait process)
+      (when (not (zerop (sb-ext:process-exit-code process)))
+        (error 'midi-player-failed
+               :midi-player *midi-player*
+               :exit-code (sb-ext:process-exit-code process))))
     #+clisp
     (ext:run-program *midi-player*
                      :arguments (append *midi-player-arguments*
