@@ -58,8 +58,7 @@
 (defgeneric bottom-line (clef))
 
 (defclass clef (gsharp-object name-mixin)
-  ((print-character :allocation :class :initform #\K)
-   (lineno :reader lineno :initarg :lineno
+  ((lineno :reader lineno :initarg :lineno
            :type (or (integer 0 8) null))))
 
 (defun make-clef (name &key lineno)
@@ -123,8 +122,7 @@
 (defgeneric clef (fiveline-staff))
 
 (defclass fiveline-staff (staff)
-  ((print-character :allocation :class :initform #\=)
-   (clef :accessor clef :initarg :clef :initform (make-clef :treble))
+  ((clef :accessor clef :initarg :clef :initform (make-clef :treble))
    (%keysig :accessor keysig :initarg :keysig
             :initform (make-array 7 :initial-element :natural))
    (key-signatures :accessor key-signatures :initform nil)))
@@ -196,8 +194,7 @@
 ;;; number of dots in the usual way. 
 
 (defclass note (gsharp-object)
-  ((print-character :allocation :class :initform #\N)
-   (cluster :initform nil :initarg :cluster :accessor cluster)
+  ((cluster :initform nil :initarg :cluster :accessor cluster)
    (pitch :initarg :pitch :reader pitch :type (integer 0 127))
    (staff :initarg :staff :reader staff :type staff)
    (head :initform nil :initarg :head :reader head
@@ -499,8 +496,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defgeneric remove-note (note))
 
 (defclass cluster (melody-element)
-  ((print-character :allocation :class :initform #\%)
-   (notes :initform '() :initarg :notes :accessor notes)
+  ((notes :initform '() :initarg :notes :accessor notes)
    (stem-direction :initform :auto :initarg :stem-direction :accessor stem-direction)))
 
 (defmethod initialize-instance :after ((c cluster) &rest args)
@@ -588,8 +584,7 @@ flatter by removing some sharps and/or adding some flats"))
 ;;; Rest
 
 (defclass rest (melody-element)
-  ((print-character :allocation :class :initform #\-)
-   (staff :initarg :staff :reader staff)
+  ((staff :initarg :staff :reader staff)
    (staff-pos :initarg :staff-pos :initform 4 :reader staff-pos)))
 
 (defun make-rest (staff &rest args
@@ -726,8 +721,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod remove-element :before ((element element) (bar bar))
   (maybe-update-key-signatures bar))
 
-(defclass melody-bar (bar)
-  ((print-character :allocation :class :initform #\|)))
+(defclass melody-bar (bar) ())
 
 (defun make-melody-bar (&rest args &key elements)
   (declare (type list elements)
@@ -769,8 +763,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defgeneric remove-bar (bar))
 
 (defclass slice (gsharp-object)
-  ((print-character :allocation :class :initform #\/)
-   (layer :initform nil :initarg :layer :accessor layer)
+  ((layer :initform nil :initarg :layer :accessor layer)
    (bars :initform '() :initarg :bars :accessor bars)))
 
 (defmethod initialize-instance :after ((s slice) &rest args)
@@ -892,8 +885,7 @@ flatter by removing some sharps and/or adding some flats"))
 
 ;;; melody layer
 
-(defclass melody-layer (layer)
-  ((print-character :allocation :class :initform #\_)))
+(defclass melody-layer (layer) ())
 
 (defun read-melody-layer-v3 (stream char n)
   (declare (ignore char n))
@@ -978,8 +970,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defgeneric remove-layer (layer))
 
 (defclass segment (gsharp-object)
-  ((print-character :allocation :class :initform #\S)
-   (buffer :initform nil :initarg :buffer :accessor buffer)
+  ((buffer :initform nil :initarg :buffer :accessor buffer)
    (layers :initform '() :initarg :layers :accessor layers)
    (tempo :initform 128 :initarg :tempo :accessor tempo)
    (tuning :initform (make-instance '12-edo)
@@ -1080,8 +1071,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defvar *default-left-margin* 20)
 
 (defclass buffer (gsharp-object esa-buffer-mixin)
-  ((print-character :allocation :class :initform #\B)
-   (segments :initform '() :initarg :segments :accessor segments)
+  ((segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff))
            :initarg :staves :accessor staves)
    ;; the min width determines the preferred geographic distance after the

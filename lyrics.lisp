@@ -4,8 +4,7 @@
 ;;;
 ;;; staff
 
-(defclass lyrics-staff (staff)
-  ((print-character :allocation :class :initform #\L)))
+(defclass lyrics-staff (staff) ())
 
 (defun make-lyrics-staff (&rest args &key name)
   (declare (ignore name))
@@ -24,8 +23,7 @@
 ;;; Lyrics element
 
 (defclass lyrics-element (rhythmic-element)
-  ((print-character :allocation :class :initform #\A)
-   (staff :initarg :staff :reader staff)
+  ((staff :initarg :staff :reader staff)
    (text :initarg :text
          :initform (make-array 5 :adjustable t :element-type 'fixnum :fill-pointer 0)
          :reader text)
@@ -75,8 +73,7 @@
 ;;;
 ;;; Lyrics bar
 
-(defclass lyrics-bar (bar)
-  ((print-character :allocation :class :initform #\C)))
+(defclass lyrics-bar (bar) ())
 
 (defun make-lyrics-bar (&rest args &key elements)
   (declare (type list elements)
@@ -109,8 +106,7 @@
 ;;;
 ;;; Lyrics layer
 
-(defclass lyrics-layer (layer)
-  ((print-character :allocation :class :initform #\M)))
+(defclass lyrics-layer (layer) ())
 
 (defun read-lyrics-layer-v3 (stream char n)
   (declare (ignore char n))
