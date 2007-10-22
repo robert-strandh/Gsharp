@@ -12,24 +12,25 @@
 (set-syntax-from-char #\] #\) *gsharp-readtable-v3*)
 (set-syntax-from-char #\] #\) *gsharp-readtable-v4*)
 
+(defgeneric slots-to-be-saved (object)
+  (:method-combination append :most-specific-last))
+
+(defun save-object (object stream)
+  (pprint-logical-block (stream nil :prefix "[" :suffix "]")
+    (format stream "~s ~2i" (class-name (class-of object)))
+    (loop for slot-name in (slots-to-be-saved object)
+	  do (let ((slot (find slot-name (sb-mop:class-slots (class-of object))
+			       :key #'sb-mop:slot-definition-name
+			       :test #'eq)))
+	       (format stream "~_~W ~W "
+		       (car (sb-mop:slot-definition-initargs slot))
+		       (slot-value object (sb-mop:slot-definition-name slot)))))))
+
 (defclass gsharp-object () ())
-
-(defgeneric print-gsharp-object (obj stream)
-  (:method-combination progn))
-
-(defmethod print-gsharp-object :around ((obj gsharp-object) stream)
-  (format stream "~s ~2i" (class-name (class-of obj)))
-  (call-next-method))
-
-;;; (defmethod print-object :around ((obj gsharp-object) stream)
-;;;  (format stream "[~a " (slot-value obj 'print-character))
-;;;   (call-next-method)
-;;;   (format stream "] "))
 
 (defmethod print-object ((obj gsharp-object) stream)
   (if *print-circle*
-      (pprint-logical-block (stream nil :prefix "[" :suffix "]")
-        (print-gsharp-object obj stream))
+      (save-object obj stream)
       (print-unreadable-object (obj stream :type t :identity t))))
 
 (defgeneric name (obj))
@@ -37,8 +38,8 @@
 (defclass name-mixin ()
   ((name :initarg :name :accessor name)))
 
-(defmethod print-gsharp-object progn ((obj name-mixin) stream)
-  (format stream "~_:name ~W " (name obj)))
+(defmethod slots-to-be-saved append ((obj name-mixin))
+  '(name))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -73,8 +74,8 @@
             (:percussion 3))))
   (make-instance 'clef :name name :lineno lineno))
 
-(defmethod print-gsharp-object progn ((c clef) stream)
-  (format stream "~_:lineno ~W " (lineno c)))
+(defmethod slots-to-be-saved append ((c clef))
+  '(lineno))
 
 (defun read-clef-v3 (stream char n)
   (declare (ignore char n))
@@ -139,8 +140,8 @@
   (declare (ignore name clef keysig))
   (apply #'make-instance 'fiveline-staff args))
 
-(defmethod print-gsharp-object progn ((s fiveline-staff) stream)
-  (format stream "~_:clef ~W ~_:keysig ~W " (clef s) (keysig s)))
+(defmethod slots-to-be-saved append ((s fiveline-staff))
+  '(clef %keysig))
 
 (defun read-fiveline-staff-v3 (stream char n)
   (declare (ignore char n))
@@ -240,12 +241,8 @@
            (ignore head accidentals dots))
   (apply #'make-instance 'note :pitch pitch :staff staff args))
 
-(defmethod print-gsharp-object progn ((n note) stream)
-  (with-slots (pitch staff head accidentals dots %tie-right %tie-left) n
-    (format stream
-            "~_:pitch ~W ~_:staff ~W ~_:head ~W ~_:accidentals ~W ~_:dots ~W ~
-             ~@[~_:tie-right ~W ~]~@[~_:tie-left ~W ~]"
-            pitch staff head accidentals dots %tie-right %tie-left)))
+(defmethod slots-to-be-saved append ((n note))
+  '(pitch staff head accidentals dots %tie-right %tie-left))
 
 (defun read-note-v3 (stream char n)
   (declare (ignore char n))
@@ -279,9 +276,8 @@
                       :initarg :master-pitch-freq
                       :accessor master-pitch-freq)))
 
-(defmethod print-gsharp-object progn ((tuning tuning) stream)
-  (format stream "~_:master-pitch-note ~W ~_:master-pitch-freq ~W "
-          (master-pitch-note tuning) (master-pitch-freq tuning)))
+(defmethod slots-to-be-saved append ((tuning tuning))
+  '(master-pitch-note master-pitch-freq))
 
 ;;; Returns how a note should be tuned in a given tuning
 ;;; in terms of a cent value.
@@ -293,9 +289,8 @@
 (defclass 12-edo (tuning)
   ())
 
-(defmethod print-gsharp-object progn ((tuning 12-edo) stream)
-  ;; no parameters to save
-  )
+(defmethod slots-to-be-saved append ((tuning 12-edo))
+  '())
 
 (defmethod note-cents ((note note) (tuning 12-edo))
   (multiple-value-bind (octave pitch) (floor (pitch note) 7)
@@ -322,9 +317,8 @@
    ;; TODO: Add cent sizes of various microtonal accidentals, perhaps in an alist?
    ))
 
-(defmethod print-gsharp-object progn ((tuning regular-temperament) stream)
-  (format stream "~_:octave-cents ~W ~_:fifth-cents ~W "
-          (octave-cents tuning) (fifth-cents tuning)))
+(defmethod slots-to-be-saved append ((tuning regular-temperament))
+  '(octave-cents fifth-cents))
 
 (defmethod note-cents ((note note) (tuning regular-temperament))
   (let ((octaves 1)
@@ -371,10 +365,8 @@
   ((bar :initform nil :initarg :bar :accessor bar)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)))
 
-(defmethod print-gsharp-object progn ((e element) stream)
-  (with-slots (notehead rbeams lbeams dots xoffset) e
-    (format stream
-            "~_:xoffset ~W " xoffset)))
+(defmethod slots-to-be-saved append ((e element))
+  '(xoffset))
 
 (defmethod duration ((element element)) 0)
 (defmethod rbeams ((element element)) 0)
@@ -410,11 +402,8 @@
    (lbeams :initform 0 :initarg :lbeams :accessor lbeams)
    (dots :initform 0 :initarg :dots :accessor dots)))
    
-(defmethod print-gsharp-object progn ((e rhythmic-element) stream)
-  (with-slots (notehead rbeams lbeams dots) e
-    (format stream
-            "~_:notehead ~W ~_:rbeams ~W ~_:lbeams ~W ~_:dots ~W "
-            notehead rbeams lbeams dots)))
+(defmethod slots-to-be-saved append ((e rhythmic-element))
+  '(notehead rbeams lbeams dots))
 
 (defmethod undotted-duration ((element rhythmic-element))
   (ecase (notehead element)
@@ -467,10 +456,8 @@ flatter by removing some sharps and/or adding some flats"))
            (ignore alterations))
   (apply #'make-instance 'key-signature :staff staff args))
 
-(defmethod print-gsharp-object progn ((k key-signature) stream)
-  (with-slots (%staff %alterations) k
-    (format stream
-            "~_:staff ~W ~_:alterations ~W " %staff %alterations)))
+(defmethod slots-to-be-saved append ((k key-signature))
+  '(%staff %alterations))
 
 (defmethod more-sharps ((sig key-signature) &optional (n 1))
   (let ((alt (alterations sig)))
@@ -551,9 +538,8 @@ flatter by removing some sharps and/or adding some flats"))
            (ignore notehead lbeams rbeams dots xoffset notes stem-direction))
   (apply #'make-instance 'cluster args))
 
-(defmethod print-gsharp-object progn ((c cluster) stream)
-  (with-slots (stem-direction notes) c
-    (format stream "~_:stem-direction ~W ~_:notes ~W " stem-direction notes)))
+(defmethod slots-to-be-saved append ((c cluster))
+  '(stem-direction notes))
 
 (defun read-cluster-v3 (stream char n)
   (declare (ignore char n))
@@ -637,9 +623,8 @@ flatter by removing some sharps and/or adding some flats"))
   (apply #'make-instance 'rest
          :staff staff args))
 
-(defmethod print-gsharp-object progn ((s rest) stream)
-  (with-slots (staff staff-pos) s
-    (format stream "~_:staff ~W ~_:staff-pos ~W " staff staff-pos)))
+(defmethod slots-to-be-saved append ((s rest))
+  '(staff staff-pos))
 
 (defun read-rest-v3 (stream char n)
   (declare (ignore char n))
@@ -683,9 +668,8 @@ flatter by removing some sharps and/or adding some flats"))
   (apply #'make-instance 'lyrics-element
          :staff staff args))
 
-(defmethod print-gsharp-object progn ((elem lyrics-element) stream)
-  (with-slots (staff text) elem
-     (format stream "~_:staff ~W ~_:text ~W " staff text)))
+(defmethod slots-to-be-saved append ((elem lyrics-element))
+  '(staff text))
 
 (defun read-lyrics-element-v3 (stream char n)
   (declare (ignore char n))
@@ -738,8 +722,8 @@ flatter by removing some sharps and/or adding some flats"))
   (loop for element in (elements b)
         do (setf (bar element) b)))
 
-(defmethod print-gsharp-object progn ((b bar) stream)
-  (format stream "~_:elements ~W " (elements b)))
+(defmethod slots-to-be-saved append ((b bar))
+  '(elements))
 
 ;;; The duration of a bar is simply the sum of durations
 ;;; of its elements.  We might want to improve on the 
@@ -888,8 +872,8 @@ flatter by removing some sharps and/or adding some flats"))
            (ignore bars))
   (apply #'make-instance 'slice args))
 
-(defmethod print-gsharp-object progn ((s slice) stream)
-  (format stream "~_:bars ~W " (bars s)))
+(defmethod slots-to-be-saved append ((s slice))
+  '(bars))
 
 (defun read-slice-v3 (stream char n)
   (declare (ignore char n))
@@ -994,10 +978,8 @@ flatter by removing some sharps and/or adding some flats"))
         (layer (body l)) l
         (layer (tail l)) l))
 
-(defmethod print-gsharp-object progn ((l layer) stream)
-  (with-slots (head body tail staves) l
-    (format stream "~_:staves ~W ~_:head ~W ~_:body ~W ~_:tail ~W "
-            staves head body tail)))
+(defmethod slots-to-be-saved append ((l layer))
+  '(staves head body tail))
 
 (defgeneric make-layer-for-staff (staff &rest args &key staves head body tail &allow-other-keys))
 
@@ -1128,9 +1110,8 @@ flatter by removing some sharps and/or adding some flats"))
     (loop for layer in layers
           do (setf (segment layer) s))))
 
-(defmethod print-gsharp-object progn ((s segment) stream)
-  (format stream "~_:layers ~W ~_:tempo ~W ~_:tuning ~W "
-          (layers s) (tempo s) (tuning s)))
+(defmethod slots-to-be-saved append ((s segment))
+  '(layers tempo tuning))
 
 (defun read-segment-v3 (stream char n)
   (declare (ignore char n))
@@ -1247,11 +1228,8 @@ flatter by removing some sharps and/or adding some flats"))
     (loop for segment in segments
           do (setf (buffer segment) b))))
 
-(defmethod print-gsharp-object progn ((b buffer) stream)
-  (with-slots (staves segments min-width spacing-style right-edge left-offset left-margin) b
-    (format stream 
-            "~_:min-width ~W ~_:spacing-style ~W ~_:right-edge ~W ~_:left-offset ~W ~_:left-margin ~W ~_:staves ~W ~_:segments ~W "
-            min-width spacing-style right-edge left-offset left-margin staves segments )))
+(defmethod slots-to-be-saved append ((b buffer))
+  '(min-width spacing-style right-edge left-offset left-margin staves segments))
 
 (defun read-buffer-v3 (stream char n)
   (declare (ignore char n))
