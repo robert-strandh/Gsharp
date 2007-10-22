@@ -27,6 +27,7 @@
    "sdl"
    "score-pane"
    "buffer"
+   "melody"
    "lyrics"
    "numbering"
    "Obseq/obseq"
