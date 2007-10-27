@@ -534,7 +534,11 @@
  'play-command-table
  :errorp nil
  :menu '(("Buffer" :command com-play-buffer)
-         ("Segment" :command com-play-segment)))
+         ("Segment" :command com-play-segment)
+         ("Layer" :command com-play-layer)))
+
+(define-gsharp-command (com-play-buffer :name t) ()
+  (play-buffer (buffer (current-cursor))))
 
 (define-gsharp-command (com-play-segment :name t) ()
   (play-segment (segment (current-cursor))))
