@@ -73,6 +73,7 @@
                                   standard-application-frame)
   ((views :initarg :views :initform '() :accessor views)
    (input-state :initarg :input-state :accessor input-state))
+  (:default-initargs :input-state (make-input-state))
   (:menu-bar menubar-command-table :height 25)
   (:pointer-documentation t)
   (:panes
@@ -118,11 +119,13 @@
   (:top-level (esa-top-level)))
 
 (defmethod buffers ((application-frame gsharp))
-  (remove-duplicates (mapcar (lambda (window) (buffer (view window)))
-                             (windows application-frame))
-                     :test #'eq))
+  (let (result)
+    (dolist (window (windows application-frame) (nreverse result))
+      (let ((view (view window)))
+        (when view
+          (pushnew (buffer view) result))))))
 
-(defmethod frame-current-buffer ((application-frame gsharp))
+(defmethod esa-current-buffer ((application-frame gsharp))
   (buffer (view (car (windows application-frame)))))
 
 (defun current-cursor ()
@@ -548,39 +551,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; main entry point
+;;; main entry points
 
-(defun gsharp-common (buffer new-process process-name width height)
-  (let* ((staff (car (staves buffer)))
-         (input-state (make-input-state))
-         (cursor (make-initial-cursor buffer))
-         (view (make-instance 'orchestra-view
-                              :buffer buffer
-                              :cursor cursor)))
-    (let ((frame (make-application-frame 'gsharp
-                                         :buffer buffer
-                                         :input-state input-state
-                                         :cursor cursor
-                                         :width width :height height)))
-      (push view (views frame))
-      (flet ((run ()
-               (run-frame-top-level frame)))
-        (setf (staves (car (layers (car (segments buffer))))) (list staff))
-        (if new-process
-            (clim-sys:make-process #'run :name process-name)
-            (run))))))    
-
-(defun gsharp (&key new-process (process-name "Gsharp")
-               (width 900) (height 600))
+(defun gsharp (&rest args &key new-process process-name width height)
   "Start a Gsharp session with a fresh empty buffer" 
-  (gsharp-common (make-instance 'buffer)
-                 new-process process-name width height))
+  (declare (ignore new-process process-name width height))
+  (apply #'gsharp-common '(com-new-buffer) args))
 
-(defun edit-file (filename &key new-process (process-name "Gsharp")
-                  (width 900) (height 600))
+(defun edit-file (filename &rest args 
+                  &key new-process process-name width height)
   "Start a Gsharp session editing a given file" 
-  (gsharp-common (read-everything filename)
-                 new-process process-name width height))
+  (declare (ignore new-process process-name width height))
+  (apply #'gsharp-common `(esa-io::com-find-file ,filename) args))
+
+(defun gsharp-common (command &key new-process (process-name "Gsharp") width height)
+  (let ((*application-frame*
+         (make-application-frame 'gsharp :width width :height height)))
+    (adopt-frame (find-frame-manager) *application-frame*)
+    (execute-frame-command *application-frame* command)
+    (flet ((run () (run-frame-top-level *application-frame*)))
+      (if new-process
+          (clim-sys:make-process #'run :name process-name)
+          (run)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
