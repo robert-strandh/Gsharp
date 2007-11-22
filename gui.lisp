@@ -1530,17 +1530,19 @@ Prints the results in the minibuffer."
                :default (print-buffer-filename) :default-type 'pathname
                :insert-default t))
   (with-open-file (ps filepath :direction :output :if-exists :supersede)
-    (with-output-to-postscript-stream (s ps)
-      (setf (stream-default-view s)
-            ;; FIXME: should probably get the class of the view from
-            ;; the current buffer or window or something.
-            (make-instance 'orchestra-view :light-glyphs-ink +black+ 
-                           :buffer (current-buffer) :cursor (current-cursor)))
-      (setf (medium-transformation s)
-            ;; FIXME: This scaling works for me (A4 paper, default
-            ;; gsharp buffer sizes.
-            (compose-scaling-with-transformation (medium-transformation s)
-                                                 0.8 0.8))
-      (print-buffer s (current-buffer) (current-cursor) 
-                    (left-margin (current-buffer)) 100))))
-
+    (let* ((type (pathname-type filepath))
+           (epsp (string-equal type "EPS")))
+      (with-output-to-postscript-stream (s ps :device-type (when epsp :eps))
+        (setf (stream-default-view s)
+              ;; FIXME: should probably get the class of the view from
+              ;; the current buffer or window or something.
+              (make-instance 'orchestra-view :light-glyphs-ink +black+ 
+                             :buffer (current-buffer) 
+                             :cursor (current-cursor)))
+        (setf (medium-transformation s)
+              ;; FIXME: This scaling works for me (A4 paper, default
+              ;; gsharp buffer sizes.
+              (compose-scaling-with-transformation 
+               (medium-transformation s) 0.8 0.8))
+        (print-buffer s (current-buffer) (current-cursor) 
+                      (left-margin (current-buffer)) 100)))))
