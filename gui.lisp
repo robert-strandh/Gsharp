@@ -565,11 +565,12 @@
   (apply #'gsharp-common `(esa-io::com-find-file ,filename) args))
 
 (defun gsharp-common (command &key new-process (process-name "Gsharp") width height)
-  (let ((*application-frame*
-         (make-application-frame 'gsharp :width width :height height)))
+  (let* ((frame (make-application-frame 'gsharp :width width :height height))
+         (*application-frame* frame)
+         (*esa-instance* frame))
     (adopt-frame (find-frame-manager) *application-frame*)
     (execute-frame-command *application-frame* command)
-    (flet ((run () (run-frame-top-level *application-frame*)))
+    (flet ((run () (run-frame-top-level frame)))
       (if new-process
           (clim-sys:make-process #'run :name process-name)
           (run)))))
