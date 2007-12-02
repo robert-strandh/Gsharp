@@ -41,5 +41,5 @@
    "play"
    "gui"
    "fontview"
-   "Mxml/mxml"
-   "Mxml/commands")
+   #+sbcl "Mxml/mxml"
+   #+sbcl "Mxml/commands")

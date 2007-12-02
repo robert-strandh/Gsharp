@@ -19,12 +19,12 @@
   (pprint-logical-block (stream nil :prefix "[" :suffix "]")
     (format stream "~s ~2i" (class-name (class-of object)))
     (loop for slot-name in (slots-to-be-saved object)
-	  do (let ((slot (find slot-name (sb-mop:class-slots (class-of object))
-			       :key #'sb-mop:slot-definition-name
+	  do (let ((slot (find slot-name (clim-mop:class-slots (class-of object))
+			       :key #'clim-mop:slot-definition-name
 			       :test #'eq)))
 	       (format stream "~_~W ~W "
-		       (car (sb-mop:slot-definition-initargs slot))
-		       (slot-value object (sb-mop:slot-definition-name slot)))))))
+		       (car (clim-mop:slot-definition-initargs slot))
+		       (slot-value object (clim-mop:slot-definition-name slot)))))))
 
 (defclass gsharp-object () ())
 
