@@ -1051,13 +1051,13 @@ Prints the results in the minibuffer."
 ;;; motion by element
 
 (define-gsharp-command com-forward-element 
-    ((count 'integer :prompt "Number of Elements"))
+    ((count 'integer :prompt "Number of Elements" :default 1))
   "Move forward by element."
   (loop repeat count
         do (forward-element (current-cursor))))
 
 (define-gsharp-command com-backward-element 
-    ((count 'integer :prompt "Number of Elements"))
+    ((count 'integer :prompt "Number of Elements" :default 1))
   "Move backward by element."
   (loop repeat count
         do (backward-element (current-cursor))))
@@ -1067,12 +1067,12 @@ Prints the results in the minibuffer."
 ;;; motion by measure
 
 (define-gsharp-command com-forward-measure 
-    ((count 'integer :prompt "Number of Measures"))
+    ((count 'integer :prompt "Number of Measures" :default 1))
   "Move forward by measure."
   (loop repeat count do (forward-bar (current-cursor))))
 
 (define-gsharp-command com-backward-measure 
-    ((count 'integer :prompt "Number of Measures"))
+    ((count 'integer :prompt "Number of Measures" :default 1))
   "Move backward by measure."
   (loop repeat count do (backward-bar (current-cursor))))
 
@@ -1245,7 +1245,7 @@ Prints the results in the minibuffer."
           (forward-element cursor))))
 
 (define-gsharp-command com-delete-element 
-    ((count 'integer :prompt "Number of Elements"))
+    ((count 'integer :prompt "Number of Elements" :default 1))
   "Delete element forwards."
   (let ((cursor (current-cursor)))
     (loop repeat count
@@ -1259,7 +1259,7 @@ Prints the results in the minibuffer."
                    (delete-element cursor))))))
 
 (define-gsharp-command com-erase-element 
-    ((count 'integer :prompt "Number of Elements"))
+    ((count 'integer :prompt "Number of Elements" :default 1))
   "Delete element backwards."
   (let ((cursor (current-cursor)))
     (loop repeat count
