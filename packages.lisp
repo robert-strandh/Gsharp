@@ -188,7 +188,7 @@
 	:gsharp-measure :sdl :midi
 	:gsharp-play)
   (:shadowing-import-from :gsharp-numbering #:number)
-  (:shadowing-import-from :gsharp-buffer #:rest)
+  (:shadowing-import-from :gsharp-buffer #:rest #:buffer)
   (:export #:gsharp #:edit-file))
 
 (in-package :gsharp-numbering)
