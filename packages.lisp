@@ -35,6 +35,7 @@
 
 (defpackage :score-pane
   (:use :clim :clim-extensions :clim-lisp :sdl :esa)
+  (:import-from :esa-io #:buffer)
   (:shadow #:rest)
   (:export #:draw-fiveline-staff #:draw-lyrics-staff
 	   #:draw-stem #:draw-right-stem #:draw-left-stem 
