@@ -268,7 +268,8 @@
 (make-command-table
  'menubar-command-table
  :errorp nil
- :menu '(("File" :menu file-command-table)
+ :menu '(("File" :menu esa-io-menu-table)
+         ("Macros" :menu keyboard-macro-menu-table)
          ("Buffer" :menu buffer-command-table)
          ("Stuff" :menu segment-command-table)
          ("Segment" :menu segment-command-table)
@@ -277,19 +278,8 @@
          ("Measure" :menu measure-command-table)
          ("Modes" :menu modes-command-table)
          ("Staves" :menu staves-command-table)
-         ("Play" :menu play-command-table)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; file menu
-
-(make-command-table
- 'file-command-table
- :errorp nil
- :menu `(("Find" :command (esa-io::com-find-file ,esa::*unsupplied-argument-marker*))
-         ("Save" :command esa-io::com-save-buffer)
-         ("Save as" :command (esa-io::com-write-buffer ,esa::*unsupplied-argument-marker*))
-         ("Quit" :command com-quit)))
+         ("Play" :menu play-command-table)
+         ("Help" :menu help-menu-table)))
 
 (define-gsharp-command (com-new-buffer :name t) ()
   (let* ((buffer (make-instance 'buffer))
