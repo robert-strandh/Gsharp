@@ -494,7 +494,10 @@ note elements in that staff have associated lyrics."
         ;; clefs
         (for-named-elements ("clef" clef attributes)
           (let ((name (stringcase (named-pcdata clef "sign")
-                        ("G" :treble)
+                        ("G" (if (string= (named-pcdata clef "clef-octave-change")
+                                          "-1")
+                                 :treble8
+                                 :treble))
                         ("F" :bass)
                         ("C" :c)
                         ("percussion" :percussion)
@@ -861,7 +864,10 @@ dotted 16th note will return 8."
                    (cxml:with-element "sign"
                      (cxml:text clef-sign))
                    (cxml:with-element "line"
-                     (cxml:text (write-to-string clef-line))))))))
+                     (cxml:text (write-to-string clef-line)))
+                   (when (eq (name clef) :treble8)
+                     (cxml:with-element "clef-octave-change"                    
+                       (cxml:text "-1"))))))))
 
     ;; process each bar, backing up only if there's a "next" bar
     (loop for voice from 1
