@@ -143,8 +143,14 @@ notehead, dots and beams values."
                ("eighth" 1)
                (("quarter" "half" "whole" "breve" "full" "long") 0))
              0))
-        (dots (length (dom:get-elements-by-tag-name note-element "dot"))))
-    (values notehead beams dots)))
+        (dots (length (dom:get-elements-by-tag-name note-element "dot")))
+        (stem (if (has-element-type note-element "stem")
+                  (cond
+                    ((string= (named-pcdata note-element "stem") "up") :up)
+                    ((string= (named-pcdata note-element "stem") "down"):down)
+                    (t :auto))
+                  :auto)))              
+    (values notehead beams dots stem)))
 
 (defparameter *step-to-basenote* '((#\C . 0)
                                    (#\D . 1)
@@ -271,12 +277,14 @@ specified, returns the first (hopefully default) staff."
       (when (has-element-type xnote "pitch")
         (progn
           (unless (has-element-type xnote "chord")
-            (multiple-value-bind (notehead beams dots)
+            (multiple-value-bind (notehead beams dots stem)
                 (parse-mxml-note-duration xnote)
               (setf *parsing-in-cluster* (make-cluster :notehead notehead
                                                        :lbeams beams
                                                        :rbeams beams
-                                                       :dots dots)))
+                                                       :dots dots
+                                                       :stem-direction stem)))
+                                                                        
             (add-element-at-duration *parsing-in-cluster* bar *parsing-duration-gmeasure-position*)
             (setf advance (duration *parsing-in-cluster*)))
           (add-note *parsing-in-cluster* (parse-mxml-pitched-note xnote staves))))
@@ -1105,6 +1113,10 @@ dotted 16th note will return 8."
            do (cxml:with-element "dot"))
       (if accidental (cxml:with-element "accidental"
                        (cxml:text accidental)))
+      (unless (eq (final-stem-direction (cluster note)) :auto)
+        (cxml:with-element "stem"
+          (cxml:text (string-downcase
+                      (string (final-stem-direction (cluster note)))))))
       (if (> (hash-table-count *staff-hash*) 1)
           (cxml:with-element "staff"
             (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
