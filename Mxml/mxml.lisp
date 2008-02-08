@@ -454,13 +454,10 @@ note elements in that staff have associated lyrics."
 (defun gduration-from-xduration (xduration)
   (/ xduration (* 4 *mxml-divisions*)))
 
-(defun parse-mxml-part (part)
+(defun parse-mxml-part (part part-name)
   (let ((staves nil)
         (layers nil)
-        (lyrics-layer-hash (make-hash-table))
-        ;; TODO this could pull the part-name from the partlist at the
-        ;; top of the file
-        (part-name (dom:get-attribute part "id")))
+        (lyrics-layer-hash (make-hash-table)))
 
     ;; Create all of the staves, along with their initial
     ;; keysignatures and clefs.
@@ -522,10 +519,14 @@ note elements in that staff have associated lyrics."
         ;; in when added to the buffer.
         (setf staves
               (loop for i below number-of-staves
-                 for melody-staff = (make-fiveline-staff :name (format nil "~A staff ~D" part-name (1+ i))
+                 for melody-staff = (make-fiveline-staff :name (if (= number-of-staves 1)
+                                                                   part-name
+                                                                   (format nil "~A staff ~D" part-name (1+ i)))
                                                          :clef (elt clefs i))
                  for lyric-staff = (if (xmlstaff-has-lyrics part (1+ i))
-                                       (list (make-lyrics-staff :name (format nil "~A lyricstaff ~D" part-name (1+ i))))
+                                       (list (make-lyrics-staff :name (if (= number-of-staves 1)
+                                                                          part-name
+                                                                          (format nil "~A lyricstaff ~D" part-name (1+ i)))))
                                        nil)
                  nconc (cons melody-staff lyric-staff)))
 
@@ -554,18 +555,22 @@ note elements in that staff have associated lyrics."
             (pushnew (nth staff-number fiveline-staves) (elt staves-for-layers voice-number))))
         
         (setf layers (nconc
-                      (loop for staves across staves-for-layers
-                         for i from 1
-                         collect (make-layer staves
-                                             :body (make-slice :bars nil)
-                                             :name (format nil "~A layer ~D" part-name i)))
-                      (loop for lyrics-staff in lyrics-staves
-                         for i from 1
-                         for new-layer = (make-layer (list lyrics-staff)
-                                                     :body (make-slice :bars nil)
-                                                     :name (format nil "~A lyrics-layer ~D" part-name i))
-                         do (setf (gethash lyrics-staff lyrics-layer-hash) new-layer)
-                         collecting new-layer)))))
+                       (loop for staves across staves-for-layers
+                          for i from 1
+                          collect (make-layer staves
+                                              :body (make-slice :bars nil)
+                                              :name (if (= (length staves-for-layers) 1)
+                                                        part-name
+                                                        (format nil "~A layer ~D" part-name i))))
+                       (loop for lyrics-staff in lyrics-staves
+                          for i from 1
+                          for new-layer = (make-layer (list lyrics-staff)
+                                                      :body (make-slice :bars nil)
+                                                      :name (if (= (length staves-for-layers) 1)
+                                                                part-name
+                                                                (format nil "~A lyrics-layer ~D" part-name i)))
+                          do (setf (gethash lyrics-staff lyrics-layer-hash) new-layer)
+                          collecting new-layer)))))
     
     ;; return the layers and the staves
     (values layers
@@ -622,11 +627,23 @@ note elements in that staff have associated lyrics."
   (let ((layerss nil)
         (lyrics-layer-hashes nil)
         (stavess nil)
-        (parts (dom:get-elements-by-tag-name document "part")))
-    
+        (parts (dom:get-elements-by-tag-name document "part"))
+        (parts-alist nil))
+    (sequence:dosequence (part (dom:child-nodes
+                                (aref (dom:get-elements-by-tag-name document "part-list")
+                                      0)))
+      (setf parts-alist
+            (if (has-element-type part "part-name")
+                (acons (dom:get-attribute part "id")
+                       (named-pcdata part "part-name")
+                       parts-alist)
+                (acons (dom:get-attribute part "id")
+                       (dom:get-attribute part "id")
+                       parts-alist))))
     (sequence:dosequence (part parts)
-      (multiple-value-bind (layers staves lyrics-layer-hash)
-          (parse-mxml-part part)
+       (multiple-value-bind (layers staves lyrics-layer-hash)
+          (parse-mxml-part part (cdr (assoc (dom:get-attribute part "id")
+                                            parts-alist :test #'string=)))
         (setf layerss
               (append layerss (list layers)))
         (setf lyrics-layer-hashes
@@ -634,8 +651,10 @@ note elements in that staff have associated lyrics."
         (setf stavess (append stavess (list staves)))))
 
     ;; And finally make the buffer and start parsing notes.
+    ;; Previous operations result in staves and layers in opposite
+    ;; orders (don't know why) - hence the reverse for segment layers
     (let* ((segment (make-instance 'segment
-                                   :layers (apply #'concatenate 'list layerss)))
+                                   :layers (reverse (apply #'concatenate 'list layerss))))
            (buffer (make-instance 'buffer
                                   :segments (list segment)
                                   :staves (apply #'concatenate 'list stavess))))
@@ -681,8 +700,48 @@ note elements in that staff have associated lyrics."
 ;;;;;;;;;;;
 (defvar *staff-hash*)
 
+(defun guess-parts (layers)
+  ;; Looks for the way of dividing layers into as many mxml-parts as
+  ;; possible without ending up with a single staff in two
+  ;; parts. Returns two parallel lists - one of lists of layers, the
+  ;; other of staves.
+  (let ((parts))
+    (dolist (layer layers (values (mapcar #'second parts)
+                                  (mapcar #'first parts)))
+      (dolist (part parts (setf parts (cons (list (staves layer)
+                                                  (list layer))
+                                            parts)))
+        (when (not (every #'(lambda (x) (not (member x (first part))))
+                          (staves layer)))
+          (setf (first part) (union (staves layer)
+                                    (first part))
+                (second part) (cons layer (second part)))
+          (return))))))
+         
+(defun ordered-parts (segment buffer)
+  ;; sort parts that can have multiple layers and staves. Sort by
+  ;; stave order and then by layers order.
+  (multiple-value-bind (part-layers part-staves)
+      (guess-parts (layers segment))
+    (let* ((s-positions (mapcar #'(lambda (x)
+                                    (loop for stave in x
+                                       minimize (position stave (staves buffer))))
+                                part-staves))
+           (l-positions (mapcar #'(lambda (x) 
+                                    (loop for layer in x
+                                       minimize (position layer (layers segment))))
+                                part-layers))
+           (parts (mapcar #'list part-layers s-positions l-positions)))
+      (mapcar #'car
+              (sort parts #'(lambda (x y) (or (< (second x) (second y))
+                                              (and (= (second x) (second y))
+                                                   (< (third x) (third y))))))))))
+
 (defun write-mxml (buffer)
-  (let ((sink (cxml:make-rod-sink :indentation 2 :canonical nil)))
+  ;; Create mxml for buffer. Previously took part = segment, now takes
+  ;; part = layer.
+  (let ((sink (cxml:make-rod-sink :indentation 2 :canonical nil))
+        (ordered-parts))
     (cxml:with-xml-output sink
       (sax:start-dtd sink                                                         
                      "score-partwise"                                             
@@ -691,24 +750,33 @@ note elements in that staff have associated lyrics."
       (sax:end-dtd sink)
       (cxml:with-element "score-partwise"
         (cxml:attribute "version" "1.1")
-        (make-xml-partlist)
-        (cxml:with-element "part"
-          (cxml:attribute "id" "P1")
-          (loop for segment in (segments buffer)
+        (loop for segment in (segments buffer)
              with measure-number = 1
-             do
-               (make-xml-segment segment measure-number)
-               (setf measure-number
-                     (+ measure-number
-                        (loop for layer in (layers segment)
-                           maximizing (length (bars (body layer))))))))))))
+             do 
+             (setf ordered-parts (ordered-parts segment buffer))
+             (make-xml-partlist ordered-parts)
+             (make-xml-segment segment measure-number ordered-parts)
+             (setf measure-number
+                   (+ measure-number
+                      (loop for layer in (layers segment)
+                         maximizing (length (bars (body layer)))))))))))
 
-(defun make-xml-partlist ()
+(defun make-xml-partlist (part-list)
+  ;; Generates the part-list element based on sublists of layers. Part ID's are
+  ;; numbered P1, P2, etc., part names are taken from the layer names.
   (cxml:with-element "part-list"
-    (let ((partid "P1"))
+    (do ((part-list part-list (cdr part-list))
+         (i 1 (1+ i)))
+        ((null part-list))
       (cxml:with-element "score-part"
-        (cxml:attribute "id" partid)
-        (cxml:with-element "part-name" (cxml:text partid))))))
+        (cxml:attribute "id" (format nil "P~D" i))
+        (cxml:with-element "part-name" 
+          (cxml:text (name-for-part (car part-list))))))))
+
+(defun name-for-part (layers)
+  (apply #'concatenate 'string (name (car layers))
+         (loop for layer in (cdr layers)
+            collect (format nil ", ~A" (name layer)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Dealing with durations
@@ -759,7 +827,7 @@ dotted 16th note will return 8."
 ;; Back to exporting
 ;;;;;;;;;;;;;;;;;;;;;;
 
-(defun make-xml-segment (segment first-bar-number)
+(defun make-xml-segment (segment first-bar-number ordered-parts)
 
   ;; Evaluate the appropriate mxml divisions.
   ;; i think the beginning of a segment is a good place to do this. i
@@ -767,16 +835,23 @@ dotted 16th note will return 8."
   ;; right.
   (let ((*mxml-divisions*
          (loop for element in (extract-all-elements segment)
-            maximizing (calculate-required-divisions element)))
-        (*staff-hash*
-         (make-staff-hash
-          (remove-duplicates (apply #'concatenate 'list
-                                    (mapcar #'staves (layers segment)))))))
-  
-    (let ((lists-of-bars (mapcar #'(lambda (l) (bars (body l)))
-                                 (layers segment))))
-      (apply #'map-all-lists-maximally
-             #'make-xml-bars first-bar-number lists-of-bars))))
+            maximizing (calculate-required-divisions element))))
+    (do* ((parts ordered-parts (cdr parts))
+          (part (car parts) (car parts))
+          (i 1 (1+ i)))
+         ((null parts))
+      (let ((*staff-hash* 
+             (make-staff-hash (remove-duplicates 
+                               (apply #'concatenate 'list
+                                      (mapcar #'staves part))))))
+        (cxml:with-element "part"
+          (cxml:attribute "id" (format nil "P~D" i))
+          (do ((part-bars (mapcar #'(lambda (x) (bars (body x)))
+                                  part)
+                          (mapcar #'cdr part-bars))
+               (bar-no first-bar-number (1+ bar-no)))
+              ((null (car part-bars)))
+            (apply #'make-xml-bars bar-no part (mapcar #'car part-bars))))))))
 
 ;;(defun make-xml-layer (layer)
 ;;  (let ((body (body layer)))
@@ -795,7 +870,7 @@ dotted 16th note will return 8."
              (setf (gethash staff new-staff-hash) i))))
     new-staff-hash))
 
-(defun make-xml-bars (id &rest bars)
+(defun make-xml-bars (id layers &rest bars)
   (cxml:with-element "measure"
     (cxml:attribute "number" (write-to-string id))
 
@@ -820,12 +895,7 @@ dotted 16th note will return 8."
           (cxml:with-element "divisions"
             (cxml:text (write-to-string *mxml-divisions*)))
 
-          (let* ((layers
-                  (remove-duplicates
-                   (mapcar #'(lambda (bar) (layer (slice bar))) bars)))
-                 (staves
-                  (remove-duplicates
-                    (apply #'concatenate 'list (mapcar #'staves layers))))
+          (let* ((staves (reduce #'union (mapcar #'staves layers)))
                  (melody-staves
                   (remove-if
                    #'(lambda (staff) (typep staff 'lyrics-staff)) staves))
@@ -837,6 +907,9 @@ dotted 16th note will return 8."
             ;; is fixed in MusicXML 2.0.
             ;; TODO: put a bunch more attribute elements after this
             ;; one if the other staves have different key signatures.
+            ;; N.B. These comments are largely based on the
+            ;; parts/segments/layers issue. Should be a very rare issue
+            ;; with the new code.
             (let ((staff (car melody-staves)))
               (cxml:with-element "key"
                 (alterations-to-fifths
