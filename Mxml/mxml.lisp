@@ -1004,9 +1004,9 @@ dotted 16th note will return 8."
       (cxml:with-element "type" (cxml:text type))
       (loop repeat dots
          do (cxml:with-element "dot"))
-      (if (> (hash-table-count *staff-hash*) 1)
-          (cxml:with-element "staff"
-            (cxml:text (write-to-string (gethash (staff rest) *staff-hash*))))))))
+      (when (> (hash-table-count *staff-hash*) 1)
+	(cxml:with-element "staff"
+	  (cxml:text (write-to-string (gethash (staff rest) *staff-hash*))))))))
 
 (defmethod make-xml-element ((cluster cluster) voice)
   ;; this maybe should get called earlier. or later. i don't know.
@@ -1034,9 +1034,9 @@ dotted 16th note will return 8."
       (unless (null voice)
         (cxml:with-element "voice" (cxml:text (write-to-string voice))))
       ;; TODO: make this use the first melody staff above the lyrics staff
-      (if (> (hash-table-count *staff-hash*) 1)
-          (cxml:with-element "staff"
-            (cxml:text (write-to-string (gethash (staff lyric) *staff-hash*)))))
+      (when (> (hash-table-count *staff-hash*) 1)
+	(cxml:with-element "staff"
+	  (cxml:text (write-to-string (gethash (staff lyric) *staff-hash*)))))
       (cxml:with-element "lyric"
         (cxml:with-element "syllabic" (cxml:text syllabic))
         (cxml:with-element "text" (cxml:text text))))))
