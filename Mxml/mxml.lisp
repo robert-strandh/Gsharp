@@ -129,6 +129,9 @@ notehead, dots and beams values."
                 :filled)
                ("half" :half)
                ("whole" :whole)
+	       ;; KLUDGE: "full" here (and for beams) I think is a
+	       ;; feature of catering for Nightingale's MusicXML
+	       ;; export, which is wrong in this respect.
                (("breve" "full") :breve)
                ("long" :long))
              :filled))
@@ -166,9 +169,8 @@ notehead, dots and beams values."
     (+ basenum (* 7 octave))))
 
 (defun parse-mxml-accidental (note)
-  ;; TODO this should support microtones. also, i wrote it fairly
-  ;; early on and it doesn't use things like has-element which it
-  ;; should.
+  ;; I (presumably Brian Gruber -- CSR) wrote it fairly early on and
+  ;; it doesn't use things like has-element which it should.
   (let ((alters (dom:get-elements-by-tag-name note "alter")))
     (if (= 0 (length alters))
         :natural
