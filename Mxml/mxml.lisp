@@ -753,10 +753,10 @@ note elements in that staff have associated lyrics."
   (let ((sink (cxml:make-rod-sink :indentation 2 :canonical nil))
         (ordered-parts))
     (cxml:with-xml-output sink
-      (sax:start-dtd sink                                                         
-                     "score-partwise"                                             
-                     "-//Recordare//DTD MusicXML 1.1 Partwise//EN"                
-                     "http://www.musicxml.org/dtds/partwise.dtd")                 
+      (sax:start-dtd sink
+                     "score-partwise"
+                     "-//Recordare//DTD MusicXML 1.1 Partwise//EN"
+                     "http://www.musicxml.org/dtds/partwise.dtd") 
       (sax:end-dtd sink)
       (cxml:with-element "score-partwise"
         (cxml:attribute "version" "1.1")
@@ -976,22 +976,25 @@ dotted 16th note will return 8."
 
 (defgeneric make-xml-element (gharp-element voice))
 
+(defun rhythmic-element-type (element)
+  (ecase (notehead element)
+    (:long "long")
+    (:breve "breve")
+    (:whole "whole")
+    (:half "half")
+    (:filled
+     (ecase (max (rbeams element) (lbeams element))
+       (0 "quarter")
+       (1 "eighth")
+       (2 "16th")
+       (3 "32nd")
+       (4 "64th")
+       (5 "128th")
+       (6 "256th")))))
+
 (defmethod make-xml-element ((rest rest) voice)
   (let ((duration (calculate-duration rest))
-        (type (ecase (notehead rest)
-                (:long "long")
-                (:breve "breve")
-                (:whole "whole")
-                (:half "half")
-                (:filled
-                 (ecase (max (rbeams rest) (lbeams rest))
-                   (0 "quarter")
-                   (1 "eighth")
-                   (2 "16th")
-                   (3 "32nd")
-                   (4 "64th")
-                   (5 "128th")
-                   (6 "256th")))))
+        (type (rhythmic-element-type rest))
         (dots (dots rest)))
     (cxml:with-element "note"
       (cxml:with-element "rest")
@@ -1009,20 +1012,7 @@ dotted 16th note will return 8."
   ;; this maybe should get called earlier. or later. i don't know.
   (gsharp-measure::compute-final-accidentals (notes cluster))
   (let ((duration (calculate-duration cluster))
-        (type (ecase (notehead cluster)
-                (:long "long")
-                (:breve "breve")
-                (:whole "whole")
-                (:half "half")
-                (:filled
-                 (ecase (max (rbeams cluster) (lbeams cluster))
-                   (0 "quarter")
-                   (1 "eighth")
-                   (2 "16th")
-                   (3 "32nd")
-                   (4 "64th")
-                   (5 "128th")
-                   (6 "256th")))))
+        (type (rhythmic-element-type cluster))
         (dots (dots cluster)))
 
     (loop for note in (notes cluster)
@@ -1077,7 +1067,7 @@ dotted 16th note will return 8."
   (let ((step (mod pitch 7)))
     (list (car (rassoc step *step-to-basenote*)) (/ (- pitch step) 7))))
 
-(defun make-xml-note (note in-chord type dots duration &optional voice)
+(defun make-xml-note (note in-chord type dots duration voice)
   (let ((pitch (gshnote-to-xml (pitch note)))
         (accidental (ecase (final-accidental note)
                       ((nil))
@@ -1101,11 +1091,12 @@ dotted 16th note will return 8."
                  (:sesquiflat "-1.5")
                  (:double-flat "-2"))))
     (cxml:with-element "note"
-      (if in-chord
-          (cxml:with-element "chord"))
+      (when in-chord
+	(cxml:with-element "chord"))
       (cxml:with-element "pitch"
         (cxml:with-element "step" (cxml:text (car pitch)))
-        (if alter (cxml:with-element "alter" (cxml:text alter)))
+        (when alter 
+	  (cxml:with-element "alter" (cxml:text alter)))
         (cxml:with-element "octave" (cxml:text (write-to-string (cadr pitch)))))
       (cxml:with-element "duration" (cxml:text (write-to-string duration)))
       (unless (null voice)
@@ -1113,15 +1104,15 @@ dotted 16th note will return 8."
       (cxml:with-element "type" (cxml:text type))
       (loop repeat dots
            do (cxml:with-element "dot"))
-      (if accidental (cxml:with-element "accidental"
-                       (cxml:text accidental)))
+      (when accidental 
+	(cxml:with-element "accidental" (cxml:text accidental)))
       (unless (eq (final-stem-direction (cluster note)) :auto)
         (cxml:with-element "stem"
           (cxml:text (string-downcase
                       (string (final-stem-direction (cluster note)))))))
-      (if (> (hash-table-count *staff-hash*) 1)
-          (cxml:with-element "staff"
-            (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
+      (when (> (hash-table-count *staff-hash*) 1)
+	(cxml:with-element "staff"
+	  (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
 
       ;; Small temptation here to put the if clause on the attribute,
       ;; but remember that a note can have ties in both directions.
