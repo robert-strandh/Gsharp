@@ -201,6 +201,8 @@ specified, returns the first (hopefully default) staff."
        (remove-if #'(lambda (s) (not (typep s 'fiveline-staff))) staves)))
   (elt melody-staves (parse-mxml-note-staff-number note))))
 
+(defvar *parsing-in-cluster*)
+
 (defun parse-mxml-pitched-note (note staves)
   (let* ((staff (parse-mxml-note-staff note staves))
          (step (named-pcdata note "step"))
@@ -213,11 +215,16 @@ specified, returns the first (hopefully default) staff."
       (estringcase (dom:get-attribute tie "type")
         ("start" (setf tie-right t))
         ("stop" (setf tie-left t))))
+    (for-named-elements ("staccato" stacc note)
+      (declare (ignore stacc))
+      (pushnew :staccato (annotations *parsing-in-cluster*)))
+    (for-named-elements ("tenuto" ten note)
+      (declare (ignore ten))
+      (pushnew :tenuto (annotations *parsing-in-cluster*)))
     (make-instance 'note :pitch pitch :staff staff :accidentals accidentals
                    :tie-left tie-left :tie-right tie-right)))
 
 (defvar *parsing-duration-gmeasure-position*)
-(defvar *parsing-in-cluster*)
 (defvar *mxml-divisions*)
 (defun parse-mxml-note (xnote bars staves lyrics-layer-hash)
   ;; TODO: There is nothing in MusicXML that stops you from having
@@ -1011,18 +1018,14 @@ dotted 16th note will return 8."
 (defmethod make-xml-element ((cluster cluster) voice)
   ;; this maybe should get called earlier. or later. i don't know.
   (gsharp-measure::compute-final-accidentals (notes cluster))
-  (let ((duration (calculate-duration cluster))
-        (type (rhythmic-element-type cluster))
-        (dots (dots cluster)))
-
+  (let ((duration (calculate-duration cluster)))
     (loop for note in (notes cluster)
-       for x from 0
-       do (make-xml-note note (> x 0) type dots duration voice))
-
+	  for x from 0
+	  do (make-xml-note note (> x 0) duration voice cluster))
     (when (null (notes cluster))
-        ;; it's an empty cluster, a "space"
+      ;; it's an empty cluster, a "space"
       (cxml:with-element "forward"
-        (cxml:text (write-to-string duration))))))
+	(cxml:text (write-to-string duration))))))
 
 (defmethod make-xml-element ((lyric lyrics-element) voice)
   (let ((duration (calculate-duration lyric))
@@ -1067,29 +1070,47 @@ dotted 16th note will return 8."
   (let ((step (mod pitch 7)))
     (list (car (rassoc step *step-to-basenote*)) (/ (- pitch step) 7))))
 
-(defun make-xml-note (note in-chord type dots duration voice)
-  (let ((pitch (gshnote-to-xml (pitch note)))
-        (accidental (ecase (final-accidental note)
-                      ((nil))
-                      (:sharp "sharp")
-                      (:natural "natural")
-                      (:flat "flat")
-                      (:double-sharp "double-sharp")
-                      (:sesquisharp "three-quarters-sharp")
-                      (:semisharp "quarter-sharp")
-                      (:semiflat "quarter-flat")
-                      (:sesquiflat "three-quarters-flat")
-                      (:double-flat "flat-flat")))
-        (alter (ecase (accidentals note)
-                 (:sharp "1")
-                 (:natural nil)
-                 (:flat "-1")
-                 (:double-sharp "2")
-                 (:sesquisharp "1.5")
-                 (:semisharp "0.5")
-                 (:semiflat "-0.5")
-                 (:sesquiflat "-1.5")
-                 (:double-flat "-2"))))
+(defun note-accidental (note)
+  (ecase (final-accidental note)
+    ((nil))
+    (:sharp "sharp")
+    (:natural "natural")
+    (:flat "flat")
+    (:double-sharp "double-sharp")
+    (:sesquisharp "three-quarters-sharp")
+    (:semisharp "quarter-sharp")
+    (:semiflat "quarter-flat")
+    (:sesquiflat "three-quarters-flat")
+    (:double-flat "flat-flat")))
+
+(defun note-alter (note)
+  (ecase (accidentals note)
+    (:sharp "1")
+    (:natural nil)
+    (:flat "-1")
+    (:double-sharp "2")
+    (:sesquisharp "1.5")
+    (:semisharp "0.5")
+    (:semiflat "-0.5")
+    (:sesquiflat "-1.5")
+    (:double-flat "-2")))
+
+(defun note-notations-p (note cluster)
+  (or (tie-left note)
+      (tie-right note)
+      (note-articulations-p note cluster)))
+
+(defun note-articulations-p (note cluster)
+  (let ((annotations (annotations cluster)))
+    (or (member :staccato annotations)
+	(member :tenuto annotations))))
+
+(defun make-xml-note (note in-chord duration voice cluster)
+  (let ((type (rhythmic-element-type cluster))
+        (dots (dots cluster))
+	(pitch (gshnote-to-xml (pitch note)))
+        (accidental (note-accidental note))
+        (alter (note-alter note)))
     (cxml:with-element "note"
       (when in-chord
 	(cxml:with-element "chord"))
@@ -1113,12 +1134,15 @@ dotted 16th note will return 8."
       (when (> (hash-table-count *staff-hash*) 1)
 	(cxml:with-element "staff"
 	  (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
-
-      ;; Small temptation here to put the if clause on the attribute,
-      ;; but remember that a note can have ties in both directions.
-      (when (or (tie-left note) (tie-right note))
+      (when (note-notations-p note cluster)
         (cxml:with-element "notations"
           (when (tie-left note)
             (cxml:with-element "tied" (cxml:attribute "type" "stop")))
           (when (tie-right note)
-            (cxml:with-element "tied" (cxml:attribute "type" "start"))))))))
+            (cxml:with-element "tied" (cxml:attribute "type" "start")))
+	  (when (note-articulations-p note cluster)
+	    (cxml:with-element "articulations"
+	      (when (member :staccato (annotations cluster))
+		(cxml:with-element "staccato"))
+	      (when (member :tenuto (annotations cluster))
+		(cxml:with-element "tenuto")))))))))
