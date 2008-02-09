@@ -103,6 +103,8 @@
 (set-key 'com-untie-note-left 'cluster-table '((#\x) (#\{)))
 (set-key 'com-untie-note-right 'cluster-table '((#\x) (#\})))
 (set-key 'com-rotate-stem-direction 'cluster-table '((#\s :meta)))
+(set-key 'com-toggle-staccato 'cluster-table '(#\s))
+(set-key 'com-toggle-tenuto 'cluster-table '(#\t))
 (set-key 'com-current-increment 'cluster-table '((#\p)))
 (set-key 'com-current-decrement 'cluster-table '((#\n)))
 (set-key 'com-octave-up 'cluster-table '((#\U :shift :meta)))

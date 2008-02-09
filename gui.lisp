@@ -754,6 +754,18 @@ Prints the results in the minibuffer."
           (:up :down)
           (:down :auto))))
 
+(define-gsharp-command com-toggle-staccato ()
+  (let ((cluster (cur-cluster)))
+    (if (member :staccato (annotations cluster))
+	(setf (annotations cluster) (remove :staccato (annotations cluster)))
+	(push :staccato (annotations cluster)))))
+
+(define-gsharp-command com-toggle-tenuto ()
+  (let ((cluster (cur-cluster)))
+    (if (member :tenuto (annotations cluster))
+	(setf (annotations cluster) (remove :tenuto (annotations cluster)))
+	(push :tenuto (annotations cluster)))))
+
 (define-gsharp-command com-down ()
   (let ((element (cur-element)))
     (if (typep element 'cluster)

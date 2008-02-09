@@ -117,6 +117,10 @@
   (declare (ignore direction))
   (mark-modified element))
 
+(defmethod (setf annotations) :after (annotations (element relement))
+  (declare (ignore annotations))
+  (mark-modified element))
+
 (defmethod append-char :after ((element lyrics-element) char)
   (declare (ignore char))
   (mark-modified element))

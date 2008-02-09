@@ -909,6 +909,60 @@ right of the center of its timeline"))
 
 (defgeneric draw-element (pane element &optional flags))
 
+(defmethod draw-element :around (pane element &optional flags)
+  (call-next-method)
+  (dolist (annotation (annotations element))
+    (draw-element-annotation pane element annotation)))
+
+(defgeneric draw-element-annotation (pane element annotation)
+  (:method (pane element annotation) 
+    (warn "unknown annotation ~S for ~S" annotation element)))
+
+;;; FIXME: these methods work and have the right vertical behaviour;
+;;; the horizontal centering of the dot and the tenuto mark are all
+;;; wrong, sadly.
+(defmethod draw-element-annotation
+    (pane (element cluster) (annotation (eql :staccato)))
+  (let ((direction (final-stem-direction element))
+	(x (final-absolute-element-xoffset element)))
+    (if (eq direction :up)
+	(score-pane:with-vertical-score-position (pane (bot-note-staff-yoffset element))
+	  (score-pane:with-notehead-right-offsets (dx dy)
+	    (score-pane:with-notehead-left-offsets (ddx ddy)
+	      (let ((pos (- (bot-note-pos element) 2)))
+		(when (and (<= 0 pos) (evenp pos))
+		  (setq pos (1- pos)))
+		(score-pane:draw-dot pane (+ x (/ (+ dx ddx) 2)) pos)))))
+	(score-pane:with-vertical-score-position (pane (top-note-staff-yoffset element))
+	  (score-pane:with-notehead-right-offsets (dx dy)
+	    (score-pane:with-notehead-left-offsets (ddx ddy)
+	      (let ((pos (+ (top-note-pos element) 2)))
+		(when (and (<= pos 8) (evenp pos))
+		  (setq pos (1+ pos)))
+		(score-pane:draw-dot pane (+ x (/ (+ dx ddx) 2)) pos))))))))
+
+(defmethod draw-element-annotation 
+    (pane (element cluster) (annotation (eql :tenuto)))
+  (let ((direction (final-stem-direction element))
+	(x (final-absolute-element-xoffset element)))
+    (if (eq direction :up)
+	(score-pane:with-vertical-score-position (pane (bot-note-staff-yoffset element))
+	  (score-pane:with-notehead-right-offsets (dx dy)
+	    (score-pane:with-notehead-left-offsets (ddx ddy)
+	      (let ((pos (- (bot-note-pos element) 2)))
+		(when (and (<= 0 pos) (evenp pos))
+		  (setq pos (1- pos)))
+		(draw-rectangle* pane (+ x ddx) (1- (score-pane:staff-step (- pos)))
+				 (+ x dx) (1+ (score-pane:staff-step (- pos))))))))
+	(score-pane:with-vertical-score-position (pane (top-note-staff-yoffset element))
+	  (score-pane:with-notehead-right-offsets (dx dy)
+	    (score-pane:with-notehead-left-offsets (ddx ddy)
+	      (let ((pos (+ (bot-note-pos element) 2)))
+		(when (and (<= pos 8) (evenp pos))
+		  (setq pos (1+ pos)))
+		(draw-rectangle* pane (+ x ddx) (1- (score-pane:staff-step (- pos)))
+				 (+ x dx) (1+ (score-pane:staff-step (- pos)))))))))))
+					       
 (defmethod note-difference ((note1 note) (note2 note))
   (- (pitch note1) (pitch note2)))
 
