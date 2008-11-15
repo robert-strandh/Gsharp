@@ -1757,4 +1757,77 @@ of a normal note.  This function always returns a positive value"))
 	    p5 left ++ p6 down (tensions 3 1) p7 down ++ p8 left ++ p9 up ++
 	    p10 right ++ p11 down (tensions 1 3) p12 down (tensions 3 1) p13 right (tensions 1 3)
 	    p14 (tensions 3 1) cycle)))))
-	     
+
+;;;                  
+;;;                                w2
+;;;                            _________
+;;;                           |         |
+;;;                                     q                  _
+;;;                                 **********		    |
+;;;                               **************	    |
+;;;                             *****m l ********	    |
+;;;                            *******     *******	    |
+;;;                          p*********n  k********r	    |
+;;;                            *******     ******** 	    |
+;;;                              ***  j   *******	    |
+;;;                               o   | ********	    |
+;;;                          ii-*************s		    |
+;;;                             *************		    | h1
+;;;                              c    | ********	    |
+;;;                             ***   h    *******	    |
+;;;                           *******      ********	    |
+;;;                          *********     *********	    |
+;;;                     b - ***********d  g********* t	    |
+;;;                          ********* f    ********	    |
+;;;                           ******- e|   ********	    |
+;;;                             ****************	    |
+;;;                               ************		   _|
+;;;                                   |
+;;;                                   a
+;;;                  
+;;;                         |___________|
+;;;                              w1
+;;;                  
+;;;                  
+;;;                  
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-3)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should sit have its lowest point
+	     ;; at the bottom of the staff line
+	     (ya (+ (- (/ slt 2)) yoffset))
+	     ;; it should have its top at the lower edge of the staff line
+	     (h1 (* 2 sld))
+	     (h2 (* 0.25 h1))
+	     (h3 (* 0.75 h1))
+	     (w1 (round (* 0.38 h1)))
+	     (w2 (round (* 0.33 h1)))
+	     (pa (c (* -0.1 w1) ya))
+	     (pb (c (- w1) (+ ya h2)))
+	     (pc (c (* -0.6 w1) (+ ya (min (1- sld) (round (* 0.4 h1))))))
+	     (pd (c (round (* -0.2 w1)) (+ ya h2)))
+	     (pe (c (* -0.5 w1) (+ ya (* 2.1 slt))))
+	     (pf (c (* -0.1 w1) (+ ya slt)))
+	     (pg (c (* 0.2 w1) (+ ya h2)))
+	     (ph (c (* -0.1 w1) (+ ya sld)))
+	     (pii (c (* -0.7 w1) (+ ya sld (* 0.5 slt))))
+	     (pj (+ ph (c 0 slt)))
+	     (pk (c (* 0.18 w1) (+ ya h3)))
+	     (pl (c (* -0.1 w1) (+ ya (round (* 0.88 h1)))))
+	     (pm (c (* -0.3 w1) (+ ya (round (* 0.85 h1)))))
+	     (pn (c (round (* -0.2 w1)) (+ ya h3)))
+	     (po (c (* -0.55 w1) (+ ya (max (1+ sld) (* 0.6 h1)))))
+	     (pp (c (- w2) (+ ya h3)))
+	     (pq (c 0 (+ ya h1)))
+	     (pr (c w2 h3))
+	     (ps (c (* 0.5 w1) (+ ya sld (* 0.5 slt))))
+	     (pt (c w1 (+ ya h2))))
+	(mf pa left ++ pb up ++ pc right ++ pd down ++ pe down ++
+	    pf right ++ pg up ++ ph left (tensions 1 5) pii up (tensions 5 1)
+	    pj right ++ pk up ++ pl left ++ pm down ++ pn down ++
+	    po left ++ pp up ++ pq right ++ pr down (tensions 0.75 10)
+	    ps down (tensions 10 0.75) pt down ++ cycle)))))
