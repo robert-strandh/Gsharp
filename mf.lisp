@@ -136,8 +136,10 @@
 		     (setf (curl (right-context x)) (slot-value y 'curl))
 		     (setf (direction (right-context x)) (slot-value y 'direction)))
 		 (if (typep y 'curl)
-		     (setf (curl (left-context z)) (slot-value y 'curl))
-		     (setf (direction (left-context z)) (slot-value y 'direction)))))))
+		     (setf (curl (left-context (if (eq z *cycle*) (car path) z)))
+			   (slot-value y 'curl))
+		     (setf (direction (left-context (if (eq z *cycle*) (car path) z)))
+			   (slot-value y 'direction)))))))
 
 (defun propagate-tensions-controls (path)
   (loop for (x y z) on path
