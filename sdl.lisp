@@ -1610,3 +1610,151 @@ of a normal note.  This function always returns a positive value"))
   (climi::close-path
    (mf #c(0 0) -- (complex 16 0) -- (complex 0 -1) -- #c(0 0))))
 
+;;;           w3
+;;;       ___________
+;;;      |           |
+;;;
+;;;             9 *** 10 ** -11			      - 
+;;;              ********** -12			       |
+;;;             ***********			       |
+;;;         8- ************			       |
+;;;           *************			       |
+;;;          **************			       |
+;;;         ***************			       |
+;;;        ***6/ **********			       |
+;;;       **   / **********			       |
+;;;      7    5  **********			       |
+;;;              **********			       |  h2
+;;;              **********			       |
+;;;              **********			       |
+;;;              **********			       |
+;;;              **********			       |
+;;;              **********			       |
+;;;              **********			       |
+;;;           4 -**********- 13             	       |
+;;;        3     **********     14          -	       |
+;;;         \ **************** /             |	       |
+;;;     2 -**********************- 15        | h1      |
+;;;        **********************           _|        _|
+;;;          |       |        |
+;;;          1       0        16
+;;;
+;;;
+;;;              |___|
+;;;                w1
+;;;
+;;;        |_________|
+;;;            w2
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-1)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should sit on top of a staff line
+	     (y0 (+ (/ slt 2) yoffset))
+	     (p0 (c 0 y0))
+	     ;; if the little notch is to be visible, the top
+	     ;; of this character should hang below the upper staff line.
+	     (h2 (- (* 2 sld) slt))
+	     ;; w1 and w2 should be integers in to avoid fuzziness
+	     (w1 (round (* 0.14 h2)))
+	     (w2 (round (* 0.25 h2)))
+	     (h1 (* 0.5 w2))
+	     (p1 (- p0 (* 0.9 w2)))
+	     (p2 (c (- w2) (+ y0 (* h1 0.25))))
+	     (p3 (+ p1 (c 0 (+ y0 (* h1 0.5)))))
+	     (p4 (c (- w1) (+ y0 (* h1 1.2))))
+	     (p5 (c (- w1) (+ y0 (* h2 0.62))))
+	     (p6 (c (- (* w1 1.09)) (+ y0 (* h2 0.65))))
+	     (p7 (c (- (* w2 1.3)) (+ y0 (* h2 0.52))))
+	     (p8 (c (- (* w1 1.23)) (+ y0 (* h2 0.85))))
+	     (p9 (c (- (* w1 0.91)) (+ y0 h2)))
+	     (p10 (c (* w1 0.18) (+ y0 (* h2 0.97))))
+	     (p11 (c w1 (+ y0 (* h2 0.98))))
+	     (p12 (c w1 (+ y0 (* h2 0.96))))
+	     (p13 (c w1 (imagpart p4)))
+	     (p14 (c (- (realpart p3)) (imagpart p3)))
+	     (p15 (c w2 (imagpart p2)))
+	     (p16 (c (- (realpart p1)) (imagpart p1))))
+	(mf p0 -- p1 left ++ p2 up ++ p3 ++ up p4 -- p5 up ++
+	    p6 (tensions 2 3) p7 (tensions 4 1) 
+	    p8 (tensions 1 2)
+	    p9 (tensions 2 2) p10 ++ p11 ++ down p12 -- p13 down ++
+	    p14 ++ p15 down ++ left p16 -- cycle)))))
+
+	
+;;;           
+;;;                          w2
+;;;                      __________
+;;;                     |          |
+;;;                                10
+;;;                                |                     _
+;;;                            *********                  |
+;;;                         **************                |
+;;;                       ******************              |
+;;;                      ****-6  | **********             |
+;;;                   9 -******  5  **********            |
+;;;                     *******-7  4-*********-11         |
+;;;                      ******      *********            |
+;;;                        ***      *********             |
+;;;                         |      ********               |
+;;;                         8    *******                  |
+;;;                            *****          14          |
+;;;                          *****            |           |  h1
+;;;                         *****-12    13    *           |
+;;;                        *******       |   **    _      |
+;;;                      **********************     |     |
+;;;                     ***********************     |     |
+;;;              _     ***********************      |     |
+;;;             |     ****  |   *************       | h2  |
+;;;             |  3 -***   1    ***********        |     |
+;;;          h3 |     **           ********         |     |
+;;;             |_     \            *****          _|    _| 
+;;;                     2             |
+;;;                                   0
+;;;
+;;;
+;;;
+;;;                   |__________| 
+;;;                        w1
+;;;           
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-2)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should sit have its lowest point
+	     ;; at the bottom of the staff line
+	     (y0 (+ (- (/ slt 2)) yoffset))
+	     ;; it should have its top at the lower edge of the staff line
+	     (h1 (* 2 sld))
+	     (h2 (round (* 0.20 h1)))
+	     (h3 (* 0.14 h1))
+	     (h4 (* 0.65 h1))
+	     (w1 (round (* 0.38 h1)))
+	     (w2 (round (* 0.33 h1)))
+	     (w3 (round (* 0.6 w2)))
+	     (p0 (c (* 0.1 w1) y0))
+	     (p1 (c (- (* 0.5 w1)) (+ y0 h3)))
+	     (p2 (c (- (* 0.9 w1)) (+ y0 slt)))
+	     (p3 (c (- w1) (+ y0 (* 0.5 h3))))
+	     (p4 (c (round (* 0.2 w1)) (+ y0 h4)))
+	     (p5 (c (- (* 0.1 w1)) (+ y0 (round (* 0.88 h1)))))
+	     (p6 (c (- w3) (+ y0 (* 0.78 h1))))
+	     (p7 (c (- (* 0.2 w1)) (+ y0 h4)))
+	     (p8 (c (- w3) (+ y0 (round (* 0.53 h1)))))
+	     (p9 (c (- w2) (+ y0 (* 0.7 h1))))
+	     (p10 (c 0 (+ y0 h1)))
+	     (p11 (c w2 h4))
+	     (p12 (c (- (* 0.01 w1)) (* 0.3 h1)))
+	     (p13 (c (* 0.5 w1) h2))
+	     (p14 (c w1 (* 0.3 h1))))
+	(mf p0 left ++ p1 left ++ p2 left ++ p3 up ++ p4 up (tensions 3 1)
+	    p5 left ++ p6 down (tensions 3 1) p7 down ++ p8 left ++ p9 up ++
+	    p10 right ++ p11 down (tensions 1 3) p12 down (tensions 3 1) p13 right (tensions 1 3)
+	    p14 (tensions 3 1) cycle)))))
+	     
