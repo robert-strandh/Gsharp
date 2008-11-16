@@ -1831,3 +1831,82 @@ of a normal note.  This function always returns a positive value"))
 	    pj right ++ pk up ++ pl left ++ pm down ++ pn down ++
 	    po left ++ pp up ++ pq right ++ pr down (tensions 0.75 10)
 	    ps down (tensions 10 0.75) pt down ++ cycle)))))
+
+;;;                      
+;;;                  
+;;;                  
+;;;                           k        l
+;;;                         *************                         - 
+;;;                       j*************m                          |
+;;;                       *************                            |
+;;;                      *************                             |
+;;;                     ************                               |
+;;;                    ************                                |
+;;;                   ***********   ***                            |
+;;;                  **********n  t****v                           |
+;;;                 *********    ******                            |
+;;;                ********    ********                            |
+;;;              i*******   s**********                            |  h2
+;;;              ******      **********                            |
+;;;             *****        **********                            |
+;;;            *****        r**********w                           |
+;;;           ******o  p     **********                            |
+;;;          ******************************                        |
+;;;        h*********************************x                     |
+;;;          ******************************             -          |
+;;;            g         f  e**********y                 |         |
+;;;                      d****************               |         |
+;;;                 c -**********************z           | h1      |
+;;;                    **********************           _|        _|
+;;;                      b       a        aa
+;;;                                       
+;;;                          |_ _|
+;;;                           w2
+;;;                    |_________|
+;;;                        w1
+;;;                 
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-4)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should sit on top of a staff line
+	     (ya (+ (/ slt 2) yoffset))
+	     ;; Its top should hang under the staff line
+	     (h2 (- (* 2 sld) slt))
+	     (xa (round (* 0.02 h2)))
+	     (h1 (round (* 0.15 h2)))
+	     (w1 (round (* 0.25 h2)))
+	     (w2 (round (* 0.14 h2)))
+	     (pa (c xa ya))
+	     (pb (c (- xa (* 0.90 w1)) ya))
+	     (pc (c (- xa w1) (+ ya (* 0.25 h1))))
+	     (pd (+ pb (c 0 (* 1/2 h1))))
+	     (pe (c (- xa w2) (+ ya (* 0.75 h1))))
+	     (pf (+ pd (c 0 (* 1/2 h1))))
+	     (pg (c (* -0.45 h2) (+ ya h1)))
+	     (ph (c (* -0.47 h2) (+ ya (* 1.1 h1))))
+	     (ppi (c (* -0.38 h2) (+ ya (* 0.5 h2))))
+	     (pj (c (* -0.20 h2) (+ ya (* 0.95 h2))))
+	     (pk (c (* -0.12 h2) (+ ya h2)))
+	     (pl (c (* 0.17 h2) (+ ya h2)))
+	     (pm (c (* 0.17 h2) (+ ya (* 0.9 h2))))
+	     (pn (c (* -0.1 h2) (+ ya (* 0.55 h2))))
+	     (po (c (* -0.35 h2) (+ ya (* 1.75 h1))))
+	     (pp (c (* -0.3 h2) (+ ya (* 1.5 h1))))
+	     (pr (c (- xa w2) (+ ya (* 2.2 h1))))
+	     (ps (c (- xa w2) (+ ya (* 2.5 h1))))
+	     (pt (c (+ xa (* 0.70 w2)) (+ ya (* 0.65 h2))))
+	     (pv (c (+ xa w2) (+ ya (* 0.65 h2))))
+	     (pw (c (+ xa w2) (+ ya (* 2.0 h1))))
+	     (px (c (+ xa w1) (+ ya (* 1.1 h1))))
+	     (py (c (+ xa w2) (+ ya (* 0.75 h1))))
+	     (pz (c (+ xa w1) (+ ya (* 0.25 h1))))
+	     (paa (c (+ xa (* 0.90 w1)) ya)))
+	(mf pa -- pb left ++ pc up ++ pd right ++ pe up ++ left pf --
+	    pg left ++ ph ++ ppi (tensions 1 3) pj ++ right pk -- pl right ++ pm ++
+	    pn (tensions 1 5) po down ++ pp right ++ pr up ++ up ps -- pt
+	    (direction (- pt ps)) ++ down pv -- pw down ++ px down ++
+	    py down ++ pz down ++ left paa -- cycle)))))
