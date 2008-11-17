@@ -1797,7 +1797,7 @@ of a normal note.  This function always returns a positive value"))
 	       yoffset)
     font
     (flet ((c (x y) (complex x y)))
-      (let* (;; This symbol should sit have its lowest point
+      (let* (;; This symbol should have its lowest point
 	     ;; at the bottom of the staff line
 	     (ya (+ (- (/ slt 2)) yoffset))
 	     ;; it should have its top at the lower edge of the staff line
@@ -1910,3 +1910,92 @@ of a normal note.  This function always returns a positive value"))
 	    pn (tensions 1 5) po down ++ pp right ++ pr up ++ up ps -- pt
 	    (direction (- pt ps)) ++ down pv -- pw down ++ px down ++
 	    py down ++ pz down ++ left paa -- cycle)))))
+
+;;;          
+;;;                    w2
+;;;                  _______
+;;;                 |       |
+;;;                  
+;;;                    l                n                     _
+;;;                   *******    m   *****o                    |
+;;;                 k********************                      |
+;;;                  *******************                       |
+;;;                  ******************                        |
+;;;                  *****q**********                          |
+;;;                  ****    **p**                             |
+;;;                  ****r                                     |
+;;;                  **** s **t**                   -          |
+;;;                  ***************                 |         |
+;;;                  ******************              |         | h1
+;;;                 j****   h   **********           |         |
+;;;                    i          *********          |         |
+;;;                    c           *********         |         |
+;;;          -       *****        g*********u        |         |
+;;;         |      *********       *********         | h2      |
+;;;         |     ***********      *********         |         |
+;;;     -   |    b************d   *********          |         |
+;;;    |  h4|      **********    *********           |         |
+;;; h3|     |        ******e f *********             |         |
+;;;    |    |          **************                |         |
+;;;    |_   |_            ********                  _|        _|
+;;;                          a
+;;;                  
+;;;              |___________|
+;;;                    w1
+;;;          
+;;;          
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-5)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should have its lowest point
+	     ;; at the bottom of the staff line
+	     (ya (+ (- (/ slt 2)) yoffset))
+	     ;; it should have its top at the lower edge of the staff line
+	     (h1 (* 2 sld))
+	     (h2 (round (* 0.62 h1)))
+	     (h3 (* 0.30 h1))
+	     (h4 (round (* 0.44 h1)))
+	     (yi (+ ya h4 (max 1 (round (* 0.04 h1)))))
+	     (yp (+ ya h2 (max 1 (round (* 0.08 h1)))))
+	     (ym (+ ya (round (* 0.95 h1))))
+	     (yn (+ ya (round (* 0.975 h1))))
+	     (yg (+ ya (* 0.35 h1)))
+	     (yh (+ ya (- h2 (max 1 (round (* 0.07 h1))))))
+	     (w1 (round (* 0.4 h1)))
+	     (w2 (round (* 0.3 h1)))
+	     (xd 0)
+	     (xc (* 0.5 (- xd w1)))
+	     (xe (- xd (* 0.09 h1)))
+	     (xg (round (* 0.10 h1)))
+	     (xr (- (round (* 0.13 h1)) w2))
+	     (ys (- h2 (* 0.03 h1)))
+	     (yq (+ yp (* 0.03 h1)))
+	     (pa (c 0 ya))
+	     (pb (c (- w1) (+ ya h3)))
+	     (pc (c xc (+ ya h4)))
+	     (pd (c xd (+ ya h3)))
+	     (pe (c xe (+ ya (* 0.13 h1))))
+	     (pf (c (* -0.2 w1) (+ ya slt)))
+	     (pg (c xg (+ ya yg)))
+	     (ph (c (* -0.05 h1) yh))
+	     (ppi (c (- (* 0.05 h1) w2) yi))
+	     (pj (c (- w2) (+ yi (* 0.05 h1))))
+	     (pk (c (- w2) (+ ya (- h1 (* 0.10 h1)))))
+	     (pl (c (- (* 0.07 h1) w2) (+ ya h1)))
+	     (pm (c (* 0.18 h1) ym))
+	     (pn (c (- w2 (* 0.03 h1)) yn))
+	     (po (c (round (* 1.1 w2)) (+ ya (- h1 (* 0.03 h1)))))
+	     (pp (c (* 0.05 h1) yp))
+	     (pq (c (+ xr (* 0.03 h1)) yq))
+	     (pr (c xr (+ (* 0.7 ys) (* 0.3 yq))))
+	     (ps (c (+ xr (* 0.03 h1)) ys))
+	     (pt (c (* 0.1 h1) (+ ya h2)))
+	     (pu (c w1 (+ ya yg))))
+	(mf pa left ++ pb up ++ pc right ++ pd down ++ pe (tensions 20 1)
+	    pf right ++ pg up ++ ph left ++ ppi left ++ pj up ++ pk up ++
+	    pl right ++ pm right ++ pn right ++ po down ++ pp left ++
+	    pq left ++ pr down ++ ps right ++ pt right ++ pu down ++ cycle)))))
