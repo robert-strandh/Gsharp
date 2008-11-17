@@ -1999,3 +1999,85 @@ of a normal note.  This function always returns a positive value"))
 	    pf right ++ pg up ++ ph left ++ ppi left ++ pj up ++ pk up ++
 	    pl right ++ pm right ++ pn right ++ po down ++ pp left ++
 	    pq left ++ pr down ++ ps right ++ pt right ++ pu down ++ cycle)))))
+
+;;;                    
+;;;                                      w2
+;;;                                  __________
+;;;                                 |          |                  
+;;;                                   c			   _
+;;;                                  ****		    |
+;;;                              ******g*****		    |
+;;;                           *****    ********		    |
+;;;                         ******    **********d	    |
+;;;                        ******    f**********	    |
+;;;                       *******h     ********		    |
+;;;                      ********        **e*		    |
+;;;                     **********        j 		    |
+;;;                    ************i**********		    |
+;;;                    *************************	    |
+;;;                    ************* n **********	    | h1
+;;;                   b***********      **********	    |
+;;;                    **********       **********	    |
+;;;                    **********       **********k	    |
+;;;                    **********m     o**********	    |
+;;;                    **********       **********	    |
+;;;                     *********       *********	    |
+;;;                      *********  l  ********		    |
+;;;                       ********************		    |
+;;;                         ****************		    |
+;;;                             *********                  _|
+;;;                                 a
+;;;                    
+;;;                    
+;;;                    |____________|
+;;;                         w1
+;;;                    
+;;;                    
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-6)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should have its lowest point
+	     ;; at the bottom of the staff line
+	     (ya (+ (- (/ slt 2)) yoffset))
+	     ;; it should have its top at the lower edge of the staff line
+	     (h1 (* 2 sld))
+	     (w1 (round (* 0.4 h1)))
+	     (w2 (round (* 0.35 h1)))
+	     (xc (* 0.1 w2))
+	     (xf (round (* 0.05 h1)))
+	     (yf (+ ya (* 0.8 h1)))
+	     (xe (* 0.5 (+ w2 xf)))
+	     (ye (+ ya (* 0.68 h1)))
+	     (xg (+ xf (* 0.02 h1)))
+	     (yg (+ ya (- h1 slt)))
+	     (xh (* -0.12 h1))
+	     (yh (+ ya (* 0.7 h1)))
+	     (xj (* 0.12 h1))
+	     (yj (- ye slt))
+	     (xi (* -0.09 h1))
+	     (yi (- yj (* 0.5 slt)))
+	     (yn (- yj (* 2 slt)))
+	     (pa (c 0 0))
+	     (pb (c (- w1) (+ ya (* 0.45 h1))))
+	     (pc (c xc (+ ya h1)))
+	     (pd (c w2 yf))
+	     (pe (c xe ye))
+	     (pf (c xf yf))
+	     (pg (c xg yg))
+	     (ph (c xh yh))
+	     (ppi (c xi yi))
+	     (pj (c xj yj))
+	     (pk (c w1 (+ ya (* 0.35 h1))))
+	     (pl (+ pa (c 0 slt)))
+	     (pm (c (* -0.13 h1) (+ ya (* 0.32 h1))))
+	     (pn (c 0 yn))
+	     (po (c (* 0.13 h1) (+ ya (* 0.32 h1)))))
+	(clim:region-difference
+	 (mf pa left ++ pb up ++ pc right ++ pd down ++ pe left ++
+	     pf up (tensions 1 20) pg (tensions 20 1) ph down ++ ppi
+	     (tensions 5 1) pj right ++ pk down ++ cycle)
+	 (mf pl left ++ pm up ++ pn right ++ po down ++ cycle))))))
