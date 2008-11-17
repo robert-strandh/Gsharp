@@ -2164,4 +2164,83 @@ of a normal note.  This function always returns a positive value"))
 	    pn right (tensions 1 3) po (tensions 3 1)
 	    pp down ++ pq down ++ pr left ++ cycle)))))
 	    
-				       
+;;;                              
+;;;                              
+;;;                              
+;;;                               w2
+;;;                           __________   
+;;;                          |          |
+;;;                          e                             _
+;;;                        ******                           |
+;;;                     ************                        |
+;;;                  ****    i    ****                      |
+;;;                ****             ****                    |
+;;;               *****              ****                   |
+;;;              ******l            j****f                  |
+;;;             d******             ****                    |
+;;;              *******           ****                     |
+;;;              **********     k ****                      |
+;;;               *******************                       |
+;;;                ******************g                      | h1
+;;;                c******************                      |
+;;;                ********************                     |
+;;;               ***** o       ********                    |
+;;;              *****              *****                   |
+;;;             ****               p*****h    -             |
+;;;       -    b****n               *****      |            |
+;;;      |      ****               *****       |            |
+;;;      |       ****             *****        | h3         |
+;;;   h2 |        ****       m  ******         |            |
+;;;      |          ****************           |            |
+;;;      |_             *********             _|           _|
+;;;                          a    
+;;;                              
+;;;                          |___________|    
+;;;                                w1
+;;;                 |________|             
+;;;                     w3
+;;;                              
+;;;                    |_____|
+;;;                       w4       
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-8)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should have its lowest point
+	     ;; at the bottom of the staff line
+	     (ya (+ (- (/ slt 2)) yoffset))
+	     ;; it should have its top at the lower edge of the staff line
+	     (h1 (* 2 sld))
+	     (h2 (* 0.23 h1))
+	     (h3 (* 0.27 h1))
+	     (w1 (round (* 0.38 h1)))
+	     (w2 (round (* 0.35 h1)))
+	     (w3 (round (* 0.26 h1)))
+	     (w4 (* 0.07 h1))
+	     (pa (c 0 ya))
+	     (pb (c (- w1) (+ ya h2)))
+	     (pc (c (- w3) (+ ya (* 0.48 h1))))
+	     (pd (c (- w2) (+ ya (- h1 h3))))
+	     (pe (c 0 (+ ya h1)))
+	     (pf (c w2 (+ ya (- h1 h2))))
+	     (pg (c w3 (+ ya (* 0.52 h1))))
+	     (ph (c w1 (+ ya h3)))
+	     (pm (+ pa (c 0 (round (* 0.28 sld)))))
+	     (pn (+ pb (round (* 0.33 sld))))
+	     (po (c (- w4) (+ ya (* 0.43 h1))))
+	     (pp (- ph (round (* 0.40 sld))))
+	     (ppi (- pe (c 0 (round (* 0.28 sld)))))
+	     (pj (- pf (round (* 0.33 sld))))
+	     (pk (c w4 (+ ya (* 0.57 h1))))
+	     (pl (+ pd (round (* 0.40 sld)))))
+	(clim:region-difference
+	 (mf pa left ++ pb up (tensions 1 5)  pc up (tensions 5 1) pd up ++
+	     right pe -- ppi left ++ pl down (tensions 1 20) pk right
+	     (tensions 3 1) pj up ++ left ppi -- pe right ++ pf down
+	     (tensions 1 5) pg down (tensions 5 1) ph down ++ cycle)
+	 (mf pm left ++ pn up (tensions 1 3) po right (tensions 20 1)
+	     pp down ++ cycle))))))
+	     
