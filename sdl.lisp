@@ -2081,3 +2081,87 @@ of a normal note.  This function always returns a positive value"))
 	     pf up (tensions 1 20) pg (tensions 20 1) ph down ++ ppi
 	     (tensions 5 1) pj right ++ pk down ++ cycle)
 	 (mf pl left ++ pm up ++ pn right ++ po down ++ cycle))))))
+
+;;;                           
+;;;                           
+;;;                        w1       
+;;;                    __________
+;;;                   |          |
+;;;
+;;;
+;;;                    k        m               o          _
+;;;                   *  l  ************       *            |
+;;;                  j*******************     *             |
+;;;                   ********************n **              |
+;;;                   ***********************               |
+;;;                   *** g ************e***                |
+;;;                   **      *********  **                 |
+;;;                  i*           f     d**                 |
+;;;                   h                ***                  |
+;;;                                   ****                  |
+;;;                                 ****                    |
+;;;                                *****                    |
+;;;                               *****                     | h1
+;;;                              ******                     |
+;;;                             ******                      |
+;;;                            *******                      |
+;;;                           *******                       |
+;;;                           *******                       |
+;;;                          *******                        |
+;;;                          *******                        |
+;;;                         ********p                       |
+;;;                         ********                        |
+;;;                        *********                        |
+;;;                      c ****a****q                       |
+;;;                       ***    ***                       _|
+;;;                       b       r
+;;;                           
+;;;                           
+;;;                           
+;;;                           
+;;;                           
+;;;                           
+;;;                           
+;;;                           
+
+(defmethod compute-design ((font font) (shape (eql :time-signature-7)))
+  (with-slots ((sld staff-line-distance)
+	       (slt staff-line-thickness)
+	       yoffset)
+    font
+    (flet ((c (x y) (complex x y)))
+      (let* (;; This symbol should sit on top of a staff line
+	     (yb (+ (/ slt 2) yoffset))
+	     ;; if the little notch is to be visible, the top
+	     ;; of this character should hang below the upper staff line.
+	     (h1 (- (* 2 sld) slt))
+	     (yl (+ yb (- h1 slt)))
+	     (w1 (round (* 0.37 h1)))
+	     (yn (+ yb (- h1 (* 2 slt))))
+	     (yf (+ yb (round (* 0.65 h1))))
+	     (ya (+ yb slt))
+	     (pc (c (round (* -0.20 h1)) (+ yb (* 0.03 h1))))
+	     (pb (c (+ (realpart pc) (* 0.03 h1)) yb))
+	     (pd (c (round (* 0.18 h1)) yf))
+	     (pe (c (realpart pd) (+ (imagpart pd) (* 0.03 h1))))
+	     (pf (c (* 0.06 h1) yf))
+	     (pg (c (* -0.21 h1) (+ yf (round (* 0.8 slt)))))
+	     (ph (c (- (* 0.03 h1) w1) (+ yb (* 0.55 h1))))
+	     (ppi (c (- w1) (+ (imagpart ph) (* 0.03 h1))))
+	     (pj (c (- w1) (+ yb (- h1 (* 0.03 h1)))))
+	     (pk (c (+ (realpart pj) (* 0.03 h1)) (+ yb h1)))
+	     (pl (c (- (* 0.11 h1) w1) yl))
+	     (pm (c (* -0.05 h1) (+ yb h1)))
+	     (pn (c (* 0.23 h1) yn))
+	     (po (c (round (* 0.9 w1)) (+ yb h1)))
+	     (pp (c (round (* 0.15 h1)) (+ yb (* 0.13 h1))))
+	     (pq (c (realpart pp) (+ yb (* 0.03 h1))))
+	     (pr (c (- (realpart pp) (* 0.03 h1)) yb))
+	     (pa (c (* 0.00 h1) ya)))
+	(mf pa left ++ pb left ++ pc up (tensions 1 5) pd up ++ pe left ++
+	    pf left ++ pg left ++ ph left ++ ppi up ++
+	    pj up ++ pk right ++ pl right ++ pm right ++
+	    pn right (tensions 1 3) po (tensions 3 1)
+	    pp down ++ pq down ++ pr left ++ cycle)))))
+	    
+				       
