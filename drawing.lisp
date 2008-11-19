@@ -162,7 +162,7 @@ right of the center of its timeline"))
       (score-pane:staff-step 5)
       (score-pane:staff-step 2)))
 
-(defmethod right-bulge ((keysig gsharp-buffer::key-signature) pane)
+(defmethod right-bulge ((keysig key-signature) pane)
   ;; FIXME: shares much code with DRAW-ELEMENT (KEY-SIGNATURE).
   (let ((old-keysig (keysig keysig)))
     (let ((bulge 0))
@@ -697,7 +697,7 @@ right of the center of its timeline"))
 
 (defun draw-beam-group (pane elements)
   (let ((e (car elements)))
-    (when (typep e 'gsharp-buffer::key-signature)
+    (when (typep e 'key-signature)
       (assert (null (cdr elements)))
       (return-from draw-beam-group
         (draw-element pane e (final-absolute-element-xoffset e)))))

@@ -955,7 +955,7 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-insert-keysig ()
   (insert-keysig))
 
-(defmethod remove-element :before ((keysig gsharp-buffer::key-signature) (bar bar))
+(defmethod remove-element :before ((keysig key-signature) (bar bar))
   (let ((staff (staff keysig)))
     (setf (gsharp-buffer::key-signatures staff)
           (remove keysig (gsharp-buffer::key-signatures staff)))

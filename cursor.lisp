@@ -166,8 +166,7 @@
 	(when (> (pos cursor) position)
 	  (incf (pos cursor)))))
 
-(defmethod add-element :after 
-    ((keysig gsharp-buffer::key-signature) bar position)
+(defmethod add-element :after ((keysig key-signature) bar position)
   (let ((staff (staff keysig)))
     (setf (gsharp-buffer::key-signatures staff)
 	  (merge 'list (list keysig) (gsharp-buffer::key-signatures staff) 
