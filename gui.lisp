@@ -942,9 +942,9 @@ Prints the results in the minibuffer."
          (cursor (current-cursor))
          (staff (car (staves (layer cursor))))
          (keysig (if (keysig cursor)
-                     (gsharp-buffer::make-key-signature 
+                     (make-key-signature 
                       staff :alterations (copy-seq (alterations (keysig cursor))))
-                     (gsharp-buffer::make-key-signature staff))))
+                     (make-key-signature staff))))
     ;; FIXME: should only invalidate elements temporally after the
     ;; cursor.
     (gsharp-measure::invalidate-everything-using-staff (current-buffer) staff)
@@ -957,8 +957,8 @@ Prints the results in the minibuffer."
 
 (defmethod remove-element :before ((keysig key-signature) (bar bar))
   (let ((staff (staff keysig)))
-    (setf (gsharp-buffer::key-signatures staff)
-          (remove keysig (gsharp-buffer::key-signatures staff)))
+    (setf (key-signatures staff)
+          (remove keysig (key-signatures staff)))
     (gsharp-measure::invalidate-everything-using-staff (current-buffer) staff)))
 
 ;;; FIXME: this isn't quite right (argh) for the case of two
@@ -1005,14 +1005,14 @@ Prints the results in the minibuffer."
   ;; in.
   (assert (eq cursor (current-cursor)))
   (let* ((staff (car (staves (layer cursor))))
-         (key-signatures (gsharp-buffer::key-signatures staff))
+         (key-signatures (key-signatures staff))
          (bar (bar cursor))
          (element-or-nil (cursor-element cursor)))
     (%keysig staff key-signatures bar element-or-nil)))
 
 (defmethod keysig ((note note))
   (let* ((staff (staff note))
-         (key-signatures (gsharp-buffer::key-signatures staff))
+         (key-signatures (key-signatures staff))
          (bar (bar (cluster note)))
          (element-or-nil (cluster note)))
     (%keysig staff key-signatures bar element-or-nil)))
@@ -1024,7 +1024,7 @@ Prints the results in the minibuffer."
 
 (defmethod keysig ((element element))
   (let* ((staff (staff element))
-         (key-signatures (gsharp-buffer::key-signatures staff))
+         (key-signatures (key-signatures staff))
          (bar (bar element)))
     (%keysig staff key-signatures bar element)))
 

@@ -55,6 +55,7 @@
   (:shadow #:rest)
   (:export #:clef #:name #:lineno #:make-clef
 	   #:staff #:fiveline-staff #:make-fiveline-staff
+           #:key-signatures
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note #:make-note
@@ -90,7 +91,8 @@
 	   #:clef #:f-position #:b-position #:bottom-line
            #:keysig #:staff-pos #:xoffset #:read-everything
 	   #:read-buffer-from-stream
-	   #:key-signature #:alterations #:more-sharps #:more-flats
+	   #:key-signature #:make-key-signature
+           #:alterations #:more-sharps #:more-flats
 	   #:line-width #:lines-per-page #:min-width #:spacing-style
 	   #:right-edge #:left-offset
 	   #:left-margin #:text #:append-char #:erase-char

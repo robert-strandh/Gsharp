@@ -33,7 +33,7 @@
    (format stream "[lyrics staff ~a]" (name object)))
 
 (defun key-signature-for-staff (staff measures)
-  (let ((key-signatures (gsharp-buffer::key-signatures staff))
+  (let ((key-signatures (key-signatures staff))
 	(barno (gsharp-numbering:number (car (measure-bars (car measures))))))
     (or (and key-signatures
 	     (find barno key-signatures :from-end t :test #'> 

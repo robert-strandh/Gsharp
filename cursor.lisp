@@ -168,8 +168,8 @@
 
 (defmethod add-element :after ((keysig key-signature) bar position)
   (let ((staff (staff keysig)))
-    (setf (gsharp-buffer::key-signatures staff)
-	  (merge 'list (list keysig) (gsharp-buffer::key-signatures staff) 
+    (setf (key-signatures staff)
+	  (merge 'list (list keysig) (key-signatures staff) 
 		 (lambda (x y) (gsharp::starts-before-p x (bar y) y))))))
 
 (defmethod remove-element :before ((element element) (bar cbar))
