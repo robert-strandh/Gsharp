@@ -208,8 +208,8 @@
 	    ;; there might be more than one key signature in the bar,
 	    ;; and they might have changed their relative order as a
 	    ;; result of the edit.
-	    (setf (key-signatures staff)
-		  (sort (key-signatures staff)
+	    (setf (staffwise-elements staff)
+		  (sort (staffwise-elements staff)
 			(lambda (x y) (gsharp::starts-before-p x (bar y) y))))))))))
  
 (defmethod add-element :after ((element element) (bar bar) position)

@@ -41,6 +41,7 @@
 	   #:draw-stem #:draw-right-stem #:draw-left-stem 
 	   #:draw-ledger-line #:draw-bar-line #:draw-beam #:staff-step
 	   #:draw-notehead #:draw-accidental #:draw-clef #:draw-rest #:draw-dot
+	   #:draw-time-signature-component
 	   #:draw-flags-up #:draw-flags-down
 	   #:draw-tie-up #:draw-tie-down
 	   #:with-score-pane #:with-vertical-score-position
@@ -55,7 +56,8 @@
   (:shadow #:rest)
   (:export #:clef #:name #:lineno #:make-clef
 	   #:staff #:fiveline-staff #:make-fiveline-staff
-           #:key-signatures
+           #:key-signatures #:time-signatures
+	   #:staffwise-elements
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note #:make-note
@@ -91,7 +93,9 @@
 	   #:clef #:f-position #:b-position #:bottom-line
            #:keysig #:staff-pos #:xoffset #:read-everything
 	   #:read-buffer-from-stream
+	   #:staffwise-element
 	   #:key-signature #:make-key-signature
+	   #:time-signature #:time-signature-components
            #:alterations #:more-sharps #:more-flats
 	   #:line-width #:lines-per-page #:min-width #:spacing-style
 	   #:right-edge #:left-offset

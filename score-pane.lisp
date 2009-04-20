@@ -170,6 +170,35 @@
   (with-output-as-presentation (stream object 'clef)
     (draw-clef stream name x staff-step)))
 
+;;;;;;;;;;;;;;;;;; time signature
+
+(defun draw-time-signature-component (stream component x)
+  (flet ((component-name (c)
+           (ecase c
+             (1 :time-signature-1)
+             (2 :time-signature-2)
+             (3 :time-signature-3)
+             (4 :time-signature-4)
+             (5 :time-signature-5)
+             (6 :time-signature-6)
+             (7 :time-signature-7)
+             (8 :time-signature-8))))
+    (etypecase component
+      ((integer 1 8)
+       (let* ((design (sdl::ensure-design *font* (component-name component))))
+         (sdl::draw-shape stream *font* design x (staff-step -2))
+         (bounding-rectangle-width design)))
+      ((cons (integer 1 8) (integer 1 8))
+       (destructuring-bind (num . den) component
+         (let* ((num-name (component-name num))
+                (den-name (component-name den))
+                (ndesign (sdl::ensure-design *font* num-name))
+                (ddesign (sdl::ensure-design *font* den-name)))
+           (sdl::draw-shape stream *font* num-name x (staff-step -4))
+           (sdl::draw-shape stream *font* den-name x (staff-step 0))
+           (max (bounding-rectangle-width ndesign)
+                (bounding-rectangle-width ddesign))))))))
+
 ;;;;;;;;;;;;;;;;;; rest
 
 (defun draw-rest (stream duration x staff-step)

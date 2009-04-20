@@ -166,10 +166,10 @@
 	(when (> (pos cursor) position)
 	  (incf (pos cursor)))))
 
-(defmethod add-element :after ((keysig key-signature) bar position)
-  (let ((staff (staff keysig)))
-    (setf (key-signatures staff)
-	  (merge 'list (list keysig) (key-signatures staff) 
+(defmethod add-element :after ((element staffwise-element) bar position)
+  (let ((staff (staff element)))
+    (setf (staffwise-elements staff)
+	  (merge 'list (list element) (staffwise-elements staff) 
 		 (lambda (x y) (gsharp::starts-before-p x (bar y) y))))))
 
 (defmethod remove-element :before ((element element) (bar cbar))

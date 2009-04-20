@@ -955,10 +955,28 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-insert-keysig ()
   (insert-keysig))
 
-(defmethod remove-element :before ((keysig key-signature) (bar bar))
-  (let ((staff (staff keysig)))
-    (setf (key-signatures staff)
-          (remove keysig (key-signatures staff)))
+(defun insert-timesig (numerator denominator)
+  (let* ((cursor (current-cursor))
+         (staff (car (staves (layer cursor))))
+         (timesig (make-instance 'time-signature
+                                 :staff staff
+                                 :components
+                                 (list (if denominator
+                                           (cons numerator denominator)
+                                           numerator)))))
+    (insert-element timesig cursor)
+    (forward-element cursor)
+    timesig))
+
+(define-gsharp-command (com-insert-timesig :name t) 
+   ((numerator '(integer 1 8) :prompt "Numerator")
+    (denominator '(integer 1 8) :prompt "Denominator"))
+  (insert-timesig numerator denominator))
+
+(defmethod remove-element :before ((element staffwise-element) (bar bar))
+  (let ((staff (staff element)))
+    (setf (staffwise-elements staff)
+          (remove element (staffwise-elements staff)))
     (gsharp-measure::invalidate-everything-using-staff (current-buffer) staff)))
 
 ;;; FIXME: this isn't quite right (argh) for the case of two

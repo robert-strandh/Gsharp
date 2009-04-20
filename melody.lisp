@@ -78,8 +78,17 @@
   ((clef :accessor clef :initarg :clef :initform (make-clef :treble))
    (%keysig :accessor keysig :initarg :keysig
             :initform (make-array 7 :initial-element :natural))
-   (key-signatures :accessor key-signatures :initform nil)))
-           
+   (staffwise-elements :accessor staffwise-elements :initform nil)))
+       
+(defgeneric key-signatures (staff)
+  (:method ((s fiveline-staff))
+    (remove-if #'(lambda (x) (not (typep x 'key-signature)))
+	       (staffwise-elements s))))
+(defgeneric time-signatures (staff)
+  (:method ((s fiveline-staff))
+    (remove-if #'(lambda (x) (not (typep x 'time-signature)))
+	       (staffwise-elements s))))
+	   
 (defmethod initialize-instance :after ((obj fiveline-staff) &rest args)
   (declare (ignore args))
   (with-slots (%keysig) obj
@@ -309,9 +318,13 @@ sharper by removing some flats and/or adding some sharps"))
   (:documentation "make the key signature N alterations
 flatter by removing some sharps and/or adding some flats"))
 
-(defclass key-signature (element)
-  ((%staff :initarg :staff :reader staff)
-   (%alterations :initform (make-array 7 :initial-element :natural) 
+(defclass staffwise-element (element)
+  ((%staff :initarg :staff :reader staff)))
+(defmethod slots-to-be-saved append ((s-e staffwise-element))
+  '(%staff))
+
+(defclass key-signature (staffwise-element)
+  ((%alterations :initform (make-array 7 :initial-element :natural) 
                  :initarg :alterations :reader alterations)))
 
 (defun make-key-signature (staff &rest args &key alterations)
@@ -320,7 +333,7 @@ flatter by removing some sharps and/or adding some flats"))
   (apply #'make-instance 'key-signature :staff staff args))
 
 (defmethod slots-to-be-saved append ((k key-signature))
-  '(%staff %alterations))
+  '(%alterations))
 
 (defmethod more-sharps ((sig key-signature) &optional (n 1))
   (let ((alt (alterations sig)))
@@ -357,6 +370,20 @@ flatter by removing some sharps and/or adding some flats"))
                    ((eq (aref alt 4) :natural) (setf (aref alt 4) :flat))
                    ((eq (aref alt 0) :natural) (setf (aref alt 0) :flat))
                    ((eq (aref alt 3) :natural) (setf (aref alt 3) :flat))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Time signature
+;; * no make function (no type checking)
+;; * slots-to-be-saved only 'cos it's there
+;; * What accessors do we need (if any)?
+;; * Should I copy the (keysig) functionality from gui.lisp?
+
+(defclass time-signature (staffwise-element)
+  ((%components :initarg :components :reader time-signature-components
+                :initform nil)))
+(defmethod slots-to-be-saved append ((t-s time-signature))
+  '(%components))
                                                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
