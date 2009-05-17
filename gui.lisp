@@ -25,6 +25,30 @@
   ((cursor :initarg :cursor :reader cursor)
    (buffer :initarg :buffer :reader buffer)))
 
+;;; FIXME: we need to sort out Drei's definition of accept methods for
+;;; the general VIEW type.
+;;;
+;;; FIXME: we should name our views so that they can be found by a
+;;; string name, rather than the unreadable-object print.  There's a
+;;; SUBSCRIPTABLE-NAME-MIXIN in ESA-UTILS that is used for this
+;;; purpose in the analogous place in Climacs.
+(define-presentation-method accept 
+    ((type orchestra-view) stream (view textual-view)
+     &key (default nil defaultp) (default-type type))
+  (multiple-value-bind (object success string)
+      (complete-input stream
+		      (lambda (so-far action)
+			(complete-from-possibilities
+			 so-far (views *esa-instance*) '()
+                         :action action
+			 :name-key #'princ-to-string
+			 :value-key #'identity))
+		      :partial-completers '(#\Space))
+    (cond
+      (success (values object type))
+      ((and defaultp (= (length string) 0)) (values default default-type))
+      (t (input-not-of-required-type string type)))))
+
 ;;; exists for the sole purpose of a :before method that updates the
 ;;; measures of each modified buffer.
 (defclass gsharp-pane-mixin () ())
@@ -302,6 +326,7 @@
          (view (make-instance 'orchestra-view 
                               :buffer buffer
                               :cursor cursor)))
+    (push view (views *application-frame*))
     (setf (view (car (windows *application-frame*))) view
           (input-state *application-frame*) input-state
           (filepath buffer) filepath)
@@ -1532,6 +1557,38 @@ Prints the results in the minibuffer."
 
 (defmethod frame-make-new-buffer ((frame gsharp) &key &allow-other-keys)
   (make-instance 'buffer))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Buffer / View handling
+
+;;; FIXME: these utility functions should live elsewhere.
+(defun current-view ()
+  (view (current-window)))
+
+(defun not-current-view ()
+  (find (current-view) (views *application-frame*) :test (complement #'eq)))
+
+(defun not-current-view-or-first ()
+  (or (not-current-view) (car (views *application-frame*))))
+
+(defun next-or-new-buffer-view ()
+  (or (not-current-view)
+      (progn (com-new-buffer) 
+	     (car (views *application-frame*)))))
+
+(define-gsharp-command (com-switch-to-view :name t)
+    ((view 'orchestra-view :default (not-current-view-or-first)))
+  (setf (view (current-window)) view))
+
+(define-gsharp-command (com-kill-view :name t)
+    ((view 'orchestra-view :default (current-view)))
+  (let ((views (views *application-frame*)))
+    (setf (views *application-frame*) (remove view views))
+    (when (eq view (current-view))
+      (let ((next-view (next-or-new-buffer-view)))
+	(setf (view (current-window)) next-view)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

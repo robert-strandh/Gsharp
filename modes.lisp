@@ -11,6 +11,9 @@
 (set-key `(com-delete-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\Rubout)))
 (set-key `(com-erase-element ,*numeric-argument-marker*) 'global-gsharp-table '((#\Backspace)))
 
+(set-key `(com-switch-to-view ,*unsupplied-argument-marker*) 'global-gsharp-table '((#\x :control) #\b))
+(set-key `(com-kill-view ,*unsupplied-argument-marker*) 'global-gsharp-table '((#\x :control) #\k))
+
 ;;; FIXME: implement numeric arg handling
 (set-key 'com-forward-page 'global-gsharp-table '((#\x :control) #\]))
 (set-key 'com-backward-page 'global-gsharp-table '((#\x :control) #\[))
