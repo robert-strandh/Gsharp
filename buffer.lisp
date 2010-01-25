@@ -539,6 +539,7 @@
   ((segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff))
            :initarg :staves :accessor staves)
+   (rastral-size :initform 6 :initarg :r-size :accessor rastral-size)
    ;; the min width determines the preferred geographic distance after the
    ;; timeline with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
@@ -549,6 +550,32 @@
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
    (left-margin :initform *default-left-margin* :initarg :left-margin :accessor left-margin)))
+
+(defmethod left-offset ((buffer buffer))
+  (* (rastral-size buffer) 4))
+
+(defun buffer-selection (buffer)
+  (when (buffer-back-selection buffer)
+    (car (buffer-back-selection buffer))))
+
+(defun selection-browse-backward (buffer)
+  (when (buffer-back-selection buffer)
+    (push (car (buffer-back-selection buffer))
+          (buffer-forward-selection buffer))
+    (setf (buffer-back-selection buffer)
+          (cdr (buffer-back-selection buffer)))))
+
+(defun selection-browse-forward (buffer)
+  (when (buffer-forward-selection buffer)
+    (push (car (buffer-forward-selection buffer))
+          (buffer-back-selection buffer))
+    (setf (buffer-forward-selection buffer)
+          (cdr (buffer-forward-selection buffer)))))
+
+(defun add-new-selection (element-list buffer)
+  (dolist (selection (buffer-forward-selection buffer)
+           (push element-list (buffer-back-selection buffer)))
+    (push selection (buffer-back-selection buffer))))
 
 (defun set-buffer-of-staves (buffer)
   (loop for staff in (staves buffer)

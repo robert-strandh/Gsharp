@@ -559,7 +559,7 @@ right of the center of its timeline"))
         (incf y (+ 20 (* 70 (length staves))))))))
 
 (defmethod draw-buffer (pane (buffer buffer) *cursor* x y)
-  (score-pane:with-staff-size 6
+  (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* ((staves (staves buffer))
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
 	   (method (method-for-timesig 
@@ -572,7 +572,7 @@ right of the center of its timeline"))
           (draw-page pane buffer x y staves method page-measures))))))
 
 (defmethod print-buffer (pane (buffer buffer) *cursor* x y)
-  (score-pane:with-staff-size 6
+  (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* ((staves (staves buffer))
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
 	   (method (method-for-timesig 
@@ -704,7 +704,7 @@ right of the center of its timeline"))
 
 (defun draw-beam-group (pane elements)
   (let ((e (car elements)))
-    (when (typep e 'staffwise-element)
+    (when (typep e 'gsharp-buffer::staffwise-element)
       (assert (null (cdr elements)))
       (return-from draw-beam-group
         (draw-element pane e (final-absolute-element-xoffset e)))))
@@ -878,7 +878,7 @@ right of the center of its timeline"))
 				    (- x 1) (+ sy (- (+ (score-pane:staff-step 2) yoffset)))
 				    (- x 1) (+ sy (- (+ (score-pane:staff-step -2) yoffset)))
 				    :ink +red+)))))
-      (score-pane:with-staff-size 6
+      (score-pane:with-staff-size (gsharp-buffer::rastral-size (buffer cursor))
 	(let* ((x (final-absolute-measure-xoffset bar))
 	       (width (final-width bar))
 	       (elements (elements bar)))

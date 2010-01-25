@@ -2243,4 +2243,3 @@ of a normal note.  This function always returns a positive value"))
 	     (tensions 1 5) pg down (tensions 5 1) ph down ++ cycle)
 	 (mf pm left ++ pn up (tensions 1 3) po right (tensions 20 1)
 	     pp down ++ cycle))))))
-	     

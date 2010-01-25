@@ -679,8 +679,8 @@
 ;;; sequence of bars within that segment.  The last two items are used
 ;;; to indicate the position of the measure in the sequence of all
 ;;; measures of the buffer.
-(defun compute-measure (bars seg-pos bar-pos)
-  (score-pane:with-staff-size 6
+(defun compute-measure (bars seg-pos bar-pos buffer)
+  (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (loop for bar in bars
 	  do (when (modified-p bar)
 	       (compute-bar-parameters bar)
@@ -741,15 +741,16 @@
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.
 (defun compute-measures (segment)
-  (setf (slot-value segment 'measures)
-	(loop for all-bars on (mapcar (lambda (layer) (bars (body layer)))
-				      (layers segment))
-	      by (lambda (bars) (mapcar #'cdr bars))
-	      as bar-pos from 0 by 1
-	      while (notevery #'null all-bars)
-	      collect (compute-measure
-		       (remove nil (mapcar #'car all-bars))
-		       (number segment) bar-pos))))
+  (let ((buffer (buffer segment)))
+    (setf (slot-value segment 'measures)
+          (loop for all-bars on (mapcar (lambda (layer) (bars (body layer)))
+                                        (layers segment))
+             by (lambda (bars) (mapcar #'cdr bars))
+             as bar-pos from 0 by 1
+             while (notevery #'null all-bars)
+             collect (compute-measure
+                      (remove nil (mapcar #'car all-bars))
+                      (number segment) bar-pos buffer)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

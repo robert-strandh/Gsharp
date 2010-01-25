@@ -610,6 +610,13 @@ Prints the results in the minibuffer."
          (result (format nil "~:[; No values~;~:*~{~S~^,~}~]" values)))
     (display-message result)))
 
+(define-gsharp-command (com-zoom-in :name t) ()
+  (incf (gsharp-buffer::rastral-size (buffer (current-cursor)))))
+(define-gsharp-command (com-zoom-out :name t) ()
+  (unless (<= (gsharp-buffer::rastral-size (buffer (current-cursor))) 6)
+    (decf (gsharp-buffer::rastral-size (buffer (current-cursor))))))
+(set-key 'com-zoom-in 'global-gsharp-table '(#\+))
+(set-key 'com-zoom-out 'global-gsharp-table '(#\-))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; note insertion commands
@@ -1153,7 +1160,7 @@ Prints the results in the minibuffer."
     (position-if (lambda (measure) (member bar (measure-bars measure)))
                  sequence)))
 (defun get-page-lines (buffer page-measures)
-  (score-pane:with-staff-size 6
+  (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* (;; all this untimely ripp'd from DRAW-BUFFER in
 	   ;; drawing.lisp.  Needs to be kept in sync, otherwise the
 	   ;; layout for motion will be different from the layout on
