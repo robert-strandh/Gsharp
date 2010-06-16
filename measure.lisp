@@ -825,6 +825,13 @@
   (when (buffer segment)
     (mark-modified (buffer segment))))
 
+(defparameter *staves-per-page* 12)
+(defgeneric systems-per-page (buffer)
+  (:method (b) 
+    (let ((stave-count (length (staves b))))
+      (assert (<= stave-count *staves-per-page*))
+      (floor *staves-per-page* stave-count))))
+
 ;;; temporary stuff
 ;;; call fun on every list of measures (which make up a line)
 ;;; in the buffer
@@ -857,7 +864,7 @@
 	  (make-measure-cost-method
 	   (min-width buffer) (spacing-style buffer)
 	   (- (right-edge buffer) (left-margin buffer) (left-offset buffer))
-	   (floor 12 (length (staves buffer)))))
+	   (systems-per-page buffer)))
     (obseq-solve buffer)
     (setf (modified-p buffer) nil)))
 

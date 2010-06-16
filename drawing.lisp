@@ -549,7 +549,7 @@ right of the center of its timeline"))
 			    (lines-per-page method)))
 
 (defun draw-page (pane buffer x y staves maxmethod page-measures)
-  (let* ((systems-per-page (max 1 (floor 12 (length staves))))
+  (let* ((systems-per-page (gsharp-measure::systems-per-page buffer))
          (measure-seqs (layout-page page-measures systems-per-page maxmethod)))
     (dolist (measures measure-seqs)
       (let* ((toffset (compute-timesig-offset staves measures))

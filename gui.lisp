@@ -1172,7 +1172,7 @@ Prints the results in the minibuffer."
                                                (spacing-style old-method)
                                                (- (line-width old-method) timesig-offset)
                                                (lines-per-page old-method))))
-           (systems-per-page (max 1 (floor 12 (length staves)))))
+           (systems-per-page (gsharp-measure::systems-per-page buffer)))
       (gsharp-drawing::layout-page page-measures systems-per-page method))))
 
 ;;; FIXME: these routines should implement numeric-argument handling
@@ -1609,6 +1609,9 @@ Prints the results in the minibuffer."
                                                  (user-homedir-pathname)))))
     (merge-pathnames (make-pathname :type "ps") defaults)))
 
+(defparameter *scale* 0.8)
+(defparameter *top-margin* 100)
+
 (define-gsharp-command (com-print-buffer-to-file :name t)
     ((filepath 'pathname
                :prompt "Print To: " :prompt-mode :raw
@@ -1625,9 +1628,8 @@ Prints the results in the minibuffer."
                              :buffer (current-buffer) 
                              :cursor (current-cursor)))
         (setf (medium-transformation s)
-              ;; FIXME: This scaling works for me (A4 paper, default
-              ;; gsharp buffer sizes.
+              ;; FIXME: not a very flexible or intelligent scaling system
               (compose-scaling-with-transformation 
-               (medium-transformation s) 0.8 0.8))
+               (medium-transformation s) *scale* *scale*))
         (print-buffer s (current-buffer) (current-cursor) 
-                      (left-margin (current-buffer)) 100)))))
+                      (left-margin (current-buffer)) *top-margin*)))))
