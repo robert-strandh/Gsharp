@@ -12,8 +12,12 @@
     (write-string (write-mxml buffer) s)))
 
 (defun pcdata (thing)
-  (string-trim '(#\Space #\Tab #\Newline) 
-               (dom:node-value (dom:first-child thing))))
+  (let ((content (dom:first-child thing)))
+    ;; Could be empty
+    (if content
+	(string-trim '(#\Space #\Tab #\Newline) 
+		     (dom:node-value content))
+	"")))
 (defun named-pcdata (node tag-name)
   (if (has-element-type node tag-name)
       (pcdata (elt (dom:get-elements-by-tag-name node tag-name) 0))
@@ -368,6 +372,8 @@ specified, returns the first (hopefully default) staff."
                    (incf position)))))))
 
 (defgeneric is-empty (element))
+(defmethod is-empty ((element cons))
+  t)
 (defmethod is-empty ((element element))
   nil)
 (defmethod is-empty ((lyrics-element lyrics-element))
@@ -397,6 +403,27 @@ specified, returns the first (hopefully default) staff."
            do (decf duration divisions)
            collect (make-cluster :notehead :filled :lbeams beams :rbeams beams))
         until (= duration 0)))))
+
+(defun parse-mxml-clef (clef)
+  "Takes dom element for clef and returns a clef object"
+  (let ((name (stringcase (named-pcdata clef "sign")
+			  ("G" (if (string= (named-pcdata clef "clef-octave-change")
+					    "-1")
+				   :treble8
+				   :treble))
+			  ("F" :bass)
+			  ("C" :c)
+			  ("percussion" :percussion)
+			  ;; "TAB" and "none" are the other, unsupported choices,
+			  ;; along with other octave shifts.
+			  (t  :c)))
+	(lineno (if (has-element-type clef "line")
+		    (* 2 (1- (parse-integer (named-pcdata clef "line"))))
+		    nil))
+	(staff-number (if (dom:has-attribute clef "number")
+			  (1- (parse-integer (dom:get-attribute clef "number")))
+			  0)))
+    (values (make-clef name :lineno lineno) staff-number)))
 
 (defun parse-mxml-key (key staves)
   "Takes a dom element 'key' and returns a key-signature object"
@@ -467,6 +494,8 @@ note elements in that staff have associated lyrics."
 (defun copy-keysignature (ks)
   (gsharp-buffer::make-key-signature
    (staff ks) :alterations (copy-seq (alterations ks))))
+(defun copy-clef (clef)
+  (make-clef (name clef) :lineno (lineno clef)))
 
 (defun gduration-from-xduration (xduration)
   (/ xduration (* 4 *mxml-divisions*)))
@@ -475,7 +504,6 @@ note elements in that staff have associated lyrics."
   (let ((staves nil)
         (layers nil)
         (lyrics-layer-hash (make-hash-table)))
-
     ;; Create all of the staves, along with their initial
     ;; keysignatures and clefs.
     ;; TODO change this to do look in the current part, not the
@@ -493,43 +521,39 @@ note elements in that staff have associated lyrics."
                       (dom:get-elements-by-tag-name part "staves")
                       maximizing (parse-integer (pcdata x)))))
            (clefs (make-array number-of-staves))
-           (first-measure
-            (elt (dom:get-elements-by-tag-name part "measure") 0))
-           (attributes (dom:first-child first-measure)))
-
-      ;; Special Case: if the first thing in the first measure is an
-      ;; attribute, and that attribute has a key signature, write it
-      ;; to the staff. Also get the clef.
-      (when (string= (dom:tag-name attributes) "attributes")
+           (measures (dom:get-elements-by-tag-name part "measure"))
+           (attributes))
+      ;; The attributes don't appear to need to be the first things in
+      ;; a bar (see the Dichterliebe example on recordare
+      ;; website---it's a v2.0 example, but I can't see where what it
+      ;; does would be illegal in v1). I don't know what can precede
+      ;; it in the wild, but the dtd is very permissive. This approach
+      ;; allows the element to occur anywhere---not even limiting it
+      ;; to the first bar. This may be stupid, but I can't tell.
+      (do ((i 0 (1+ i)))
+	  ((= i (length measures)))
+	(do ((thing (dom:first-child (elt measures i))
+		    (dom:next-sibling thing)))
+	    ((not thing))
+	  (when (string= (dom:tag-name thing) "attributes")
+	    (setf attributes thing)
+	    (return)))
+	(when attributes
+	  (return)))
+      (when attributes
 
         ;; clefs need to be made before i make the staves, keysigs
         ;; after. don't ask.
-
         ;; clefs
         (for-named-elements ("clef" clef attributes)
-          (let ((name (stringcase (named-pcdata clef "sign")
-                        ("G" (if (string= (named-pcdata clef "clef-octave-change")
-                                          "-1")
-                                 :treble8
-                                 :treble))
-                        ("F" :bass)
-                        ("C" :c)
-                        ("percussion" :percussion)
-                        ;; "TAB" and "none" are the other, unsupported choices
-                        (t  :c)))
-                (lineno (if (has-element-type clef "line")
-                            (* 2 (1- (parse-integer (named-pcdata clef "line"))))
-                            nil))
-                (staff-number (if (dom:has-attribute clef "number")
-                                  (1- (parse-integer (dom:get-attribute clef "number")))
-                                  0)))
-            (setf (elt clefs staff-number) (make-clef name :lineno lineno))))
+	  (multiple-value-bind (new-clef staff-number)
+	      (parse-mxml-clef clef)
+            (setf (elt clefs staff-number) new-clef)))
         ;; every fiveline staff must have a clef, even if the xml file did not specify one
         (loop for clef across clefs
            for i from 0
            do (when (eql 0 clef)
                 (setf (elt clefs i) (make-clef :treble))))
-
         ;; staves
         ;; remember that the order of the staves matters, and the
         ;; order that they are put in here is the order they will be
@@ -546,7 +570,6 @@ note elements in that staff have associated lyrics."
                                                                           (format nil "~A lyricstaff ~D" part-name (1+ i)))))
                                        nil)
                  nconc (cons melody-staff lyric-staff)))
-
         ;; keysignatures
         (for-named-elements ("key" key attributes)
           (let ((keysig (parse-mxml-key key staves)))
@@ -570,7 +593,6 @@ note elements in that staff have associated lyrics."
                                   (1- (parse-integer (named-pcdata note "voice")))
                                   0)))
             (pushnew (nth staff-number fiveline-staves) (elt staves-for-layers voice-number))))
-        
         (setf layers (nconc
                        (loop for staves across staves-for-layers
                           for i from 1
@@ -623,22 +645,34 @@ note elements in that staff have associated lyrics."
                 
               ;; if we haven't written anything yet, this
               ;; keysignature got added to the staff itself
-              (unless (eql 0 *parsing-duration-gmeasure-position*)
-                (let ((new-keysignature (parse-mxml-key
-                                         (elt (dom:get-elements-by-tag-name child "key") 0)
-                                         staves)))
-                  (loop for bar in bars
-                     do (when (find (staff new-keysignature) (staves (layer (slice bar))))
-                          (add-element-at-duration
-                           (copy-keysignature new-keysignature)
-                           bar *parsing-duration-gmeasure-position*))))))
+              (unless (= 0 measure-position *parsing-duration-gmeasure-position*)
+		(when (has-element-type child "key")
+		  (let ((new-keysignature (parse-mxml-key
+					   (elt (dom:get-elements-by-tag-name child "key") 0)
+					   staves)))
+		    (loop for bar in bars
+		       do (when (find (staff new-keysignature) (staves (layer (slice bar))))
+			    (add-element-at-duration
+			     (copy-keysignature new-keysignature)
+			     bar *parsing-duration-gmeasure-position*)))))
+		(when (has-element-type child "clef")
+		  ;; spacer till this is available in gsharp
+		  #+nil (multiple-value-bind (new-clef staff-number)
+		      (parse-mxml-clef (elt (dom:get-elements-by-tag-name child "clef") 0))
+		    (loop for bar in bars
+		       do (when (find (nth staff-number staves) (staves (layer (slice bar))))
+			    (add-element-at-duration
+			     (copy-clef new-clef) bar
+			     *parsing-duration-gmeasure-position*)))))))
                      
-             ("backup" (decf *parsing-duration-gmeasure-position*
-                             (gduration-from-xduration
-                              (parse-integer (named-pcdata child "duration")))))
-             ("forward" (incf *parsing-duration-gmeasure-position*
-                              (gduration-from-xduration
-                               (parse-integer (named-pcdata child "duration")))))))))))
+	     ("backup" (setf *parsing-duration-gmeasure-position*
+                         (max (- *parsing-duration-gmeasure-position*
+                                 (gduration-from-xduration
+                                  (parse-integer (named-pcdata child "duration"))))
+                              0)))
+         ("forward" (incf *parsing-duration-gmeasure-position*
+                          (gduration-from-xduration
+                           (parse-integer (named-pcdata child "duration")))))))))))
 
 (defun parse-mxml (document)
   (let ((layerss nil)
@@ -693,12 +727,23 @@ note elements in that staff have associated lyrics."
            (declare (ignore pubid))
            (when (equal (puri:uri-host sysid) "www.musicxml.org")
              (open (merge-pathnames
-                    (file-namestring (puri:uri-path sysid))
+                    (get-dtd-path (puri:uri-parsed-path sysid))
                     *mxml-dtds-dir*)
                    :element-type '(unsigned-byte 8)))))
     (cxml:parse-file pathname (cxml:make-whitespace-normalizer
                                (cxml-dom:make-dom-builder))
                      :entity-resolver #'resolver :validate t)))
+(defun get-dtd-path (uri-path)
+  (let* ((parsed-path uri-path)
+	 (parent-dir (nth (- (list-length parsed-path) 2)
+			  parsed-path))
+	 (filename (car (last parsed-path))))
+    (cond
+      ((member parent-dir '("1.0" "1.1" "2.0") :test #'string=)
+       (format nil "~D/~D" parent-dir filename))
+      (t (format nil "2.0/~D" filename)))))
+
+
 
 (defun musicxml-document-from-string (string)
   (flet ((resolver (pubid sysid)
