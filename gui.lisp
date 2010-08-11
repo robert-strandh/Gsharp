@@ -1,5 +1,8 @@
 (in-package :gsharp)
 
+(defparameter *icon-path*
+  ;;  sb-ext:*core-pathname*
+  "/Users/dlewis/lisp/gsharp/Icons/")
 (defun make-initial-cursor (buffer)
   (let* ((segment (segmentno buffer 0))
          (layer (layerno segment 0))
@@ -697,6 +700,20 @@ Prints the results in the minibuffer."
 
 (define-gsharp-command com-insert-empty-cluster ()
   (insert-cluster))  
+
+(defun cur-elementp ()
+  (handler-case
+      (cur-element)
+    (not-on-an-element () nil)))
+(defun cur-clusterp ()
+  (handler-case
+      (cur-cluster)
+    (not-on-a-cluster () nil)))
+(defun cur-notep ()
+  (handler-case
+      (cur-note)
+    (not-on-a-cluster () nil)
+    (not-on-an-element () nil)))
 
 (defun cur-cluster ()
   (current-cluster (current-cursor)))

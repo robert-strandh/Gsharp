@@ -1012,9 +1012,15 @@ right of the center of its timeline"))
       (score-pane:draw-accidental pane (final-accidental note) (final-absolute-accidental-xoffset note) pos))
     (draw-dots pane nb-dots x dot-xoffset dot-pos)))
 
+(defparameter *main-selected-note-colour* +blue-violet+)
 (defun draw-notes (pane notes dots notehead dot-xoffset)
-  (loop for note in notes do
-	(draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note) dot-xoffset (final-absolute-dot-ypos note))))
+  (loop for note in notes 
+     do
+       (with-drawing-options (pane :ink (if (and (gsharp::cur-notep)
+                                                 (eq note (gsharp::cur-note))
+                                                 (not (typep pane 'clim-postscript::postscript-stream)))
+                                            *main-selected-note-colour* +black+))
+         (draw-note pane note notehead dots (final-absolute-note-xoffset note) (note-position note) dot-xoffset (final-absolute-dot-ypos note)))))
 
 (defun element-has-suspended-notes (element)
   (not (apply #'= (mapcar #'final-relative-note-xoffset (notes element)))))
