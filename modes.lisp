@@ -70,7 +70,6 @@
 (set-key 'com-insert-keysig 'melody-table '(#\K))
 
 (set-key 'com-more-sharps 'melody-table '((#\# :meta)))
-(set-key 'com-more-sharps 'melody-table '((#\# :meta)))
 (set-key 'com-more-flats 'melody-table '((#\@ :meta)))
 
 ;;; the rhythmic table contains command that are specific 

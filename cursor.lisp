@@ -216,11 +216,11 @@
 
 (defgeneric backward-slice (cursor))
 
-(defgeneric head-slisce (cursor))
+(defgeneric head-slice (cursor))
 
-(defgeneric body-slisce (cursor))
+(defgeneric body-slice (cursor))
 
-(defgeneric tail-slisce (cursor))
+(defgeneric tail-slice (cursor))
 
 (defgeneric insert-bar-before (bar cursor))
 
