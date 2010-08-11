@@ -43,6 +43,7 @@
 (set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
 (set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))
 (set-key 'com-istate-rotate-notehead 'global-gsharp-table '((#\i) (#\h)))
+(set-key 'com-istate-rotate-notehead-downwards 'global-gsharp-table '((#\i) (#\g)))
 (set-key 'com-istate-rotate-stem-direction 'global-gsharp-table '((#\i) (#\s)))
 (set-key 'com-istate-fewer-dots 'global-gsharp-table '((#\i) (#\x) (#\.)))
 (set-key 'com-istate-fewer-lbeams 'global-gsharp-table '((#\i) (#\x) (#\[)))

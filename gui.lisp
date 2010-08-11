@@ -1356,7 +1356,16 @@ Prints the results in the minibuffer."
           (:whole :breve)
           (:half :whole)
           (:filled :half)
-          (:long :filled))))            
+          (:long :filled))))
+
+(define-gsharp-command com-istate-rotate-notehead-downwards ()
+  (setf (notehead (input-state *application-frame*))
+        (ecase (notehead (input-state *application-frame*))
+          (:long :breve)
+          (:breve :whole)
+          (:whole :half)
+          (:half :filled)
+          (:filled :long))))            
 
 (define-gsharp-command com-istate-rotate-stem-direction ()
   (setf (stem-direction (input-state *application-frame*))
