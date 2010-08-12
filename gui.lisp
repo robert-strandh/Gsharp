@@ -226,16 +226,18 @@
   (update-page-numbers frame))
 
 (defmethod display-score ((frame gsharp) pane)
-  (let* ((buffer (buffer (view pane))))
-    (score-pane:with-score-pane pane
-      (draw-buffer pane buffer (current-cursor)
-                   (left-margin buffer) 100)
-      (draw-the-cursor pane (current-cursor) (cursor-element (current-cursor))
-                       (last-note (input-state *application-frame*)))
-      (multiple-value-bind (minx miny maxx maxy)
-          (bounding-rectangle* (stream-output-history pane))
-        (declare (ignore minx maxx))
-        (change-space-requirements pane :height (+ maxy miny))))))
+  (let* ((buffer (buffer (view pane)))
+         (zoom (gsharp-buffer::zoom-level buffer)))
+    (with-drawing-options (pane :transformation (make-scaling-transformation zoom zoom))
+      (score-pane:with-score-pane pane
+        (draw-buffer pane buffer (current-cursor)
+                     (left-margin buffer) 100)
+        (draw-the-cursor pane (current-cursor) (cursor-element (current-cursor))
+                         (last-note (input-state *application-frame*)))
+        (multiple-value-bind (minx miny maxx maxy)
+            (bounding-rectangle* (stream-output-history pane))
+          (declare (ignore minx maxx))
+          (change-space-requirements pane :height (+ maxy miny)))))))
 
 (defmethod window-clear ((pane score-pane:score-pane))
   (let ((output-history (stream-output-history pane)))
@@ -613,13 +615,22 @@ Prints the results in the minibuffer."
          (result (format nil "~:[; No values~;~:*~{~S~^,~}~]" values)))
     (display-message result)))
 
-(define-gsharp-command (com-zoom-in :name t) ()
-  (incf (gsharp-buffer::rastral-size (buffer (current-cursor)))))
-(define-gsharp-command (com-zoom-out :name t) ()
-  (unless (<= (gsharp-buffer::rastral-size (buffer (current-cursor))) 6)
-    (decf (gsharp-buffer::rastral-size (buffer (current-cursor))))))
-(set-key 'com-zoom-in 'global-gsharp-table '(#\+))
-(set-key 'com-zoom-out 'global-gsharp-table '(#\-))
+(define-gsharp-command (com-raster+ :name t) ()
+  (let ((score-pane (get-main-score-pane)))
+    (incf (gsharp-buffer::rastral-size (buffer (current-cursor))))
+    (redisplay-frame-pane *application-frame* score-pane :force-p t)))
+(define-gsharp-command (com-raster- :name t) ()
+  (let ((score-pane (get-main-score-pane)))
+    (unless (<= (gsharp-buffer::rastral-size (buffer (current-cursor))) 6)
+      (decf (gsharp-buffer::rastral-size (buffer (current-cursor))))
+      (redisplay-frame-pane *application-frame* score-pane :force-p t))))
+
+(defun get-main-score-pane ()
+  (find "score" 
+        (frame-current-panes *application-frame*)
+        :key #'pane-name
+        :test #'string=))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; note insertion commands
@@ -1675,3 +1686,11 @@ Prints the results in the minibuffer."
     ()
   (com-write-buffer (gui-get-pathname :extensions '("gsh" "mxml" "xml"))))
 
+(define-gsharp-command (com-zoom-in :name t :menu t)
+    ()
+  (unless (<= (gsharp-buffer::zoom-level (buffer (current-cursor))) 64)
+    (incf (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)))
+(define-gsharp-command (com-zoom-out :name t :menu t)
+    ()
+  (unless (<= (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)
+    (decf (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)))

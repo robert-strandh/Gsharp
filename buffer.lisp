@@ -540,6 +540,7 @@
    (staves :initform (list (make-fiveline-staff))
            :initarg :staves :accessor staves)
    (rastral-size :initform 6 :initarg :r-size :accessor rastral-size)
+   (zoom-level :initform 1 :initarg :zoom :accessor zoom-level)
    ;; the min width determines the preferred geographic distance after the
    ;; timeline with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)

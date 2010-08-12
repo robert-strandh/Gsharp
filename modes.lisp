@@ -49,6 +49,9 @@
 (set-key 'com-istate-fewer-lbeams 'global-gsharp-table '((#\i) (#\x) (#\[)))
 (set-key 'com-istate-fewer-rbeams 'global-gsharp-table '((#\i) (#\x) (#\])))
 
+(set-key 'com-zoom-in 'global-gsharp-table '(#\+))
+(set-key 'com-zoom-out 'global-gsharp-table '(#\-))
+
 (set-key `(com-eval-expression ,*unsupplied-argument-marker*) 
          'global-gsharp-table '((#\: :meta)))
 
