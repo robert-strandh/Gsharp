@@ -1,3 +1,103 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; New button types
+
+(in-package :clim-internals)
+
+;; These are specialised PUSH-BUTTON implementations. PUSH-BUTTON
+;; deals with behaviour and with drawing and animating the button. In
+;; the CLIM specs, it also has a label string which it prints. The
+;; label is used at two points: space calculation and drawing.
+;;
+;; Spacing -- COMPOSE-SPACE: slightly worrying because I don't really
+;; understand how layout works, but seems generally ok
+;;
+;; Drawing is handled by two functions -- DRAW-LABEL*, which is a
+;; generic function, specialised here easily enouth, and
+;; DRAW-ENGRAVED-LABEL*, which handles pressed buttons by calling
+;; DRAW-LABEL* twice, with different settings positions and inks. This
+;; isn't a generic, so I can't do anything about it. Since my
+;; DRAW-LABEL* ignores ink, the 3d effect is lost.
+
+;;; ICON-PUSH-BUTTON
+;; Push button that shows an icon *instead* of text. Perhaps this
+;; should be optionally with text. The icon must be in XPM format, but
+;; not for any readily apparent reason (more readers are in /Extensions)
+(defclass icon-push-button (push-button)
+  ((icon-path :initarg :icon-path :accessor icon-path)
+   (icon :initarg :icon :initform nil)))
+(defgeneric icon (button))
+(defmethod icon ((button icon-push-button))
+  ;; Once an icon file has been imported once, just return the
+  ;; object. Perhaps it'd be better to do this when the object is
+  ;; initialised.
+  (unless (and (slot-boundp button 'icon)
+               (slot-value button 'icon))
+    (when (probe-file (icon-path button))
+      (setf (slot-value button 'icon)
+            (make-pattern-from-bitmap-file
+             (icon-path button)
+             :format :xpm :port nil))))
+  (slot-value button 'icon))
+(defclass icon-push-button-pane (icon-push-button push-button-pane)
+  ())
+(define-abstract-pane-mapping 'icon-push-button 'icon-push-button-pane)
+(defmethod compose-space ((gadget icon-push-button-pane) &key width height)
+  ;; FIXME: I don't really know what these values should be
+  (let* ((pw (pattern-width (icon gadget)))
+         (ph (pattern-height (icon gadget)))
+         (w (+ pw 
+               (* 2 (+ *3d-border-thickness*
+                       (or (pane-x-spacing gadget)
+                           0)))))
+         (h (+ ph (* 2 (+ *3d-border-thickness*
+                          (or (pane-y-spacing gadget)
+                              0))))))
+    (make-space-requirement 
+     :width (or width w)
+     :min-width w
+     :height (or height h)
+     :min-height h)))
+(defmethod draw-label* ((pane icon-push-button) x1 y1 x2 y2 
+                        &key ink)
+  (declare (ignore ink))
+  (draw-pattern* pane (icon pane) x1 y1))
+
+;;; DRAWN-PUSH-BUTTON
+;; A push button whose image is created using DRAWING-FUNCTION (which
+;; takes (STREAM X Y). I'm presetting width and height, because I
+;; don't understand CLIM layout functionality. Alternatives include
+;; storing a funcall to use in COMPOSE-SPACE or just making the
+;; drawing function work with whatever size it's given. I'm also
+;; making it a full CLIM-STREAM-PANE, because it works. Is it
+;; necessary?
+
+(defclass drawn-push-button (push-button)
+  ((drawing-function :initarg :drawing-function :accessor button-drawing-function)
+   (drawing-width :initarg :drawing-width :accessor drawing-width)
+   (height :initarg :drawing-height :accessor drawing-height)))
+(defclass drawn-push-button-pane (drawn-push-button push-button-pane clim-stream-pane)
+  ())
+(define-abstract-pane-mapping 'drawn-push-button 'drawn-push-button-pane)
+(defmethod compose-space ((gadget drawn-push-button-pane) &key width height)
+  (let* ((dw (drawing-width  gadget))
+         (dh (drawing-height gadget))
+         (w (+ dw (* 2 (+ *3d-border-thickness*
+                          (or (pane-x-spacing gadget)
+                              0)))))
+         (h (+ dh (* 2 (+ *3d-border-thickness*
+                          (or (pane-y-spacing gadget)
+                              0))))))
+    (make-space-requirement 
+     :width (or width w)
+     :min-width w
+     :height (or height h)
+     :min-height h)))  
+(defmethod draw-label* ((pane drawn-push-button) x1 y1 x2 y2
+                        &key ink)
+  (declare (ignore ink))
+  (funcall (button-drawing-function pane) pane x1 y1))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
