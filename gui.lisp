@@ -256,32 +256,39 @@
        (bottom-line clef))))
 
 (defmethod display-element ((frame gsharp) pane)
-  (when (handler-case (cur-cluster)
+  (when (handler-case (cur-element)
           (gsharp-condition () nil))
-    (score-pane:with-score-pane pane
-      (score-pane:with-staff-size 10
-        (score-pane:with-vertical-score-position (pane 500)
-          (let* ((xpos 30)
-                 (cluster (cur-cluster))
-                 (notehead (notehead cluster))
-                 (rbeams (rbeams cluster))
-                 (lbeams (lbeams cluster))
-                 (dots (dots cluster))
-                 (notes (notes cluster))
-                 (stem-direction (stem-direction cluster)))
-            (declare (ignore stem-direction notehead lbeams rbeams dots))
-            (loop for note in notes do
-                  (draw-ellipse* pane xpos (* 15 (note-position note)) 7 0 0 7)
-                  (score-pane:draw-accidental pane (accidentals note)
-                                                   (- xpos (if (oddp (note-position note)) 15 25))
-                                                   (* 3 (note-position note))))
-            (when notes
-              (draw-ellipse* pane xpos (* 15 (note-position (cur-note)))
-                             7 0 0 7 :ink +red+))
-            (loop for s from 0 by 30
-                  repeat 5 do
-                  (draw-line* pane (- xpos 25) s (+ xpos 25) s))))))))
+    (draw-current-element pane (cur-element))))
 
+(defgeneric draw-current-element (pane element)
+  (:method (pane element) nil))
+(defmethod draw-current-element (pane (cluster cluster))
+  (score-pane:with-score-pane pane
+    (score-pane:with-staff-size 10
+      (score-pane:with-vertical-score-position (pane 10)
+        (let* ((xpos 30)
+               (notehead (notehead cluster))
+               (rbeams (rbeams cluster))
+               (lbeams (lbeams cluster))
+               (dots (dots cluster))
+               (notes (notes cluster))
+               (stem-direction (stem-direction cluster)))
+          (declare (ignore stem-direction notehead lbeams rbeams dots))
+          (loop for note in notes do
+               (draw-ellipse* pane xpos (- 120 (* 15 (note-position note))) 7 0 0 7)
+               (score-pane:draw-accidental pane (accidentals note)
+                                           (- xpos (if (oddp (note-position note)) 15 25))
+                                           (- (* 3 (note-position note)) 24)))
+          (when notes
+            (draw-ellipse* pane xpos (- 120 (* 15 (note-position (cur-note))))
+                           7 0 0 7 :ink +red+))
+          (loop for s from 0 by 30
+             repeat 5 do
+               (draw-line* pane (- xpos 25) s (+ xpos 25) s))
+          
+          (clim::draw-text* pane (format nil "x-offset: ~A" 
+                                         (gsharp-buffer::xoffset cluster))
+                            5 140))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; messages to the user
