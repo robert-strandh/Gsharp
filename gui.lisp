@@ -145,6 +145,46 @@
        interactor)))
   (:top-level (esa-top-level)))
 
+(defun simple-button (label function &key panes)
+  (make-pane 'push-button :label label
+             :height 20
+             :activate-callback
+             (lambda (gadget)
+               (declare (ignore gadget))
+               (funcall function)
+               (dolist (pane-keyword panes)
+                 (redisplay-frame-pane 
+                  *application-frame*
+                  (pane-from-keyword *application-frame* pane-keyword)
+                  :force-p t)))))
+
+(defgeneric pane-from-keyword (frame pane-keyword))
+(defmethod pane-from-keyword (frame (pane-keyword (eql :state)))
+  (find-pane-named frame 'state))
+(defmethod pane-from-keyword (frame (pane-keyword (eql :element)))
+  (find-pane-named frame 'element))
+(defmethod pane-from-keyword (frame (pane-keyword (eql :score)))
+  (get-main-score-pane))
+
+(defun istate-button (label function)
+  (simple-button label function :panes '(:state)))
+(defun element-button (label function)
+  (simple-button label function :panes '(:score :element)))
+
+(defun istate-notehead-button (label value)
+  (make-pane 'push-button
+             :label label
+             :activate-callback
+             (lambda (gadget)
+               (declare (ignore gadget))
+               (setf (notehead (input-state *application-frame*))
+                     value)
+               (when (find-pane-named *application-frame* 'state)
+                 (redisplay-frame-pane *application-frame*
+                                       (find-pane-named *application-frame* 'state)
+                                       :force-p t)))
+             :height 20))
+
 (defmethod buffers ((application-frame gsharp))
   (let (result)
     (dolist (window (windows application-frame) (nreverse result))
