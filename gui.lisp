@@ -534,6 +534,13 @@
 (define-gsharp-command (com-delete-layer :name t) ()
   (delete-layer (current-cursor)))
 
+(define-gsharp-command (com-jump-to-here :name t) 
+    ((element 'element))
+  (let ((cursor (current-cursor)))
+    (setf (gsharp-cursor::bar cursor) (bar element)
+          (gsharp-cursor::pos cursor) (1+ (position element
+                                                    (elements (bar element)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; slice menu
@@ -1622,6 +1629,12 @@ Prints the results in the minibuffer."
 
 (define-gsharp-command com-more-flats ()
   (more-flats (keysig (current-cursor))))
+
+(define-presentation-to-command-translator jump-to-here 
+    (element gsharp::com-jump-to-here gsharp
+                                     :gesture :select
+                                     :documentation "Move cursor here")
+    (presentation) (list (presentation-object presentation)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

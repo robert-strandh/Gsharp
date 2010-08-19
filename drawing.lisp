@@ -1034,33 +1034,34 @@ right of the center of its timeline"))
 (defmethod draw-element (pane (element cluster) &optional (flags t))
   (with-new-output-record (pane)
     (unless (null (notes element))
-      (let* ((direction (final-stem-direction element))
-             (stem-pos (final-stem-position element))
-             (stem-yoffset (final-stem-yoffset element))
-             (groups (group-notes-by-staff (notes element)))
-             (x (final-absolute-element-xoffset element))
-             (dot-xoffset 
-              (let ((basic-xoffset (+ (score-pane:staff-step 2)
-                                      (reduce #'max (mapcar #'final-absolute-note-xoffset (notes element))))))
-                (if (and flags (eq direction :up) (flags-drawn-p element))
-                    (max basic-xoffset (+ (score-pane:staff-step 4) x))
-                    basic-xoffset))))
-	(when flags
-	  (score-pane:with-vertical-score-position (pane stem-yoffset)
-	    (draw-flags pane element x direction stem-pos)))
-        (loop for group in groups do 
-              (draw-notes pane group (dots element) (notehead element) dot-xoffset)
-              (draw-ledger-lines pane x group))
-	(unless (member (notehead element) '(:whole :breve))
-	  (if (eq direction :up)
-	      (score-pane:draw-right-stem
-	       pane x
-	       (- (bot-note-staff-yoffset element) (score-pane:staff-step (bot-note-pos element)))
-	       (- stem-yoffset (score-pane:staff-step stem-pos)))
-	      (score-pane:draw-left-stem
-	       pane x
-	       (- (top-note-staff-yoffset element) (score-pane:staff-step (top-note-pos element)))
-	       (- stem-yoffset (score-pane:staff-step stem-pos)))))))))
+      (with-output-as-presentation (pane element 'cluster)
+        (let* ((direction (final-stem-direction element))
+               (stem-pos (final-stem-position element))
+               (stem-yoffset (final-stem-yoffset element))
+               (groups (group-notes-by-staff (notes element)))
+               (x (final-absolute-element-xoffset element))
+               (dot-xoffset 
+                (let ((basic-xoffset (+ (score-pane:staff-step 2)
+                                        (reduce #'max (mapcar #'final-absolute-note-xoffset (notes element))))))
+                  (if (and flags (eq direction :up) (flags-drawn-p element))
+                      (max basic-xoffset (+ (score-pane:staff-step 4) x))
+                      basic-xoffset))))
+          (when flags
+            (score-pane:with-vertical-score-position (pane stem-yoffset)
+              (draw-flags pane element x direction stem-pos)))
+          (loop for group in groups do 
+                (draw-notes pane group (dots element) (notehead element) dot-xoffset)
+                (draw-ledger-lines pane x group))
+          (unless (member (notehead element) '(:whole :breve))
+            (if (eq direction :up)
+                (score-pane:draw-right-stem
+                 pane x
+                 (- (bot-note-staff-yoffset element) (score-pane:staff-step (bot-note-pos element)))
+                 (- stem-yoffset (score-pane:staff-step stem-pos)))
+  	        (score-pane:draw-left-stem
+                 pane x
+                 (- (top-note-staff-yoffset element) (score-pane:staff-step (top-note-pos element)))
+                 (- stem-yoffset (score-pane:staff-step stem-pos))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1069,9 +1070,10 @@ right of the center of its timeline"))
 (defmethod draw-element (pane (element rest) &optional (flags t))
   (declare (ignore flags))
   (let ((x (final-absolute-element-xoffset element)))
-    (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
-      (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
-      (draw-dots pane (dots element) x (+ x (score-pane:staff-step 2)) (1+ (staff-pos element))))))
+    (with-output-as-presentation (pane element 'rest)
+      (score-pane:with-vertical-score-position (pane (staff-yoffset (staff element)))
+        (score-pane:draw-rest pane (undotted-duration element) x (staff-pos element))
+        (draw-dots pane (dots element) x (+ x (score-pane:staff-step 2)) (1+ (staff-pos element)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
