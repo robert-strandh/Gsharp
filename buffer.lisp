@@ -62,10 +62,12 @@
 (defclass element (gsharp-object)
   ((bar :initform nil :initarg :bar :accessor bar)
    (xoffset :initform 0 :initarg :xoffset :accessor xoffset)
+   (right-pad :initform 0 :initarg :right-pad :accessor right-pad)
+   (left-pad :initform 0 :initarg :left-pad :accessor left-pad)
    (annotations :initform nil :initarg :annotations :accessor annotations)))
 
 (defmethod slots-to-be-saved append ((e element))
-  '(xoffset annotations))
+  '(xoffset annotations left-pad right-pad))
 
 (defmethod duration ((element element)) 0)
 (defmethod rbeams ((element element)) 0)

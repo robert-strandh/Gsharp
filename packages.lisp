@@ -103,7 +103,9 @@
 	   #:tie-right #:tie-left
 	   #:needs-saving
            #:tuning #:master-pitch-note #:master-pitch-freq
-           #:note-cents #:12-edo #:regular-temperament))
+           #:note-cents #:12-edo #:regular-temperament
+       #:x-offset #:left-pad #:right-pad
+       #:rastral-size #:zoom-level))
 
 (defpackage :gsharp-numbering
   (:use :gsharp-utilities :gsharp-buffer :clim-lisp)

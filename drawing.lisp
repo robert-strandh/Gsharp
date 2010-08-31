@@ -148,6 +148,11 @@ right of the center of its timeline"))
 	      (score-pane:staff-step 0)))
      (score-pane:staff-step 2)))
 
+(defmethod left-bulge :around ((element element) pane)
+  (+ (gsharp-buffer::left-pad element) (call-next-method)))
+(defmethod right-bulge :around ((element element) pane)
+  (+ (gsharp-buffer::right-pad element) (call-next-method)))
+
 (defmethod right-bulge ((element element) pane)
   (score-pane:staff-step 1))
 

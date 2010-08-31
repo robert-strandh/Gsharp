@@ -96,6 +96,17 @@
                  "")
              pane))))
 
+(defun x-offset-label (frame pane)
+  (declare (ignore frame))
+  (when (handler-case (cur-cluster)
+          (gsharp-condition () nil))
+    (princ (gsharp-buffer::xoffset (cur-element)) pane)))
+(defun x-pad-label (frame pane)
+  (declare (ignore frame))
+  (when (handler-case (cur-cluster)
+          (gsharp-condition () nil))
+    (princ (gsharp-buffer::left-pad (cur-element)) pane)))
+
 (define-application-frame gsharp (esa-frame-mixin
                                   standard-application-frame)
   ((views :initarg :views :initform '() :accessor views)
