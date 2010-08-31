@@ -33,6 +33,12 @@
 (set-key 'com-left 'global-gsharp-table '((#\l :meta)))
 (set-key 'com-right 'global-gsharp-table '((#\r :meta)))
 
+;; Post MS file-io keystrokes
+(set-key 'com-load-score-file 'global-gsharp-table '((#\o :meta)))
+(set-key 'com-save-score-file-as 'global-gsharp-table '((#\S :meta)))
+(set-key 'com-save-buffer 'global-gsharp-table '((#\s :meta)))
+
+
 (set-key 'com-istate-more-dots 'global-gsharp-table '((#\i) (#\.)))
 (set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
 (set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))

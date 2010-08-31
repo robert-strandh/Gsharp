@@ -1633,3 +1633,19 @@ Prints the results in the minibuffer."
                (medium-transformation s) *scale* *scale*))
         (print-buffer s (current-buffer) (current-cursor) 
                       (left-margin (current-buffer)) *top-margin*)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; File dialogue box
+;;
+
+(define-gsharp-command (com-load-score-file :name "Load file" :menu t)
+    ()
+  (let ((file (gui-get-pathname :extensions '("gsh" "mxml" "xml"))))
+    (when (pathnamep file)
+      (com-find-file file))))
+
+(define-gsharp-command (com-save-score-file-as :name "Save file as" :menu t)
+    ()
+  (com-write-buffer (gui-get-pathname :extensions '("gsh" "mxml" "xml"))))
+
