@@ -431,18 +431,18 @@ specified, returns the first (hopefully default) staff."
   (let ((alterations (fill (make-array 7) :natural))
         (fifths-element (dom:get-elements-by-tag-name key "fifths"))
 
-        (staff (nth (if (dom:has-attribute key "number")
-                        (1- (parse-integer (dom:get-attribute key "number")))
-                        ;; TODO: this next line is wrong... it's
-                        ;; supposed to apply to all staves if the
-                        ;; staff isn't specified
-                        0)
-                    (remove-if #'(lambda (s) (typep s 'lyrics-staff)) staves))))
+        (staff (if (dom:has-attribute key "number")
+                   (nth (1- (parse-integer (dom:get-attribute key "number")))
+                        (remove-if #'(lambda (s) (typep s 'lyrics-staff)) staves))
+                   ;; TODO: this next line is wrong... it's
+                   ;; supposed to apply to all staves if the
+                   ;; staff isn't specified
+                   ;; DONE:?
+                   nil)))
     (if (eql 1 (length fifths-element))
         (let ((fifths (parse-integer (pcdata (elt fifths-element 0))))
               (order-of-sharps #(3 0 4 1 5 2 6))
-              (order-of-flats #(6 2 5 1 4 0 3))
-              (key-signature (gsharp-buffer::make-key-signature staff)))
+              (order-of-flats #(6 2 5 1 4 0 3)))
           ;; deal with the basic fifths
           (if (< fifths 0)
               ;; well, this would have been a nice way to do it, but
@@ -453,8 +453,7 @@ specified, returns the first (hopefully default) staff."
               (dotimes (index (abs fifths))
                 (setf (elt alterations (elt order-of-flats index)) :flat))
               (dotimes (index fifths)
-                (setf (elt alterations (elt order-of-sharps index)) :sharp)))
-          key-signature)
+                (setf (elt alterations (elt order-of-sharps index)) :sharp))))
         
         ;; Deal with weird key signatures
         ;; The DTD specifies that it goes step, alter, step, alter. If
@@ -477,7 +476,10 @@ specified, returns the first (hopefully default) staff."
                           ("2" :double-sharp)
                           ("-2" :double-flat)
                           (t :natural)))))))
-    (gsharp-buffer::make-key-signature staff :alterations alterations)))
+    (if staff
+        (gsharp-buffer::make-key-signature staff :alterations alterations)
+        (loop for staff in staves
+           collect (gsharp-buffer::make-key-signature staff :alterations alterations)))))
 
 (defun xmlstaff-has-lyrics (part staff-number)
   "Given a MusicXML part and a staff number, determine if any of the
@@ -573,8 +575,11 @@ note elements in that staff have associated lyrics."
         ;; keysignatures
         (for-named-elements ("key" key attributes)
           (let ((keysig (parse-mxml-key key staves)))
-            (setf (keysig (staff keysig)) keysig)))))
-
+            (if (listp keysig)
+                (dolist (sig keysig)
+                   (setf (keysig (staff sig)) sig))
+                (setf (keysig (staff keysig)) keysig))))))
+    
     ;; make the layers
     (multiple-value-bind (lyrics-staves fiveline-staves)
         (split-if #'(lambda (s) (typep s 'lyrics-staff)) staves)
@@ -629,7 +634,8 @@ note elements in that staff have associated lyrics."
                     collect new-bar))
            (*parsing-duration-gmeasure-position* 0)
            (*parsing-in-cluster* nil))
-         
+       (format t "~{~a ~}~%" (loop for staff in staves
+                                collect (string (aref (alterations (keysig staff)) 2))))
        (for-children (child measure)
          (let ((element-type (dom:tag-name child)))
            (stringcase element-type
@@ -645,16 +651,21 @@ note elements in that staff have associated lyrics."
                 
               ;; if we haven't written anything yet, this
               ;; keysignature got added to the staff itself
-              (unless (= 0 measure-position *parsing-duration-gmeasure-position*)
+             (unless (= 0 measure-position *parsing-duration-gmeasure-position*)
+ ;;            (unless (= 0 *parsing-duration-gmeasure-position*)
 		(when (has-element-type child "key")
+          (format t "~A ~A!!!~%" measure-position *parsing-duration-gmeasure-position*)
 		  (let ((new-keysignature (parse-mxml-key
 					   (elt (dom:get-elements-by-tag-name child "key") 0)
 					   staves)))
-		    (loop for bar in bars
-		       do (when (find (staff new-keysignature) (staves (layer (slice bar))))
-			    (add-element-at-duration
-			     (copy-keysignature new-keysignature)
-			     bar *parsing-duration-gmeasure-position*)))))
+            (unless (listp new-keysignature)
+              (setf new-keysignature (list new-keysignature)))
+            (dolist (new-sig new-keysignature)
+              (loop for bar in bars
+                 do (when (find (staff new-sig) (staves (layer (slice bar))))
+                      (add-element-at-duration
+                       (copy-keysignature new-sig)
+                       bar *parsing-duration-gmeasure-position*))))))
 		(when (has-element-type child "clef")
 		  ;; spacer till this is available in gsharp
 		  #+nil (multiple-value-bind (new-clef staff-number)
@@ -1149,7 +1160,7 @@ dotted 16th note will return 8."
   (let ((annotations (annotations cluster)))
     (or (member :staccato annotations)
 	(member :tenuto annotations))))
-
+(defparameter *foo* nil)
 (defun make-xml-note (note in-chord duration voice cluster)
   (let ((type (rhythmic-element-type cluster))
         (dots (dots cluster))
