@@ -302,7 +302,7 @@
 ;;; Element pane
 
 (defmethod note-position ((note note))
-  (let ((clef (clef (staff note))))
+  (let ((clef (clef note)))
     (- (pitch note)
        (bottom-line clef))))
 
@@ -1080,6 +1080,13 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-insert-keysig ()
   (insert-keysig))
 
+(defun insert-clef (clef)
+  (let ((cursor (current-cursor)))
+    (gsharp-measure::invalidate-everything-using-staff (current-buffer) (staff clef))
+    (insert-element clef cursor)
+    (forward-element cursor)
+    clef))
+
 (defun insert-timesig (numerator denominator)
   (let* ((cursor (current-cursor))
          (staff (car (staves (layer cursor))))
@@ -1097,6 +1104,13 @@ Prints the results in the minibuffer."
    ((numerator '(integer 1 8) :prompt "Numerator")
     (denominator '(integer 1 8) :prompt "Denominator"))
   (insert-timesig numerator denominator))
+
+(define-gsharp-command (com-insert-clef :name t) ()
+  (let* ((type (accept 'clef-type :prompt "Type of clef"))
+         (line (accept 'integer :prompt "Line of clef"))
+         (clef (make-clef type :lineno line)))
+    (setf (slot-value clef 'gsharp-buffer::%staff) (car (staves (layer (current-cursor)))))
+    (insert-clef clef)))
 
 (defmethod remove-element :before ((element staffwise-element) (bar bar))
   (let ((staff (staff element)))
@@ -1170,6 +1184,41 @@ Prints the results in the minibuffer."
          (key-signatures (key-signatures staff))
          (bar (bar element)))
     (%keysig staff key-signatures bar element)))
+
+;; These are copied from the keysig equivalents, which seem to work...
+(defun %clef (staff clefs bar element-or-nil)
+  (or (and clefs
+	   (find-if (lambda (x) (starts-before-p x bar element-or-nil))
+		    clefs :from-end t))
+      (clef staff)))
+
+(defmethod clef ((cursor gsharp-cursor))
+  (assert (eq cursor (current-cursor)))
+  (let* ((staff (car (staves (layer cursor))))
+         (clefs (clefs staff))
+         (bar (bar cursor))
+         (element-or-nil (cursor-element cursor)))
+    (%clef staff clefs bar element-or-nil)))
+
+(defmethod clef ((note note))
+  (let* ((staff (staff note))
+         (clefs (clefs staff))
+         (bar (bar (cluster note)))
+         (element-or-nil (cluster note)))
+    (%clef staff clefs bar element-or-nil)))
+
+(defmethod clef ((cluster cluster))
+  (error "Called ~S (a staff-scope operation) on an element with no ~
+          associated staff: ~S" 
+         'clef cluster))
+
+(defmethod clef ((element element))
+  ;; Obviously, only works for elemnts with a staff (i.e. not a
+  ;; cluster
+  (let* ((staff (staff element))
+         (clefs (clefs staff))
+         (bar (bar element)))
+    (%clef staff clefs bar element)))
 
 (define-gsharp-command com-tie-note-left ()
   (let ((note (cur-note)))

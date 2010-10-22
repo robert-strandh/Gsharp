@@ -192,6 +192,11 @@
       (setf elements (ninsert-element element elements position)))
     (setf bar b)))
 
+(defun sort-staffwise-elements (staff)
+  (setf (staffwise-elements staff)
+        (sort (staffwise-elements staff)
+              (lambda (x y) (gsharp::starts-before-p x (bar y) y)))))
+
 ;;; fix this and move it to melody.lisp
 (defun maybe-update-key-signatures (bar)
   (let* ((layer (layer (slice bar)))
@@ -210,9 +215,7 @@
 	    ;; there might be more than one key signature in the bar,
 	    ;; and they might have changed their relative order as a
 	    ;; result of the edit.
-	    (setf (staffwise-elements staff)
-		  (sort (staffwise-elements staff)
-			(lambda (x y) (gsharp::starts-before-p x (bar y) y))))))))))
+        (sort-staffwise-elements staff)))))))
  
 (defmethod add-element :after ((element element) (bar bar) position)
   (maybe-update-key-signatures bar))

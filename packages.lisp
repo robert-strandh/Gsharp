@@ -57,7 +57,7 @@
   (:export #:clef #:name #:lineno #:make-clef
 	   #:staff #:fiveline-staff #:make-fiveline-staff
            #:key-signatures #:time-signatures
-	   #:staffwise-elements
+	   #:staffwise-elements #:clefs
 	   #:lyrics-staff #:make-lyrics-staff
 	   #:gsharp-condition
 	   #:pitch #:accidentals #:dots #:note #:make-note
@@ -90,7 +90,7 @@
 	   #:add-staff-to-layer
 	   #:remove-staff-from-layer
 	   #:stem-direction #:undotted-duration #:duration
-	   #:clef #:f-position #:b-position #:bottom-line
+	   #:f-position #:b-position #:bottom-line
            #:keysig #:staff-pos #:xoffset #:read-everything
 	   #:read-buffer-from-stream
 	   #:staffwise-element

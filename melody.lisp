@@ -16,7 +16,7 @@
 ;;; the note number of the bottom line of this clef.
 (defgeneric bottom-line (clef))
 
-(defclass clef (gsharp-object name-mixin)
+(defclass clef (staffwise-element gsharp-object name-mixin)
   ((lineno :reader lineno :initarg :lineno
            :type (or (integer 0 8) null))))
 
@@ -571,3 +571,8 @@ flatter by removing some sharps and/or adding some flats"))
   (declare (ignore staves head body tail))
   (apply #'make-instance 'melody-layer args))
 
+(defgeneric clefs (staff)
+  (:method ((s t)) nil)
+  (:method ((s fiveline-staff))
+    (remove-if #'(lambda (x) (not (typep x 'clef)))
+               (staffwise-elements s))))
