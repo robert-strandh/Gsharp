@@ -384,6 +384,8 @@ flatter by removing some sharps and/or adding some flats"))
                 :initform nil)))
 (defmethod slots-to-be-saved append ((t-s time-signature))
   '(%components))
+(defun make-time-signature (staff &rest args)
+  (apply #'make-instance 'time-signature :staff staff args))
                                                                               
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

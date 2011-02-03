@@ -162,6 +162,13 @@ right of the center of its timeline"))
 (defmethod right-bulge :around ((element element) pane)
   (+ (gsharp-buffer::right-pad element) (call-next-method)))
 
+(defmethod right-bulge ((timesig time-signature) pane)
+  ;; FIXME: this is probably wrong; it should either compute the bulge
+  ;; properly, or else approximate using (length - 0.5) *
+  ;; typical-width-of-component
+  (* (length (time-signature-components timesig))
+     (score-pane:staff-step 5)))
+
 (defmethod left-bulge ((element clef) pane)
   (score-pane:staff-step 2))
 
@@ -181,13 +188,6 @@ right of the center of its timeline"))
 	   (element-has-suspended-notes element))
       (score-pane:staff-step 5)
       (score-pane:staff-step 2)))
-
-(defmethod right-bulge ((timesig time-signature) pane)
-  ;; FIXME: this is probably wrong; it should either compute the bulge
-  ;; properly, or else approximate using (length - 0.5) *
-  ;; typical-width-of-component
-  (* (length (time-signature-components timesig))
-     (score-pane:staff-step 5)))
 
 (defmethod right-bulge ((keysig key-signature) pane)
   ;; FIXME: shares much code with DRAW-ELEMENT (KEY-SIGNATURE).
@@ -724,7 +724,7 @@ right of the center of its timeline"))
 
 (defun draw-beam-group (pane elements)
   (let ((e (car elements)))
-    (when (typep e 'gsharp-buffer::staffwise-element)
+    (when (typep e 'staffwise-element)
       (assert (null (cdr elements)))
       (return-from draw-beam-group
         (draw-element pane e (final-absolute-element-xoffset e)))))
@@ -1167,3 +1167,15 @@ right of the center of its timeline"))
   (declare (ignore flags))
   (let ((x (final-absolute-element-xoffset clef)))
     (score-pane:draw-clef pane (name clef) x (lineno clef))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Time signature element
+
+(defmethod draw-element (pane (timesig time-signature) &optional (flags t))
+  (declare (ignore flags))
+  (let ((staff (staff timesig))	
+        (x (final-absolute-element-xoffset timesig)))    
+    (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
+      (dolist (component (time-signature-components timesig))
+        (score-pane:draw-time-signature-component pane component x)))))

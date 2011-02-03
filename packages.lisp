@@ -96,6 +96,7 @@
 	   #:staffwise-element
 	   #:key-signature #:make-key-signature
 	   #:time-signature #:time-signature-components
+       #:make-time-signature
            #:alterations #:more-sharps #:more-flats
 	   #:line-width #:lines-per-page #:min-width #:spacing-style
 	   #:right-edge #:left-offset

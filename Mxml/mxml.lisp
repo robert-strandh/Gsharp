@@ -425,9 +425,37 @@ specified, returns the first (hopefully default) staff."
 			  0)))
     (values (make-clef name :lineno lineno) staff-number)))
 
+(defun parse-mxml-time (time staves)
+  "Takes a dom element 'time' and returns a time-signature object"
+  ;; FIXME: More complex examples (e.g. additive ts) are missing as is
+  ;; the dreaded "symbol"
+  (let* ((numerators (dom:get-elements-by-tag-name time "beats"))
+         (denominators (dom:get-elements-by-tag-name time "beat-type"))
+         (symbol (dom:get-attribute time "symbol"))
+         (components))
+    (declare (ignore symbol)) ;; FIXME:
+    (setf components
+          (loop for numerator being the elements of numerators
+             for denominator being the elements of denominators
+             collect (mxml-ts-component numerator denominator)))
+    (loop for staff in staves
+       collect (make-time-signature staff :components components))))
+
+(defun mxml-ts-component (numerator denominator)
+  (let ((numerator-string (pcdata numerator))
+        (denominator-string (pcdata denominator))
+        (num) (n-end) (den) (d-end))
+    (multiple-value-setq (num n-end)
+        (parse-integer numerator-string :junk-allowed t))
+    (multiple-value-setq (den d-end)
+        (parse-integer denominator-string :junk-allowed t))
+    (cons (if (and num (= n-end (length numerator-string)))
+              num numerator-string)
+          (if (and den (= d-end (length denominator-string)))
+              den denominator-string))))
+
 (defun parse-mxml-key (key staves)
   "Takes a dom element 'key' and returns a key-signature object"
-
   (let ((alterations (fill (make-array 7) :natural))
         (fifths-element (dom:get-elements-by-tag-name key "fifths"))
 
@@ -494,8 +522,11 @@ note elements in that staff have associated lyrics."
   nil)
 
 (defun copy-keysignature (ks)
-  (gsharp-buffer::make-key-signature
+  (make-key-signature
    (staff ks) :alterations (copy-seq (alterations ks))))
+(defun copy-timesignature (ts)
+  (make-time-signature
+   (staff ts) :components (copy-seq (time-signature-components ts))))
 (defun copy-clef (clef)
   (make-clef (name clef) :lineno (lineno clef)))
 
@@ -505,7 +536,8 @@ note elements in that staff have associated lyrics."
 (defun parse-mxml-part (part part-name)
   (let ((staves nil)
         (layers nil)
-        (lyrics-layer-hash (make-hash-table)))
+        (lyrics-layer-hash (make-hash-table))
+        (attrib-time-sigs))
     ;; Create all of the staves, along with their initial
     ;; keysignatures and clefs.
     ;; TODO change this to do look in the current part, not the
@@ -578,7 +610,9 @@ note elements in that staff have associated lyrics."
             (if (listp keysig)
                 (dolist (sig keysig)
                    (setf (keysig (staff sig)) sig))
-                (setf (keysig (staff keysig)) keysig))))))
+                (setf (keysig (staff keysig)) keysig))))
+        (for-named-elements ("time" time attributes)
+          (push (parse-mxml-time time staves) attrib-time-sigs))))
     
     ;; make the layers
     (multiple-value-bind (lyrics-staves fiveline-staves)
@@ -619,9 +653,10 @@ note elements in that staff have associated lyrics."
     ;; return the layers and the staves
     (values layers
             staves
-            lyrics-layer-hash)))
+            lyrics-layer-hash
+            attrib-time-sigs)))
 
-(defun parse-make-segment (part layers staves lyrics-layer-hash)
+(defun parse-make-segment (part layers staves lyrics-layer-hash &key (attrib-time-sigs))
   ;;look at each element
   (loop for measure across (dom:get-elements-by-tag-name part "measure")
      for measure-position from 0
@@ -634,6 +669,17 @@ note elements in that staff have associated lyrics."
                     collect new-bar))
            (*parsing-duration-gmeasure-position* 0)
            (*parsing-in-cluster* nil))
+       (when (= measure-position 0)
+         (dolist (ts attrib-time-sigs)
+           (unless (listp ts)
+             (setf ts (list ts)))
+           (dolist (new-sig ts)
+             (loop for bar in bars
+                do (when (find (staff new-sig) (staves (layer (slice bar))))
+                     (add-element-at-duration
+                      (copy-timesignature new-sig)
+                      bar 0))))))
+
        (format t "~{~a ~}~%" (loop for staff in staves
                                 collect (string (aref (alterations (keysig staff)) 2))))
        (for-children (child measure)
@@ -666,6 +712,19 @@ note elements in that staff have associated lyrics."
                       (add-element-at-duration
                        (copy-keysignature new-sig)
                        bar *parsing-duration-gmeasure-position*))))))
+        (when (has-element-type child "time")
+          (format t "~A ~A!!!~%" measure-position *parsing-duration-gmeasure-position*)
+		  (let ((new-timesignature (parse-mxml-time
+					   (elt (dom:get-elements-by-tag-name child "time") 0)
+					   staves)))
+            (unless (listp new-timesignature)
+              (setf new-timesignature (list new-timesignature)))
+            (dolist (new-sig new-timesignature)
+              (loop for bar in bars
+                 do (when (find (staff new-sig) (staves (layer (slice bar))))
+                      (add-element-at-duration
+                       (copy-timesignature new-sig)
+                       bar *parsing-duration-gmeasure-position*))))))
 		(when (has-element-type child "clef")
 		  ;; spacer till this is available in gsharp
 		  #+nil (multiple-value-bind (new-clef staff-number)
@@ -690,7 +749,7 @@ note elements in that staff have associated lyrics."
         (lyrics-layer-hashes nil)
         (stavess nil)
         (parts (dom:get-elements-by-tag-name document "part"))
-        (parts-alist nil))
+        (parts-alist nil) (attrib-time-sigss))
     (sequence:dosequence (part (dom:child-nodes
                                 (aref (dom:get-elements-by-tag-name document "part-list")
                                       0)))
@@ -703,15 +762,15 @@ note elements in that staff have associated lyrics."
                        (dom:get-attribute part "id")
                        parts-alist))))
     (sequence:dosequence (part parts)
-       (multiple-value-bind (layers staves lyrics-layer-hash)
+       (multiple-value-bind (layers staves lyrics-layer-hash attrib-time-sigs)
           (parse-mxml-part part (cdr (assoc (dom:get-attribute part "id")
                                             parts-alist :test #'string=)))
         (setf layerss
-              (append layerss (list layers)))
-        (setf lyrics-layer-hashes
-              (append lyrics-layer-hashes (list lyrics-layer-hash)))
-        (setf stavess (append stavess (list staves)))))
-
+              (append layerss (list layers))
+              lyrics-layer-hashes
+              (append lyrics-layer-hashes (list lyrics-layer-hash))
+              stavess (append stavess (list staves))
+              attrib-time-sigss (append attrib-time-sigss (list attrib-time-sigs)))))
     ;; And finally make the buffer and start parsing notes.
     ;; Previous operations result in staves and layers in opposite
     ;; orders (don't know why) - hence the reverse for segment layers
@@ -724,15 +783,20 @@ note elements in that staff have associated lyrics."
          for lyrics-layer-hash in lyrics-layer-hashes
          for layers in layerss
          for staves in stavess
+         for attrib-time-sigs in attrib-time-sigss
          with *mxml-divisions* = nil
-         do (parse-make-segment part layers staves lyrics-layer-hash))
+         do (parse-make-segment part layers staves lyrics-layer-hash 
+                                :attrib-time-sigs attrib-time-sigs))
       buffer)))
 
 (defvar *mxml-dtds-dir*
-  (merge-pathnames "mxml-dtds/"
-                   (make-pathname
-                    :directory (pathname-directory
-                                (load-time-value *load-pathname*)))))
+  (merge-pathnames "Mxml/mxml-dtds/"
+;;                   (make-pathname
+;;                    :directory 
+                    (asdf:component-pathname (asdf:find-system :gsharp))
+                    #+nil (pathname-directory
+                                (load-time-value *load-pathname*))))
+
 (defun musicxml-document (pathname)
   (flet ((resolver (pubid sysid)
            (declare (ignore pubid))

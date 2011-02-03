@@ -1090,19 +1090,18 @@ Prints the results in the minibuffer."
 (defun insert-timesig (numerator denominator)
   (let* ((cursor (current-cursor))
          (staff (car (staves (layer cursor))))
-         (timesig (make-instance 'time-signature
-                                 :staff staff
-                                 :components
-                                 (list (if denominator
-                                           (cons numerator denominator)
-                                           numerator)))))
+         (timesig (make-time-signature :staff staff
+                                       :components
+                                       (list (if denominator
+                                                 (cons numerator denominator)
+                                                 numerator)))))
     (insert-element timesig cursor)
     (forward-element cursor)
     timesig))
 
 (define-gsharp-command (com-insert-timesig :name t) 
-   ((numerator '(integer 1 8) :prompt "Numerator")
-    (denominator '(integer 1 8) :prompt "Denominator"))
+    ((numerator '(integer 1 8) :prompt "Numerator")
+     (denominator '(integer 1 8) :prompt "Denominator"))
   (insert-timesig numerator denominator))
 
 (define-gsharp-command (com-insert-clef :name t) ()
