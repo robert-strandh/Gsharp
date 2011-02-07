@@ -1,3 +1,11 @@
+;;;; Using Quicklisp (recommended, see http://www.quicklisp.org):
+
+;;; type (ql:quickload "gsharp")
+;;; when installed, type (require :gsharp)
+;;; then (gsharp::gsharp)
+
+;;;; "Manual" installation:
+
 ;;; Requirements
 
 #|
@@ -35,3 +43,4 @@
 ;;; Run Gsharp
 
 (gsharp::gsharp)
+
