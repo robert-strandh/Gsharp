@@ -41,6 +41,7 @@
    "play"
    "clim-utils"
    "gui"
+   "undo"
    "fontview"
    #+sbcl "Mxml/mxml"
    #+sbcl "Mxml/commands")

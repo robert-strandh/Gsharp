@@ -210,7 +210,11 @@
   (cursor (view (car (windows *application-frame*)))))
 
 (defmethod execute-frame-command :around ((frame gsharp) command)
-  (handler-case (call-next-method)
+  (handler-case 
+      (let ((buffer (if (views frame)
+                        (list (buffer (car (views frame)))))))
+        (drei::with-undo (buffer)
+          (call-next-method)))
     (gsharp-condition (condition) (beep) (display-message "~a" condition))))
 
 (defmethod display-state ((frame gsharp) pane)
@@ -1813,3 +1817,10 @@ Prints the results in the minibuffer."
     ()
   (unless (<= (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)
     (decf (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)))
+
+(define-command (com-undo :name t :command-table gsharp) ()
+  (handler-case (drei::undo (drei::undo-tree (current-buffer)))
+    (drei-undo:no-more-undo () (beep) (display-message "No more undo"))))
+(define-command (com-redo :name t :command-table gsharp) ()
+  (handler-case (drei::redo (drei::undo-tree (current-buffer)))
+    (drei-undo:no-more-undo () (beep) (display-message "No more redo"))))

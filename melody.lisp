@@ -111,6 +111,11 @@
   #'read-fiveline-staff-v3
   *gsharp-readtable-v3*)
 
+(defgeneric set-contents (element contents)
+  (:documentation "Sets note in an element"))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Note
@@ -446,13 +451,16 @@ flatter by removing some sharps and/or adding some flats"))
      (declare (ignore condition))
      (format stream "Attempt to add a note already in a cluster"))))
 
+(defmethod set-contents ((cluster cluster) contents)
+  (setf (notes cluster) contents))
+
 (defmethod add-note ((cluster cluster) (note note))
   (with-slots (notes) cluster
     (assert (not (find note notes :test #'note-equal))
             ()
             'note-already-in-cluster)
-    (setf notes (merge 'list notes (list note) #'note-less)
-          (cluster note) cluster)))
+    (set-contents cluster (merge 'list notes (list note) #'note-less))
+    (setf (cluster note) cluster)))
 
 (defmethod find-note ((cluster cluster) (note note))
   (with-slots (notes) cluster
@@ -467,9 +475,7 @@ flatter by removing some sharps and/or adding some flats"))
 (defmethod remove-note ((note note))
   (with-slots (cluster) note
     (assert cluster () 'note-not-in-cluster)
-    (with-slots (notes) cluster
-      (setf notes (delete note notes :test #'eq)))
-    (setf cluster nil)))
+    (set-contents cluster (delete note (notes cluster) :test #'eq))))
 
 (defun lower-bound (bound list &key (test #'<))
   "Return the `largest' element in the sorted list LIST such that

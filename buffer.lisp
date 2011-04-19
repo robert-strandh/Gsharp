@@ -540,7 +540,7 @@
 (defvar *default-left-offset* 30)
 (defvar *default-left-margin* 20)
 
-(defclass buffer (gsharp-object esa-buffer-mixin)
+(defclass buffer (gsharp-object esa-buffer-mixin drei:undo-mixin)
   ((segments :initform '() :initarg :segments :accessor segments)
    (staves :initform (list (make-fiveline-staff))
            :initarg :staves :accessor staves)
