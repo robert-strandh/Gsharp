@@ -1,6 +1,6 @@
-(in-package :common-lisp-user)
+(in-package :asdf-user)
 
-(asdf:defsystem :gsharp
+(defsystem :gsharp
   :depends-on (:mcclim :clim-listener :flexichain :midi :puri :cxml)
   :serial t
   :components
