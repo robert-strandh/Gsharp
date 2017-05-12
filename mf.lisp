@@ -470,20 +470,20 @@
     (if (typep (car path) 'left-endpoint)
 	(let ((segments (loop for point in (butlast path)
 			      collect (let ((rc (right-context point)))
-					(climi::make-bezier-segment
+					(mcclim-bezier::make-bezier-segment
 					 (complex-to-point (point point))
 					 (complex-to-point (control rc))
 					 (complex-to-point (control (left-context (neighbor rc))))
 					 (complex-to-point (point (neighbor rc))))))))
-	  (make-instance 'climi::bezier-curve :segments segments))
+	  (make-instance 'mcclim-bezier:bezier-curve :segments segments))
 	(let ((segments (loop for point in path
 			      collect (let ((rc (right-context point)))
-					(climi::make-bezier-segment
+					(mcclim-bezier::make-bezier-segment
 					 (complex-to-point (point point))
 					 (complex-to-point (control rc))
 					 (complex-to-point (control (left-context (neighbor rc))))
 					 (complex-to-point (point (neighbor rc))))))))
-	  (make-instance 'climi::bezier-area :segments segments)))))
+	  (make-instance 'mcclim-bezier:bezier-area :segments segments)))))
 
 (defparameter *infinity* 4095.99998) ;see the MF book
 
@@ -542,13 +542,13 @@
 	 (p1 (clim:make-point 0.5 a))
 	 (p2 (clim:make-point a 0.5))
 	 (alpha 0.7))
-    (climi::make-bezier-curve
+    (mcclim-bezier:make-bezier-curve
      (list q0
-	   (climi::part-way q0 p1 alpha)
-	   (climi::part-way p0 p1 alpha)
+	   (mcclim-bezier::part-way q0 p1 alpha)
+	   (mcclim-bezier::part-way p0 p1 alpha)
 	   p0
-	   (climi::part-way p0 p2 alpha)
-	   (climi::part-way q1 p2 alpha)
+	   (mcclim-bezier::part-way p0 p2 alpha)
+	   (mcclim-bezier::part-way q1 p2 alpha)
 	   q1))))
 
 (defparameter +half-circle+
@@ -559,10 +559,10 @@
 (defparameter +full-circle+
   (let* ((tr (clim:make-rotation-transformation pi))
 	 (rotated-half-circle (clim:transform-region tr +half-circle+)))
-    (climi::close-path (clim:region-union +half-circle+ rotated-half-circle))))
+    (mcclim-bezier::close-path (clim:region-union +half-circle+ rotated-half-circle))))
 
 (defparameter +unit-square+
-  (climi::close-path
+  (mcclim-bezier::close-path
    (mf #c(0.5 0.5) -- #c(-0.5 0.5) -- #c(-0.5 -0.5) -- #c(0.5 -0.5) -- #c(0.5 0.5))))
 
 (defun superellipse (r top l bot superness)
@@ -580,7 +580,7 @@
 	bot right +++ (complex xbr yrb) (direction (- r bot)) +++ cycle)))
 
 (defparameter +razor+
-  (climi::close-path (mf #c(-0.5 0) -- #c(0.5 0) -- #c(-0.5 0))))
+  (mcclim-bezier::close-path (mf #c(-0.5 0) -- #c(0.5 0) -- #c(-0.5 0))))
 
 ;;; pen drawing
 
@@ -591,4 +591,4 @@
      ,@body))
 
 (defun draw-path (path)
-  (climi::convolve-regions *pen* path))
+  (mcclim-bezier:convolve-regions *pen* path))
