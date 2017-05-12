@@ -1,1 +1,12 @@
-*.fasl
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.idx
+*.llg
+*.ind
+*.log
+*.pdf
+*.ps
+*.toc
+*.ilg
