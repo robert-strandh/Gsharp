@@ -119,4 +119,3 @@
 (defmethod make-layer-for-staff ((staff lyrics-staff) &rest args &key staves head body tail &allow-other-keys)
   (declare (ignore staves head body tail))
   (apply #'make-instance 'lyrics-layer args))
-
