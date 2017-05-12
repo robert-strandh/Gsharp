@@ -1,7 +1,7 @@
 (in-package :gsharp-drawing)
 
 (defclass x-y-width-mixin ()
-  (;; indicates the absolute y position of the system to which the 
+  (;; indicates the absolute y position of the system to which the
    ;; object belongs
    (system-y-position :accessor system-y-position)
    ;; the absolute x position of the object
@@ -36,7 +36,7 @@
   (let ((clefs (clefs staff))
 	(barno (gsharp-numbering:number (car (measure-bars (car measures))))))
     (or (and clefs
-             (find barno clefs :from-end t :test #'> 
+             (find barno clefs :from-end t :test #'>
                    :key (lambda (x) (gsharp-numbering:number (bar x)))))
         (clef staff))))
 
@@ -44,7 +44,7 @@
   (let ((key-signatures (key-signatures staff))
 	(barno (gsharp-numbering:number (car (measure-bars (car measures))))))
     (or (and key-signatures
-	     (find barno key-signatures :from-end t :test #'> 
+	     (find barno key-signatures :from-end t :test #'>
 		   :key (lambda (x) (gsharp-numbering:number (bar x)))))
 	(keysig staff))))
 
@@ -106,7 +106,7 @@
 ;;; line is not comparable between two different lines.  All we know
 ;;; is that timelines with the same elasticity will grow and shrink in
 ;;; parallel, and that proportions between two timelines of different
-;;; durations will be preserved. 
+;;; durations will be preserved.
 (defun compute-elasticities (measures method)
   (loop for measure in measures
 	do (loop with timelines = (timelines measure)
@@ -117,12 +117,12 @@
 
 ;;; FIXME: there should be an :around method that adds the value
 ;;; return by the main method to the explicit horizontal offset that
-;;; the user wants to impose on an element, and the existence of this 
+;;; the user wants to impose on an element, and the existence of this
 ;;; around method should be documented.
 ;;; FIXME: we should probably also allow for the user to introduce
 ;;; explicit (positive or negative) bulges that will be added in by
 ;;; the :around method, thus allowing the user to explicitly move two
-;;; adjacent elements further apart, or to bring them closer together. 
+;;; adjacent elements further apart, or to bring them closer together.
 (defgeneric left-bulge (element pane)
   (:documentation "The amount by which an element sticks out to the
 left of the center of its timeline"))
@@ -130,11 +130,11 @@ left of the center of its timeline"))
 ;;; FIXME: there should be an :around method that adds the value
 ;;; return by the main method to the explicit horizontal offset that
 ;;; the user wants to impose on an element, and the existence of this
-;;; around method should be documented.  
+;;; around method should be documented.
 ;;; FIXME: we should probably also allow for the user to introduce
 ;;; explicit (positive or negative) bulges that will be added in by
 ;;; the :around method, thus allowing the user to explicitly move two
-;;; adjacent elements further apart, or to bring them closer together. 
+;;; adjacent elements further apart, or to bring them closer together.
 (defgeneric right-bulge (element pane)
   (:documentation "The amount by which an element sticks out to the
 right of the center of its timeline"))
@@ -196,7 +196,7 @@ right of the center of its timeline"))
       (loop with advance = 0
             for pitch in '(6 2 5 1 4 0 3)
             when (and (eq (aref (alterations old-keysig) pitch) :flat)
-                      (not (eq (aref (alterations keysig) pitch) 
+                      (not (eq (aref (alterations keysig) pitch)
                                :flat)))
             do (incf advance (score-pane:staff-step 2))
             finally (incf bulge (if (= advance 0) 0 (+ advance (score-pane:staff-step 2)))))
@@ -449,7 +449,7 @@ right of the center of its timeline"))
 	  (if (member staff (staves (layer (slice (bar *cursor*)))))
 	      (draw-staff-and-clef pane staff measures x right-edge)
 	      (score-pane:with-light-glyphs pane
-		(draw-staff-and-clef pane staff measures x right-edge))))))  
+		(draw-staff-and-clef pane staff measures x right-edge))))))
 
 (defun compute-and-draw-system (pane buffer staves measures method x y timesig-offset right-edge)
   (compute-elasticities measures method)
@@ -459,7 +459,7 @@ right of the center of its timeline"))
 	 ;; proportionally, so that every smallest gap gets shrunk
 	 ;; by the same percentage
 	 (force (if (> (zero-force-size e-fun) (line-width method))
-		    0 
+		    0
 		    (force-at-size e-fun (line-width method)))))
     (compute-system-coordinates measures
 				(+ x (left-offset buffer) timesig-offset) y
@@ -547,7 +547,7 @@ right of the center of its timeline"))
 						       best-splits (append left right)))))))))
 			 (values best-splits best-min best-max))))))))
     (split-aux sequence 0 (length sequence) n)))
-		     
+
 (defun layout-page (measures n method)
   (if (<= (length measures) n)
       (mapcar #'list measures)
@@ -582,7 +582,7 @@ right of the center of its timeline"))
   (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* ((staves (staves buffer))
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
-	   (method (method-for-timesig 
+	   (method (method-for-timesig
                     (buffer-cost-method buffer) max-timesig-offset)))
       (loop for staff in staves
 	    for offset from 0 by 70 do
@@ -595,7 +595,7 @@ right of the center of its timeline"))
   (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* ((staves (staves buffer))
 	   (max-timesig-offset (* (score-pane:staff-step 2.5) 7))
-	   (method (method-for-timesig 
+	   (method (method-for-timesig
                     (buffer-cost-method buffer) max-timesig-offset)))
       (loop for staff in staves
 	    for offset from 0 by 70 do
@@ -691,17 +691,17 @@ right of the center of its timeline"))
 	      (+ top-note-pos length)
 	      (- bot-note-pos length)))))
 
-;;; the dominating note among a bunch of notes is the 
-;;; one that is closest to the beam, i.e. the one 
+;;; the dominating note among a bunch of notes is the
+;;; one that is closest to the beam, i.e. the one
 ;;; the one that is closest to the end of the stem that
-;;; is not attached to a notehead. 
+;;; is not attached to a notehead.
 (defun dominating-note (notes stem-direction)
   (reduce (lambda (n1 n2)
 	    (let ((yoff1 (staff-yoffset (staff n1)))
 		  (yoff2 (staff-yoffset (staff n2))))
 	      (if (eq stem-direction :up)
 		  (if (< yoff1 yoff2)
-		      n1 
+		      n1
 		      (if (> yoff1 yoff2)
 			  n2
 			  (if (> (pitch n1) (pitch n2)) n1 n2)))
@@ -790,18 +790,18 @@ right of the center of its timeline"))
 			  do (map-over-cluster-pairs
 			      (lambda (e1 e2)
 				(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
-				       (setf region 
+				       (setf region
 					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
 									    (+ (final-absolute-element-xoffset e2) right) 10000))))
 				      ((>= (rbeams e1) beams)
 				       (setf region
-					     (region-union region 
+					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e1) right) -10000
 									    (+ (final-absolute-element-xoffset e1) right (score-pane:staff-step 2)) 10000))))
 				      ((>= (lbeams e2) beams)
 				       (setf region
-					     (region-union region 
+					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e2) right (score-pane:staff-step -2)) -10000
 									    (+ (final-absolute-element-xoffset e2) right) 10000))))
 				      (t nil)))
@@ -825,18 +825,18 @@ right of the center of its timeline"))
 			  do (map-over-cluster-pairs
 			      (lambda (e1 e2)
 				(cond ((and (>= (rbeams e1) beams) (>= (lbeams e2) beams))
-				       (setf region 
+				       (setf region
 					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
 									    (+ (final-absolute-element-xoffset e2) left) 10000))))
 				      ((>= (rbeams e1) beams)
 				       (setf region
-					     (region-union region 
+					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e1) left) -10000
 									    (+ (final-absolute-element-xoffset e1) left (score-pane:staff-step 2)) 10000))))
 				      ((>= (lbeams e2) beams)
 				       (setf region
-					     (region-union region 
+					     (region-union region
 							   (make-rectangle* (+ (final-absolute-element-xoffset e2) left (score-pane:staff-step -2)) -10000
 									    (+ (final-absolute-element-xoffset e2) left) 10000))))
 				      (t nil)))
@@ -872,7 +872,7 @@ right of the center of its timeline"))
 	  (let ((maxy (- (bounding-rectangle-max-y pane) (bounding-rectangle-height region))))
 	    (scroll-extent pane 0 (max 0 (min maxy
 					      (- sy (floor (bounding-rectangle-height region) 2)))))))))
-				       
+
     (flet ((draw-cursor (x)
 	     (if (typep staff 'fiveline-staff)
 		 (let* ((clef (clef cursor))
@@ -942,7 +942,7 @@ right of the center of its timeline"))
     (draw-element-annotation pane element annotation)))
 
 (defgeneric draw-element-annotation (pane element annotation)
-  (:method (pane element annotation) 
+  (:method (pane element annotation)
     (warn "unknown annotation ~S for ~S" annotation element)))
 
 ;;; FIXME: these methods work and have the right vertical behaviour;
@@ -968,7 +968,7 @@ right of the center of its timeline"))
 		  (setq pos (1+ pos)))
 		(score-pane:draw-dot pane (+ x (/ (+ dx ddx) 2)) pos))))))))
 
-(defmethod draw-element-annotation 
+(defmethod draw-element-annotation
     (pane (element cluster) (annotation (eql :tenuto)))
   (let ((direction (final-stem-direction element))
 	(x (final-absolute-element-xoffset element)))
@@ -989,7 +989,7 @@ right of the center of its timeline"))
 		  (setq pos (1+ pos)))
 		(draw-rectangle* pane (+ x ddx) (1- (score-pane:staff-step (- pos)))
 				 (+ x dx) (1+ (score-pane:staff-step (- pos)))))))))))
-					       
+
 (defmethod note-difference ((note1 note) (note2 note))
   (- (pitch note1) (pitch note2)))
 
@@ -1017,7 +1017,7 @@ right of the center of its timeline"))
 	  (score-pane:with-notehead-left-offsets (left down)
 	    (declare (ignore down))
 	    (score-pane:draw-flags-up pane nb (+ x left) pos))))))
-  
+
 (defun draw-dots (pane nb-dots x dot-xoffset dot-pos)
   (when dot-pos
     (let ((staff-step (score-pane:staff-step 1)))
@@ -1034,7 +1034,7 @@ right of the center of its timeline"))
 
 (defparameter *main-selected-note-colour* +blue-violet+)
 (defun draw-notes (pane notes dots notehead dot-xoffset)
-  (loop for note in notes 
+  (loop for note in notes
      do
        (with-drawing-options (pane :ink (if (and (gsharp::cur-notep)
                                                  (eq note (gsharp::cur-note))
@@ -1046,7 +1046,7 @@ right of the center of its timeline"))
   (not (apply #'= (mapcar #'final-relative-note-xoffset (notes element)))))
 
 ;;; draw a cluster.  The stem direction and the stem position have
-;;; already been computed.  
+;;; already been computed.
 ;;; 1. Group notes by staff.
 ;;; 2. Draw the notes in each group
 ;;; 3. If necessary, draw ledger lines for notes in a group
@@ -1060,7 +1060,7 @@ right of the center of its timeline"))
                (stem-yoffset (final-stem-yoffset element))
                (groups (group-notes-by-staff (notes element)))
                (x (final-absolute-element-xoffset element))
-               (dot-xoffset 
+               (dot-xoffset
                 (let ((basic-xoffset (+ (score-pane:staff-step 2)
                                         (reduce #'max (mapcar #'final-absolute-note-xoffset (notes element))))))
                   (if (and flags (eq direction :up) (flags-drawn-p element))
@@ -1069,7 +1069,7 @@ right of the center of its timeline"))
           (when flags
             (score-pane:with-vertical-score-position (pane stem-yoffset)
               (draw-flags pane element x direction stem-pos)))
-          (loop for group in groups do 
+          (loop for group in groups do
                 (draw-notes pane group (dots element) (notehead element) dot-xoffset)
                 (draw-ledger-lines pane x group))
           (unless (member (notehead element) '(:whole :breve))
@@ -1122,9 +1122,9 @@ right of the center of its timeline"))
               for pitch in '(6 2 5 1 4 0 3)
               for line in '(0 3 -1 2 -2 1 -3)
               when (and (eq (aref (alterations old-keysig) pitch) :flat)
-                        (not (eq (aref (alterations keysig) pitch) 
+                        (not (eq (aref (alterations keysig) pitch)
                                  :flat)))
-              do (score-pane:draw-accidental 
+              do (score-pane:draw-accidental
                   pane :natural (+ x advance) (+ line yoffset))
               and do (incf advance (score-pane:staff-step 2))
               finally (incf x (if (= advance 0) 0 (+ advance (score-pane:staff-step 2))))))
@@ -1158,7 +1158,7 @@ right of the center of its timeline"))
 (defmethod draw-element (pane (timesig time-signature) &optional (flags t))
   (declare (ignore flags))
   (let ((staff (staff timesig))	
-        (x (final-absolute-element-xoffset timesig)))    
+        (x (final-absolute-element-xoffset timesig)))
     (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
       (dolist (component (time-signature-components timesig))
         (score-pane:draw-time-signature-component pane component x)))))
@@ -1175,7 +1175,7 @@ right of the center of its timeline"))
 (defmethod draw-element (pane (timesig time-signature) &optional (flags t))
   (declare (ignore flags))
   (let ((staff (staff timesig))	
-        (x (final-absolute-element-xoffset timesig)))    
+        (x (final-absolute-element-xoffset timesig)))
     (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
       (dolist (component (time-signature-components timesig))
         (score-pane:draw-time-signature-component pane component x)))))
