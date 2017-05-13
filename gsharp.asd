@@ -6,6 +6,7 @@
   :components
   ((:file "packages")
    (:file "utilities")
+   (:file "bezier-extra")
    (:file "mf")
    (:file "sdl")
    (:file "score-pane")
