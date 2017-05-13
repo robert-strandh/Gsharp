@@ -554,12 +554,14 @@
 (defparameter +half-circle+
   (let* ((tr (clim:make-rotation-transformation (/ pi 2)))
 	 (rotated-quarter-circle (clim:transform-region tr +quarter-circle+)))
-    (clim:region-union +quarter-circle+ rotated-quarter-circle)))
+    (mcclim-bezier::append-paths +quarter-circle+
+                                 rotated-quarter-circle)))
 
 (defparameter +full-circle+
   (let* ((tr (clim:make-rotation-transformation pi))
 	 (rotated-half-circle (clim:transform-region tr +half-circle+)))
-    (mcclim-bezier::close-path (clim:region-union +half-circle+ rotated-half-circle))))
+    (mcclim-bezier::close-path
+     (mcclim-bezier::append-paths +half-circle+ rotated-half-circle))))
 
 (defparameter +unit-square+
   (mcclim-bezier::close-path
