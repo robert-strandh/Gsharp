@@ -1,4 +1,4 @@
-(in-package :gsharp-cursor)
+(in-package #:gsharp-cursor)
 
 (defmacro defcclass (name base slots)
   `(progn 

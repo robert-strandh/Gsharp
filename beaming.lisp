@@ -1,4 +1,4 @@
-(in-package :gsharp-beaming)
+(in-package #:gsharp-beaming)
 
 ;;; The beaming function takes a list of the form:
 ;;; ((p1 x1) (p2 x2) ... (pn xn))

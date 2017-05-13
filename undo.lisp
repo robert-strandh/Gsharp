@@ -13,7 +13,7 @@
 ;;; Each operation's function or method is also altered to accomodate
 ;;; undo recording.
 
-(in-package :gsharp)
+(in-package #:gsharp)
 
 ;; General utils first
 (defgeneric element-children (element)

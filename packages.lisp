@@ -200,11 +200,11 @@
   (:shadowing-import-from :gsharp-buffer #:rest #:buffer)
   (:export #:gsharp #:edit-file))
 
-(in-package :gsharp-numbering)
+(in-package #:gsharp-numbering)
 (deftype number () 'cl:number)
 (setf (find-class 'number) (find-class 'cl:number))
 
-(in-package :gsharp-buffer)
+(in-package #:gsharp-buffer)
 (defun rest (list)
   (cl:rest list))
 (define-compiler-macro rest (list)

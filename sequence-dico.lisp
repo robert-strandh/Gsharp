@@ -1,4 +1,4 @@
-(in-package :sequence-dico)
+(in-package #:sequence-dico)
 
 ;;; Store an object associated with the sequence in the sequence dictionary.
 ;;; If a prefix of sequence already names an object in the dictionary

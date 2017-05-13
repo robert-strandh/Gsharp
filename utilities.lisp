@@ -1,4 +1,4 @@
-(in-package :gsharp-utilities)
+(in-package #:gsharp-utilities)
 
 ;;; Destructively insert the element in the list at the position
 ;;; indicated.  The position must be greater than or equal to zero and

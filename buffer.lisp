@@ -1,4 +1,4 @@
-(in-package :gsharp-buffer)
+(in-package #:gsharp-buffer)
 
 (defparameter *gsharp-readtable-v3* (copy-readtable))
 (defparameter *gsharp-readtable-v4* (copy-readtable))

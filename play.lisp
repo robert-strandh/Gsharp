@@ -1,4 +1,4 @@
-(in-package :gsharp-play)
+(in-package #:gsharp-play)
 
 (defparameter *midi-temp-file* "/tmp/timidity.mid")
 (defparameter *midi-player* "timidity")
