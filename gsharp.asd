@@ -1,4 +1,4 @@
-(in-package :asdf-user)
+(cl:in-package #:asdf-user)
 
 (defsystem :gsharp
   :depends-on (:mcclim :clim-listener :flexichain :midi :puri :cxml)
