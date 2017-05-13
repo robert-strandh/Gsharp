@@ -11,7 +11,7 @@
 
 ;;; The following hack is due to Gilbert Baumann.  It allows us to
 ;;; dynamically mix in classes into a class without the latter being
-;;; aware of it.  
+;;; aware of it.
 
 ;; First of all we need to keep track of added mixins, we use a hash
 ;; table here. Better would be to stick this information to the victim
@@ -55,7 +55,7 @@ of 'victim-class'."
              (dolist (k (class-stealth-mixins name))
                (pushnew k direct-superclasses
                         :test #'class-equalp))
-             (apply #'call-next-method class name 
+             (apply #'call-next-method class name
                     :direct-superclasses direct-superclasses
                     arguments))
             (t
