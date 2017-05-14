@@ -1,7 +1,7 @@
 (cl:in-package #:score-pane)
-(defparameter *inactive-colour* +black+) ;; +gray50+
+(defparameter *inactive-color* +black+) ;; +gray50+
 (defclass score-view (view)
-  ((light-glyphs-ink :initform *inactive-colour* :initarg :light-glyphs-ink :accessor light-glyphs-ink)
+  ((light-glyphs-ink :initform *inactive-color* :initarg :light-glyphs-ink :accessor light-glyphs-ink)
    (%number-of-pages :initform "-" :accessor number-of-pages)
    (%current-page-number :initform "-" :accessor current-page-number)))
 
