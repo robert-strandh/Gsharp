@@ -32,7 +32,6 @@
    (:file "clim-utils")
    (:file "gui")
    (:file "undo")
-   (:file "fontview")
    #+sbcl (:file "Mxml/mxml")
    #+sbcl (:file "Mxml/commands")))
 
