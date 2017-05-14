@@ -2,7 +2,7 @@
 
 (defmacro defrclass (name base slots)
   `(progn 
-     (define-stealth-mixin ,name () ,base
+     (stealth-mixin:define-stealth-mixin ,name () ,base
        ((modified-p :initform t :accessor modified-p)
 	,@slots))))
 
@@ -24,7 +24,7 @@
 ;;;
 ;;; Staff
 
-(define-stealth-mixin rstaff () staff
+(stealth-mixin:define-stealth-mixin rstaff () staff
   ((rank :accessor staff-rank)))
 
 (defun invalidate-slice-using-staff (slice staff)
@@ -164,7 +164,7 @@
 ;;;
 ;;; Cluster
 
-(define-stealth-mixin rcluster () cluster
+(stealth-mixin:define-stealth-mixin rcluster () cluster
   ((final-stem-direction :accessor final-stem-direction)
    ;; the position, in staff steps, of the top note in the element.
    (top-note-pos :accessor top-note-pos)
@@ -756,7 +756,7 @@
 ;;;
 ;;; Buffer
 
-(define-stealth-mixin rbuffer (obseq) buffer
+(stealth-mixin:define-stealth-mixin rbuffer (obseq) buffer
   ((modified-p :initform t :accessor modified-p)))
 
 ;;; Given a buffer, a position of a segment in the sequence of

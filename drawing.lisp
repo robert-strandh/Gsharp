@@ -8,16 +8,16 @@
    (final-absolute-measure-xoffset :accessor final-absolute-measure-xoffset)
    (final-width :accessor final-width)))
 
-(define-stealth-mixin dbar (x-y-width-mixin) bar
+(stealth-mixin:define-stealth-mixin dbar (x-y-width-mixin) bar
   ())
 
-(define-stealth-mixin dmeasure (x-y-width-mixin) measure
+(stealth-mixin:define-stealth-mixin dmeasure (x-y-width-mixin) measure
   (;; an elasticity function that describes how the space right after
    ;; the initial barline of the measure behaves as a function of the
    ;; force that is applied to it.
    (prefix-elasticity-function :accessor prefix-elasticity-function)))
 
-(define-stealth-mixin dstaff () staff
+(stealth-mixin:define-stealth-mixin dstaff () staff
   ((yoffset :initform 0 :accessor staff-yoffset)))
 
 (define-presentation-method present
@@ -607,10 +607,10 @@ right of the center of its timeline"))
           (draw-page pane buffer x y staves method page-measures)
           (setq first nil))))))
 
-(define-stealth-mixin xelement () element
+(stealth-mixin:define-stealth-mixin xelement () element
   ((final-absolute-xoffset :accessor final-absolute-element-xoffset)))
 
-(define-stealth-mixin velement () melody-element
+(stealth-mixin:define-stealth-mixin velement () melody-element
   (;; the position, in staff steps, of the end of the stem
    ;; that is not attached to a note, independent of the
    ;; staff on which it is located
@@ -625,7 +625,7 @@ right of the center of its timeline"))
    ;; the element
    (bot-note-staff-yoffset :accessor bot-note-staff-yoffset)))
 
-(define-stealth-mixin welement () lyrics-element
+(stealth-mixin:define-stealth-mixin welement () lyrics-element
   ())
 
 ;;; Compute and store several important pieces of information
