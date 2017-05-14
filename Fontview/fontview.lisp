@@ -1,8 +1,3 @@
-(cl:in-package #:common-lisp-user)
-
-(defpackage :fontview
-  (:use :clim :clim-extensions :clim-lisp :sdl))
-
 (cl:in-package #:fontview)
 
 (define-application-frame fontview ()
