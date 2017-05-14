@@ -31,15 +31,15 @@
 
 (defun set-char-unicode-correspondance (char unicode)
   (setf (gethash char *char-to-unicode-table*) unicode
-	(gethash unicode *unicode-to-char-table*) char))
+        (gethash unicode *unicode-to-char-table*) char))
 
 (loop for char in '(#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M
-		    #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
+                    #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
       for code from 65
       do (set-char-unicode-correspondance char code))
 
 (loop for char in '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
-		    #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)
+                    #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)
       for code from 97
       do (set-char-unicode-correspondance char code))
 
