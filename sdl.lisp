@@ -1,4 +1,4 @@
-(in-package #:sdl)
+(cl:in-package #:sdl)
 
 (defgeneric staff-line-distance (font))
 (defgeneric staff-line-offsets (font))

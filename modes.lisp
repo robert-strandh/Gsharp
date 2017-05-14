@@ -1,4 +1,4 @@
-(in-package #:gsharp)
+(cl:in-package #:gsharp)
 
 (define-command-table global-gsharp-table
     :inherit-from (global-esa-table esa-io-table keyboard-macro-table help-table))

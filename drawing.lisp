@@ -1,4 +1,4 @@
-(in-package #:gsharp-drawing)
+(cl:in-package #:gsharp-drawing)
 
 (defclass x-y-width-mixin ()
   (;; indicates the absolute y position of the system to which the

@@ -1,9 +1,9 @@
-(in-package #:common-lisp-user)
+(cl:in-package #:common-lisp-user)
 
 (defpackage :fontview
   (:use :clim :clim-extensions :clim-lisp :sdl))
 
-(in-package #:fontview)
+(cl:in-package #:fontview)
 
 (define-application-frame fontview ()
   ((font :initform (make-instance 'sdl::font :staff-line-distance 6))

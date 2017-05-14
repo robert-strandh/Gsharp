@@ -1,4 +1,4 @@
-(in-package #:gsharp)
+(cl:in-package #:gsharp)
 
 (defclass input-state ()
   ((lbeams :initform 0 :accessor lbeams)

@@ -1,4 +1,4 @@
-(in-package #:gsharp-buffer)
+(cl:in-package #:gsharp-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

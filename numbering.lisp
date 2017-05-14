@@ -1,4 +1,4 @@
-(in-package #:gsharp-numbering)
+(cl:in-package #:gsharp-numbering)
 
 (defmethod number ((element element))
   (position element (elements (bar element))))

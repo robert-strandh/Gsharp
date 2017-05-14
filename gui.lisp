@@ -1,4 +1,4 @@
-(in-package #:gsharp)
+(cl:in-package #:gsharp)
 
 (defparameter *icon-path*
   ;;  sb-ext:*core-pathname*

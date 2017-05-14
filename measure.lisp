@@ -1,4 +1,4 @@
-(in-package #:gsharp-measure)
+(cl:in-package #:gsharp-measure)
 
 (defmacro defrclass (name base slots)
   `(progn 

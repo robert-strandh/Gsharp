@@ -1,4 +1,4 @@
-(in-package #:score-pane)
+(cl:in-package #:score-pane)
 (defparameter *inactive-colour* +black+) ;; +gray50+
 (defclass score-view (view)
   ((light-glyphs-ink :initform *inactive-colour* :initarg :light-glyphs-ink :accessor light-glyphs-ink)

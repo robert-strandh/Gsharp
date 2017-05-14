@@ -2,7 +2,7 @@
 ;;
 ;;; New button types
 
-(in-package #:clim-internals)
+(cl:in-package #:clim-internals)
 
 ;; These are specialised PUSH-BUTTON implementations. PUSH-BUTTON
 ;; deals with behaviour and with drawing and animating the button. In
@@ -114,7 +114,7 @@
 ;; or for some of the listener functionality to be moved somewhere
 ;; useful.
 
-(in-package #:gsharp)
+(cl:in-package #:gsharp)
 
 (defparameter *file-text-style*
   (make-text-style :sans-serif :roman :small))

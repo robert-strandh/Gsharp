@@ -39,7 +39,7 @@
 ;;; where x is the value of the force at which the slope changes, and
 ;;; s is the slope after than point.
 
-(in-package #:gsharp-drawing)
+(cl:in-package #:gsharp-drawing)
 
 (defgeneric add-elasticities (e1 e2)
   (:documentation "add two elasticity functions"))
