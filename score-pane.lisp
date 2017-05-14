@@ -1,5 +1,7 @@
 (cl:in-package #:score-pane)
+
 (defparameter *inactive-color* +black+) ;; +gray50+
+
 (defclass score-view (view)
   ((light-glyphs-ink :initform *inactive-color* :initarg :light-glyphs-ink :accessor light-glyphs-ink)
    (%number-of-pages :initform "-" :accessor number-of-pages)
@@ -12,6 +14,7 @@
   (setf (stream-default-view pane) (make-instance 'score-view)))
 
 (defparameter *font* nil)
+
 (defparameter *fonts* (make-array 100 :initial-element nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
