@@ -1,7 +1,13 @@
 (cl:in-package #:asdf-user)
 
 (defsystem :gsharp
-  :depends-on (:mcclim :clim-listener :flexichain :midi :puri :cxml)
+  :depends-on (:mcclim
+               :clim-listener
+               :stealth-mixin
+               :flexichain
+               :midi
+               :puri
+               :cxml)
   :serial t
   :components
   ((:file "packages")
