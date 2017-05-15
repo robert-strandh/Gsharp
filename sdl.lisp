@@ -113,7 +113,8 @@ of a normal note.  This function always returns a positive value"))
 
 (defparameter *beam-designs* (make-hash-table :test #'equal))
 
-(defmethod initialize-instance :after ((font font) &rest initargs &key &allow-other-keys)
+(defmethod initialize-instance :after
+    ((font font) &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
   (with-slots (staff-line-distance
 	       staff-line-thickness
@@ -1038,12 +1039,12 @@ of a normal note.  This function always returns a positive value"))
 	   ;; A factor that determines the height of the thin part as a
 	   ;; fraction of the staff line distance
 	   (height-multiplier 2.5)
-	   ;; A factor that determines the width of the hole as a fraction of the
-	   ;; staff line distance.
+	   ;; A factor that determines the width of the hole as a
+	   ;; fraction of the staff line distance.
 	   (hole-width-multiplier 0.33)
 	   (hole-width (round (* hole-width-multiplier sld)))
-	   ;; Hope that half a pixel will not be visible and will not influence 
-	   ;; the required distance to the noteheads.  
+	   ;; Hope that half a pixel will not be visible and will not
+	   ;; influence the required distance to the noteheads.
 	   ;;
 	   ;; FIXME: this is the only real difference between the
 	   ;; :semisharp and :sesquisharp glyph calculations, and the
@@ -1087,12 +1088,12 @@ of a normal note.  This function always returns a positive value"))
 	   ;; A factor that determines the height of the thin part as a
 	   ;; fraction of the staff line distance
 	   (height-multiplier 2.5)
-	   ;; A factor that determines the width of the hole as a fraction of the
-	   ;; staff line distance.
+	   ;; A factor that determines the width of the hole as a
+	   ;; fraction of the staff line distance.
 	   (hole-width-multiplier 0.33)
 	   (hole-width (round (* hole-width-multiplier sld)))
-	   ;; Hope that half a pixel will not be visible and will not influence 
-	   ;; the required distance to the noteheads.
+	   ;; Hope that half a pixel will not be visible and will not
+	   ;; influence the required distance to the noteheads.
 	   (xoffset (if (oddp hole-width) 0.5 0))
 	   (edge-distance (* edge-distance-multiplier sld))
 	   (width (+ hole-width (* 2 stem-thickness) (* 2 edge-distance)))
@@ -1138,8 +1139,8 @@ of a normal note.  This function always returns a positive value"))
 	   ;; A factor that determines the height of the thin part as a
 	   ;; fraction of the staff line distance
 	   (height-multiplier 2.5)
-	   ;; A factor that determines the width of the hole as a fraction of the
-	   ;; staff line distance.
+	   ;; A factor that determines the width of the hole as a
+	   ;; fraction of the staff line distance.
 	   (hole-width-multiplier 0.33)
 	   (hole-width (round (* hole-width-multiplier sld)))
 	   ;; Hope that half a pixel will not be visible and will not
@@ -1308,19 +1309,19 @@ of a normal note.  This function always returns a positive value"))
 	       stem-thickness
 	       yoffset) font
     (flet ((c (x y) (complex x y)))
-      (let* (;; A factor that determines the width of the hole as a fraction of the
-	     ;; staff line distance.
+      (let* (;; A factor that determines the width of the hole as a
+	     ;; fraction of the staff line distance.
 	     (hole-width-multiplier 0.33)
 	     (hole-width (round (* hole-width-multiplier sld)))
-	     ;; Hope that half a pixel will not be visible and will not influence 
-	     ;; the required distance to the noteheads.
+	     ;; Hope that half a pixel will not be visible and will
+	     ;; not influence the required distance to the noteheads.
 	     (xoffset (if (oddp hole-width) 0.5 0))
 	     (width (+ hole-width (* 2 stem-thickness)))
 	     (xleft (* -0.5 width))
 	     (xright (- xleft))
-	     ;; The left part of the character is right in the middle of the 
-	     ;; staff line and the lower edge of the right part touches the upper
-	     ;; edge of the staff line
+	     ;; The left part of the character is right in the middle
+	     ;; of the staff line and the lower edge of the right part
+	     ;; touches the upper edge of the staff line
 	     (yleft (* -0.5 slt))
 	     (yright (- yleft))
 	     ;; The path for the thick part
@@ -1655,8 +1656,8 @@ of a normal note.  This function always returns a positive value"))
       (let* (;; This symbol should sit on top of a staff line
 	     (y0 (+ (/ slt 2) yoffset))
 	     (p0 (c 0 y0))
-	     ;; if the little notch is to be visible, the top
-	     ;; of this character should hang below the upper staff line.
+	     ;; if the little notch is to be visible, the top of this
+	     ;; character should hang below the upper staff line.
 	     (h2 (- (* 2 sld) slt))
 	     ;; w1 and w2 should be integers in to avoid fuzziness
 	     (w1 (round (* 0.14 h2)))
@@ -1730,7 +1731,8 @@ of a normal note.  This function always returns a positive value"))
       (let* (;; This symbol should sit have its lowest point
 	     ;; at the bottom of the staff line
 	     (y0 (+ (- (/ slt 2)) yoffset))
-	     ;; it should have its top at the lower edge of the staff line
+	     ;; it should have its top at the lower edge of the staff
+	     ;; line
 	     (h1 (* 2 sld))
 	     (h2 (round (* 0.20 h1)))
 	     (h3 (* 0.14 h1))
@@ -1951,10 +1953,11 @@ of a normal note.  This function always returns a positive value"))
 	       yoffset)
     font
     (flet ((c (x y) (complex x y)))
-      (let* (;; This symbol should have its lowest point
-	     ;; at the bottom of the staff line
+      (let* (;; This symbol should have its lowest point at the bottom
+	     ;; of the staff line
 	     (ya (+ (- (/ slt 2)) yoffset))
-	     ;; it should have its top at the lower edge of the staff line
+	     ;; it should have its top at the lower edge of the staff
+	     ;; line
 	     (h1 (* 2 sld))
 	     (h2 (round (* 0.62 h1)))
 	     (h3 (* 0.30 h1))
@@ -2043,7 +2046,8 @@ of a normal note.  This function always returns a positive value"))
       (let* (;; This symbol should have its lowest point
 	     ;; at the bottom of the staff line
 	     (ya (+ (- (/ slt 2)) yoffset))
-	     ;; it should have its top at the lower edge of the staff line
+	     ;; it should have its top at the lower edge of the staff
+	     ;; line
 	     (h1 (* 2 sld))
 	     (w1 (round (* 0.4 h1)))
 	     (w2 (round (* 0.35 h1)))
@@ -2132,8 +2136,8 @@ of a normal note.  This function always returns a positive value"))
     (flet ((c (x y) (complex x y)))
       (let* (;; This symbol should sit on top of a staff line
 	     (yb (+ (/ slt 2) yoffset))
-	     ;; if the little notch is to be visible, the top
-	     ;; of this character should hang below the upper staff line.
+	     ;; if the little notch is to be visible, the top of this
+	     ;; character should hang below the upper staff line.
 	     (h1 (- (* 2 sld) slt))
 	     (yl (+ yb (- h1 slt)))
 	     (w1 (round (* 0.37 h1)))
@@ -2209,10 +2213,11 @@ of a normal note.  This function always returns a positive value"))
 	       yoffset)
     font
     (flet ((c (x y) (complex x y)))
-      (let* (;; This symbol should have its lowest point
-	     ;; at the bottom of the staff line
+      (let* (;; This symbol should have its lowest point at the bottom
+	     ;; of the staff line
 	     (ya (+ (- (/ slt 2)) yoffset))
-	     ;; it should have its top at the lower edge of the staff line
+	     ;; it should have its top at the lower edge of the staff
+	     ;; line
 	     (h1 (* 2 sld))
 	     (h2 (* 0.23 h1))
 	     (h3 (* 0.27 h1))
