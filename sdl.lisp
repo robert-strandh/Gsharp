@@ -12,20 +12,20 @@
   (:documentation "the x offset of a suspended note compared to that
 of a normal note.  This function always returns a positive value"))
 (defgeneric beam-offsets (font)
-  (:documentation "return two values, both to be added to the 
-		   vertical reference point in order to obtain the 
+  (:documentation "return two values, both to be added to the
+		   vertical reference point in order to obtain the
 		   bottom and top of the beam (in that order)"))
 (defgeneric beam-hang-sit-offset (font)
-  (:documentation "return a positive value to be added to (hang) or 
+  (:documentation "return a positive value to be added to (hang) or
 		   subtracted from (sit) the vertical reference point
-		   of a staff line, in order to obtain the reference 
+		   of a staff line, in order to obtain the reference
 		   point of a hanging or sitting beam respectively"))
 
 (defclass font ()
-  (;; The distance in pixels between the upper edge of two 
-   ;; adjacent staff lines. 
+  (;; The distance in pixels between the upper edge of two
+   ;; adjacent staff lines.
    (staff-line-distance :initarg :staff-line-distance :reader staff-line-distance)
-   ;; An integer value indicating how many non-white pixels are 
+   ;; An integer value indicating how many non-white pixels are
    ;; used to draw a staff line.
    (staff-line-thickness)
    ;; An integer value indicating how many non-white pixels are
@@ -57,8 +57,8 @@ of a normal note.  This function always returns a positive value"))
    ;;
    ;; A similar rule holds for vertical reference points.  For instance,
    ;; the reference point of a staff line is the middle of the line if its
-   ;; thickness is even and one half pixel below that if it is odd. 
-   ;;  
+   ;; thickness is even and one half pixel below that if it is odd.
+   ;;
    ;; We do this consistently for stems, staff lines, etc.  Thus, the
    ;; client program can pretend that the reference point is always in the
    ;; middle of the object.  When the object has an odd size the effect is
@@ -66,20 +66,20 @@ of a normal note.  This function always returns a positive value"))
    ;; have to watch out with attach points between stems and noteheads.
    ;; In fact, in general, the noteheads may have a different distance
    ;; from the reference point to the left attach point from the distance
-   ;; from the reference point to the right attach point.  
+   ;; from the reference point to the right attach point.
 
    ;; Characters are positioned vertically in multiples of half a staff
    ;; line distance.  An even multiple indicates that the symbol will be
    ;; placed ON A STAFF LINE, and an odd multiple a symbol BETWEEN TWO
    ;; STAFF LINES.  The bottom staff line of a staff has a multiple of
    ;; zero, and the multiple is positive towards the upper edge of the
-   ;; page and negative towards the lower edge of the page. 
+   ;; page and negative towards the lower edge of the page.
    ;;
    ;; When the staff line thickness is even, the reference point for
    ;; placing characters is the middle of the staff line or half way
    ;; between two adjacent middles of staff lines.  When the staff line
    ;; thickness is odd, the reference point is located half a pixel lower
-   ;; down.  
+   ;; down.
 
    ;; A certain number of characters are rotationally symmetric.  But the
    ;; center of the character is usually not the reference point.  Since
@@ -109,7 +109,7 @@ of a normal note.  This function always returns a positive value"))
    (beam-offset-up)
    (beam-hang-sit-offset :reader beam-hang-sit-offset)
    (designs :initform (make-hash-table :test #'eq))))
-  
+
 
 (defparameter *beam-designs* (make-hash-table :test #'equal))
 
@@ -209,7 +209,7 @@ of a normal note.  This function always returns a positive value"))
 (defmethod stem-offsets ((font font))
   (with-slots (stem-offset-left stem-offset-right) font
     (values stem-offset-left stem-offset-right)))
-  
+
 (defmethod ledger-line-x-offsets ((font font))
   (with-slots (ledger-line-offset-left ledger-line-offset-right) font
     (values ledger-line-offset-left ledger-line-offset-right)))
@@ -305,7 +305,7 @@ of a normal note.  This function always returns a positive value"))
   (let* ((key (list direction position width)))
     (or (gethash key *beam-designs*)
 	(setf (gethash key *beam-designs*)
-	      (climi::close-path 
+	      (climi::close-path
 	       (if (eq direction :down)
 		   (if (eq position :upper)
 		       (mf #c(0 0) -- (complex width 1) -- (complex 0 1) -- #c(0 0))
@@ -322,7 +322,7 @@ of a normal note.  This function always returns a positive value"))
 ;;;                                 |
 ;;;                                 **
 ;;;                                ****
-;;;                               ***** 
+;;;                               *****
 ;;;                              ** | **
 ;;;                              ** h **
 ;;;                             **     **
@@ -449,7 +449,7 @@ of a normal note.  This function always returns a positive value"))
 		   (complex 0 yoffset)))))) ; replace ++ by -- one day
 
 ;;;
-;;;                    xa  xb             
+;;;                    xa  xb
 ;;;                      ||
 ;;;                      ||  xc         xf
 ;;;                      ||  |          |
@@ -475,12 +475,12 @@ of a normal note.  This function always returns a positive value"))
 ;;;             *********  **       ******    |    *******
 ;;;             *********  **       *******   |   ******
 ;;;             *********  **      ***** *************
-;;;             *********  **      **** |_____       
+;;;             *********  **      **** |_____
 ;;;             *********  **   ******        (xl,yl)
 ;;;      (0, 0) *********  ***********--xi
-;;;             *********  ***********  
-;;;             *********  **   *******   
-;;;             *********  **      ****   
+;;;             *********  ***********
+;;;             *********  **   *******
+;;;             *********  **      ****
 ;;;             *********  **      ***** *************
 ;;;             *********  **       *******       ******
 ;;;             *********  **       ******         *******
@@ -503,12 +503,11 @@ of a normal note.  This function always returns a positive value"))
 ;;;             *********  **      ********************
 ;;;             *********  **        ****************
 
-
-;;; The x coordinate of the reference point is always on the left edge 
-;;; of the character.  The y coordinate of the reference point is the 
+;;; The x coordinate of the reference point is always on the left edge
+;;; of the character.  The y coordinate of the reference point is the
 ;;; top edge of the staff line on which the character sits.
 
-;;; since the character is symmetric around the staff line, we only 
+;;; since the character is symmetric around the staff line, we only
 ;;; have to define the upper curve, then we draw it both unmodified and
 ;;; reflected + shifted the thickness of the staff line.
 
@@ -570,43 +569,41 @@ of a normal note.  This function always returns a positive value"))
 	   r))
 	 (c 0 yoffset))))))
 
-;;;                                                                       
-;;;                                                                       
-;;;                  i                                                    
-;;;                  |                                                    
+;;;
+;;;
+;;;                  i
+;;;                  |
 ;;;***********************************************************************
-;;;             *********                 |xj                             
-;;;           **  |      **              ***                              
-;;;          **   e       ***           *****_yj                          
-;;;         **             ***          *****                             
-;;;        *** |d           ***          ***                              
-;;;  (0,0)\** ***            ***                                          
+;;;             *********                 |xj
+;;;           **  |      **              ***
+;;;          **   e       ***           *****_yj
+;;;         **             ***          *****
+;;;        *** |d           ***          ***
+;;;  (0,0)\** ***            ***
 ;;;***********************************************************************
-;;;        *********          ***                                         
-;;;      a-*********-c        ****       ***                              
-;;;        *********          ****      *****_yk                         
-;;;         *******         f-****-h    *****                            
-;;;           ***             ****       ***                             
-;;;            |b             ****                                        
+;;;        *********          ***
+;;;      a-*********-c        ****       ***
+;;;        *********          ****      *****_yk
+;;;         *******         f-****-h    *****
+;;;           ***             ****       ***
+;;;            |b             ****
 ;;;***********************************************************************
-;;;                           ****                                        
-;;;                          ****                                         
-;;;                         ****                                          
-;;;                        ****                                           
-;;;                       ***                                             
-;;;                     ***                                               
+;;;                           ****
+;;;                          ****
+;;;                         ****
+;;;                        ****
+;;;                       ***
+;;;                     ***
 ;;;***********************************************************************
-;;;                  ***                                                  
-;;;                ***                                                    
-;;;              ***                                                      
-;;;           ***                                                         
-;;;      g-***                                                            
-;;;        |                                                              
-;;;         g + (0, -1)                                                   
+;;;                  ***
+;;;                ***
+;;;              ***
+;;;           ***
+;;;      g-***
+;;;        |
+;;;         g + (0, -1)
 ;;;***********************************************************************
-;;;                                                                       
-;;;                                                                       
-;;;                                                                       
+;;;
 
 (defmethod compute-design ((font font) (shape (eql :f-clef)))
   (with-slots ((sld staff-line-distance) staff-line-thickness dot-diameter) font
@@ -631,7 +628,7 @@ of a normal note.  This function always returns a positive value"))
 		    left (c xd yd) &
 		    (c xd yd) ++
 		    (c xe ye) right ++
-		    (c xf yf) (direction #c(-0.2 -1)) ++ (curl 3) 
+		    (c xf yf) (direction #c(-0.2 -1)) ++ (curl 3)
 		    (c xg yg) &
 		    (c xg yg) --
 		    (c xg (1- yg)) &
@@ -717,7 +714,7 @@ of a normal note.  This function always returns a positive value"))
 ;;; vertically the same way as a notehead is.  But it is also used as a
 ;;; staccato dot, in which case it must be horizontally aligned the same
 ;;; way as the noteheads are.  This restriction is more important the
-;;; lower the resolution is.  
+;;; lower the resolution is.
 
 ;;; Let us see how this works.  For a staff line distance of 6 (the
 ;;; smallest), vertical and horizontal alignments are the same: the
@@ -727,7 +724,7 @@ of a normal note.  This function always returns a positive value"))
 ;;; even.  We think it is more important that the dot be aligned
 ;;; vertically, and that half a pixel of horizontal offset is not a
 ;;; problem for the staccato dot.  We thus use yoffset for the alignment
-;;; both vertically and horizontally. 
+;;; both vertically and horizontally.
 
 ;;; Ross says the dot should be roughly a third of the staff line
 ;;; distance, but in his examples, it is closer to half a staff line
@@ -790,7 +787,6 @@ of a normal note.  This function always returns a positive value"))
 (defmethod compute-design ((font font) (shape (eql :small-tie-8-up)))
   (with-slots ((sld staff-line-distance) (slt staff-line-thickness)) font
     (small-tie-up sld slt (round (* 2.67 sld)))))
-
 
 (defun small-tie-down (sld slt width)
   (let* ((thickness (round (* 0.33 sld)))
@@ -1169,7 +1165,7 @@ of a normal note.  This function always returns a positive value"))
 			    (draw-path (translate thickpart
 						  (complex xoffset (+ yoffset (* -0.5 sld)))))))
        (with-pen (scale +razor+ stem-thickness)
-	 (clim:region-union 
+	 (clim:region-union
 	  (clim:region-union
 	   (draw-path (translate thinpart
 				 (complex (- xoffset hole-width (* 1 stem-thickness))
@@ -1301,7 +1297,7 @@ of a normal note.  This function always returns a positive value"))
 					     --
 					     (c (- (round (* -0.85 sld)) (* 0.5 stem-thickness))
 						(* -0.5 sld)))))))))))
-;;; The width of a natural sign is slightly less than 2/3s of the 
+;;; The width of a natural sign is slightly less than 2/3s of the
 ;;; staff line distance of that font.
 (defmethod compute-design ((font font) (shape (eql :natural)))
   (with-slots ((sld staff-line-distance)
@@ -1436,7 +1432,7 @@ of a normal note.  This function always returns a positive value"))
 				       (complex hoffset sld)))
 		    (rest-part font (+ (complex (* 0.5 sld) (* 0.5 sld))
 				       (complex hoffset sld))))))))
-  
+
 (defmethod compute-design ((font font) (shape (eql :64th-rest)))
   (with-slots ((sld staff-line-distance)) font
     (let ((hoffset (round (* 0.4 sld))))
@@ -1472,7 +1468,7 @@ of a normal note.  This function always returns a positive value"))
 			   extreme-point ++
 			   (c (- (round (* 0.88 sld)) st) (* -2.5 sld)) up ++
 			   (direction #c(-1 2)) (c 0 (* (- -1.3 0.625) sld)) &
-			   (c 0 (* (- -1.3 0.625) sld)) -- 
+			   (c 0 (* (- -1.3 0.625) sld)) --
 			   (c 0 (* -1.4 sld))))))
 
 (defmethod compute-design ((font font) (shape (eql :flags-down-1)))
@@ -1480,7 +1476,7 @@ of a normal note.  This function always returns a positive value"))
     (let ((xoffset (ceiling (* 0.5 stem-thickness)))
 	  (extreme-point-1 (complex (* 0.5 sld) (* -3.5 sld))))
       (translate (first-flag sld stem-thickness extreme-point-1) xoffset))))
-      
+
 (defmethod compute-design ((font font) (shape (eql :flags-down-2)))
   (with-slots ((sld staff-line-distance) (st stem-thickness)) font
     (let ((xoffset (ceiling (* 0.5 st)))
@@ -1534,7 +1530,7 @@ of a normal note.  This function always returns a positive value"))
     (let ((xoffset (ceiling (* 0.5 stem-thickness)))
 	  (extreme-point-1 (complex (* 0.5 sld) (* -3.5 sld))))
       (translate (yscale (first-flag sld stem-thickness extreme-point-1) -1) xoffset))))
-      
+
 (defmethod compute-design ((font font) (shape (eql :flags-up-2)))
   (with-slots ((sld staff-line-distance) (st stem-thickness)) font
     (let ((xoffset (ceiling (* 0.5 st)))
@@ -1615,7 +1611,7 @@ of a normal note.  This function always returns a positive value"))
 ;;;       ___________
 ;;;      |           |
 ;;;
-;;;             9 *** 10 ** -11			      - 
+;;;             9 *** 10 ** -11			      -
 ;;;              ********** -12			       |
 ;;;             ***********			       |
 ;;;         8- ************			       |
@@ -1680,13 +1676,13 @@ of a normal note.  This function always returns a positive value"))
 	     (p15 (c w2 (imagpart p2)))
 	     (p16 (c (- (realpart p1)) (imagpart p1))))
 	(mf p0 -- p1 left ++ p2 up ++ p3 ++ up p4 -- p5 up ++
-	    p6 (tensions 2 3) p7 (tensions 4 1) 
+	    p6 (tensions 2 3) p7 (tensions 4 1)
 	    p8 (tensions 1 2)
 	    p9 (tensions 2 2) p10 ++ p11 ++ down p12 -- p13 down ++
 	    p14 ++ p15 down ++ left p16 -- cycle)))))
 
 	
-;;;           
+;;;
 ;;;                          w2
 ;;;                      __________
 ;;;                     |          |
@@ -1712,15 +1708,15 @@ of a normal note.  This function always returns a positive value"))
 ;;;             |     ****  |   *************       | h2  |
 ;;;             |  3 -***   1    ***********        |     |
 ;;;          h3 |     **           ********         |     |
-;;;             |_     \            *****          _|    _| 
+;;;             |_     \            *****          _|    _|
 ;;;                     2             |
 ;;;                                   0
 ;;;
 ;;;
 ;;;
-;;;                   |__________| 
+;;;                   |__________|
 ;;;                        w1
-;;;           
+;;;
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-2)))
   (with-slots ((sld staff-line-distance)
@@ -1760,7 +1756,7 @@ of a normal note.  This function always returns a positive value"))
 	    p10 right ++ p11 down (tensions 1 3) p12 down (tensions 3 1) p13 right (tensions 1 3)
 	    p14 (tensions 3 1) cycle)))))
 
-;;;                  
+;;;
 ;;;                                w2
 ;;;                            _________
 ;;;                           |         |
@@ -1786,12 +1782,9 @@ of a normal note.  This function always returns a positive value"))
 ;;;                               ************		   _|
 ;;;                                   |
 ;;;                                   a
-;;;                  
+;;;
 ;;;                         |___________|
 ;;;                              w1
-;;;                  
-;;;                  
-;;;                  
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-3)))
   (with-slots ((sld staff-line-distance)
@@ -1834,11 +1827,9 @@ of a normal note.  This function always returns a positive value"))
 	    po left ++ pp up ++ pq right ++ pr down (tensions 0.75 10)
 	    ps down (tensions 10 0.75) pt down ++ cycle)))))
 
-;;;                      
-;;;                  
-;;;                  
+;;;
 ;;;                           k        l
-;;;                         *************                         - 
+;;;                         *************                         -
 ;;;                       j*************m                          |
 ;;;                       *************                            |
 ;;;                      *************                             |
@@ -1861,12 +1852,11 @@ of a normal note.  This function always returns a positive value"))
 ;;;                 c -**********************z           | h1      |
 ;;;                    **********************           _|        _|
 ;;;                      b       a        aa
-;;;                                       
+;;;
 ;;;                          |_ _|
 ;;;                           w2
 ;;;                    |_________|
 ;;;                        w1
-;;;                 
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-4)))
   (with-slots ((sld staff-line-distance)
@@ -1913,11 +1903,11 @@ of a normal note.  This function always returns a positive value"))
 	    (direction (- pt ps)) ++ down pv -- pw down ++ px down ++
 	    py down ++ pz down ++ left paa -- cycle)))))
 
-;;;          
+;;;
 ;;;                    w2
 ;;;                  _______
 ;;;                 |       |
-;;;                  
+;;;
 ;;;                    l                n                     _
 ;;;                   *******    m   *****o                    |
 ;;;                 k********************                      |
@@ -1941,11 +1931,9 @@ of a normal note.  This function always returns a positive value"))
 ;;;    |    |          **************                |         |
 ;;;    |_   |_            ********                  _|        _|
 ;;;                          a
-;;;                  
+;;;
 ;;;              |___________|
 ;;;                    w1
-;;;          
-;;;          
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-5)))
   (with-slots ((sld staff-line-distance)
@@ -2003,10 +1991,10 @@ of a normal note.  This function always returns a positive value"))
 	    pl right ++ pm right ++ pn right ++ po down ++ pp left ++
 	    pq left ++ pr down ++ ps right ++ pt right ++ pu down ++ cycle)))))
 
-;;;                    
+;;;
 ;;;                                      w2
 ;;;                                  __________
-;;;                                 |          |                  
+;;;                                 |          |
 ;;;                                   c			   _
 ;;;                                  ****		    |
 ;;;                              ******g*****		    |
@@ -2030,12 +2018,10 @@ of a normal note.  This function always returns a positive value"))
 ;;;                         ****************		    |
 ;;;                             *********                  _|
 ;;;                                 a
-;;;                    
-;;;                    
+;;;
+;;;
 ;;;                    |____________|
 ;;;                         w1
-;;;                    
-;;;                    
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-6)))
   (with-slots ((sld staff-line-distance)
@@ -2086,9 +2072,9 @@ of a normal note.  This function always returns a positive value"))
 	     (tensions 5 1) pj right ++ pk down ++ cycle)
 	 (mf pl left ++ pm up ++ pn right ++ po down ++ cycle))))))
 
-;;;                           
-;;;                           
-;;;                        w1       
+;;;
+;;;
+;;;                        w1
 ;;;                    __________
 ;;;                   |          |
 ;;;
@@ -2119,14 +2105,6 @@ of a normal note.  This function always returns a positive value"))
 ;;;                      c ****a****q                       |
 ;;;                       ***    ***                       _|
 ;;;                       b       r
-;;;                           
-;;;                           
-;;;                           
-;;;                           
-;;;                           
-;;;                           
-;;;                           
-;;;                           
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-7)))
   (with-slots ((sld staff-line-distance)
@@ -2167,12 +2145,9 @@ of a normal note.  This function always returns a positive value"))
 	    pj up ++ pk right ++ pl right ++ pm right ++
 	    pn right (tensions 1 3) po (tensions 3 1)
 	    pp down ++ pq down ++ pr left ++ cycle)))))
-	    
-;;;                              
-;;;                              
-;;;                              
+	
 ;;;                               w2
-;;;                           __________   
+;;;                           __________
 ;;;                          |          |
 ;;;                          e                             _
 ;;;                        ******                           |
@@ -2197,15 +2172,15 @@ of a normal note.  This function always returns a positive value"))
 ;;;   h2 |        ****       m  ******         |            |
 ;;;      |          ****************           |            |
 ;;;      |_             *********             _|           _|
-;;;                          a    
-;;;                              
-;;;                          |___________|    
+;;;                          a
+;;;
+;;;                          |___________|
 ;;;                                w1
-;;;                 |________|             
+;;;                 |________|
 ;;;                     w3
-;;;                              
+;;;
 ;;;                    |_____|
-;;;                       w4       
+;;;                       w4
 
 (defmethod compute-design ((font font) (shape (eql :time-signature-8)))
   (with-slots ((sld staff-line-distance)
