@@ -166,7 +166,7 @@
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
 		;; FIXME: we want :TYPE ACCIDENTAL here but need to
 		;; sort out order of definition for that to be useful.
-		#+nil #+nil
+		#+(or) #+(or)
                 :type (member :natural :flat :double-flat :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
          :type (or (integer 0 3) null))
@@ -178,7 +178,7 @@
            (type staff staff)
            (type (or (member :long :breve :whole :half :filled) null) head)
 	   ;; FIXME: :TYPE ACCIDENTAL
-	   #+nil #+nil
+	   #+(or) #+(or)
            (type (member :natural :flat :double-flat :sharp :double-sharp)
                  accidentals)
            (type (or (integer 0 3) null) dots)
