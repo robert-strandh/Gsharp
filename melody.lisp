@@ -210,8 +210,9 @@
 
 ;;; FIXME: add name-mixin also?
 (defclass tuning (gsharp-object)
-  ((master-pitch-note :initform (make-instance 'note :pitch 33 ; a above middle c
-                                                     :staff (make-instance 'staff))
+  ((master-pitch-note :initform (make-instance 'note
+                                  :pitch 33 ; a above middle c
+                                  :staff (make-instance 'staff))
                       :initarg :master-pitch-note
                       :type note
                       :accessor master-pitch-note)
