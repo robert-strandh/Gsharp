@@ -4,8 +4,8 @@
 ;;;
 ;;; Clef
 
-;;; The line number on which the clef is located on the staff. 
-;;; The bottom line of the staff is number 1. 
+;;; The line number on which the clef is located on the staff.
+;;; The bottom line of the staff is number 1.
 (defgeneric lineno (clef))
 
 ;;; for key signature drawing calcluations.  FIXME: in fact the layout
@@ -51,7 +51,6 @@
     ((:treble :treble8) (+ (lineno clef) 2))
     (:c (- (lineno clef) 1))))
 
-
 ;;; given a clef, return the staff step of the F that should have
 ;;; the first sharp sign in key signatures with sharps
 (defmethod f-position ((clef clef))
@@ -79,7 +78,7 @@
    (%keysig :accessor keysig :initarg :keysig
             :initform (make-array 7 :initial-element :natural))
    (staffwise-elements :accessor staffwise-elements :initform nil)))
-       
+
 (defgeneric key-signatures (staff)
   (:method ((s fiveline-staff))
     (remove-if #'(lambda (x) (not (typep x 'key-signature)))
@@ -88,7 +87,7 @@
   (:method ((s fiveline-staff))
     (remove-if #'(lambda (x) (not (typep x 'time-signature)))
 	       (staffwise-elements s))))
-	   
+	
 (defmethod initialize-instance :after ((obj fiveline-staff) &rest args)
   (declare (ignore args))
   (with-slots (%keysig) obj
@@ -114,8 +113,6 @@
 (defgeneric set-contents (element contents)
   (:documentation "Sets note in an element"))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Note
@@ -124,7 +121,7 @@
 ;;; or the pitch of a note, you have to delete it and add a new note
 ;;; with the right characteristics.
 
-;;; Return the pitch of the note. 
+;;; Return the pitch of the note.
 (defgeneric pitch (note))
 
 ;;; Return the accidentals of the note.  The value returned is one of
@@ -137,28 +134,28 @@
 (defgeneric dots (note))
 
 ;;; Returns the cluster to which the note belongs, or nil if the note
-;;; currently does not belong to any cluster. 
+;;; currently does not belong to any cluster.
 (defgeneric cluster (note))
 
 ;;; The pitch is a number from 0 to 128
-;;; 
-;;; The staff is a staff object. 
-;;; 
+;;;
+;;; The staff is a staff object.
+;;;
 ;;; Head can be :long, :breve, :whole, :half, :filled, or nil.  A
 ;;; value of nil means that the notehead is determined by that of the
 ;;; cluster to which the note belongs.
-;;; 
+;;;
 ;;; Accidentals can be :natural :flat :double-flat :sharp or :double-sharp.
 ;;; The default is :natural.  Whether a note is actually displayed
 ;;; preceded by one of the corresponding signs is a matter of context and
-;;; display style. 
-;;; 
+;;; display style.
+;;;
 ;;; The number of dots can be an integer or nil, meaning that the number
 ;;; of dots is taken from the cluster.  The default value is nil.
-;;; 
+;;;
 ;;; The actual duration of the note is computed from the note head, the
 ;;; number of beams of the cluster to which the note belongs, and the
-;;; number of dots in the usual way. 
+;;; number of dots in the usual way.
 
 (defclass note (gsharp-object)
   ((cluster :initform nil :initarg :cluster :accessor cluster)
@@ -169,7 +166,7 @@
    (accidentals :initform :natural :initarg :accidentals :reader accidentals
 		;; FIXME: we want :TYPE ACCIDENTAL here but need to
 		;; sort out order of definition for that to be useful.
-		#+nil #+nil 
+		#+nil #+nil
                 :type (member :natural :flat :double-flat :sharp :double-sharp))
    (dots :initform nil :initarg :dots :reader dots
          :type (or (integer 0 3) null))
@@ -207,7 +204,6 @@
 (defun note-equal (note1 note2)
   (= (pitch note1) (pitch note2)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Tuning (support for microtonal and historical tunings/temperaments)
@@ -230,7 +226,7 @@
 ;;; in terms of a cent value.
 (defgeneric note-cents (note tuning))
 
-;;; 12-edo is provided for efficiency only. It is a 
+;;; 12-edo is provided for efficiency only. It is a
 ;;; special case of a regular temperament. Perhaps it
 ;;; should be removed?
 (defclass 12-edo (tuning)
@@ -296,9 +292,9 @@
     (+ (* octaves (octave-cents tuning))
        (* fifths (fifth-cents tuning))
        (* quartertones (quartertone-cents tuning)))))
- 
+
 ;;; TODO: (defclass irregular-temperament ...)
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Melody element
@@ -310,9 +306,9 @@
 ;;; Key signature
 
 (defgeneric alterations (key-signature)
-  (:documentation "return the alterations in the form of a 
+  (:documentation "return the alterations in the form of a
 7-element array where each element is either :natural,
-:sharp, or :flat according to how each staff position 
+:sharp, or :flat according to how each staff position
 should be altered"))
 
 (defgeneric more-sharps (key-signature &optional n)
@@ -329,7 +325,7 @@ flatter by removing some sharps and/or adding some flats"))
   '(%staff))
 
 (defclass key-signature (staffwise-element)
-  ((%alterations :initform (make-array 7 :initial-element :natural) 
+  ((%alterations :initform (make-array 7 :initial-element :natural)
                  :initarg :alterations :reader alterations)))
 
 (defun make-key-signature (staff &rest args &key alterations)
@@ -391,7 +387,7 @@ flatter by removing some sharps and/or adding some flats"))
   '(%components))
 (defun make-time-signature (staff &rest args)
   (apply #'make-instance 'time-signature :staff staff args))
-                                                                              
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Cluster
@@ -403,13 +399,13 @@ flatter by removing some sharps and/or adding some flats"))
 ;;; note in the cluster with the same staff and the same pitch.
 (defgeneric add-note (cluster note))
 
-;;; Find a note in a cluster.  The comparison is made using only the 
+;;; Find a note in a cluster.  The comparison is made using only the
 ;;; pitch of the supplied note.  If the note does not exist nil is returned.
 (defgeneric find-note (cluster note))
 
 ;;; Delete a note from the cluster to which it belongs.  It is an
 ;;; error to call this function if the note currently does not belong
-;;; to any cluster. 
+;;; to any cluster.
 (defgeneric remove-note (note))
 
 (defclass cluster (melody-element)
