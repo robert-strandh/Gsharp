@@ -370,17 +370,20 @@
 ;;; for the accidental of the note not to overlap any of the others, 
 ;;; we must use the minimum of all the x offsets thus computed. 
 (defun accidental-min-xoffset (note1 notes staff-step)
-  (reduce #'min notes :key (lambda (note) (accidental-relative-xoffset note1 note staff-step))))
+  (reduce #'min notes
+          :key (lambda (note)
+                 (accidental-relative-xoffset note1 note staff-step))))
 
 ;;; given a list of notes that have accidentals to place, and a list of 
 ;;; notes that either have no accidentals or with already-placed accidentals, 
 ;;; compute the note in the first list that can be placed as far to the right 
 ;;; as possible.
 (defun best-accidental (notes-with-accidentals notes staff-step)
-  (reduce (lambda (note1 note2) (if (>= (accidental-min-xoffset note1 notes staff-step)
-					(accidental-min-xoffset note2 notes staff-step))
-				    note1
-				    note2))
+  (reduce (lambda (note1 note2)
+            (if (>= (accidental-min-xoffset note1 notes staff-step)
+                    (accidental-min-xoffset note2 notes staff-step))
+                note1
+                note2))
 	  notes-with-accidentals))  
 
 ;;; for each note in a list of notes, if it has an accidental, compute
