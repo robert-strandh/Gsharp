@@ -25,8 +25,8 @@
 ;;; Protocol
 ;;;
 
-;;; The base class of obseqs.  Client code must mix this class into any 
-;;; sequence that should be treated.  
+;;; The base class of obseqs.  Client code must mix this class into any
+;;; sequence that should be treated.
 (defclass obseq () ())
 
 ;;; The base class of elements of an obseq.  Client code must mix this
@@ -52,26 +52,26 @@
 (defgeneric obseq-prev (obseq elem))
 
 ;;; Given an obseq and and obseq-elem, this function is called by client
-;;; code in order to indicate modifications to the obseq.  Elements 
-;;; in the obseq after the one given may have been altered, whereas 
+;;; code in order to indicate modifications to the obseq.  Elements
+;;; in the obseq after the one given may have been altered, whereas
 ;;; all the elements preceding the one given are unmodified.  When `nil'
 ;;; is passed as the element value, even the first element may have
-;;;  been damaged. 
+;;;  been damaged.
 (defgeneric obseq-first-undamaged-element (obseq elem))
 
 ;;; Given an obseq and and obseq-elem, this function is called by client
-;;; code in order to indicate modifications to the obseq.  Elements 
-;;; in the obseq before the one given may have been altered, whereas 
+;;; code in order to indicate modifications to the obseq.  Elements
+;;; in the obseq before the one given may have been altered, whereas
 ;;; all the elements after the one given are unmodified.  When `nil'
 ;;; is passed as the element value, even the last element may have
-;;;  been damaged. 
+;;;  been damaged.
 (defgeneric obseq-last-undamaged-element (obseq elem))
 
 ;;; There are two types of cost: sequence cost, and total cost.  The
 ;;; sequence cost reflects the cost of a sequence of individual
 ;;; elements.  The total cost reflects the cost of a sequence of
-;;; sequences.  The way to combine costs is contained in a cost method 
-;;; which is supplied by client code. 
+;;; sequences.  The way to combine costs is contained in a cost method
+;;; which is supplied by client code.
 
 ;;; The base class for all cost methods.  A cost method contains
 ;;; everything that is required to compute individual costs, sequence
@@ -93,11 +93,11 @@
 (defgeneric (setf obseq-cost-method) (method obseq))
 
 ;;; The base class for the cost of a sequence of elements of an object
-;;; sequence. Client code must mix this class into any class used to 
+;;; sequence. Client code must mix this class into any class used to
 ;;; reflect sequence cost.
 (defclass seq-cost () ())
 
-;;; The base class for the cost of a sequence of object sequences. 
+;;; The base class for the cost of a sequence of object sequences.
 ;;; Client code moust mix this class into any class used to reflect
 ;;; total cost.
 (defclass total-cost () ())
@@ -114,12 +114,12 @@
 ;;; *  with a total cost and a sequence cost.  In that case the result
 ;;;    should be the total cost of adding the sequence to the right of
 ;;;    the sequence of sequences.  Client code must supply a method
-;;;    for this argument combination. 
+;;;    for this argument combination.
 ;;; *  with a sequence cost and a total cost.  In that case the result
 ;;;    should be the total cost of adding the sequence to the left of
 ;;;    the sequence of sequences.  The library supplies a default method
-;;;    for this argument combination assuming a symmetric relation by 
-;;;    making a recursive call with arguments reversed. 
+;;;    for this argument combination assuming a symmetric relation by
+;;;    making a recursive call with arguments reversed.
 ;;; *  with a sequence cost and an element.  In that case, the result
 ;;;    should be the sequence cost of adding the element to the right
 ;;;    of the sequence.  Client code must supply a method for this
@@ -128,16 +128,16 @@
 ;;;    should be the sequence cost of adding the element to the left
 ;;;    of the sequence. The library supplies a default method for this
 ;;;    argument combination assuming a symmetric relation by making
-;;;    a recursive call with arguments reversed. 
+;;;    a recursive call with arguments reversed.
 ;;; *  with a sequence cost and nil.  In that case, the result should
-;;;    be the total cost of a sequence of the one sequence.  Client code 
-;;;    must supply a method for this argument combination. 
+;;;    be the total cost of a sequence of the one sequence.  Client code
+;;;    must supply a method for this argument combination.
 ;;; *  with an element and nil.  In that case, the result should be
 ;;;    the cost of a sequence containing the one element.  Client code
 ;;;    must supply a method for this argument combination.
 ;;; *  with a total cost and an element.  The library supplies a method
-;;;    that makes a recursive call with the total cost and the sequence 
-;;;    cost of a sequence containing the single element.  Client code may 
+;;;    that makes a recursive call with the total cost and the sequence
+;;;    cost of a sequence containing the single element.  Client code may
 ;;;    supply a more efficient version.
 ;;; *  with an element and a total cost.  The library supplies a method
 ;;;    that makes a recursive call with the sequence cost of a
@@ -170,7 +170,7 @@
 ;;; This functino is called by client code to obtain a subsequence of
 ;;; the solution.  Given an element of the obseq, it returns (as two
 ;;; values) the first and the last element of the subsequence
-;;; containing the element given. 
+;;; containing the element given.
 (defgeneric obseq-interval (obseq elem))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -190,7 +190,7 @@
   (declare (ignore cost-method seq-cost))
   nil)
 
-;;; default methods announced in the protocol 
+;;; default methods announced in the protocol
 
 (defmethod combine-cost ((method cost-method) (sc seq-cost) (tc total-cost))
   (combine-cost method tc sc))
@@ -254,13 +254,13 @@
     (or (obseq-prev obseq (if (eq elem right-sentinel) nil elem))
         (slot-value obseq 'left-sentinel))))
 
-;;; we maintain an invariant that stipulates that 
+;;; we maintain an invariant that stipulates that
 ;;; 1. elements are numbered in the `number-left' slot sequetially from 0 up-to
-;;;    and including the element in the `head' slot. 
+;;;    and including the element in the `head' slot.
 ;;; 2. elements to the right of the one in `head' have a value of `nil'
 ;;;    in the `number-left' slot.
 ;;; 3. elements are numbered in the `number-right' slot sequetially from 0 up-to
-;;;    and including the element in the `tail' slot. 
+;;;    and including the element in the `tail' slot.
 ;;; 4. elements to the left of the one in `tail' have a value of `nil'
 ;;;    in the `number-left' slot.
 
@@ -400,7 +400,7 @@
                   (number-right tail)))
       (loop until (eq tail elem)
             do (contract-tail obseq)))))
-  
+
 (defmethod obseq-last-undamaged-element :after (obseq elem)
   (declare (ignore elem))
   (setf (solvedp obseq) nil))
@@ -481,7 +481,7 @@
                   finally (return (values left (elem-prev obseq (best-cut-right left)))))))))
 
 ;;; FIXME: implement an :after method on (setf obseq-cost-method) that
-;;; invalidates the entire obseq. 
+;;; invalidates the entire obseq.
 
 ;;; ************************************************
 ;;; ****************** test case *******************
@@ -571,7 +571,7 @@
 (defmethod combine-cost ((method numseq-method) (elem numseq-elem) (empty (eql nil)))
   (make-instance 'numseq-seq-cost :sum (elem-value elem)))
 
-;;; cost comparisons 
+;;; cost comparisons
 (defmethod cost-less ((method numseq-method)
                       (c1 numseq-seq-cost)
                       (c2 numseq-seq-cost))
