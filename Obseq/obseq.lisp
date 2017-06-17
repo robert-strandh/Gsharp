@@ -425,7 +425,6 @@
 ;;;; ---------------------------------------------------------------------
 ;;;; Cost functions
 
-
 ;;; Compute the max of two cost objects
 (defgeneric cost-max (cost-method cost1 cost2))
 
@@ -581,12 +580,10 @@
      (abs (- (cost-best-sum method)
              (cost-sum c2)))))
 
-
 (defmethod cost-less ((method numseq-method)
                       (c1 numseq-total-cost)
                       (c2 numseq-total-cost))
   (< (maxcost c1) (maxcost c2)))
-
 
 ;;; tell it how to stop adding cost
 (defmethod seq-cost-cannot-decrease ((method numseq-method)
@@ -605,4 +602,3 @@
                         collect (make-instance 'numseq-elem :index i :value val))
                   'vector)
     :cost-method (make-instance 'numseq-method :best-sum 30)))
-
