@@ -1,6 +1,8 @@
 (cl:in-package #:asdf-user)
 
 (defsystem :gsharp
+  :description "Editor for music scores in traditional notation."
+  :author "Robert Strandh <robert.strandh@gmail.com>"
   :depends-on (:mcclim
                :clim-listener
                :stealth-mixin
@@ -34,4 +36,3 @@
    (:file "undo")
    #+sbcl (:file "Mxml/mxml")
    #+sbcl (:file "Mxml/commands")))
-
