@@ -32,11 +32,11 @@
    (ink :initarg :ink :reader displayed-output-record-ink)))
 
 (defmethod initialize-instance :after ((record score-output-record)
-				       &key x2 y2 size)
+                                       &key x2 y2 size)
   (declare (ignore size))
   (with-slots (x y width height) record
     (setf width (abs (- x2 x))
-	  height (abs (- y2 y)))))
+          height (abs (- y2 y)))))
 
 (defmethod bounding-rectangle* ((record score-output-record))
   (with-slots (x y width height) record
@@ -81,37 +81,37 @@
 (climi::def-grecording draw-pixmap (() pixmap pm-x pm-y) ()
   (climi::with-transformed-position ((medium-transformation medium) pm-x pm-y)
     (setf (slot-value climi::graphic 'pm-x) pm-x
-	  (slot-value climi::graphic 'pm-y) pm-y)
+          (slot-value climi::graphic 'pm-y) pm-y)
     (values pm-x pm-y (+ pm-x (pixmap-width pixmap)) (+ pm-y (pixmap-height pixmap)))))
 
 (climi::def-graphic-op draw-pixmap (pixmap pm-x pm-y))
 
 (defmethod medium-draw-pixmap* ((medium clim:medium) pixmap pm-x pm-y)
   (copy-from-pixmap pixmap 0 0 (pixmap-width pixmap) (pixmap-height pixmap)
-		    medium pm-x pm-y))
+                    medium pm-x pm-y))
 
 (climi::defmethod* (setf output-record-position) :around
     (nx ny (record draw-pixmap-output-record))
     (climi::with-standard-rectangle* (:x1 x1 :y1 y1)
-	record
+        record
       (with-slots (pm-x pm-y)
-	  record
-	(let ((dx (- nx x1))
-	      (dy (- ny y1)))
-	  (multiple-value-prog1
-	      (call-next-method)
-	    (incf pm-x dx)
-	    (incf pm-y dy))))))
+          record
+        (let ((dx (- nx x1))
+              (dy (- ny y1)))
+          (multiple-value-prog1
+              (call-next-method)
+            (incf pm-x dx)
+            (incf pm-y dy))))))
 
 (climi::defrecord-predicate draw-pixmap-output-record (pm-x pm-y)
   (and (climi::if-supplied (pm-x coordinate)
-	 (climi::coordinate= (slot-value climi::record 'pm-x) pm-x))
+         (climi::coordinate= (slot-value climi::record 'pm-x) pm-x))
        (climi::if-supplied (pm-y coordinate)
-	 (climi::coordinate= (slot-value climi::record 'pm-y) pm-y))))
+         (climi::coordinate= (slot-value climi::record 'pm-y) pm-y))))
 
 (defun draw-pixmap* (sheet pixmap x y
-			   &rest args
-			   &key clipping-region transformation)
+                           &rest args
+                           &key clipping-region transformation)
   (declare (ignore clipping-region transformation))
   (climi::with-medium-options (sheet args)
     (medium-draw-pixmap* medium pixmap x y)))
@@ -136,12 +136,12 @@
 
 (defun draw-notehead (stream name x staff-step)
   (sdl::draw-shape stream *font* 
-		   (ecase name
-		     ((:breve :long) :breve-notehead)
-		     (:whole :whole-notehead)
-		     (:half :half-notehead)
-		     (:filled :filled-notehead))
-		   x (staff-step (- staff-step))))
+                   (ecase name
+                     ((:breve :long) :breve-notehead)
+                     (:whole :whole-notehead)
+                     (:half :half-notehead)
+                     (:filled :filled-notehead))
+                   x (staff-step (- staff-step))))
 
 (define-presentation-method present
     (object (type notehead) stream (view score-view) &key)
@@ -157,17 +157,17 @@
 
 (defun draw-clef (stream name x staff-step)
   (sdl::draw-shape stream *font* 
-		   (ecase name
-		     ;; FIXME: while using the same glyph for :TREBLE
-		     ;; and :TREBLE8 is fine from a musical point of
-		     ;; view, some differentiation (by putting an
-		     ;; italic 8 underneath, for instance) would be
-		     ;; good.
-		     ((:treble :treble8) :g-clef)
-		     (:bass :f-clef)
-		     (:c :c-clef))
-		   x (staff-step (- staff-step))))
-		       
+                   (ecase name
+                     ;; FIXME: while using the same glyph for :TREBLE
+                     ;; and :TREBLE8 is fine from a musical point of
+                     ;; view, some differentiation (by putting an
+                     ;; italic 8 underneath, for instance) would be
+                     ;; good.
+                     ((:treble :treble8) :g-clef)
+                     (:bass :f-clef)
+                     (:c :c-clef))
+                   x (staff-step (- staff-step))))
+                       
 (define-presentation-type clef () :options (name x staff-step))
 
 (define-presentation-method present
@@ -256,7 +256,7 @@
 (defun draw-staff-line (pane x1 staff-step x2)
   (multiple-value-bind (down up) (staff-line-offsets *font*)
     (let ((y1 (+ (- (staff-step staff-step)) up))
-	  (y2 (+ (- (staff-step staff-step)) down)))
+          (y2 (+ (- (staff-step staff-step)) down)))
       (draw-rectangle* pane x1 y1 x2 y2))))
 
 (defclass staff-output-record (output-record)
@@ -279,10 +279,10 @@
   (with-slots (x y staff-lines) record
     (setf x new-x y new-y)
     (loop for staff-line in staff-lines
-	  do (multiple-value-bind (xx yy) (output-record-position staff-line)
-	       (setf (output-record-position staff-line)
-		     (values (+ xx (- new-x x))
-			     (+ yy (- new-y y))))))))  
+          do (multiple-value-bind (xx yy) (output-record-position staff-line)
+               (setf (output-record-position staff-line)
+                     (values (+ xx (- new-x x))
+                             (+ yy (- new-y y))))))))  
 
 (defmethod output-record-start-cursor-position ((record staff-output-record))
   (values nil nil))
@@ -326,10 +326,10 @@
   (length (slot-value record 'staff-lines)))
 
 (defmethod replay-output-record ((record staff-output-record) stream
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
+                                 &optional (region +everywhere+)
+                                 (x-offset 0) (y-offset 0))
   (loop for staff-line in (slot-value record 'staff-lines)
-	do (replay-output-record staff-line stream region x-offset y-offset)))
+        do (replay-output-record staff-line stream region x-offset y-offset)))
 
 (define-presentation-type staff () :options (x1 x2))
 
@@ -338,8 +338,8 @@
 (defun draw-fiveline-staff (pane x1 x2)
   (multiple-value-bind (left right) (bar-line-offsets *font*)
     (loop for staff-step from 0 by 2
-	  repeat 5
-	  do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right)))))
+          repeat 5
+          do (draw-staff-line pane (+ x1 left) staff-step (+ x2 right)))))
 
 (define-presentation-method present
     (object (type fiveline-staff) stream (view score-view) &key)
@@ -364,9 +364,9 @@
 (defun draw-stem (pane x y1 y2)
   (multiple-value-bind (left right) (stem-offsets *font*)
     (let ((x1 (+ x left))
-	  (x2 (+ x right)))
+          (x2 (+ x right)))
       (draw-rectangle* pane x1 y1 x2 y2))))
-			     
+                             
 (defun draw-right-stem (pane x y1 y2)
   (multiple-value-bind (dx dy) (notehead-right-offsets *font*)
     (draw-stem pane (+ x dx) (- y1 dy) y2)))
@@ -381,18 +381,18 @@
   (multiple-value-bind (down up) (ledger-line-y-offsets *font*)
     (multiple-value-bind (left right) (ledger-line-x-offsets *font*)
       (let ((x1 (+ x left))
-	    (y1 (- (+ (staff-step staff-step) down)))
-	    (x2 (+ x right))
-	    (y2 (- (+ (staff-step staff-step) up))))
-	(draw-rectangle* pane x1 y1 x2 y2)))))
+            (y1 (- (+ (staff-step staff-step) down)))
+            (x2 (+ x right))
+            (y2 (- (+ (staff-step staff-step) up))))
+        (draw-rectangle* pane x1 y1 x2 y2)))))
 
-			     
+                             
 ;;;;;;;;;;;;;;;;;; bar line
 
 (defun draw-bar-line (pane x y1 y2)
   (multiple-value-bind (left right) (bar-line-offsets *font*)
     (let ((x1 (+ x left))
-	  (x2 (+ x right)))
+          (x2 (+ x right)))
       ;; see comment in ROUND-COORDINATE in McCLIM's CLX backend
       (draw-rectangle* pane (floor (+ x1 0.5)) y1 (floor (+ x2 0.5)) y2))))
 
@@ -418,14 +418,14 @@
 (defmethod medium-draw-downward-beam* (medium x1 y1 x2 y2 thickness)
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 below y2
-	  for x from x1 by inverse-slope do
-	  (let ((upper (sdl::ensure-beam-segment-design :down :upper (- (round (+ x inverse-slope)) (round x))))
-		(upper-tr (make-translation-transformation (round x) y))
-		(lower (sdl::ensure-beam-segment-design :down :lower (- (round (+ x inverse-slope)) (round x))))
-		(lower-tr (make-translation-transformation (round x) (+ y thickness))))
-	    (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
-	    (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
-	    (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
+          for x from x1 by inverse-slope do
+          (let ((upper (sdl::ensure-beam-segment-design :down :upper (- (round (+ x inverse-slope)) (round x))))
+                (upper-tr (make-translation-transformation (round x) y))
+                (lower (sdl::ensure-beam-segment-design :down :lower (- (round (+ x inverse-slope)) (round x))))
+                (lower-tr (make-translation-transformation (round x) (+ y thickness))))
+            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
+            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
+            (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
 
 (defmethod medium-draw-downward-beam* 
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
@@ -434,43 +434,43 @@
 (defmethod medium-draw-upward-beam* (medium x1 y1 x2 y2 thickness)
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 above y2
-	  for x from x1 by inverse-slope do
-	  (let ((upper (sdl::ensure-beam-segment-design :up :upper (- (round (+ x inverse-slope)) (round x))))
-		(upper-tr (make-translation-transformation (round x) y))
-		(lower (sdl::ensure-beam-segment-design :up :lower (- (round (+ x inverse-slope)) (round x))))
-		(lower-tr (make-translation-transformation (round x) (+ y thickness -1))))
-	    (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
-	    (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
-	    (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
+          for x from x1 by inverse-slope do
+          (let ((upper (sdl::ensure-beam-segment-design :up :upper (- (round (+ x inverse-slope)) (round x))))
+                (upper-tr (make-translation-transformation (round x) y))
+                (lower (sdl::ensure-beam-segment-design :up :lower (- (round (+ x inverse-slope)) (round x))))
+                (lower-tr (make-translation-transformation (round x) (+ y thickness -1))))
+            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
+            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
+            (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
 
 (defmethod medium-draw-upward-beam* 
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
   (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
 
 (defmethod replay-output-record ((record downward-beam-output-record) stream
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
+                                 &optional (region +everywhere+)
+                                 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-	(with-drawing-options 
-	    (medium :ink ink :clipping-region clipping-region)
-	  (medium-draw-downward-beam* medium x1 y1 x2 (- y2 thickness) thickness))))))
+        (with-drawing-options 
+            (medium :ink ink :clipping-region clipping-region)
+          (medium-draw-downward-beam* medium x1 y1 x2 (- y2 thickness) thickness))))))
 
 (defclass upward-beam-output-record (beam-output-record)
   ())
 
 (defmethod replay-output-record ((record upward-beam-output-record) stream
-				 &optional (region +everywhere+)
-				 (x-offset 0) (y-offset 0))
+                                 &optional (region +everywhere+)
+                                 (x-offset 0) (y-offset 0))
   (declare (ignore x-offset y-offset region))
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-	(with-drawing-options 
-	    (medium :ink ink :clipping-region clipping-region)
-	  (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
+        (with-drawing-options 
+            (medium :ink ink :clipping-region clipping-region)
+          (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
 
 (defun transform-beam-attributes (transformation x1 y1 x2 y2 down up thickness)
   (multiple-value-bind (xx1 yy1)
@@ -493,9 +493,9 @@
 (defun draw-sloped-beam (medium x1 y1 x2 y2)
   (multiple-value-bind (down up) (beam-offsets *font*)
     (let ((transformation (medium-transformation (medium-sheet medium)))
-	  (thickness (- down up)))
+          (thickness (- down up)))
       (cond ((< y1 y2)
-	     (when (stream-recording-p (medium-sheet medium))
+             (when (stream-recording-p (medium-sheet medium))
                (multiple-value-bind (xx1 yy1 xx2 yy2 yd yu yt)
                    (transform-beam-attributes transformation x1 y1 x2 y2
                                               down up thickness)
@@ -505,10 +505,10 @@
                                  :x1 xx1 :y1 (+ yy1 yu) :x2 xx2 :y2 (+ yy2 yd)
                                  :thickness yt :ink (medium-ink medium)
                                  :clipping-region (transform-region transformation (medium-clipping-region medium))))))
-	     (when (stream-drawing-p (medium-sheet medium))
-	       (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
-	    (t
-	     (when (stream-recording-p (medium-sheet medium))
+             (when (stream-drawing-p (medium-sheet medium))
+               (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
+            (t
+             (when (stream-recording-p (medium-sheet medium))
                (multiple-value-bind (xx1 yy1 xx2 yy2 yd yu yt)
                    (transform-beam-attributes transformation x1 y1 x2 y2
                                               down up thickness)
@@ -518,35 +518,35 @@
                                  :x1 xx1 :y1 (+ yy2 yu) :x2 xx2 :y2 (+ yy1 yd)
                                  :thickness yt :ink (medium-ink medium)
                                  :clipping-region (transform-region transformation (medium-clipping-region medium))))))
-	     (when (stream-drawing-p (medium-sheet medium))
-	       (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
+             (when (stream-drawing-p (medium-sheet medium))
+               (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
 
 ;;; an offset of -1 means hang, 0 means straddle and 1 means sit
 (defun draw-beam (pane x1 staff-step-1 offset1 x2 staff-step-2 offset2)
   (if (> x1 x2)
       (draw-beam pane x2 staff-step-2 offset2 x1 staff-step-1 offset1)
       (multiple-value-bind (left right) (stem-offsets *font*)
-	(let* ((xx1 (+ x1 left))
-	       (xx2 (+ x2 right))
-	       (offset (beam-hang-sit-offset *font*))
-	       (y1 (- (+ (staff-step staff-step-1) (* offset1 offset))))
-	       (y2 (- (+ (staff-step staff-step-2) (* offset2 offset))))
-	       (medium (sheet-medium pane)))
-	  (if (= y1 y2)
-	      (draw-horizontal-beam pane xx1 y1 xx2)
-	      (draw-sloped-beam medium xx1 y1 xx2 y2))))))
+        (let* ((xx1 (+ x1 left))
+               (xx2 (+ x2 right))
+               (offset (beam-hang-sit-offset *font*))
+               (y1 (- (+ (staff-step staff-step-1) (* offset1 offset))))
+               (y2 (- (+ (staff-step staff-step-2) (* offset2 offset))))
+               (medium (sheet-medium pane)))
+          (if (= y1 y2)
+              (draw-horizontal-beam pane xx1 y1 xx2)
+              (draw-sloped-beam medium xx1 y1 xx2 y2))))))
 
 (defun draw-tie-up (pane x1 x2 staff-step)
   (let ((dist (/ (- x2 x1) (staff-step 4/3))))
     (if (> dist 19)
-	(let ((xx1 (round (+ x1 (staff-step 10))))
-	      (xx2 (round (- x2 (staff-step 10))))
-	      (y1 (- (round (staff-step (+ staff-step 11/3)))))
-	      (thickness (round (staff-step 2/3))))
+        (let ((xx1 (round (+ x1 (staff-step 10))))
+              (xx2 (round (- x2 (staff-step 10))))
+              (y1 (- (round (staff-step (+ staff-step 11/3)))))
+              (thickness (round (staff-step 2/3))))
           (sdl::draw-shape pane *font* :large-tie-up-left xx1 (staff-step (- staff-step)))
           (sdl::draw-shape pane *font* :large-tie-up-right xx2 (staff-step (- staff-step)))
-	  (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
-	(let ((glyph-name (cond ((> dist 18) :large-tie-10-up)
+          (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
+        (let ((glyph-name (cond ((> dist 18) :large-tie-10-up)
                                 ((> dist 17) :large-tie-9-up)
                                 ((> dist 16) :large-tie-8-up)
                                 ((> dist 15) :large-tie-7-up)
@@ -564,20 +564,20 @@
                                 ((> dist 3) :small-tie-3-up)
                                 ((> dist 2) :small-tie-2-up)
                                 (t :small-tie-1-up))))
-	  (sdl::draw-shape pane *font* glyph-name 
+          (sdl::draw-shape pane *font* glyph-name 
                            (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 (defun draw-tie-down (pane x1 x2 staff-step)
   (let ((dist (/ (- x2 x1) (staff-step 4/3))))
     (if (> dist 19)
-	(let ((xx1 (round (+ x1 (staff-step 10))))
-	      (xx2 (round (- x2 (staff-step 10))))
-	      (y1 (- (round (staff-step (- staff-step 8/3)))))
-	      (thickness (round (staff-step 2/3))))
+        (let ((xx1 (round (+ x1 (staff-step 10))))
+              (xx2 (round (- x2 (staff-step 10))))
+              (y1 (- (round (staff-step (- staff-step 8/3)))))
+              (thickness (round (staff-step 2/3))))
           (sdl::draw-shape pane *font* :large-tie-down-left xx1 (staff-step (- staff-step)))
           (sdl::draw-shape pane *font* :large-tie-down-right xx2 (staff-step (- staff-step)))
-	  (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
-	(let ((glyph-name (cond ((> dist 18) :large-tie-10-down)
+          (draw-rectangle* pane xx1 y1 xx2 (+ y1 thickness)))
+        (let ((glyph-name (cond ((> dist 18) :large-tie-10-down)
                                 ((> dist 17) :large-tie-9-down)
                                 ((> dist 16) :large-tie-8-down)
                                 ((> dist 15) :large-tie-7-down)
@@ -595,7 +595,7 @@
                                 ((> dist 3) :small-tie-3-down)
                                 ((> dist 2) :small-tie-2-down)
                                 (t :small-tie-1-down))))
-	  (sdl::draw-shape pane *font* glyph-name 
+          (sdl::draw-shape pane *font* glyph-name 
                            (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -627,10 +627,10 @@
   (let ((size-var (gensym)))
     `(let ((,size-var ,size))
       (unless (aref *fonts* ,size-var)
-	(setf (aref *fonts* ,size-var)
-	      (make-font ,size-var)))
+        (setf (aref *fonts* ,size-var)
+              (make-font ,size-var)))
       (let ((*font* (aref *fonts* ,size-var)))
-	,@body))))  
+        ,@body))))  
 
 (defmacro with-light-glyphs (pane &body body)
   `(with-drawing-options (,pane :ink (light-glyphs-ink (stream-default-view ,pane)))
