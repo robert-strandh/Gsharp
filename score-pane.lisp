@@ -122,7 +122,7 @@
 
 ;;; A staff step is half of the distance between two staff lines.
 ;;; Given a staff-step value, determine the corresponding number of
-;;; pixels in the current font.  The sign of the value returned is 
+;;; pixels in the current font.  The sign of the value returned is
 ;;; the same as that of the argument.
 ;;; But is that reasonable?  It seems more logical to have it return
 ;;; the opposite sign, so that the result from staff-step is always
@@ -135,7 +135,7 @@
 (define-presentation-type notehead () :options (name x staff-step))
 
 (defun draw-notehead (stream name x staff-step)
-  (sdl::draw-shape stream *font* 
+  (sdl::draw-shape stream *font*
                    (ecase name
                      ((:breve :long) :breve-notehead)
                      (:whole :whole-notehead)
@@ -156,7 +156,7 @@
 ;;;;;;;;;;;;;;;;;; clef
 
 (defun draw-clef (stream name x staff-step)
-  (sdl::draw-shape stream *font* 
+  (sdl::draw-shape stream *font*
                    (ecase name
                      ;; FIXME: while using the same glyph for :TREBLE
                      ;; and :TREBLE8 is fine from a musical point of
@@ -167,7 +167,7 @@
                      (:bass :f-clef)
                      (:c :c-clef))
                    x (staff-step (- staff-step))))
-                       
+
 (define-presentation-type clef () :options (name x staff-step))
 
 (define-presentation-method present
@@ -282,7 +282,7 @@
           do (multiple-value-bind (xx yy) (output-record-position staff-line)
                (setf (output-record-position staff-line)
                      (values (+ xx (- new-x x))
-                             (+ yy (- new-y y))))))))  
+                             (+ yy (- new-y y))))))))
 
 (defmethod output-record-start-cursor-position ((record staff-output-record))
   (values nil nil))
@@ -366,7 +366,7 @@
     (let ((x1 (+ x left))
           (x2 (+ x right)))
       (draw-rectangle* pane x1 y1 x2 y2))))
-                             
+
 (defun draw-right-stem (pane x y1 y2)
   (multiple-value-bind (dx dy) (notehead-right-offsets *font*)
     (draw-stem pane (+ x dx) (- y1 dy) y2)))
@@ -386,7 +386,7 @@
             (y2 (- (+ (staff-step staff-step) up))))
         (draw-rectangle* pane x1 y1 x2 y2)))))
 
-                             
+
 ;;;;;;;;;;;;;;;;;; bar line
 
 (defun draw-bar-line (pane x y1 y2)
@@ -405,7 +405,7 @@
    (clipping-region :initarg :clipping-region)
    (thickness :initarg :thickness)))
 
-;;; draw a horizontal beam around the vertical reference 
+;;; draw a horizontal beam around the vertical reference
 ;;; point y.
 (defun draw-horizontal-beam (medium x1 y x2)
   (multiple-value-bind (down up) (beam-offsets *font*)
@@ -427,7 +427,7 @@
             (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
             (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
 
-(defmethod medium-draw-downward-beam* 
+(defmethod medium-draw-downward-beam*
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
   (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
 
@@ -443,7 +443,7 @@
             (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
             (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
 
-(defmethod medium-draw-upward-beam* 
+(defmethod medium-draw-upward-beam*
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
   (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
 
@@ -454,7 +454,7 @@
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-        (with-drawing-options 
+        (with-drawing-options
             (medium :ink ink :clipping-region clipping-region)
           (medium-draw-downward-beam* medium x1 y1 x2 (- y2 thickness) thickness))))))
 
@@ -468,7 +468,7 @@
   (with-bounding-rectangle* (x1 y1 x2 y2) record
     (with-slots (thickness ink clipping-region) record
       (let ((medium (sheet-medium stream)))
-        (with-drawing-options 
+        (with-drawing-options
             (medium :ink ink :clipping-region clipping-region)
           (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
 
@@ -488,8 +488,8 @@
             (declare (ignore xt))
             (values xx1 yy1 xx2 yy2 yd yu yt)))))))
 
-;;; draw a sloped beam.  The vertical reference points 
-;;; of the two end points are indicated by y1 and y2. 
+;;; draw a sloped beam.  The vertical reference points
+;;; of the two end points are indicated by y1 and y2.
 (defun draw-sloped-beam (medium x1 y1 x2 y2)
   (multiple-value-bind (down up) (beam-offsets *font*)
     (let ((transformation (medium-transformation (medium-sheet medium)))
@@ -500,7 +500,7 @@
                    (transform-beam-attributes transformation x1 y1 x2 y2
                                               down up thickness)
                  (stream-add-output-record
-                  (medium-sheet medium) 
+                  (medium-sheet medium)
                   (make-instance 'downward-beam-output-record
                                  :x1 xx1 :y1 (+ yy1 yu) :x2 xx2 :y2 (+ yy2 yd)
                                  :thickness yt :ink (medium-ink medium)
@@ -513,7 +513,7 @@
                    (transform-beam-attributes transformation x1 y1 x2 y2
                                               down up thickness)
                  (stream-add-output-record
-                  (medium-sheet medium) 
+                  (medium-sheet medium)
                   (make-instance 'upward-beam-output-record
                                  :x1 xx1 :y1 (+ yy2 yu) :x2 xx2 :y2 (+ yy1 yd)
                                  :thickness yt :ink (medium-ink medium)
@@ -564,7 +564,7 @@
                                 ((> dist 3) :small-tie-3-up)
                                 ((> dist 2) :small-tie-2-up)
                                 (t :small-tie-1-up))))
-          (sdl::draw-shape pane *font* glyph-name 
+          (sdl::draw-shape pane *font* glyph-name
                            (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 (defun draw-tie-down (pane x1 x2 staff-step)
@@ -595,7 +595,7 @@
                                 ((> dist 3) :small-tie-3-down)
                                 ((> dist 2) :small-tie-2-down)
                                 (t :small-tie-1-down))))
-          (sdl::draw-shape pane *font* glyph-name 
+          (sdl::draw-shape pane *font* glyph-name
                            (round (* 0.5 (+ x1 x2))) (staff-step (- staff-step)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -630,7 +630,7 @@
         (setf (aref *fonts* ,size-var)
               (make-font ,size-var)))
       (let ((*font* (aref *fonts* ,size-var)))
-        ,@body))))  
+        ,@body))))
 
 (defmacro with-light-glyphs (pane &body body)
   `(with-drawing-options (,pane :ink (light-glyphs-ink (stream-default-view ,pane)))
