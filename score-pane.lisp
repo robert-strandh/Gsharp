@@ -46,28 +46,32 @@
   (with-slots (x y) record
     (values x y)))
 
-(defmethod (setf output-record-position) (new-x new-y (record score-output-record))
+(defmethod (setf output-record-position)
+    (new-x new-y (record score-output-record))
   (with-slots (x y) record
     (setf x new-x y new-y)))
 
 (defmethod output-record-start-cursor-position ((record score-output-record))
   (values nil nil))
 
-(defmethod (setf output-record-start-cursor-position) (x y (record score-output-record))
+(defmethod (setf output-record-start-cursor-position)
+    (x y (record score-output-record))
   (declare (ignore x y))
   nil)
 
 (defmethod output-record-end-cursor-position ((record score-output-record))
   (values nil nil))
 
-(defmethod (setf output-record-end-cursor-position) (x y (record score-output-record))
+(defmethod (setf output-record-end-cursor-position)
+    (x y (record score-output-record))
   (declare (ignore x y))
   nil)
 
 (defmethod output-record-hit-detection-rectangle* ((record score-output-record))
   (bounding-rectangle* record))
 
-(defmethod output-record-refined-position-test  ((record score-output-record) x y)
+(defmethod output-record-refined-position-test
+    ((record score-output-record) x y)
   (declare (ignore x y))
   t)
 
@@ -82,7 +86,10 @@
   (climi::with-transformed-position ((medium-transformation medium) pm-x pm-y)
     (setf (slot-value climi::graphic 'pm-x) pm-x
           (slot-value climi::graphic 'pm-y) pm-y)
-    (values pm-x pm-y (+ pm-x (pixmap-width pixmap)) (+ pm-y (pixmap-height pixmap)))))
+    (values pm-x
+            pm-y
+            (+ pm-x (pixmap-width pixmap))
+            (+ pm-y (pixmap-height pixmap)))))
 
 (climi::def-graphic-op draw-pixmap (pixmap pm-x pm-y))
 
@@ -275,7 +282,8 @@
   (with-slots (x y) record
     (values x y)))
 
-(defmethod (setf output-record-position) (new-x new-y (record staff-output-record))
+(defmethod (setf output-record-position)
+    (new-x new-y (record staff-output-record))
   (with-slots (x y staff-lines) record
     (setf x new-x y new-y)
     (loop for staff-line in staff-lines
@@ -287,21 +295,24 @@
 (defmethod output-record-start-cursor-position ((record staff-output-record))
   (values nil nil))
 
-(defmethod (setf output-record-start-cursor-position) (x y (record staff-output-record))
+(defmethod (setf output-record-start-cursor-position)
+    (x y (record staff-output-record))
   (declare (ignore x y))
   nil)
 
 (defmethod output-record-end-cursor-position ((record staff-output-record))
   (values nil nil))
 
-(defmethod (setf output-record-end-cursor-position) (x y (record staff-output-record))
+(defmethod (setf output-record-end-cursor-position)
+    (x y (record staff-output-record))
   (declare (ignore x y))
   nil)
 
 (defmethod output-record-hit-detection-rectangle* ((record staff-output-record))
   (bounding-rectangle* record))
 
-(defmethod output-record-refined-position-test  ((record staff-output-record) x y)
+(defmethod output-record-refined-position-test
+    ((record staff-output-record) x y)
   (declare (ignore x y))
   t)
 
@@ -313,7 +324,8 @@
 (defmethod add-output-record (child (record staff-output-record))
   (push child (slot-value record 'children)))
 
-(defmethod delete-output-record (child (record staff-output-record) &optional (errorp t))
+(defmethod delete-output-record
+    (child (record staff-output-record) &optional (errorp t))
   (with-slots (staff-lines) record
     (when (and errorp (not (member child staff-lines :test #'eq)))
       (error "not a child"))
@@ -333,7 +345,8 @@
 
 (define-presentation-type staff () :options (x1 x2))
 
-(define-presentation-type fiveline-staff () :inherit-from 'staff :options (x1 x2))
+(define-presentation-type fiveline-staff ()
+  :inherit-from 'staff :options (x1 x2))
 
 (defun draw-fiveline-staff (pane x1 x2)
   (multiple-value-bind (left right) (bar-line-offsets *font*)
@@ -419,33 +432,53 @@
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 below y2
           for x from x1 by inverse-slope do
-          (let ((upper (sdl::ensure-beam-segment-design :down :upper (- (round (+ x inverse-slope)) (round x))))
+          (let ((upper (sdl::ensure-beam-segment-design
+                        :down :upper (- (round (+ x inverse-slope)) (round x))))
                 (upper-tr (make-translation-transformation (round x) y))
-                (lower (sdl::ensure-beam-segment-design :down :lower (- (round (+ x inverse-slope)) (round x))))
+                (lower (sdl::ensure-beam-segment-design
+                        :down :lower (- (round (+ x inverse-slope)) (round x))))
                 (lower-tr (make-translation-transformation (round x) (+ y thickness))))
-            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
-            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
-            (medium-draw-rectangle* medium (round x) (1+ y) (round (+ x inverse-slope)) (+ y thickness) t)))))
+            (mcclim-bezier:medium-draw-bezier-design*
+             medium (transform-region upper-tr upper))
+            (mcclim-bezier:medium-draw-bezier-design*
+             medium (transform-region lower-tr lower))
+            (medium-draw-rectangle* medium
+                                    (round x)
+                                    (1+ y)
+                                    (round (+ x inverse-slope))
+                                    (+ y thickness) t)))))
 
 (defmethod medium-draw-downward-beam*
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
-  (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
+  (draw-polygon* (medium-sheet medium)
+                 `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2)
+                 :closed t :filled t))
 
 (defmethod medium-draw-upward-beam* (medium x1 y1 x2 y2 thickness)
   (let ((inverse-slope (abs (/ (- x2 x1) (- y2 y1)))))
     (loop for y from y1 above y2
           for x from x1 by inverse-slope do
-          (let ((upper (sdl::ensure-beam-segment-design :up :upper (- (round (+ x inverse-slope)) (round x))))
+          (let ((upper (sdl::ensure-beam-segment-design
+                        :up :upper (- (round (+ x inverse-slope)) (round x))))
                 (upper-tr (make-translation-transformation (round x) y))
-                (lower (sdl::ensure-beam-segment-design :up :lower (- (round (+ x inverse-slope)) (round x))))
+                (lower (sdl::ensure-beam-segment-design
+                        :up :lower (- (round (+ x inverse-slope)) (round x))))
                 (lower-tr (make-translation-transformation (round x) (+ y thickness -1))))
-            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region upper-tr upper))
-            (mcclim-bezier:medium-draw-bezier-design* medium (transform-region lower-tr lower))
-            (medium-draw-rectangle* medium (round x) y (round (+ x inverse-slope)) (1- (+ y thickness)) t)))))
+            (mcclim-bezier:medium-draw-bezier-design*
+             medium (transform-region upper-tr upper))
+            (mcclim-bezier:medium-draw-bezier-design*
+             medium (transform-region lower-tr lower))
+            (medium-draw-rectangle* medium
+                                    (round x)
+                                    y
+                                    (round (+ x inverse-slope))
+                                    (1- (+ y thickness)) t)))))
 
 (defmethod medium-draw-upward-beam*
     ((medium clim-postscript::postscript-medium) x1 y1 x2 y2 thickness)
-  (draw-polygon* (medium-sheet medium) `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2) :closed t :filled t))
+  (draw-polygon* (medium-sheet medium)
+                 `(,x1 ,y1 ,x1 ,(+ y1 thickness) ,x2 ,(+ y2 thickness) ,x2 ,y2)
+                 :closed t :filled t))
 
 (defmethod replay-output-record ((record downward-beam-output-record) stream
                                  &optional (region +everywhere+)
@@ -456,7 +489,8 @@
       (let ((medium (sheet-medium stream)))
         (with-drawing-options
             (medium :ink ink :clipping-region clipping-region)
-          (medium-draw-downward-beam* medium x1 y1 x2 (- y2 thickness) thickness))))))
+          (medium-draw-downward-beam*
+           medium x1 y1 x2 (- y2 thickness) thickness))))))
 
 (defclass upward-beam-output-record (beam-output-record)
   ())
@@ -470,7 +504,8 @@
       (let ((medium (sheet-medium stream)))
         (with-drawing-options
             (medium :ink ink :clipping-region clipping-region)
-          (medium-draw-upward-beam* medium x1 (- y2 thickness) x2 y1 thickness))))))
+          (medium-draw-upward-beam*
+           medium x1 (- y2 thickness) x2 y1 thickness))))))
 
 (defun transform-beam-attributes (transformation x1 y1 x2 y2 down up thickness)
   (multiple-value-bind (xx1 yy1)
@@ -504,7 +539,9 @@
                   (make-instance 'downward-beam-output-record
                                  :x1 xx1 :y1 (+ yy1 yu) :x2 xx2 :y2 (+ yy2 yd)
                                  :thickness yt :ink (medium-ink medium)
-                                 :clipping-region (transform-region transformation (medium-clipping-region medium))))))
+                                 :clipping-region
+                                 (transform-region
+                                  transformation (medium-clipping-region medium))))))
              (when (stream-drawing-p (medium-sheet medium))
                (medium-draw-downward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))
             (t
@@ -517,7 +554,9 @@
                   (make-instance 'upward-beam-output-record
                                  :x1 xx1 :y1 (+ yy2 yu) :x2 xx2 :y2 (+ yy1 yd)
                                  :thickness yt :ink (medium-ink medium)
-                                 :clipping-region (transform-region transformation (medium-clipping-region medium))))))
+                                 :clipping-region
+                                 (transform-region
+                                  transformation (medium-clipping-region medium))))))
              (when (stream-drawing-p (medium-sheet medium))
                (medium-draw-upward-beam* medium x1 (+ y1 up) x2 (+ y2 up) thickness)))))))
 
