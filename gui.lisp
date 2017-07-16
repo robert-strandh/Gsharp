@@ -40,13 +40,13 @@
      &key (default nil defaultp) (default-type type))
   (multiple-value-bind (object success string)
       (complete-input stream
-		      (lambda (so-far action)
-			(complete-from-possibilities
-			 so-far (views *esa-instance*) '()
+                      (lambda (so-far action)
+                        (complete-from-possibilities
+                         so-far (views *esa-instance*) '()
                          :action action
-			 :name-key #'princ-to-string
-			 :value-key #'identity))
-		      :partial-completers '(#\Space))
+                         :name-key #'princ-to-string
+                         :value-key #'identity))
+                      :partial-completers '(#\Space))
     (cond
       (success (values object type))
       ((and defaultp (= (length string) 0)) (values default default-type))
@@ -742,7 +742,7 @@ Prints the results in the minibuffer."
 
 (defun insert-numbered-note-new-cluster (pitch)
   (let* ((new-pitch (compute-and-adjust-note pitch))
-	 (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
+         (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
     (insert-note new-pitch (insert-cluster) accidentals)))
 
 (define-gsharp-command (com-insert-note-a :keystroke #\a) ()
@@ -825,7 +825,7 @@ Prints the results in the minibuffer."
   
 (defun insert-numbered-note-current-cluster (pitch)
   (let* ((new-pitch (compute-and-adjust-note pitch))
-	 (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
+         (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
     (insert-note new-pitch (cur-cluster) accidentals)))
 
 (define-gsharp-command com-add-note-a ()
@@ -850,11 +850,11 @@ Prints the results in the minibuffer."
   (insert-numbered-note-current-cluster 4))
 
 (macrolet ((define-duration-altering-command (name &body body)
-	       `(define-gsharp-command ,name ()
-		 (let ((element (cur-element)))
-		   ,@body
-		   (gsharp-buffer::maybe-update-key-signatures
-		    (bar (current-cursor)))))))
+               `(define-gsharp-command ,name ()
+                 (let ((element (cur-element)))
+                   ,@body
+                   (gsharp-buffer::maybe-update-key-signatures
+                    (bar (current-cursor)))))))
   (define-duration-altering-command com-more-dots ()
     (setf (dots element) (min (1+ (dots element)) 3)))
   (define-duration-altering-command com-fewer-dots ()
@@ -886,14 +886,14 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-toggle-staccato ()
   (let ((cluster (cur-cluster)))
     (if (member :staccato (annotations cluster))
-	(setf (annotations cluster) (remove :staccato (annotations cluster)))
-	(push :staccato (annotations cluster)))))
+        (setf (annotations cluster) (remove :staccato (annotations cluster)))
+        (push :staccato (annotations cluster)))))
 
 (define-gsharp-command com-toggle-tenuto ()
   (let ((cluster (cur-cluster)))
     (if (member :tenuto (annotations cluster))
-	(setf (annotations cluster) (remove :tenuto (annotations cluster)))
-	(push :tenuto (annotations cluster)))))
+        (setf (annotations cluster) (remove :tenuto (annotations cluster)))
+        (push :tenuto (annotations cluster)))))
 
 (define-gsharp-command com-down ()
   (let ((element (cur-element)))
@@ -975,35 +975,35 @@ Prints the results in the minibuffer."
   `(progn
     (setf (symbol-plist 'microsharpen)
           ',(loop for (a b) on microaccidentals
-		  if b collect a and collect b
-		  else collect a and collect a))
+                  if b collect a and collect b
+                  else collect a and collect a))
     (setf (symbol-plist 'microflatten)
           ',(loop for (a b) on (reverse microaccidentals)
-		  if b collect a and collect b
-		  else collect a and collect a))
+                  if b collect a and collect b
+                  else collect a and collect a))
     (deftype accidental () '(member ,@microaccidentals))
     (defun microsharpen (accidental)
       (or (getf (symbol-plist 'microsharpen) accidental)
-	  (error 'type-error :datum accidental :expected-type 'microaccidental)))
+          (error 'type-error :datum accidental :expected-type 'microaccidental)))
     (defun microflatten (accidental)
       (or (getf (symbol-plist 'microflatten) accidental)
-	  (error 'type-error :datum accidental :expected-type 'microaccidental)))))
+          (error 'type-error :datum accidental :expected-type 'microaccidental)))))
 
 (defmacro define-accidentals (&rest accidentals)
   `(progn
     (deftype accidental () '(member ,@accidentals))
     (defun sharpen (accidental)
       (do ((a (microsharpen accidental) (microsharpen a))
-	   (olda accidental a))
-	  ((or (eq a olda) (member a ',accidentals)) a)))
+           (olda accidental a))
+          ((or (eq a olda) (member a ',accidentals)) a)))
     (defun flatten (accidental)
       (do ((a (microflatten accidental) (microflatten a))
-	   (olda accidental a))
-	  ((or (eq a olda) (member a ',accidentals)) a)))))
+           (olda accidental a))
+          ((or (eq a olda) (member a ',accidentals)) a)))))
 
 (define-microtonal-accidentals :double-flat :sesquiflat :flat :semiflat
-			       :natural 
-			       :semisharp :sharp :sesquisharp :double-sharp)
+                               :natural 
+                               :semisharp :sharp :sesquisharp :double-sharp)
 
 (define-accidentals :double-flat :flat :natural :sharp :double-sharp)
     
@@ -1138,24 +1138,24 @@ Prints the results in the minibuffer."
       ((> (number (bar thing)) barno) nil)
       ((< (number (bar thing)) barno) t)
       (t (let ((thing-start-time (loop for e in (elements (bar thing))
-				       if (eq e element-or-nil)
-				       do (return-from starts-before-p nil)
-				       until (eq e thing) sum (duration e)))
-	       (element-start-time 
-		;; this is actually the right answer for
-		;; ELEMENT-OR-NIL = NIL, which means "end of bar"
-		(loop for e in (elements bar)
-		      if (eq e thing) do (return-from starts-before-p t)
-		      until (eq e element-or-nil) sum (duration e))))
-	   (or (> element-start-time thing-start-time)
-	       (and (= element-start-time thing-start-time)
-		    (or (null element-or-nil)
-			(> (duration element-or-nil) 0)))))))))
+                                       if (eq e element-or-nil)
+                                       do (return-from starts-before-p nil)
+                                       until (eq e thing) sum (duration e)))
+               (element-start-time 
+                ;; this is actually the right answer for
+                ;; ELEMENT-OR-NIL = NIL, which means "end of bar"
+                (loop for e in (elements bar)
+                      if (eq e thing) do (return-from starts-before-p t)
+                      until (eq e element-or-nil) sum (duration e))))
+           (or (> element-start-time thing-start-time)
+               (and (= element-start-time thing-start-time)
+                    (or (null element-or-nil)
+                        (> (duration element-or-nil) 0)))))))))
 
 (defun %keysig (staff key-signatures bar element-or-nil)
   (or (and key-signatures
-	   (find-if (lambda (x) (starts-before-p x bar element-or-nil))
-		    key-signatures :from-end t))
+           (find-if (lambda (x) (starts-before-p x bar element-or-nil))
+                    key-signatures :from-end t))
       (keysig staff)))
 
 (defmethod keysig ((cursor gsharp-cursor))
@@ -1191,8 +1191,8 @@ Prints the results in the minibuffer."
 ;; These are copied from the keysig equivalents, which seem to work...
 (defun %clef (staff clefs bar element-or-nil)
   (or (and clefs
-	   (find-if (lambda (x) (starts-before-p x bar element-or-nil))
-		    clefs :from-end t))
+           (find-if (lambda (x) (starts-before-p x bar element-or-nil))
+                    clefs :from-end t))
       (clef staff)))
 
 (defmethod clef ((cursor gsharp-cursor))
@@ -1307,9 +1307,9 @@ Prints the results in the minibuffer."
 (defun get-page-lines (buffer page-measures)
   (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (let* (;; all this untimely ripp'd from DRAW-BUFFER in
-	   ;; drawing.lisp.  Needs to be kept in sync, otherwise the
-	   ;; layout for motion will be different from the layout on
-	   ;; the screen...
+           ;; drawing.lisp.  Needs to be kept in sync, otherwise the
+           ;; layout for motion will be different from the layout on
+           ;; the screen...
            (staves (staves buffer))
            (timesig-offset (gsharp-drawing::compute-timesig-offset staves page-measures))
            (method (let ((old-method (buffer-cost-method buffer)))
@@ -1394,28 +1394,28 @@ Prints the results in the minibuffer."
     ()
   (let ((staff (car (staves (layer (current-cursor))))))
     (loop for (prev curr) on (staves (current-buffer))
-	  if (eq curr staff)
-	  do (let ((layers (layers (segment (current-cursor)))))
-	       (dolist (layer layers)
-		 (when (member prev (staves layer))
-		   (select-layer (current-cursor) layer)
-		   (do ()
-		       ((eq prev (car (staves layer))))
-		     (com-rotate-staves))
-		   (return-from com-previous-staff)))))))
+          if (eq curr staff)
+          do (let ((layers (layers (segment (current-cursor)))))
+               (dolist (layer layers)
+                 (when (member prev (staves layer))
+                   (select-layer (current-cursor) layer)
+                   (do ()
+                       ((eq prev (car (staves layer))))
+                     (com-rotate-staves))
+                   (return-from com-previous-staff)))))))
 (define-gsharp-command (com-next-staff :name t)
     ()
   (let ((staff (car (staves (layer (current-cursor))))))
     (loop for (curr next) on (staves (current-buffer))
-	  if (eq curr staff)
-	  do (let ((layers (layers (segment (current-cursor)))))
-	       (dolist (layer layers)
-		 (when (member next (staves layer))
-		   (select-layer (current-cursor) layer)
-		   (do ()
-		       ((eq next (car (staves layer))))
-		     (com-rotate-staves))
-		   (return-from com-next-staff)))))))
+          if (eq curr staff)
+          do (let ((layers (layers (segment (current-cursor)))))
+               (dolist (layer layers)
+                 (when (member next (staves layer))
+                   (select-layer (current-cursor) layer)
+                   (do ()
+                       ((eq next (car (staves layer))))
+                     (com-rotate-staves))
+                   (return-from com-next-staff)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -1742,7 +1742,7 @@ Prints the results in the minibuffer."
 (defun next-or-new-buffer-view ()
   (or (not-current-view)
       (progn (com-new-buffer) 
-	     (car (views *application-frame*)))))
+             (car (views *application-frame*)))))
 
 (define-gsharp-command (com-switch-to-view :name t)
     ((view 'orchestra-view :default (not-current-view-or-first)))
@@ -1754,7 +1754,7 @@ Prints the results in the minibuffer."
     (setf (views *application-frame*) (remove view views))
     (when (eq view (current-view))
       (let ((next-view (next-or-new-buffer-view)))
-	(setf (view (current-window)) next-view)))))
+        (setf (view (current-window)) next-view)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
