@@ -1200,7 +1200,7 @@ Prints the results in the minibuffer."
          (bar (bar element)))
     (%keysig staff key-signatures bar element)))
 
-;; These are copied from the keysig equivalents, which seem to work...
+;;; These are copied from the keysig equivalents, which seem to work...
 (defun %clef (staff clefs bar element-or-nil)
   (or (and clefs
            (find-if (lambda (x) (starts-before-p x bar element-or-nil))
@@ -1807,9 +1807,9 @@ Prints the results in the minibuffer."
                       (left-margin (current-buffer)) *top-margin*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; File dialogue box
-;;
+;;;
+;;; File dialogue box
+;;;
 
 (define-gsharp-command (com-load-score-file :name "Load file" :menu t)
     ()
