@@ -1813,6 +1813,7 @@ Prints the results in the minibuffer."
     ()
   (unless (<= (gsharp-buffer::zoom-level (buffer (current-cursor))) 64)
     (incf (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)))
+
 (define-gsharp-command (com-zoom-out :name t :menu t)
     ()
   (unless (<= (gsharp-buffer::zoom-level (buffer (current-cursor))) 1/4)
@@ -1821,6 +1822,7 @@ Prints the results in the minibuffer."
 (define-command (com-undo :name t :command-table gsharp) ()
   (handler-case (drei::undo (drei::undo-tree (current-buffer)))
     (drei-undo:no-more-undo () (beep) (display-message "No more undo"))))
+
 (define-command (com-redo :name t :command-table gsharp) ()
   (handler-case (drei::redo (drei::undo-tree (current-buffer)))
     (drei-undo:no-more-undo () (beep) (display-message "No more redo"))))
