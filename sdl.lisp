@@ -1681,7 +1681,7 @@ of a normal note.  This function always returns a positive value"))
             p9 (tensions 2 2) p10 ++ p11 ++ down p12 -- p13 down ++
             p14 ++ p15 down ++ left p16 -- cycle)))))
 
-        
+
 ;;;
 ;;;                          w2
 ;;;                      __________
@@ -2145,7 +2145,7 @@ of a normal note.  This function always returns a positive value"))
             pj up ++ pk right ++ pl right ++ pm right ++
             pn right (tensions 1 3) po (tensions 3 1)
             pp down ++ pq down ++ pr left ++ cycle)))))
-        
+
 ;;;                               w2
 ;;;                           __________
 ;;;                          |          |
