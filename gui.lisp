@@ -39,7 +39,7 @@
 ;;; string name, rather than the unreadable-object print.  There's a
 ;;; SUBSCRIPTABLE-NAME-MIXIN in ESA-UTILS that is used for this
 ;;; purpose in the analogous place in Climacs.
-(define-presentation-method accept 
+(define-presentation-method accept
     ((type orchestra-view) stream (view textual-view)
      &key (default nil defaultp) (default-type type))
   (multiple-value-bind (object success string)
@@ -61,7 +61,7 @@
 (defclass gsharp-pane-mixin () ())
 
 (defclass gsharp-pane (score-pane:score-pane gsharp-pane-mixin)
-  ((view :initarg :view :accessor view)))         
+  ((view :initarg :view :accessor view)))
 
 (defvar *info-bg-color* +gray85+)
 
@@ -134,7 +134,7 @@
                                   :foreground *info-fg-color*)))
             (setf (windows *application-frame*) (list win))
             (setf (view win) (car (views *application-frame*)))
-            (vertically () 
+            (vertically ()
               (scrolling (:width 750 :height 500
                           :min-height 400 :max-height 20000)
                 win)
@@ -170,7 +170,7 @@
                (declare (ignore gadget))
                (funcall function)
                (dolist (pane-keyword panes)
-                 (redisplay-frame-pane 
+                 (redisplay-frame-pane
                   *application-frame*
                   (pane-from-keyword *application-frame* pane-keyword)
                   :force-p t)))))
@@ -220,7 +220,7 @@
   (cursor (view (car (windows *application-frame*)))))
 
 (defmethod execute-frame-command :around ((frame gsharp) command)
-  (handler-case 
+  (handler-case
       (let ((buffer (if (views frame)
                         (list (buffer (car (views frame)))))))
         (drei::with-undo (buffer)
@@ -283,8 +283,8 @@
              (setf (score-pane:number-of-pages view) page-number))))
 
 ;;; I tried making this a :before method on redisplay-frame-panes,
-;;; but it turns out that McCLIM calls redisplay-frame-pane from 
-;;; places other than redisplay-frame-panes. 
+;;; but it turns out that McCLIM calls redisplay-frame-pane from
+;;; places other than redisplay-frame-panes.
 (defmethod redisplay-frame-pane :before ((frame gsharp) (pane gsharp-pane-mixin) &key force-p)
   (declare (ignore pane force-p))
   (mapc #'recompute-measures (buffers frame))
@@ -351,8 +351,8 @@
           (loop for s from 0 by 30
              repeat 5 do
                (draw-line* pane (- xpos 25) s (+ xpos 25) s))
-          
-          (clim::draw-text* pane (format nil "x-offset: ~A" 
+
+          (clim::draw-text* pane (format nil "x-offset: ~A"
                                          (gsharp-buffer::xoffset cluster))
                             5 140))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -388,7 +388,7 @@
          (cursor (make-initial-cursor buffer))
          (staff (car (staves buffer)))
          (input-state (make-input-state))
-         (view (make-instance 'orchestra-view 
+         (view (make-instance 'orchestra-view
                               :buffer buffer
                               :cursor cursor)))
     (push view (views *application-frame*))
@@ -401,7 +401,7 @@
   (let* ((buffer (call-next-method))
          (input-state (make-input-state))
          (cursor (make-initial-cursor buffer))
-         (view (make-instance 'orchestra-view 
+         (view (make-instance 'orchestra-view
                               :buffer buffer
                               :cursor cursor)))
     (push view (views *application-frame*))
@@ -556,11 +556,11 @@
          (new-layer (make-layer (list staff) :name name)))
     (add-layer new-layer (segment (current-cursor)))
     (select-layer (current-cursor) new-layer)))
-    
+
 (define-gsharp-command (com-delete-layer :name t) ()
   (delete-layer (current-cursor)))
 
-(define-gsharp-command (com-jump-to-here :name t) 
+(define-gsharp-command (com-jump-to-here :name t)
     ((element 'element))
   (let ((cursor (current-cursor)))
     (setf (gsharp-cursor::bar cursor) (bar element)
@@ -654,13 +654,13 @@
 ;;; main entry points
 
 (defun gsharp (&rest args &key new-process process-name width height)
-  "Start a Gsharp session with a fresh empty buffer" 
+  "Start a Gsharp session with a fresh empty buffer"
   (declare (ignore new-process process-name width height))
   (apply #'gsharp-common '(com-new-buffer) args))
 
-(defun edit-file (filename &rest args 
+(defun edit-file (filename &rest args
                   &key new-process process-name width height)
-  "Start a Gsharp session editing a given file" 
+  "Start a Gsharp session editing a given file"
   (declare (ignore new-process process-name width height))
   (apply #'gsharp-common `(esa-io::com-find-file ,filename) args))
 
@@ -688,7 +688,7 @@ Prints the results in the minibuffer."
   (let* ((*package* (find-package :gsharp))
          (values (multiple-value-list
                   (handler-case (eval expression)
-                    (error (condition) 
+                    (error (condition)
                       (beep)
                       (display-message "~a" condition)
                       (return-from com-eval-expression nil)))))
@@ -706,7 +706,7 @@ Prints the results in the minibuffer."
       (redisplay-frame-pane *application-frame* score-pane :force-p t))))
 
 (defun get-main-score-pane ()
-  (find "score" 
+  (find "score"
         (frame-current-panes *application-frame*)
         :key #'pane-name
         :test #'string=))
@@ -791,7 +791,7 @@ Prints the results in the minibuffer."
     rest))
 
 (define-gsharp-command com-insert-empty-cluster ()
-  (insert-cluster))  
+  (insert-cluster))
 
 (defun cur-elementp ()
   (handler-case
@@ -820,21 +820,21 @@ Prints the results in the minibuffer."
             (setf *current-note* (car (notes cluster))))
         (setf *current-cluster* cluster
               *current-note* (car (notes cluster))))))
-                  
+
 (define-gsharp-command com-current-increment ()
   (let* ((cluster (cur-cluster))
          (notes (notes cluster))
          (rest (member (cur-note) notes :test #'eq)))
     (unless (null (cdr rest))
       (setf *current-note* (cadr rest)))))
-             
+
 (define-gsharp-command com-current-decrement ()
   (let* ((cluster (cur-cluster))
          (notes (notes cluster))
          (pos (position (cur-note) notes :test #'eq)))
     (unless (zerop pos)
       (setf *current-note* (nth (1- pos) notes)))))
-  
+
 (defun insert-numbered-note-current-cluster (pitch)
   (let* ((new-pitch (compute-and-adjust-note pitch))
          (accidentals (aref (alterations (keysig (current-cursor))) (mod new-pitch 7))))
@@ -933,7 +933,7 @@ Prints the results in the minibuffer."
                             :rbeams rbeams :lbeams lbeams)
                           cursor)
           (forward-element cursor)))))
-    
+
 (define-gsharp-command com-up ()
   (let ((element (cur-element)))
     (if (typep element 'cluster)
@@ -1014,11 +1014,11 @@ Prints the results in the minibuffer."
           ((or (eq a olda) (member a ',accidentals)) a)))))
 
 (define-microtonal-accidentals :double-flat :sesquiflat :flat :semiflat
-                               :natural 
+                               :natural
                                :semisharp :sharp :sesquisharp :double-sharp)
 
 (define-accidentals :double-flat :flat :natural :sharp :double-sharp)
-    
+
 (define-gsharp-command com-sharper ()
   (let* ((cluster (cur-cluster))
          (note (cur-note))
@@ -1083,7 +1083,7 @@ Prints the results in the minibuffer."
          (cursor (current-cursor))
          (staff (car (staves (layer cursor))))
          (keysig (if (keysig cursor)
-                     (make-key-signature 
+                     (make-key-signature
                       staff :alterations (copy-seq (alterations (keysig cursor))))
                      (make-key-signature staff))))
     ;; FIXME: should only invalidate elements temporally after the
@@ -1115,7 +1115,7 @@ Prints the results in the minibuffer."
     (forward-element cursor)
     timesig))
 
-(define-gsharp-command (com-insert-timesig :name t) 
+(define-gsharp-command (com-insert-timesig :name t)
     ((numerator '(integer 1 8) :prompt "Numerator")
      (denominator '(integer 1 8) :prompt "Denominator"))
   (insert-timesig numerator denominator))
@@ -1153,7 +1153,7 @@ Prints the results in the minibuffer."
                                        if (eq e element-or-nil)
                                        do (return-from starts-before-p nil)
                                        until (eq e thing) sum (duration e)))
-               (element-start-time 
+               (element-start-time
                 ;; this is actually the right answer for
                 ;; ELEMENT-OR-NIL = NIL, which means "end of bar"
                 (loop for e in (elements bar)
@@ -1191,7 +1191,7 @@ Prints the results in the minibuffer."
 
 (defmethod keysig ((cluster cluster))
   (error "Called ~S (a staff-scope operation) on an element with no ~
-          associated staff: ~S" 
+          associated staff: ~S"
          'keysig cluster))
 
 (defmethod keysig ((element element))
@@ -1224,7 +1224,7 @@ Prints the results in the minibuffer."
 
 (defmethod clef ((cluster cluster))
   (error "Called ~S (a staff-scope operation) on an element with no ~
-          associated staff: ~S" 
+          associated staff: ~S"
          'clef cluster))
 
 (defmethod clef ((element element))
@@ -1259,13 +1259,13 @@ Prints the results in the minibuffer."
 ;;;
 ;;; motion by element
 
-(define-gsharp-command com-forward-element 
+(define-gsharp-command com-forward-element
     ((count 'integer :prompt "Number of Elements" :default 1))
   "Move forward by element."
   (loop repeat count
         do (forward-element (current-cursor))))
 
-(define-gsharp-command com-backward-element 
+(define-gsharp-command com-backward-element
     ((count 'integer :prompt "Number of Elements" :default 1))
   "Move backward by element."
   (loop repeat count
@@ -1275,12 +1275,12 @@ Prints the results in the minibuffer."
 ;;;
 ;;; motion by measure
 
-(define-gsharp-command com-forward-measure 
+(define-gsharp-command com-forward-measure
     ((count 'integer :prompt "Number of Measures" :default 1))
   "Move forward by measure."
   (loop repeat count do (forward-bar (current-cursor))))
 
-(define-gsharp-command com-backward-measure 
+(define-gsharp-command com-backward-measure
     ((count 'integer :prompt "Number of Measures" :default 1))
   "Move backward by measure."
   (loop repeat count do (backward-bar (current-cursor))))
@@ -1363,7 +1363,7 @@ Prints the results in the minibuffer."
      (current-buffer))))
 
 (define-gsharp-command (com-end-of-line :name t)
-    ()    
+    ()
   (let ((buffer (current-buffer))
         (cursor (current-cursor)))
     (gsharp-measure::new-map-over-obseq-subsequences
@@ -1380,7 +1380,7 @@ Prints the results in the minibuffer."
                                  (return-from com-end-of-line)))))))))
      buffer)))
 (define-gsharp-command (com-beginning-of-line :name t)
-    ()    
+    ()
   (let ((buffer (current-buffer))
         (cursor (current-cursor)))
     (gsharp-measure::new-map-over-obseq-subsequences
@@ -1453,7 +1453,7 @@ Prints the results in the minibuffer."
           (insert-element element cursor)
           (forward-element cursor))))
 
-(define-gsharp-command com-delete-element 
+(define-gsharp-command com-delete-element
     ((count 'integer :prompt "Number of Elements" :default 1))
   "Delete element forwards."
   (let ((cursor (current-cursor)))
@@ -1467,7 +1467,7 @@ Prints the results in the minibuffer."
                    (fuse-bar-with-next cursor)
                    (delete-element cursor))))))
 
-(define-gsharp-command com-erase-element 
+(define-gsharp-command com-erase-element
     ((count 'integer :prompt "Number of Elements" :default 1))
   "Delete element backwards."
   (let ((cursor (current-cursor)))
@@ -1493,7 +1493,7 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-istate-more-rbeams ()
   (setf (rbeams (input-state *application-frame*))
         (min (1+ (rbeams (input-state *application-frame*))) 3)))
-  
+
 (define-gsharp-command com-istate-fewer-lbeams ()
   (setf (lbeams (input-state *application-frame*))
         (max (1- (lbeams (input-state *application-frame*))) 0)))
@@ -1501,7 +1501,7 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-istate-more-lbeams ()
   (setf (lbeams (input-state *application-frame*))
         (min (1+ (lbeams (input-state *application-frame*))) 3)))
-  
+
 (define-gsharp-command com-istate-fewer-rbeams ()
   (setf (rbeams (input-state *application-frame*))
         (max (1- (rbeams (input-state *application-frame*))) 0)))
@@ -1522,7 +1522,7 @@ Prints the results in the minibuffer."
           (:breve :whole)
           (:whole :half)
           (:half :filled)
-          (:filled :long))))            
+          (:filled :long))))
 
 (define-gsharp-command com-istate-rotate-stem-direction ()
   (setf (stem-direction (input-state *application-frame*))
@@ -1693,7 +1693,7 @@ Prints the results in the minibuffer."
         (layer (layer (current-cursor))))
     (add-staff-to-layer staff layer)))
 
-;;; FIXME restrict to staves that are actually in the layer. 
+;;; FIXME restrict to staves that are actually in the layer.
 (define-gsharp-command (com-delete-staff-from-layer :name t) ()
   (let ((staff (accept 'score-pane:staff :prompt "Delete staff from layer"))
         (layer (layer (current-cursor))))
@@ -1705,7 +1705,7 @@ Prints the results in the minibuffer."
 (define-gsharp-command com-more-flats ()
   (more-flats (keysig (current-cursor))))
 
-(define-presentation-to-command-translator jump-to-here 
+(define-presentation-to-command-translator jump-to-here
     (element gsharp::com-jump-to-here gsharp
                                      :gesture :select
                                      :documentation "Move cursor here")
@@ -1753,7 +1753,7 @@ Prints the results in the minibuffer."
 
 (defun next-or-new-buffer-view ()
   (or (not-current-view)
-      (progn (com-new-buffer) 
+      (progn (com-new-buffer)
              (car (views *application-frame*)))))
 
 (define-gsharp-command (com-switch-to-view :name t)
@@ -1796,14 +1796,14 @@ Prints the results in the minibuffer."
         (setf (stream-default-view s)
               ;; FIXME: should probably get the class of the view from
               ;; the current buffer or window or something.
-              (make-instance 'orchestra-view :light-glyphs-ink +black+ 
-                             :buffer (current-buffer) 
+              (make-instance 'orchestra-view :light-glyphs-ink +black+
+                             :buffer (current-buffer)
                              :cursor (current-cursor)))
         (setf (medium-transformation s)
               ;; FIXME: not a very flexible or intelligent scaling system
-              (compose-scaling-with-transformation 
+              (compose-scaling-with-transformation
                (medium-transformation s) *scale* *scale*))
-        (print-buffer s (current-buffer) (current-cursor) 
+        (print-buffer s (current-buffer) (current-cursor)
                       (left-margin (current-buffer)) *top-margin*)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
