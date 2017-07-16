@@ -3,6 +3,7 @@
 (defparameter *icon-path*
   ;;  sb-ext:*core-pathname*
   "/Users/dlewis/lisp/gsharp/Icons/")
+
 (defun make-initial-cursor (buffer)
   (let* ((segment (segmentno buffer 0))
          (layer (layerno segment 0))
@@ -17,10 +18,13 @@
 
 (define-command-table total-melody-table
     :inherit-from (melody-table global-gsharp-table gsharp))
+
 (define-command-table total-rhythmic-melody-table
     :inherit-from (melody-table rhythmic-table global-gsharp-table gsharp))
+
 (define-command-table total-cluster-table
     :inherit-from (cluster-table melody-table global-gsharp-table gsharp))
+
 (define-command-table total-lyrics-table
     :inherit-from (lyrics-table global-gsharp-table gsharp))
 
@@ -60,6 +64,7 @@
   ((view :initarg :view :accessor view)))         
 
 (defvar *info-bg-color* +gray85+)
+
 (defvar *info-fg-color* +black+)
 
 (defclass gsharp-info-pane (info-pane gsharp-pane-mixin)
@@ -101,6 +106,7 @@
   (when (handler-case (cur-cluster)
           (gsharp-condition () nil))
     (princ (gsharp-buffer::xoffset (cur-element)) pane)))
+
 (defun x-pad-label (frame pane)
   (declare (ignore frame))
   (when (handler-case (cur-cluster)
@@ -170,15 +176,19 @@
                   :force-p t)))))
 
 (defgeneric pane-from-keyword (frame pane-keyword))
+
 (defmethod pane-from-keyword (frame (pane-keyword (eql :state)))
   (find-pane-named frame 'state))
+
 (defmethod pane-from-keyword (frame (pane-keyword (eql :element)))
   (find-pane-named frame 'element))
+
 (defmethod pane-from-keyword (frame (pane-keyword (eql :score)))
   (get-main-score-pane))
 
 (defun istate-button (label function)
   (simple-button label function :panes '(:state)))
+
 (defun element-button (label function)
   (simple-button label function :panes '(:score :element)))
 
@@ -317,6 +327,7 @@
 
 (defgeneric draw-current-element (pane element)
   (:method (pane element) nil))
+
 (defmethod draw-current-element (pane (cluster cluster))
   (score-pane:with-score-pane pane
     (score-pane:with-staff-size 10
@@ -718,6 +729,7 @@ Prints the results in the minibuffer."
     cluster))
 
 (defparameter *current-cluster* nil)
+
 (defparameter *current-note* nil)
 
 (defun insert-note (pitch cluster accidentals)
@@ -1769,6 +1781,7 @@ Prints the results in the minibuffer."
     (merge-pathnames (make-pathname :type "ps") defaults)))
 
 (defparameter *scale* 0.8)
+
 (defparameter *top-margin* 100)
 
 (define-gsharp-command (com-print-buffer-to-file :name t)
