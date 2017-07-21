@@ -56,7 +56,7 @@
 ;;; Element
 
 ;;; Return the bar to which the element belongs, or nil of the element
-;;; currently does not belong to any bar. 
+;;; currently does not belong to any bar.
 (defgeneric bar (element))
 
 (defclass element (gsharp-object)
@@ -81,7 +81,7 @@
 ;;; Rhythmic element
 
 ;;; Return the notehead of the element.  With setf, set the notehead
-;;; of the element. 
+;;; of the element.
 (defgeneric notehead (rhythmic-element))
 (defgeneric (setf notehead) (notehead rhythmic-element))
 
@@ -95,7 +95,7 @@
 (defgeneric (setf lbeams) (lbeams rhythmic-element))
 
 ;;; Return the number of dots of the element.  With setf, set the
-;;; number of dots of the element. 
+;;; number of dots of the element.
 (defgeneric dots (rhythmic-element))
 (defgeneric (setf dots) (dots rhythmic-element))
 
@@ -104,7 +104,7 @@
    (rbeams :initform 0 :initarg :rbeams :accessor rbeams)
    (lbeams :initform 0 :initarg :lbeams :accessor lbeams)
    (dots :initform 0 :initarg :dots :accessor dots)))
-   
+
 (defmethod slots-to-be-saved append ((e rhythmic-element))
   '(notehead rbeams lbeams dots))
 
@@ -149,7 +149,7 @@
 ;;; Add an element to the bar at the position indicated
 (defgeneric add-element (element bar position))
 
-;;; Delete an element from the bar to which it belongs. 
+;;; Delete an element from the bar to which it belongs.
 (defgeneric remove-element (element bar))
 
 (defclass bar (gsharp-object)
@@ -165,9 +165,9 @@
   '(elements))
 
 ;;; The duration of a bar is simply the sum of durations
-;;; of its elements.  We might want to improve on the 
-;;; implementation of this method so that it uses some 
-;;; kind of cache, in order to avoid looping over each 
+;;; of its elements.  We might want to improve on the
+;;; implementation of this method so that it uses some
+;;; kind of cache, in order to avoid looping over each
 ;;; element and computing the duration of each one each time.
 (defmethod duration ((bar bar))
   (reduce #'+ (elements bar) :key #'duration))
@@ -209,7 +209,7 @@
       (when (typep staff 'fiveline-staff)
         (let ((key-signatures (key-signatures staff)))
           (when (and key-signatures
-                     (find (gsharp-numbering:number bar) key-signatures 
+                     (find (gsharp-numbering:number bar) key-signatures
                            :key (lambda (x) (gsharp-numbering:number (bar x)))))
             ;; we actually only need to invalidate everything in the
             ;; current bar using the staff, not the entire staff, but...
@@ -218,10 +218,10 @@
             ;; and they might have changed their relative order as a
             ;; result of the edit.
         (sort-staffwise-elements staff)))))))
- 
+
 (defmethod add-element :after ((element element) (bar bar) position)
   (maybe-update-key-signatures bar))
- 
+
 (define-condition element-not-in-bar (gsharp-condition) ()
   (:report
    (lambda (condition stream)
@@ -352,7 +352,7 @@
   (let ((staff (car (staves l))))
     (unless head
       (setf (head l) (make-slice :bars (list (make-bar-for-staff staff)))))
-    (unless body 
+    (unless body
       (setf (body l) (make-slice :bars (list (make-bar-for-staff staff)))))
     (unless tail
       (setf (tail l) (make-slice :bars (list (make-bar-for-staff staff))))))
@@ -369,7 +369,7 @@
   (declare (type list staves)
            (type (or slice null) head body tail)
            (ignore head body tail))
-  (apply #'make-layer-for-staff (car staves) :staves staves args))         
+  (apply #'make-layer-for-staff (car staves) :staves staves args))
 
 (defmethod slices ((layer layer))
   (with-slots (head body tail) layer
@@ -417,7 +417,7 @@
 ;;; Segment
 
 ;;; Return the buffer to which the segment belongs, or nil if the
-;;; segment is currently not inserted in any buffer. 
+;;; segment is currently not inserted in any buffer.
 (defgeneric buffer (segment))
 
 ;;; Return a list of the layers of the segment.  This function may or
@@ -676,9 +676,9 @@
 (defmethod add-staff-before-staff (staff newstaff (buffer buffer))
   (setf (staves buffer)
         (add-staff-before newstaff staff (staves buffer))))
-  
+
 (defun add-staff-after (newstaff staff staves)
-  (assert (not (null staves)))  
+  (assert (not (null staves)))
   (if (eq staff (car staves))
       (push newstaff (cdr staves))
       (add-staff-after newstaff staff (cdr staves)))
@@ -687,7 +687,7 @@
 (defmethod add-staff-after-staff (staff newstaff (buffer buffer))
   (setf (staves buffer)
         (add-staff-after newstaff staff (staves buffer))))
-  
+
 (defmethod rename-staff (staff-name (staff staff) (buffer buffer))
   (assert (not (find-staff staff-name buffer nil)) () 'staff-already-in-buffer)
   (setf (name staff) staff-name))
