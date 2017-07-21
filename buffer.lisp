@@ -18,13 +18,14 @@
 (defun save-object (object stream)
   (pprint-logical-block (stream nil :prefix "[" :suffix "]")
     (format stream "~s ~2i" (class-name (class-of object)))
-    (loop for slot-name in (slots-to-be-saved object)
-          do (let ((slot (find slot-name (clim-mop:class-slots (class-of object))
-                               :key #'clim-mop:slot-definition-name
-                               :test #'eq)))
-               (format stream "~_~W ~W "
-                       (car (clim-mop:slot-definition-initargs slot))
-                       (slot-value object (clim-mop:slot-definition-name slot)))))))
+    (loop with slots = (clim-mop:class-slots (class-of object))
+          for slot-name in (slots-to-be-saved object)
+          for slot = (find slot-name slots
+                           :key #'clim-mop:slot-definition-name
+                           :test #'eq)
+          for initarg = (car (clim-mop:slot-definition-initargs slot))
+          for value = (slot-value object slot-name)
+          do (format stream "~_~W ~W " initarg value))))
 
 (defclass gsharp-object () ())
 
