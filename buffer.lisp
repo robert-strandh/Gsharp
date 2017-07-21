@@ -19,12 +19,12 @@
   (pprint-logical-block (stream nil :prefix "[" :suffix "]")
     (format stream "~s ~2i" (class-name (class-of object)))
     (loop for slot-name in (slots-to-be-saved object)
-	  do (let ((slot (find slot-name (clim-mop:class-slots (class-of object))
-			       :key #'clim-mop:slot-definition-name
-			       :test #'eq)))
-	       (format stream "~_~W ~W "
-		       (car (clim-mop:slot-definition-initargs slot))
-		       (slot-value object (clim-mop:slot-definition-name slot)))))))
+          do (let ((slot (find slot-name (clim-mop:class-slots (class-of object))
+                               :key #'clim-mop:slot-definition-name
+                               :test #'eq)))
+               (format stream "~_~W ~W "
+                       (car (clim-mop:slot-definition-initargs slot))
+                       (slot-value object (clim-mop:slot-definition-name slot)))))))
 
 (defclass gsharp-object () ())
 
@@ -202,21 +202,21 @@
 ;;; fix this and move it to melody.lisp
 (defun maybe-update-key-signatures (bar)
   (let* ((layer (layer (slice bar)))
-	 (staves (staves layer)))
+         (staves (staves layer)))
     (dolist (staff staves)
       ;; FIXME: this isn't the Right Thing: instead we should be using
       ;; something like maybe-update-key-signatures-using-staff.
       (when (typep staff 'fiveline-staff)
-	(let ((key-signatures (key-signatures staff)))
-	  (when (and key-signatures
-		     (find (gsharp-numbering:number bar) key-signatures 
-			   :key (lambda (x) (gsharp-numbering:number (bar x)))))
-	    ;; we actually only need to invalidate everything in the
-	    ;; current bar using the staff, not the entire staff, but...
-	    (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
-	    ;; there might be more than one key signature in the bar,
-	    ;; and they might have changed their relative order as a
-	    ;; result of the edit.
+        (let ((key-signatures (key-signatures staff)))
+          (when (and key-signatures
+                     (find (gsharp-numbering:number bar) key-signatures 
+                           :key (lambda (x) (gsharp-numbering:number (bar x)))))
+            ;; we actually only need to invalidate everything in the
+            ;; current bar using the staff, not the entire staff, but...
+            (gsharp-measure::invalidate-everything-using-staff (buffer staff) staff)
+            ;; there might be more than one key signature in the bar,
+            ;; and they might have changed their relative order as a
+            ;; result of the edit.
         (sort-staffwise-elements staff)))))))
  
 (defmethod add-element :after ((element element) (bar bar) position)
