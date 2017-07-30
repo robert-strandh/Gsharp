@@ -4,7 +4,7 @@
   `(progn 
      (stealth-mixin:define-stealth-mixin ,name () ,base
        ((modified-p :initform t :accessor modified-p)
-	,@slots))))
+        ,@slots))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -30,17 +30,17 @@
 (defun invalidate-slice-using-staff (slice staff)
   (declare (ignore staff)) ; maybe use this later
   (loop for bar in (bars slice)
-	do (loop for element in (elements bar)
-		 do (mark-modified element))))
+        do (loop for element in (elements bar)
+                 do (mark-modified element))))
 
 (defun invalidate-everything-using-staff (buffer staff)
   (loop for segment in (segments buffer)
-	do (loop for layer in (layers segment)
-		 do (when (member staff (staves layer))
-		      (invalidate-slice-using-staff (head layer) staff)
-		      (invalidate-slice-using-staff (body layer) staff)
-		      (invalidate-slice-using-staff (tail layer) staff)))))
-		      
+        do (loop for layer in (layers segment)
+                 do (when (member staff (staves layer))
+                      (invalidate-slice-using-staff (head layer) staff)
+                      (invalidate-slice-using-staff (body layer) staff)
+                      (invalidate-slice-using-staff (tail layer) staff)))))
+                      
 (defmethod (setf clef) :before (clef (staff staff))
   (invalidate-everything-using-staff (buffer staff) staff))
 
@@ -53,7 +53,7 @@
    ;; to the cluster.  A value of nil indicates that accidental has
    ;; not been placed yet
    (final-relative-accidental-xoffset :initform nil
-				      :accessor final-relative-accidental-xoffset)
+                                      :accessor final-relative-accidental-xoffset)
    (final-accidental :initform nil :accessor final-accidental)
    ;; the relative x offset of the note with respect to the cluster
    (final-relative-note-xoffset :accessor final-relative-note-xoffset)
@@ -67,8 +67,8 @@
 (defun group-notes-by-staff (notes)
   (let ((groups '()))
     (loop while notes do
-	  (push (remove (staff (car notes)) notes :test-not #'eq :key #'staff) groups)
-	  (setf notes (remove (staff (car notes)) notes :test #'eq :key #'staff)))
+          (push (remove (staff (car notes)) notes :test-not #'eq :key #'staff) groups)
+          (setf notes (remove (staff (car notes)) notes :test #'eq :key #'staff)))
     groups))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -93,7 +93,7 @@
 
 (defmethod mark-modified ((element relement))
   (setf (modified-p element) t
-	(slot-value element 'duration) nil)
+        (slot-value element 'duration) nil)
   (when (bar element)
     (mark-modified (bar element))))
 
@@ -133,32 +133,32 @@
 ;;; given a list of notes, return the one that is at the top
 (defun top-note (notes)
   (reduce (lambda (n1 n2)
-	    (cond ((< (staff-rank (staff n1))
-		      (staff-rank (staff n2)))
-		   n1)
-		  ((> (staff-rank (staff n1))
-		      (staff-rank (staff n2)))
-		   n2)
-		  ((> (note-position n1)
-		      (note-position n2))
-		   n1)
-		  (t n2)))
-	  notes))
+            (cond ((< (staff-rank (staff n1))
+                      (staff-rank (staff n2)))
+                   n1)
+                  ((> (staff-rank (staff n1))
+                      (staff-rank (staff n2)))
+                   n2)
+                  ((> (note-position n1)
+                      (note-position n2))
+                   n1)
+                  (t n2)))
+          notes))
 
 ;;; given a list of notes, return the one that is at the bottom
 (defun bot-note (notes)
   (reduce  (lambda (n1 n2)
-	     (cond ((> (staff-rank (staff n1))
-		       (staff-rank (staff n2)))
-		    n1)
-		   ((< (staff-rank (staff n1))
-		       (staff-rank (staff n2)))
-		    n2)
-		   ((< (note-position n1)
-		       (note-position n2))
-		    n1)
-		   (t n2)))
-	   notes))
+             (cond ((> (staff-rank (staff n1))
+                       (staff-rank (staff n2)))
+                    n1)
+                   ((< (staff-rank (staff n1))
+                       (staff-rank (staff n2)))
+                    n2)
+                   ((< (note-position n1)
+                       (note-position n2))
+                    n1)
+                   (t n2)))
+           notes))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -183,7 +183,7 @@
 (defun compute-top-bot-pos (cluster)
   (assert (non-empty-cluster-p cluster))
   (setf (top-note-pos cluster) (note-position (top-note (notes cluster)))
-	(bot-note-pos cluster) (note-position (bot-note (notes cluster)))))
+        (bot-note-pos cluster) (note-position (bot-note (notes cluster)))))
 
 (defmethod add-note :after ((element relement) (note note))
   (mark-modified element))
@@ -197,33 +197,33 @@
 (defun compute-final-stem-direction (cluster)
   (assert (non-empty-cluster-p cluster))
   (setf (final-stem-direction cluster)
-	(if (or (eq (stem-direction cluster) :up) (eq (stem-direction cluster) :down))
-	    (stem-direction cluster)
-	    (let ((top-note-pos (top-note-pos cluster))
-		  (bot-note-pos (bot-note-pos cluster)))
-	      (if (>= (- top-note-pos 4)
-		      (- 4 bot-note-pos))
-		  :down
-		  :up)))))
+        (if (or (eq (stem-direction cluster) :up) (eq (stem-direction cluster) :down))
+            (stem-direction cluster)
+            (let ((top-note-pos (top-note-pos cluster))
+                  (bot-note-pos (bot-note-pos cluster)))
+              (if (>= (- top-note-pos 4)
+                      (- 4 bot-note-pos))
+                  :down
+                  :up)))))
 
 ;;; Given a beam group containing at least two nonempty clusters,
 ;;; compute and store the final stem directions of all the non-empty
 ;;; clusters in the group
 (defun compute-final-stem-directions (elements)
   (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
-			    (stem-direction (car elements))
-			    (let ((top-note-pos
-				   (loop for element in elements
-					 when (non-empty-cluster-p element)
-					 maximize (top-note-pos element)))
-				  (bot-note-pos
-				   (loop for element in elements
-					 when (non-empty-cluster-p element)
-					 minimize (bot-note-pos element))))
-			      (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
+                            (stem-direction (car elements))
+                            (let ((top-note-pos
+                                   (loop for element in elements
+                                         when (non-empty-cluster-p element)
+                                         maximize (top-note-pos element)))
+                                  (bot-note-pos
+                                   (loop for element in elements
+                                         when (non-empty-cluster-p element)
+                                         minimize (bot-note-pos element))))
+                              (if (>= (- top-note-pos 4) (- 4 bot-note-pos)) :down :up)))))
     (loop for element in elements
-	  when (non-empty-cluster-p element)
-	  do (setf (final-stem-direction element) stem-direction))))
+          when (non-empty-cluster-p element)
+          do (setf (final-stem-direction element) stem-direction))))
 
 (defun compute-final-dot-positions (group)
   (setf group (sort (copy-list group) #'> :key #'note-position))
@@ -273,22 +273,22 @@
 ;;; the accidentals of the note and the key signature of the staff.
 (defun compute-final-accidentals (group)
   (loop for note in group do
-	(setf (final-accidental note)
-	      (if (eq (accidentals note) (find-prevailing-accidental note))
-		  nil
-		  (accidentals note)))))
+        (setf (final-accidental note)
+              (if (eq (accidentals note) (find-prevailing-accidental note))
+                  nil
+                  (accidentals note)))))
 
 (defmacro define-accidental-kerning (left right table)
   `(let ((plist (getf (symbol-plist 'accidental-kerning) ',right)))
     (setf (getf (symbol-plist 'accidental-kerning) ',right)
           (cons (cons ',left ',table)
-	        (remove ',left plist :key #'car)))))
+                (remove ',left plist :key #'car)))))
 (defmacro define-default-accidental-kerning (right table)
   `(define-accidental-kerning default ,right ,table))
 
 (macrolet ((define-kernings (&rest args)
-	       `(progn ,@(loop for (left right table) on args by #'cdddr
-			       collect `(define-accidental-kerning ,left ,right ,table)))))
+               `(progn ,@(loop for (left right table) on args by #'cdddr
+                               collect `(define-accidental-kerning ,left ,right ,table)))))
   (define-kernings
     :double-flat  :notehead     #(  0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)
     :flat         :notehead     #(  0   0   0 3.5 3.5 3.5 3.5 3.5 3.5   1   0)
@@ -337,9 +337,9 @@
 ;;; with the second one.
 (defun accidental-distance (acc1 pos1 acc2 pos2)
   (let* ((dist (- pos2 pos1))
-	 (right-info (getf (symbol-plist 'accidental-kerning) acc2))
-	 (left-right-info (cdr (assoc acc1 right-info)))
-	 (default-right-info (cdr (assoc 'default right-info))))
+         (right-info (getf (symbol-plist 'accidental-kerning) acc2))
+         (left-right-info (cdr (assoc acc1 right-info)))
+         (default-right-info (cdr (assoc 'default right-info))))
     (cond
       ((> (abs dist) 5) 0)
       ((or (not right-info) (and (not left-right-info) (not default-right-info)))
@@ -355,14 +355,14 @@
 ;;; use the x offset of the notehead instead.
 (defun accidental-relative-xoffset (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
-	 (pos1 (note-position note1))
-	 (acc2 (if (and (final-accidental note2)
-			(final-relative-accidental-xoffset note2))
-		   (final-accidental note2)
-		   :notehead))
-	 (pos2 (note-position note2))
-	 (xpos2 (or (final-relative-accidental-xoffset note2)
-		    (final-relative-note-xoffset note2))))
+         (pos1 (note-position note1))
+         (acc2 (if (and (final-accidental note2)
+                        (final-relative-accidental-xoffset note2))
+                   (final-accidental note2)
+                   :notehead))
+         (pos2 (note-position note2))
+         (xpos2 (or (final-relative-accidental-xoffset note2)
+                    (final-relative-note-xoffset note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
 ;;; given a note and a list of notes, compute x offset of the accidental
@@ -384,16 +384,16 @@
                     (accidental-min-xoffset note2 notes staff-step))
                 note1
                 note2))
-	  notes-with-accidentals))  
+          notes-with-accidentals))  
 
 ;;; for each note in a list of notes, if it has an accidental, compute
 ;;; the final relative x offset of that accidental and store it in the note. 
 (defun compute-final-relative-accidental-xoffset (notes final-stem-direction)
   (let* ((staff-step (score-pane:staff-step 1))
-	 ;; sort the notes from top to bottom
-	 (notes (sort (copy-list notes)
-		      (lambda (x y) (> (note-position x) (note-position y)))))
-	 (notes-with-accidentals (remove-if-not #'final-accidental notes)))
+         ;; sort the notes from top to bottom
+         (notes (sort (copy-list notes)
+                      (lambda (x y) (> (note-position x) (note-position y)))))
+         (notes-with-accidentals (remove-if-not #'final-accidental notes)))
     ;; initially, no accidental has been placed
     (loop for note in notes do (setf (final-relative-accidental-xoffset note) nil))
     (when (eq final-stem-direction :up)
@@ -401,19 +401,19 @@
       ;; i.e., one to the right of the stem, then the accidental of the topmost
       ;; suspended note is placed first. 
       (let ((first-suspended-note
-	     (find 0 notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
-	(when first-suspended-note
-	  (setf notes-with-accidentals
-		(remove first-suspended-note notes-with-accidentals))
-	  (setf (final-relative-accidental-xoffset first-suspended-note)
-		(accidental-min-xoffset first-suspended-note notes staff-step)))))
+             (find 0 notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
+        (when first-suspended-note
+          (setf notes-with-accidentals
+                (remove first-suspended-note notes-with-accidentals))
+          (setf (final-relative-accidental-xoffset first-suspended-note)
+                (accidental-min-xoffset first-suspended-note notes staff-step)))))
     ;; place remaining accidentals
     (loop while notes-with-accidentals
-	  do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
-	       (setf notes-with-accidentals
-		     (remove choice notes-with-accidentals))
-	       (setf (final-relative-accidental-xoffset choice)
-		     (accidental-min-xoffset choice notes staff-step))))))
+          do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
+               (setf notes-with-accidentals
+                     (remove choice notes-with-accidentals))
+               (setf (final-relative-accidental-xoffset choice)
+                     (accidental-min-xoffset choice notes staff-step))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -560,7 +560,7 @@
       (compute-measures segment)
       ;; avoid an infinite computation by using slot-value here
       (loop for measure in (slot-value segment 'measures)
-	    do (compute-timelines measure spacing-style)))
+            do (compute-timelines measure spacing-style)))
     (setf (modified-p segment) nil)))
 
 (defmethod nb-measures ((segment rsegment))
@@ -579,9 +579,9 @@
 ;;; gives the x position of the head-note. 
 (defun compute-final-relative-note-xoffsets (group direction)
   (setf group (sort (copy-list group)
-		    (if (eq direction :up)
-			(lambda (x y) (< (note-position x) (note-position y)))
-			(lambda (x y) (> (note-position x) (note-position y))))))
+                    (if (eq direction :up)
+                        (lambda (x y) (< (note-position x) (note-position y)))
+                        (lambda (x y) (> (note-position x) (note-position y))))))
   (score-pane:with-suspended-note-offset offset
     ;; the first element of the group is the head-note
     (setf (final-relative-note-xoffset (car group)) 0)
@@ -590,16 +590,16 @@
     ;; note and that of a normally positioned note. 
     (when (eq direction :down) (setf offset (- offset)))
     (loop for note in (cdr group)
-	  and old-note = (car group) then note
-	  do (let* ((pos (note-position note))
-		    (old-pos (note-position old-note))
-		    ;; if adjacent notes are just one staff step apart, 
-		    ;; then one must be suspended. 
-		    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
-	       (setf (final-relative-note-xoffset note) dx)
-	       ;; go back to ordinary offset
-	       (when (= (abs (- pos old-pos)) 1)
-		 (setf note old-note))))))
+          and old-note = (car group) then note
+          do (let* ((pos (note-position note))
+                    (old-pos (note-position old-note))
+                    ;; if adjacent notes are just one staff step apart, 
+                    ;; then one must be suspended. 
+                    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
+               (setf (final-relative-note-xoffset note) dx)
+               ;; go back to ordinary offset
+               (when (= (abs (- pos old-pos)) 1)
+                 (setf note old-note))))))
 
 (defun compute-staff-group-parameters (staff-group stem-direction)
   (compute-final-relative-note-xoffsets staff-group stem-direction)
@@ -617,7 +617,7 @@
   (when (non-empty-cluster-p element)
     (compute-top-bot-pos element)
     (loop for staff-group in (group-notes-by-staff (notes element))
-	  do (compute-staff-group-parameters staff-group (final-stem-direction element)))))
+          do (compute-staff-group-parameters staff-group (final-stem-direction element)))))
 
 (defun compute-beam-group-parameters (elements)
   (loop for element in elements
@@ -648,21 +648,21 @@
 (defun beam-groups (elements)
   (let ((group '()))
     (loop until (null elements) do
-	  (setf group (list (car elements))
-		elements (cdr elements))
-	  (when (and (non-empty-cluster-p (car group))
-		     (plusp (rbeams (car group))))
-	    (loop while (and (not (null elements))
-			     (or (not (typep (car elements) 'cluster))
-				 (null (notes (car elements)))
-				 (plusp (lbeams (car elements)))))
-		  do (push (pop elements) group)
-		  until (and (non-empty-cluster-p (car group))
-			     (zerop (rbeams (car group)))))
-	    ;; pop off trailing unbeamable objects
-	    (loop until (non-empty-cluster-p (car group))
-		  do (push (pop group) elements)))
-	  collect (nreverse group))))
+          (setf group (list (car elements))
+                elements (cdr elements))
+          (when (and (non-empty-cluster-p (car group))
+                     (plusp (rbeams (car group))))
+            (loop while (and (not (null elements))
+                             (or (not (typep (car elements) 'cluster))
+                                 (null (notes (car elements)))
+                                 (plusp (lbeams (car elements)))))
+                  do (push (pop elements) group)
+                  until (and (non-empty-cluster-p (car group))
+                             (zerop (rbeams (car group)))))
+            ;; pop off trailing unbeamable objects
+            (loop until (non-empty-cluster-p (car group))
+                  do (push (pop group) elements)))
+          collect (nreverse group))))
 
 ;;; compute some important parameters of a bar
 (defgeneric compute-bar-parameters (bar))
@@ -672,7 +672,7 @@
 
 (defmethod compute-bar-parameters ((bar melody-bar))
   (loop for group in (beam-groups (elements bar))
-	do (compute-beam-group-parameters group)))
+        do (compute-beam-group-parameters group)))
 
 ;;; From a list of simultaneous bars (and some other stuff), create a
 ;;; measure.  The `other stuff' is the spacing style, which is needed
@@ -685,61 +685,61 @@
 (defun compute-measure (bars seg-pos bar-pos buffer)
   (score-pane:with-staff-size (gsharp-buffer::rastral-size buffer)
     (loop for bar in bars
-	  do (when (modified-p bar)
-	       (compute-bar-parameters bar)
-	       (setf (modified-p bar) nil)))
+          do (when (modified-p bar)
+               (compute-bar-parameters bar)
+               (setf (modified-p bar) nil)))
     (make-measure seg-pos bar-pos bars)))
 
 (defun compute-timelines (measure spacing-style)
   (let ((timelines (timelines measure)))
     (flet ((compute-bar-timelines (bar)
-	      (loop with timeline-index = 0
-		    for element in (elements bar)
-		    and start-time = 0 then (+ start-time (duration element))
-		    do (loop until (= timeline-index (flexichain:nb-elements timelines))
-			     for timeline = (flexichain:element* timelines timeline-index)
-			     until (or (> (start-time timeline) start-time)
-				       (and (= (start-time timeline) start-time)
-					    (or (zerop (duration element))
-						;; either none or every element of a timline
-						;; has zero duration, so we only have to test
-						;; the first one. 
-						(not (zerop (duration (car (elements timeline))))))))
-			     do (incf timeline-index))
-		    do (when (or (= timeline-index (flexichain:nb-elements timelines))
-				 (let ((timeline (flexichain:element* timelines timeline-index)))
-				   (or (> (start-time timeline) start-time)
-				       (and (zerop (duration element))
-					    (not (zerop (duration (car (elements timeline)))))))))
-			 (let ((timeline (make-instance 'timeline
-							:start-time start-time)))
-			   (flexichain:insert* timelines timeline-index timeline)))
-		    do (let ((timeline (flexichain:element* timelines timeline-index)))
-			 (push element (elements timeline))
-			 (setf (timeline element) timeline)
-			 (incf timeline-index)))))
+              (loop with timeline-index = 0
+                    for element in (elements bar)
+                    and start-time = 0 then (+ start-time (duration element))
+                    do (loop until (= timeline-index (flexichain:nb-elements timelines))
+                             for timeline = (flexichain:element* timelines timeline-index)
+                             until (or (> (start-time timeline) start-time)
+                                       (and (= (start-time timeline) start-time)
+                                            (or (zerop (duration element))
+                                                ;; either none or every element of a timline
+                                                ;; has zero duration, so we only have to test
+                                                ;; the first one. 
+                                                (not (zerop (duration (car (elements timeline))))))))
+                             do (incf timeline-index))
+                    do (when (or (= timeline-index (flexichain:nb-elements timelines))
+                                 (let ((timeline (flexichain:element* timelines timeline-index)))
+                                   (or (> (start-time timeline) start-time)
+                                       (and (zerop (duration element))
+                                            (not (zerop (duration (car (elements timeline)))))))))
+                         (let ((timeline (make-instance 'timeline
+                                                        :start-time start-time)))
+                           (flexichain:insert* timelines timeline-index timeline)))
+                    do (let ((timeline (flexichain:element* timelines timeline-index)))
+                         (push element (elements timeline))
+                         (setf (timeline element) timeline)
+                         (incf timeline-index)))))
       (loop for bar in (measure-bars measure)
-	    do (compute-bar-timelines bar)))
+            do (compute-bar-timelines bar)))
     ;; compute the duration of each timeline except the last one
     (loop for i from 0 below (1- (flexichain:nb-elements timelines))
-	  do (setf (duration (flexichain:element* timelines i))
-		   (- (start-time (flexichain:element* timelines (1+ i)))
-		      (start-time (flexichain:element* timelines i)))))
+          do (setf (duration (flexichain:element* timelines i))
+                   (- (start-time (flexichain:element* timelines (1+ i)))
+                      (start-time (flexichain:element* timelines i)))))
     ;; compute the duration of the last timeline, if any
     (unless (zerop (flexichain:nb-elements timelines))
       (let ((measure-duration (reduce #'max (measure-bars measure) :key #'duration))
-	    (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
-	(setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))
+            (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
+        (setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))
     ;; set the coefficient and the min-dist of the measure
     (loop with min-dist = 10000 
-	  for timeline-index from 0 below (flexichain:nb-elements timelines)
-	  for duration = (duration (flexichain:element* timelines timeline-index))
-	  sum (expt duration spacing-style) into coeff
-	  do (when (plusp duration) (setf min-dist (min min-dist duration)))
-	  ;; timelines with zero duration do not intervene in the calculation
-	  ;; of the min-dist
-	  finally (setf (measure-coeff measure) coeff
-			(measure-min-dist measure) min-dist))))
+          for timeline-index from 0 below (flexichain:nb-elements timelines)
+          for duration = (duration (flexichain:element* timelines timeline-index))
+          sum (expt duration spacing-style) into coeff
+          do (when (plusp duration) (setf min-dist (min min-dist duration)))
+          ;; timelines with zero duration do not intervene in the calculation
+          ;; of the min-dist
+          finally (setf (measure-coeff measure) coeff
+                        (measure-min-dist measure) min-dist))))
 
 ;;; Compute all the measures of a segment by stepping through all the
 ;;; bars in parallel as long as there is at least one simultaneous bar.
@@ -779,12 +779,12 @@
 ;;; by the obseq library.
 (defmethod obseq-next ((buf buffer) (measure measure))
   (let ((seg-pos (measure-seg-pos measure))
-	(bar-pos (measure-bar-pos measure)))
+        (bar-pos (measure-bar-pos measure)))
     (cond ((< (1+ bar-pos) (nb-measures (segmentno buf seg-pos)))
-	   (buffer-pos buf seg-pos (1+ bar-pos)))
-	  ((< (1+ seg-pos) (nb-segments buf))
-	   (buffer-pos buf (1+ seg-pos) 0))
-	  (t nil))))
+           (buffer-pos buf seg-pos (1+ bar-pos)))
+          ((< (1+ seg-pos) (nb-segments buf))
+           (buffer-pos buf (1+ seg-pos) 0))
+          (t nil))))
 
 ;;; as required by the obseq library, we supply a method on this
 ;;; generic function specialized on NIL, for which the first measure
@@ -801,20 +801,20 @@
 ;;; by the obseq library.
 (defmethod obseq-prev ((buf buffer) (measure measure))
   (let ((seg-pos (measure-seg-pos measure))
-	(bar-pos (measure-bar-pos measure)))
+        (bar-pos (measure-bar-pos measure)))
     (cond ((> bar-pos 0) (buffer-pos buf seg-pos (1- bar-pos)))
-	  ((> seg-pos 0) (buffer-pos buf
-				     (1- seg-pos)
-				     (1- (nb-measures (segmentno buf (1- seg-pos))))))
-	  (t nil))))
+          ((> seg-pos 0) (buffer-pos buf
+                                     (1- seg-pos)
+                                     (1- (nb-measures (segmentno buf (1- seg-pos))))))
+          (t nil))))
 
 ;;; as required by the obseq library, we supply a method on this
 ;;; generic function specialized on NIL, for which the last measure
 ;;; of the last segment is returned.
 (defmethod obseq-prev ((buf buffer) (measure (eql nil)))
   (buffer-pos buf
-	      (1- (nb-segments buf))
-	      (1- (nb-measures (segmentno buf (1- (nb-segments buf)))))))
+              (1- (nb-segments buf))
+              (1- (nb-measures (segmentno buf (1- (nb-segments buf)))))))
 
 (defmethod mark-modified ((buffer rbuffer))
   (setf (modified-p buffer) t)
@@ -840,16 +840,16 @@
 ;;; in the buffer
 (defun new-map-over-obseq-subsequences (fun buf)
   (loop with m = (obseq-interval buf (buffer-pos buf 0 0))
-	while m
-	do (multiple-value-bind (left right)
-	       ;; find the end points of the interval that contains m
-	       (obseq-interval buf m)
-	     (funcall fun (loop for mm = left then (obseq-next buf mm)
-				collect mm
-				until (eq mm right)))
-	     ;; move to the next measure after the rightmost one
-	     ;; in the current line
-	     (setf m (obseq-next buf right)))))
+        while m
+        do (multiple-value-bind (left right)
+               ;; find the end points of the interval that contains m
+               (obseq-interval buf m)
+             (funcall fun (loop for mm = left then (obseq-next buf mm)
+                                collect mm
+                                until (eq mm right)))
+             ;; move to the next measure after the rightmost one
+             ;; in the current line
+             (setf m (obseq-next buf right)))))
 
 (defun buffer-cost-method (buffer)
   (obseq-cost-method buffer))
@@ -858,16 +858,16 @@
   (when (modified-p buffer)
     ;; number the staves
     (loop for staff in (staves buffer)
-	  for i from 0
-	  do (setf (staff-rank staff) i))
+          for i from 0
+          do (setf (staff-rank staff) i))
     ;; for now, invalidate everything
     (mapc #'adjust-lowpos-highpos (segments buffer))
     ;; initialize cost method from buffer-specific style parameters
     (setf (obseq-cost-method buffer)
-	  (make-measure-cost-method
-	   (min-width buffer) (spacing-style buffer)
-	   (- (right-edge buffer) (left-margin buffer) (left-offset buffer))
-	   (systems-per-page buffer)))
+          (make-measure-cost-method
+           (min-width buffer) (spacing-style buffer)
+           (- (right-edge buffer) (left-margin buffer) (left-offset buffer))
+           (systems-per-page buffer)))
     (obseq-solve buffer)
     (setf (modified-p buffer) nil)))
 
@@ -889,11 +889,11 @@
 
 (defun make-measure-cost-method (min-width spacing-style line-width lines-per-page)
   (make-instance 'measure-cost-method
-		 :min-width min-width
-		 :spacing-style spacing-style
-		 :line-width line-width
-		 :lines-per-page lines-per-page))
-				 
+                 :min-width min-width
+                 :spacing-style spacing-style
+                 :line-width line-width
+                 :lines-per-page lines-per-page))
+                                 
 ;;; As required by the obseq library, define a sequence cost, i.e., in
 ;;; this case the cost of a sequence of measures.
 (defclass measure-seq-cost (seq-cost)
@@ -923,8 +923,8 @@
 ;;; As far as Gsharp is concerned, this cost computation is 
 ;;; commutable, so rely on Obseq to supply the symmetric method. 
 (defmethod combine-cost ((method measure-cost-method)
-				(seq-cost measure-seq-cost)
-				(elem measure))
+                                (seq-cost measure-seq-cost)
+                                (elem measure))
   (make-instance 'measure-seq-cost
     :coeff (+ (coeff seq-cost) (measure-coeff elem))
     :min-dist (min (min-dist seq-cost) (measure-min-dist elem))
@@ -942,15 +942,15 @@
 ;;; Gsharp is concerned, this cost computation is commutable, so rely
 ;;; on Obseq to supply the symmetric method.
 (defmethod combine-cost ((method measure-cost-method)
-				(tcost measure-total-cost)
-				(seq-cost measure-seq-cost))
+                                (tcost measure-total-cost)
+                                (seq-cost measure-seq-cost))
   (make-instance 'measure-total-cost
     :cost (max (measure-total-cost tcost)
-	       (measure-seq-cost method seq-cost))))
+               (measure-seq-cost method seq-cost))))
 
 (defmethod combine-cost ((method measure-cost-method)
-				(seq-cost measure-seq-cost)
-				(elem (eql nil)))
+                                (seq-cost measure-seq-cost)
+                                (elem (eql nil)))
   (make-instance 'measure-total-cost
     :cost (measure-seq-cost method seq-cost)))
 
@@ -958,8 +958,8 @@
 ;;; As required by the obseq library, this method computes the
 ;;; sequence cost of a singleton sequence.  
 (defmethod combine-cost ((method measure-cost-method)
-				(elem measure)
-				(whatever (eql nil)))
+                                (elem measure)
+                                (whatever (eql nil)))
   (make-instance 'measure-seq-cost
     :coeff (measure-coeff elem)
     :min-dist (measure-min-dist elem)
@@ -968,8 +968,8 @@
 ;;; As required by the obseq library, this method computes the
 ;;; sequence cost of a singleton sequence.  
 (defmethod combine-cost ((method measure-cost-method)
-				(whatever (eql nil))
-				(elem measure))
+                                (whatever (eql nil))
+                                (elem measure))
   (combine-cost method elem nil))
 
 ;;; The reduced width of a sequence of measures is the sum of the
@@ -981,18 +981,18 @@
 ;;; use for the display, and (1/d_min)^k, where d_min is the duration
 ;;; of the shortest timeline, and k is the spacing style.
 (defmethod reduced-width ((method measure-cost-method)
-			  (seq-cost measure-seq-cost))
+                          (seq-cost measure-seq-cost))
   (if (zerop (min-dist seq-cost))
       0
       (* (coeff seq-cost) (min-width method)
-	 (expt (/ (min-dist seq-cost)) (spacing-style method)))))
+         (expt (/ (min-dist seq-cost)) (spacing-style method)))))
 
 ;;; The natural width of a sequence of mesures is like the reduced
 ;;; width, except that we do not ignore the space before the first
 ;;; timeline in each measure.  That space might be necessary to
 ;;; parameterize one day, but for now we just use the w_min.
 (defmethod natural-width ((method measure-cost-method)
-			  (seq-cost measure-seq-cost))
+                          (seq-cost measure-seq-cost))
   (+ (reduced-width method seq-cost)
      (* (nb-measures seq-cost) (min-width method))))
 
@@ -1001,7 +1001,7 @@
 ;;; disposal.  Values > 1 indicate that the sequence of mesures must
 ;;; be stretched instead of compressed.
 (defmethod compress-factor ((method measure-cost-method)
-			    (seq-cost measure-seq-cost))
+                            (seq-cost measure-seq-cost))
   (/ (natural-width method seq-cost)
      (* (line-width method) (lines-per-page method))))
 
@@ -1014,7 +1014,7 @@
 ;;; sequences that become too short to display without overlaps, unless
 ;;; the sequence contains a single measure, of course.
 (defmethod measure-seq-cost ((method measure-cost-method)
-			     (seq-cost measure-seq-cost))
+                             (seq-cost measure-seq-cost))
   (let ((c (compress-factor method seq-cost)))
     (max c (/ c))))
 
@@ -1024,18 +1024,18 @@
 ;;; higher.  The obseq library uses this to radically diminish the
 ;;; complexity of the computation. 
 (defmethod seq-cost-cannot-decrease ((method measure-cost-method)
-					    (seq-cost measure-seq-cost))
+                                            (seq-cost measure-seq-cost))
   (>= (natural-width method seq-cost)
       (* (line-width method) (lines-per-page method))))
 
 ;;; Compare the cost of two sequences of measures
 (defmethod cost-less ((method measure-cost-method)
-		      (c1 measure-seq-cost)
-		      (c2 measure-seq-cost))
+                      (c1 measure-seq-cost)
+                      (c2 measure-seq-cost))
   (< (measure-seq-cost method c1) (measure-seq-cost method c2)))
 
 ;;; Compare the cost of two sequences of sequences of measures
 (defmethod cost-less ((method measure-cost-method)
-		      (c1 measure-total-cost)
-		      (c2 measure-total-cost))
+                      (c1 measure-total-cost)
+                      (c2 measure-total-cost))
   (< (measure-total-cost c1) (measure-total-cost c2)))
