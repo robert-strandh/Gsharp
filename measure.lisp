@@ -481,8 +481,8 @@
 ;;; the duration of the longest element of the timeline.
 
 (defclass timeline (flexichain:element-rank-mixin)
-  ((start-time :initarg :start-time :reader start-time)
-   (elements :initform '() :accessor elements)
+  ((%start-time :initarg :start-time :reader start-time)
+   (%elements :initform '() :accessor elements)
    (duration :initarg :duration :accessor duration)
    (elasticity :accessor elasticity)
    ;; the minimum x offset from this timeline to the next, or, if this
