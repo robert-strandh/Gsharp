@@ -954,7 +954,6 @@
   (make-instance 'measure-total-cost
     :cost (measure-seq-cost method seq-cost)))
 
-
 ;;; As required by the obseq library, this method computes the
 ;;; sequence cost of a singleton sequence.  
 (defmethod combine-cost ((method measure-cost-method)
