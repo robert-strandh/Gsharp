@@ -1,7 +1,7 @@
 (cl:in-package #:gsharp-measure)
 
 (defmacro defrclass (name base slots)
-  `(progn 
+  `(progn
      (stealth-mixin:define-stealth-mixin ,name () ,base
        ((modified-p :initform t :accessor modified-p)
         ,@slots))))
@@ -40,7 +40,7 @@
                       (invalidate-slice-using-staff (head layer) staff)
                       (invalidate-slice-using-staff (body layer) staff)
                       (invalidate-slice-using-staff (tail layer) staff)))))
-                      
+
 (defmethod (setf clef) :before (clef (staff staff))
   (invalidate-everything-using-staff (buffer staff) staff))
 
@@ -63,7 +63,7 @@
 ))
 
 ;;; given a list of notes, group them so that every note in the group
-;;; is displayed on the same staff.  Return the list of groups. 
+;;; is displayed on the same staff.  Return the list of groups.
 (defun group-notes-by-staff (notes)
   (let ((groups '()))
     (loop while notes do
@@ -76,14 +76,14 @@
 ;;; Element
 
 ;;; The relement class mixes into the element class.  It adds
-;;; a `duration' slot that contains the duration of the element. 
+;;; a `duration' slot that contains the duration of the element.
 ;;; It also makes sure that whenever the duration of an element
-;;; is being asked for, the new value is computed should any 
-;;; modification to the element have taken place in the meantime. 
+;;; is being asked for, the new value is computed should any
+;;; modification to the element have taken place in the meantime.
 
 (defrclass relement element
   ((duration :initform nil)
-   (timeline :accessor timeline)))   
+   (timeline :accessor timeline)))
 
 (defmethod duration :around ((element relement))
   (with-slots (duration) element
@@ -327,7 +327,7 @@
     :double-sharp :double-sharp #(  0   0   0 2.8 2.8 2.8 2.8 2.8   0   0   0)
     ))
 
-(defvar *default-accidental-kerning* 
+(defvar *default-accidental-kerning*
   #(4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0))
 
 ;;; given 1) a type of accidental 2) its position (in staff steps) 3)
@@ -350,8 +350,8 @@
 ;;; given two notes (where the first one has an accidental, and the
 ;;; second one may or may not have an accidental) and the conversion
 ;;; factor between staff steps and x positions, compute the x offset
-;;; of the accidental of the first note.  If the second note has 
-;;; an accidental, but that has not been given a final x offset, then 
+;;; of the accidental of the first note.  If the second note has
+;;; an accidental, but that has not been given a final x offset, then
 ;;; use the x offset of the notehead instead.
 (defun accidental-relative-xoffset (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
@@ -367,16 +367,16 @@
 
 ;;; given a note and a list of notes, compute x offset of the accidental
 ;;; of the note as required by each of the notes in the list.  In order
-;;; for the accidental of the note not to overlap any of the others, 
-;;; we must use the minimum of all the x offsets thus computed. 
+;;; for the accidental of the note not to overlap any of the others,
+;;; we must use the minimum of all the x offsets thus computed.
 (defun accidental-min-xoffset (note1 notes staff-step)
   (reduce #'min notes
           :key (lambda (note)
                  (accidental-relative-xoffset note1 note staff-step))))
 
-;;; given a list of notes that have accidentals to place, and a list of 
-;;; notes that either have no accidentals or with already-placed accidentals, 
-;;; compute the note in the first list that can be placed as far to the right 
+;;; given a list of notes that have accidentals to place, and a list of
+;;; notes that either have no accidentals or with already-placed accidentals,
+;;; compute the note in the first list that can be placed as far to the right
 ;;; as possible.
 (defun best-accidental (notes-with-accidentals notes staff-step)
   (reduce (lambda (note1 note2)
@@ -384,10 +384,10 @@
                     (accidental-min-xoffset note2 notes staff-step))
                 note1
                 note2))
-          notes-with-accidentals))  
+          notes-with-accidentals))
 
 ;;; for each note in a list of notes, if it has an accidental, compute
-;;; the final relative x offset of that accidental and store it in the note. 
+;;; the final relative x offset of that accidental and store it in the note.
 (defun compute-final-relative-accidental-xoffset (notes final-stem-direction)
   (let* ((staff-step (score-pane:staff-step 1))
          ;; sort the notes from top to bottom
@@ -399,7 +399,7 @@
     (when (eq final-stem-direction :up)
       ;; when the stem direction is :up and there is a suspended note
       ;; i.e., one to the right of the stem, then the accidental of the topmost
-      ;; suspended note is placed first. 
+      ;; suspended note is placed first.
       (let ((first-suspended-note
              (find 0 notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
         (when first-suspended-note
@@ -507,7 +507,7 @@
    ;; of a buffer is indicated by two numbers, the position
    ;; of the segment to which the measure belongs within the
    ;; sequence of segments of the buffer, and the position of
-   ;; the bars within that segment. 
+   ;; the bars within that segment.
    (seg-pos :initarg :seg-pos :reader measure-seg-pos)
    (bar-pos :initarg :bar-pos :reader measure-bar-pos)
    ;; a list of the bars that make up this measure
@@ -566,8 +566,8 @@
 (defmethod nb-measures ((segment rsegment))
   (length (measures segment)))
 
-;;; Given a segment and a position, return the measure in that 
-;;; position in the sequence of measures in the segment. 
+;;; Given a segment and a position, return the measure in that
+;;; position in the sequence of measures in the segment.
 (defmethod measureno ((segment rsegment) position)
   (elt (measures segment) position))
 
@@ -576,7 +576,7 @@
 ;;; determining whether the note goes to the right or to the left of
 ;;; the stem.  The head-note of the stem goes to the left of an
 ;;; up-stem and to the right of a down-stem.  The x offset of a cluster
-;;; gives the x position of the head-note. 
+;;; gives the x position of the head-note.
 (defun compute-final-relative-note-xoffsets (group direction)
   (setf group (sort (copy-list group)
                     (if (eq direction :up)
@@ -585,17 +585,17 @@
   (score-pane:with-suspended-note-offset offset
     ;; the first element of the group is the head-note
     (setf (final-relative-note-xoffset (car group)) 0)
-    ;; OFFSET is a positive quantity that determines the 
+    ;; OFFSET is a positive quantity that determines the
     ;; absolute difference between the x offset of a suspended
-    ;; note and that of a normally positioned note. 
+    ;; note and that of a normally positioned note.
     (when (eq direction :down) (setf offset (- offset)))
     (loop for note in (cdr group)
           and old-note = (car group) then note
           do (let* ((pos (note-position note))
                     (old-pos (note-position old-note))
-                    ;; if adjacent notes are just one staff step apart, 
-                    ;; then one must be suspended. 
-                    (dx (if (= (abs (- pos old-pos)) 1) offset 0))) 
+                    ;; if adjacent notes are just one staff step apart,
+                    ;; then one must be suspended.
+                    (dx (if (= (abs (- pos old-pos)) 1) offset 0)))
                (setf (final-relative-note-xoffset note) dx)
                ;; go back to ordinary offset
                (when (= (abs (- pos old-pos)) 1)
@@ -703,7 +703,7 @@
                                             (or (zerop (duration element))
                                                 ;; either none or every element of a timline
                                                 ;; has zero duration, so we only have to test
-                                                ;; the first one. 
+                                                ;; the first one.
                                                 (not (zerop (duration (car (elements timeline))))))))
                              do (incf timeline-index))
                     do (when (or (= timeline-index (flexichain:nb-elements timelines))
@@ -731,7 +731,7 @@
             (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
         (setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))
     ;; set the coefficient and the min-dist of the measure
-    (loop with min-dist = 10000 
+    (loop with min-dist = 10000
           for timeline-index from 0 below (flexichain:nb-elements timelines)
           for duration = (duration (flexichain:element* timelines timeline-index))
           sum (expt duration spacing-style) into coeff
@@ -830,7 +830,7 @@
 
 (defparameter *staves-per-page* 12)
 (defgeneric systems-per-page (buffer)
-  (:method (b) 
+  (:method (b)
     (let ((stave-count (length (staves b))))
       (assert (<= stave-count *staves-per-page*))
       (floor *staves-per-page* stave-count))))
@@ -893,7 +893,7 @@
                  :spacing-style spacing-style
                  :line-width line-width
                  :lines-per-page lines-per-page))
-                                 
+
 ;;; As required by the obseq library, define a sequence cost, i.e., in
 ;;; this case the cost of a sequence of measures.
 (defclass measure-seq-cost (seq-cost)
@@ -920,8 +920,8 @@
 ;;; cost that has the sum of the coefficients of each measure in the
 ;;; sequence, the min of the min-dists of each measure in the
 ;;; sequence, and the total number of measures in the sequence.
-;;; As far as Gsharp is concerned, this cost computation is 
-;;; commutable, so rely on Obseq to supply the symmetric method. 
+;;; As far as Gsharp is concerned, this cost computation is
+;;; commutable, so rely on Obseq to supply the symmetric method.
 (defmethod combine-cost ((method measure-cost-method)
                                 (seq-cost measure-seq-cost)
                                 (elem measure))
@@ -955,7 +955,7 @@
     :cost (measure-seq-cost method seq-cost)))
 
 ;;; As required by the obseq library, this method computes the
-;;; sequence cost of a singleton sequence.  
+;;; sequence cost of a singleton sequence.
 (defmethod combine-cost ((method measure-cost-method)
                                 (elem measure)
                                 (whatever (eql nil)))
@@ -965,7 +965,7 @@
     :nb-measures 1))
 
 ;;; As required by the obseq library, this method computes the
-;;; sequence cost of a singleton sequence.  
+;;; sequence cost of a singleton sequence.
 (defmethod combine-cost ((method measure-cost-method)
                                 (whatever (eql nil))
                                 (elem measure))
@@ -1021,7 +1021,7 @@
 ;;; determines whether we can prove that adding another measure to an
 ;;; existing sequence is guaranteed to make the cost of the sequence
 ;;; higher.  The obseq library uses this to radically diminish the
-;;; complexity of the computation. 
+;;; complexity of the computation.
 (defmethod seq-cost-cannot-decrease ((method measure-cost-method)
                                             (seq-cost measure-seq-cost))
   (>= (natural-width method seq-cost)
