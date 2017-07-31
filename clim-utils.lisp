@@ -1,28 +1,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
+;;;
 ;;; New button types
 
 (cl:in-package #:clim-internals)
 
-;; These are specialised PUSH-BUTTON implementations. PUSH-BUTTON
-;; deals with behaviour and with drawing and animating the button. In
-;; the CLIM specs, it also has a label string which it prints. The
-;; label is used at two points: space calculation and drawing.
+;;; These are specialised PUSH-BUTTON implementations. PUSH-BUTTON
+;;; deals with behaviour and with drawing and animating the button. In
+;;; the CLIM specs, it also has a label string which it prints. The
+;;; label is used at two points: space calculation and drawing.
 ;;
-;; Spacing -- COMPOSE-SPACE: slightly worrying because I don't really
-;; understand how layout works, but seems generally ok
+;;; Spacing -- COMPOSE-SPACE: slightly worrying because I don't really
+;;; understand how layout works, but seems generally ok
 ;;
-;; Drawing is handled by two functions -- DRAW-LABEL*, which is a
-;; generic function, specialised here easily enouth, and
-;; DRAW-ENGRAVED-LABEL*, which handles pressed buttons by calling
-;; DRAW-LABEL* twice, with different settings positions and inks. This
-;; isn't a generic, so I can't do anything about it. Since my
-;; DRAW-LABEL* ignores ink, the 3d effect is lost.
+;;; Drawing is handled by two functions -- DRAW-LABEL*, which is a
+;;; generic function, specialised here easily enouth, and
+;;; DRAW-ENGRAVED-LABEL*, which handles pressed buttons by calling
+;;; DRAW-LABEL* twice, with different settings positions and
+;;; inks. This isn't a generic, so I can't do anything about it. Since
+;;; my DRAW-LABEL* ignores ink, the 3d effect is lost.
 
 ;;; ICON-PUSH-BUTTON
-;; Push button that shows an icon *instead* of text. Perhaps this
-;; should be optionally with text. The icon must be in XPM format, but
-;; not for any readily apparent reason (more readers are in /Extensions)
+
+;;; Push button that shows an icon *instead* of text. Perhaps this
+;;; should be optionally with text. The icon must be in XPM format,
+;;; but not for any readily apparent reason (more readers are in
+;;; /Extensions)
+
 (defclass icon-push-button (push-button)
   ((icon-path :initarg :icon-path :accessor icon-path)
    (icon :initarg :icon :initform nil)))
@@ -64,13 +67,13 @@
   (draw-pattern* pane (icon pane) x1 y1))
 
 ;;; DRAWN-PUSH-BUTTON
-;; A push button whose image is created using DRAWING-FUNCTION (which
-;; takes (STREAM X Y). I'm presetting width and height, because I
-;; don't understand CLIM layout functionality. Alternatives include
-;; storing a funcall to use in COMPOSE-SPACE or just making the
-;; drawing function work with whatever size it's given. I'm also
-;; making it a full CLIM-STREAM-PANE, because it works. Is it
-;; necessary?
+;;; A push button whose image is created using DRAWING-FUNCTION (which
+;;; takes (STREAM X Y). I'm presetting width and height, because I
+;;; don't understand CLIM layout functionality. Alternatives include
+;;; storing a funcall to use in COMPOSE-SPACE or just making the
+;;; drawing function work with whatever size it's given. I'm also
+;;; making it a full CLIM-STREAM-PANE, because it works. Is it
+;;; necessary?
 
 (defclass drawn-push-button (push-button)
   ((drawing-function :initarg :drawing-function :accessor button-drawing-function)
@@ -100,28 +103,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
+;;;
 ;;; File dialogue stuff
-;;
-;; Dialogue box for file browing operations. Takes an object and puts
-;; the resulting pathname into it (for now, this means we can only
-;; handle single files). User can optionally provide acceptable file
-;; extensions, which will disallow clicking on other files (the user
-;; can override this by ctrl-clicking).
-;; 
-;; This really ought to go somewhere in CLIM, but it uses code from
-;; CLIM-LISTENER, so would probably need a package that doesn't exist
-;; or for some of the listener functionality to be moved somewhere
-;; useful.
+;;;
+;;; Dialogue box for file browing operations. Takes an object and puts
+;;; the resulting pathname into it (for now, this means we can only
+;;; handle single files). User can optionally provide acceptable file
+;;; extensions, which will disallow clicking on other files (the user
+;;; can override this by ctrl-clicking).
+;;; 
+;;; This really ought to go somewhere in CLIM, but it uses code from
+;;; CLIM-LISTENER, so would probably need a package that doesn't exist
+;;; or for some of the listener functionality to be moved somewhere
+;;; useful.
 
 (cl:in-package #:gsharp)
 
 (defparameter *file-text-style*
   (make-text-style :sans-serif :roman :small))
-;; Transport for holding pathname info between application frame and
-;; caller
+;;; Transport for holding pathname info between application frame and
+;;; caller
 (defstruct filespec (pathname))
-;; FIXME: way to pass initargs to application gadget
+;;; FIXME: way to pass initargs to application gadget
 (defparameter *init-info* "") 
 
 (define-command-table path-input)
