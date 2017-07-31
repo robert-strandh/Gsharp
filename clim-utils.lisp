@@ -53,19 +53,19 @@
   ;; FIXME: I don't really know what these values should be
   (let* ((pw (pattern-width (icon gadget)))
          (ph (pattern-height (icon gadget)))
-         (w (+ pw 
+         (w (+ pw
                (* 2 (+ *3d-border-thickness*
                        (or (pane-x-spacing gadget)
                            0)))))
          (h (+ ph (* 2 (+ *3d-border-thickness*
                           (or (pane-y-spacing gadget)
                               0))))))
-    (make-space-requirement 
+    (make-space-requirement
      :width (or width w)
      :min-width w
      :height (or height h)
      :min-height h)))
-(defmethod draw-label* ((pane icon-push-button) x1 y1 x2 y2 
+(defmethod draw-label* ((pane icon-push-button) x1 y1 x2 y2
                         &key ink)
   (declare (ignore ink))
   (draw-pattern* pane (icon pane) x1 y1))
@@ -98,11 +98,11 @@
          (h (+ dh (* 2 (+ *3d-border-thickness*
                           (or (pane-y-spacing gadget)
                               0))))))
-    (make-space-requirement 
+    (make-space-requirement
      :width (or width w)
      :min-width w
      :height (or height h)
-     :min-height h)))  
+     :min-height h)))
 (defmethod draw-label* ((pane drawn-push-button) x1 y1 x2 y2
                         &key ink)
   (declare (ignore ink))
@@ -118,7 +118,7 @@
 ;;; handle single files). User can optionally provide acceptable file
 ;;; extensions, which will disallow clicking on other files (the user
 ;;; can override this by ctrl-clicking).
-;;; 
+;;;
 ;;; This really ought to go somewhere in CLIM, but it uses code from
 ;;; CLIM-LISTENER, so would probably need a package that doesn't exist
 ;;; or for some of the listener functionality to be moved somewhere
@@ -134,7 +134,7 @@
 (defstruct filespec (pathname))
 
 ;;; FIXME: way to pass initargs to application gadget
-(defparameter *init-info* "") 
+(defparameter *init-info* "")
 
 (define-command-table path-input)
 ;; (defclass file-browser-pane (esa-pane-mixin application-pane) ())
@@ -172,17 +172,17 @@
                        :text-style *file-text-style*
                        :command-table 'file-browser
                        :display-function 'display-folder))
-   (ok-button 
+   (ok-button
     :push-button :label "Ok"
     :activate-callback
     #'(lambda (gadget)
         (declare (ignore gadget))
         (setf (filespec-pathname (final-file *application-frame*))
               (pathname
-               (gadget-value (find-pane-named *application-frame* 
+               (gadget-value (find-pane-named *application-frame*
                                               'path-input))))
         (frame-exit *application-frame*)))
-   (cancel-button 
+   (cancel-button
     :push-button :label "Cancel"
     :activate-callback
     #'(lambda (gadget)
@@ -191,7 +191,7 @@
         (frame-exit *application-frame*))))
   (:layouts
    (default
-       (vertically () 
+       (vertically ()
          path-input
          (scrolling () browser)
          (horizontally () ok-button cancel-button +fill+)))))
@@ -209,8 +209,8 @@
          (path (if (clim-listener::directoryp main-path)
                    (clim-listener::show-directory-pathnames main-path)
                    (clim-listener::show-directory-pathnames (directory-name main-path)))))
-    (browser-show-directory 
-     pane 
+    (browser-show-directory
+     pane
      ;;   (clim-listener::show-directory-pathnames (current-path frame))
      path
      :show-hidden (show-hidden frame)
@@ -261,15 +261,15 @@
               (formatting-cell (pane)
                 (if (= i 0 j)
                     ;; fixme: root dir
-                    (with-output-as-presentation 
+                    (with-output-as-presentation
                         (pane parent 'clim:pathname :single-box t)
-                      (clim-listener::draw-icon 
+                      (clim-listener::draw-icon
                        pane
                        (clim-listener::standard-icon "up-folder.xpm")
                        :extra-spacing 3)
                       (princ "Parent directory" pane))
                     (with-drawing-options
-                        (pane :ink 
+                        (pane :ink
                               (if (or (clim-listener::directoryp (aref dir (+ (* 3 i) j -1)))
                                       (file-filter (aref dir (+ (* 3 i) j -1))
                                                    *application-frame*))
@@ -303,7 +303,7 @@
 (define-presentation-to-command-translator select-file
     (clim-listener::pathname com-select-file file-browser
                              :documentation "select file"
-                             :tester ((object) 
+                             :tester ((object)
                                       (file-filter object *application-frame*)))
     (object)
   (list object))
@@ -312,7 +312,7 @@
     (clim-listener::pathname com-select-file file-browser
                              :gesture :adjust
                              :documentation "select file"
-                             :tester ((object) 
+                             :tester ((object)
                                       (not (clim-listener::directoryp object))))
     (object)
   (list object))
@@ -332,7 +332,7 @@
       (frame-exit *application-frame*)
       (progn
         (setf (filespec-pathname (final-file *application-frame*)) pathname
-              (gadget-value (find-pane-named *application-frame* 'path-input)) 
+              (gadget-value (find-pane-named *application-frame* 'path-input))
               (princ-to-string pathname))
         (redraw-file-browser-windows *application-frame*))))
 
@@ -340,7 +340,7 @@
     (clim-listener::pathname com-change-to-directory file-browser
                    :documentation  "change-to-directory"
                    :tester ((object) (clim-listener::directoryp object)))
-    (object) 
+    (object)
   (list object))
 
 (defparameter *gadget-init-hash* (make-hash-table))
@@ -363,7 +363,7 @@
     (setf initial-path (directory-of-current-buffer)))
   (let* ((filespec (make-filespec :pathname ""))
          (frame (make-application-frame-with-gadgets
-                 'file-browser 
+                 'file-browser
                  :gadget-vars (list :path-input (princ-to-string initial-path))
                  :frame-vars (list :width 600 :path initial-path
                                    :file filespec
