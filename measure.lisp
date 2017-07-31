@@ -8,7 +8,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Key signature
+;;; Key signature.
 
 (defmethod more-sharps :after ((sig key-signature) &optional n)
   (declare (ignore n))
@@ -22,7 +22,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Staff
+;;; Staff.
 
 (stealth-mixin:define-stealth-mixin rstaff () staff
   ((rank :accessor staff-rank)))
@@ -46,23 +46,23 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Note
+;;; Note.
 
 (defrclass rnote note
   (;; The relative x offset of the accidental of the note with respect
    ;; to the cluster.  A value of nil indicates that accidental has
-   ;; not been placed yet
+   ;; not been placed yet.
    (final-relative-accidental-xoffset :initform nil
                                       :accessor final-relative-accidental-xoffset)
    (final-accidental :initform nil :accessor final-accidental)
-   ;; the relative x offset of the note with respect to the cluster
+   ;; The relative x offset of the note with respect to the cluster.
    (final-relative-note-xoffset :accessor final-relative-note-xoffset)
-   ;; the absolute y position of any dot, or NIL if dots should not be
-   ;; drawn
+   ;; The absolute y position of any dot, or NIL if dots should not be
+   ;; drawn.
    (final-absolute-dot-ypos :accessor final-absolute-dot-ypos :initform nil)
 ))
 
-;;; given a list of notes, group them so that every note in the group
+;;; Given a list of notes, group them so that every note in the group
 ;;; is displayed on the same staff.  Return the list of groups.
 (defun group-notes-by-staff (notes)
   (let ((groups '()))
@@ -75,11 +75,11 @@
 ;;;
 ;;; Element
 
-;;; The relement class mixes into the element class.  It adds
-;;; a `duration' slot that contains the duration of the element.
-;;; It also makes sure that whenever the duration of an element
-;;; is being asked for, the new value is computed should any
-;;; modification to the element have taken place in the meantime.
+;;; The relement class mixes into the element class.  It adds a
+;;; DURATION slot that contains the duration of the element.  It also
+;;; makes sure that whenever the duration of an element is being asked
+;;; for, the new value is computed should any modification to the
+;;; element have taken place in the meantime.
 
 (defrclass relement element
   ((duration :initform nil)
@@ -130,7 +130,7 @@
     (- (pitch note)
        (bottom-line clef))))
 
-;;; given a list of notes, return the one that is at the top
+;;; Given a list of notes, return the one that is at the top.
 (defun top-note (notes)
   (reduce (lambda (n1 n2)
             (cond ((< (staff-rank (staff n1))
@@ -145,7 +145,7 @@
                   (t n2)))
           notes))
 
-;;; given a list of notes, return the one that is at the bottom
+;;; Given a list of notes, return the one that is at the bottom.
 (defun bot-note (notes)
   (reduce  (lambda (n1 n2)
              (cond ((> (staff-rank (staff n1))
@@ -166,12 +166,12 @@
 
 (stealth-mixin:define-stealth-mixin rcluster () cluster
   ((final-stem-direction :accessor final-stem-direction)
-   ;; the position, in staff steps, of the top note in the element.
+   ;; The position, in staff steps, of the top note in the element.
    (top-note-pos :accessor top-note-pos)
-   ;; the position, in staff steps, of the bottom note in the element.
+   ;; The position, in staff steps, of the bottom note in the element.
    (bot-note-pos :accessor bot-note-pos)))
 
-;;; Return true if and only if the element is a non-empty cluster
+;;; Return true if and only if the element is a non-empty cluster.
 (defun non-empty-cluster-p (element)
   (and (typep element 'cluster)
        (not (null (notes element)))))
@@ -208,7 +208,7 @@
 
 ;;; Given a beam group containing at least two nonempty clusters,
 ;;; compute and store the final stem directions of all the non-empty
-;;; clusters in the group
+;;; clusters in the group.
 (defun compute-final-stem-directions (elements)
   (let ((stem-direction (if (not (eq (stem-direction (car elements)) :auto))
                             (stem-direction (car elements))
@@ -232,13 +232,13 @@
       (let* ((position (note-position note))
              (ideal (if (oddp position) position (1+ position))))
         (cond
-          ;; if there's no dot at our ideal position, use that
+          ;; If there's no dot at our ideal position, use that.
           ((not (member ideal so-far)) (push (setf (final-absolute-dot-ypos note) ideal) so-far))
-          ;; if the note in question is on a line and we haven't
-          ;; got a dot in the space underneath, use that
+          ;; If the note in question is on a line and we haven't got a
+          ;; dot in the space underneath, use that.
           ((and (evenp position) (not (member (- ideal 2) so-far)))
            (push (setf (final-absolute-dot-ypos note) (- ideal 2)) so-far))
-          ;; otherwise, give up for this note
+          ;; Otherwise, give up for this note.
           (t (setf (final-absolute-dot-ypos note) nil)))))))
 
 (defun find-prevailing-accidental (note)
@@ -330,7 +330,7 @@
 (defvar *default-accidental-kerning*
   #(4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0 4.0))
 
-;;; given 1) a type of accidental 2) its position (in staff steps) 3)
+;;; Given 1) a type of accidental 2) its position (in staff steps) 3)
 ;;; a type of accidental or a type of notehead, and 4) its position,
 ;;; return the x offset of the first accidental, i.e., how many staff
 ;;; steps to the left that it must be moved in order to avoid overlap
@@ -347,12 +347,12 @@
       ((not left-right-info) (aref default-right-info (+ dist 5)))
       (t (aref left-right-info (+ dist 5))))))
 
-;;; given two notes (where the first one has an accidental, and the
+;;; Given two notes (where the first one has an accidental, and the
 ;;; second one may or may not have an accidental) and the conversion
 ;;; factor between staff steps and x positions, compute the x offset
-;;; of the accidental of the first note.  If the second note has
-;;; an accidental, but that has not been given a final x offset, then
-;;; use the x offset of the notehead instead.
+;;; of the accidental of the first note.  If the second note has an
+;;; accidental, but that has not been given a final x offset, then use
+;;; the x offset of the notehead instead.
 (defun accidental-relative-xoffset (note1 note2 staff-step)
   (let* ((acc1 (final-accidental note1))
          (pos1 (note-position note1))
@@ -365,7 +365,7 @@
                     (final-relative-note-xoffset note2))))
     (- xpos2 (* staff-step (accidental-distance acc1 pos1 acc2 pos2)))))
 
-;;; given a note and a list of notes, compute x offset of the accidental
+;;; Given a note and a list of notes, compute x offset of the accidental
 ;;; of the note as required by each of the notes in the list.  In order
 ;;; for the accidental of the note not to overlap any of the others,
 ;;; we must use the minimum of all the x offsets thus computed.
@@ -374,10 +374,10 @@
           :key (lambda (note)
                  (accidental-relative-xoffset note1 note staff-step))))
 
-;;; given a list of notes that have accidentals to place, and a list of
-;;; notes that either have no accidentals or with already-placed accidentals,
-;;; compute the note in the first list that can be placed as far to the right
-;;; as possible.
+;;; Given a list of notes that have accidentals to place, and a list
+;;; of notes that either have no accidentals or with already-placed
+;;; accidentals, compute the note in the first list that can be placed
+;;; as far to the right as possible.
 (defun best-accidental (notes-with-accidentals notes staff-step)
   (reduce (lambda (note1 note2)
             (if (>= (accidental-min-xoffset note1 notes staff-step)
@@ -386,20 +386,21 @@
                 note2))
           notes-with-accidentals))
 
-;;; for each note in a list of notes, if it has an accidental, compute
-;;; the final relative x offset of that accidental and store it in the note.
+;;; For each note in a list of notes, if it has an accidental, compute
+;;; the final relative x offset of that accidental and store it in the
+;;; note.
 (defun compute-final-relative-accidental-xoffset (notes final-stem-direction)
   (let* ((staff-step (score-pane:staff-step 1))
-         ;; sort the notes from top to bottom
+         ;; Sort the notes from top to bottom.
          (notes (sort (copy-list notes)
                       (lambda (x y) (> (note-position x) (note-position y)))))
          (notes-with-accidentals (remove-if-not #'final-accidental notes)))
-    ;; initially, no accidental has been placed
+    ;; Initially, no accidental has been placed.
     (loop for note in notes do (setf (final-relative-accidental-xoffset note) nil))
     (when (eq final-stem-direction :up)
-      ;; when the stem direction is :up and there is a suspended note
-      ;; i.e., one to the right of the stem, then the accidental of the topmost
-      ;; suspended note is placed first.
+      ;; When the stem direction is :up and there is a suspended note
+      ;; i.e., one to the right of the stem, then the accidental of
+      ;; the topmost suspended note is placed first.
       (let ((first-suspended-note
              (find 0 notes-with-accidentals :test #'/= :key #'final-relative-note-xoffset)))
         (when first-suspended-note
@@ -407,7 +408,7 @@
                 (remove first-suspended-note notes-with-accidentals))
           (setf (final-relative-accidental-xoffset first-suspended-note)
                 (accidental-min-xoffset first-suspended-note notes staff-step)))))
-    ;; place remaining accidentals
+    ;; Place remaining accidentals.
     (loop while notes-with-accidentals
           do (let ((choice (best-accidental notes-with-accidentals notes staff-step)))
                (setf notes-with-accidentals
@@ -417,7 +418,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Rest
+;;; Rest.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -440,7 +441,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Slice
+;;; Slice.
 
 (defrclass rslice slice
   ())
@@ -460,7 +461,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Layer
+;;; Layer.
 
 (defrclass rlayer layer
   ())
@@ -472,7 +473,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Timeline
+;;; Timeline.
 
 ;;; A timeline of a measure is the set of all simultaneous elements of
 ;;; the bars of the meausure.  The duration of a timeline is either
@@ -485,8 +486,8 @@
    (%elements :initform '() :accessor elements)
    (duration :initarg :duration :accessor duration)
    (elasticity :accessor elasticity)
-   ;; the minimum x offset from this timeline to the next, or, if this
-   ;; is the last timeline, from this one to the end of the measure
+   ;; The minimum x offset from this timeline to the next, or, if this
+   ;; is the last timeline, from this one to the end of the measure.
    (smallest-gap :initform 0 :accessor smallest-gap)))
 
 (defclass ranked-flexichain (flexichain:standard-flexichain flexichain:flexirank-mixin)
@@ -494,29 +495,28 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Measure
+;;; Measure.
 
 ;;; A measure represents the set of simultaneous bars.
 (defclass measure (obseq-elem)
-  (;; the smallest duration of any timeline in the measure
+  (;; The smallest duration of any timeline in the measure.
    (min-dist :initarg :min-dist :accessor measure-min-dist)
-   ;; the coefficient of a measure is the sum of d_i^k where d_i
-   ;; is the duration of the i:th timeline, and k is the spacing style
+   ;; The coefficient of a measure is the sum of d_i^k where d_i is
+   ;; the duration of the i:th timeline, and k is the spacing style.
    (coeff :initarg :coeff :accessor measure-coeff)
-   ;; the position of a measure in the sequence of measures
-   ;; of a buffer is indicated by two numbers, the position
-   ;; of the segment to which the measure belongs within the
-   ;; sequence of segments of the buffer, and the position of
-   ;; the bars within that segment.
+   ;; The position of a measure in the sequence of measures of a
+   ;; buffer is indicated by two numbers, the position of the segment
+   ;; to which the measure belongs within the sequence of segments of
+   ;; the buffer, and the position of the bars within that segment.
    (seg-pos :initarg :seg-pos :reader measure-seg-pos)
    (bar-pos :initarg :bar-pos :reader measure-bar-pos)
-   ;; a list of the bars that make up this measure
+   ;; A list of the bars that make up this measure.
    (bars :initarg :bars :reader measure-bars)
-   ;; a ranked flexichain of timelines
+   ;; A ranked flexichain of timelines.
    (timelines :initform (make-instance 'ranked-flexichain) :reader timelines)
-   ;; a convex piecewise-linear function that determines the
+   ;; A convex piecewise-linear function that determines the
    ;; horizontal size of the measure as a function of the "force" that
-   ;; is applied to it
+   ;; is applied to it.
    (elasticity-function :accessor elasticity-function)))
 
 (defun make-measure (seg-pos bar-pos bars)
@@ -529,7 +529,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Segment
+;;; Segment.
 
 (defrclass rsegment segment
   ((measures :initform '() :reader measures)))
@@ -575,15 +575,15 @@
 ;;; same staff, compute their final x offsets.  This is a question of
 ;;; determining whether the note goes to the right or to the left of
 ;;; the stem.  The head-note of the stem goes to the left of an
-;;; up-stem and to the right of a down-stem.  The x offset of a cluster
-;;; gives the x position of the head-note.
+;;; up-stem and to the right of a down-stem.  The x offset of a
+;;; cluster gives the x position of the head-note.
 (defun compute-final-relative-note-xoffsets (group direction)
   (setf group (sort (copy-list group)
                     (if (eq direction :up)
                         (lambda (x y) (< (note-position x) (note-position y)))
                         (lambda (x y) (> (note-position x) (note-position y))))))
   (score-pane:with-suspended-note-offset offset
-    ;; the first element of the group is the head-note
+    ;; The first element of the group is the head-note.
     (setf (final-relative-note-xoffset (car group)) 0)
     ;; OFFSET is a positive quantity that determines the
     ;; absolute difference between the x offset of a suspended
@@ -593,11 +593,11 @@
           and old-note = (car group) then note
           do (let* ((pos (note-position note))
                     (old-pos (note-position old-note))
-                    ;; if adjacent notes are just one staff step apart,
-                    ;; then one must be suspended.
+                    ;; If adjacent notes are just one staff step
+                    ;; apart, then one must be suspended.
                     (dx (if (= (abs (- pos old-pos)) 1) offset 0)))
                (setf (final-relative-note-xoffset note) dx)
-               ;; go back to ordinary offset
+               ;; Go back to ordinary offset.
                (when (= (abs (- pos old-pos)) 1)
                  (setf note old-note))))))
 
@@ -607,7 +607,7 @@
   (compute-final-accidentals staff-group)
   (compute-final-relative-accidental-xoffset staff-group stem-direction))
 
-;;; compute some important parameters of an element
+;;; Compute some important parameters of an element.
 (defgeneric compute-element-parameters (element))
 
 (defmethod compute-element-parameters (element)
@@ -659,12 +659,12 @@
                   do (push (pop elements) group)
                   until (and (non-empty-cluster-p (car group))
                              (zerop (rbeams (car group)))))
-            ;; pop off trailing unbeamable objects
+            ;; Pop off trailing unbeamable objects.
             (loop until (non-empty-cluster-p (car group))
                   do (push (pop group) elements)))
           collect (nreverse group))))
 
-;;; compute some important parameters of a bar
+;;; Compute some important parameters of a bar.
 (defgeneric compute-bar-parameters (bar))
 
 (defmethod compute-bar-parameters (bar)
@@ -720,29 +720,30 @@
                          (incf timeline-index)))))
       (loop for bar in (measure-bars measure)
             do (compute-bar-timelines bar)))
-    ;; compute the duration of each timeline except the last one
+    ;; Compute the duration of each timeline except the last one.
     (loop for i from 0 below (1- (flexichain:nb-elements timelines))
           do (setf (duration (flexichain:element* timelines i))
                    (- (start-time (flexichain:element* timelines (1+ i)))
                       (start-time (flexichain:element* timelines i)))))
-    ;; compute the duration of the last timeline, if any
+    ;; Compute the duration of the last timeline, if any.
     (unless (zerop (flexichain:nb-elements timelines))
       (let ((measure-duration (reduce #'max (measure-bars measure) :key #'duration))
             (last-timeline (flexichain:element* timelines (1- (flexichain:nb-elements timelines)))))
         (setf (duration last-timeline) (- measure-duration (start-time last-timeline)))))
-    ;; set the coefficient and the min-dist of the measure
+    ;; Set the coefficient and the min-dist of the measure.
     (loop with min-dist = 10000
           for timeline-index from 0 below (flexichain:nb-elements timelines)
           for duration = (duration (flexichain:element* timelines timeline-index))
           sum (expt duration spacing-style) into coeff
           do (when (plusp duration) (setf min-dist (min min-dist duration)))
-          ;; timelines with zero duration do not intervene in the calculation
-          ;; of the min-dist
+          ;; Timelines with zero duration do not intervene in the
+          ;; calculation of the min-dist.
           finally (setf (measure-coeff measure) coeff
                         (measure-min-dist measure) min-dist))))
 
 ;;; Compute all the measures of a segment by stepping through all the
-;;; bars in parallel as long as there is at least one simultaneous bar.
+;;; bars in parallel as long as there is at least one simultaneous
+;;; bar.
 (defun compute-measures (segment)
   (let ((buffer (buffer segment)))
     (setf (slot-value segment 'measures)
@@ -757,7 +758,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; Buffer
+;;; Buffer.
 
 (stealth-mixin:define-stealth-mixin rbuffer (obseq) buffer
   ((modified-p :initform t :accessor modified-p)))
@@ -770,7 +771,7 @@
       nil
       (measureno (segmentno buffer seg-pos) bar-pos)))
 
-;;; as required by the obseq library, we supply a method on this
+;;; As required by the obseq library, we supply a method on this
 ;;; generic function.  When we are given a measure other than the last
 ;;; one in the segment, return the next one in the segment.  When we
 ;;; are given the last measure in a segment which is not the last one,
@@ -786,19 +787,19 @@
            (buffer-pos buf (1+ seg-pos) 0))
           (t nil))))
 
-;;; as required by the obseq library, we supply a method on this
+;;; As required by the obseq library, we supply a method on this
 ;;; generic function specialized on NIL, for which the first measure
 ;;; of the first segment is returned.
 (defmethod obseq-next ((buf buffer) (measure (eql nil)))
   (measureno (segmentno buf 0) 0))
 
-;;; as required by the obseq library, we supply a method on this
-;;; generic function.  When we are given a measure other than the first
-;;; one in the segment, return the previous one in the segment.  When we
-;;; are given the first measure in a segment which is not the first one,
-;;; return the last measure in the preceding segment.  When we are
-;;; given the first measure of the first segment, return nil as required
-;;; by the obseq library.
+;;; As required by the obseq library, we supply a method on this
+;;; generic function.  When we are given a measure other than the
+;;; first one in the segment, return the previous one in the segment.
+;;; When we are given the first measure in a segment which is not the
+;;; first one, return the last measure in the preceding segment.  When
+;;; we are given the first measure of the first segment, return nil as
+;;; required by the obseq library.
 (defmethod obseq-prev ((buf buffer) (measure measure))
   (let ((seg-pos (measure-seg-pos measure))
         (bar-pos (measure-bar-pos measure)))
@@ -808,9 +809,9 @@
                                      (1- (nb-measures (segmentno buf (1- seg-pos))))))
           (t nil))))
 
-;;; as required by the obseq library, we supply a method on this
-;;; generic function specialized on NIL, for which the last measure
-;;; of the last segment is returned.
+;;; As required by the obseq library, we supply a method on this
+;;; generic function specialized on NIL, for which the last measure of
+;;; the last segment is returned.
 (defmethod obseq-prev ((buf buffer) (measure (eql nil)))
   (buffer-pos buf
               (1- (nb-segments buf))
