@@ -29,7 +29,9 @@
 (defclass icon-push-button (push-button)
   ((icon-path :initarg :icon-path :accessor icon-path)
    (icon :initarg :icon :initform nil)))
+
 (defgeneric icon (button))
+
 (defmethod icon ((button icon-push-button))
   ;; Once an icon file has been imported once, just return the
   ;; object. Perhaps it'd be better to do this when the object is
@@ -44,7 +46,9 @@
   (slot-value button 'icon))
 (defclass icon-push-button-pane (icon-push-button push-button-pane)
   ())
+
 (define-abstract-pane-mapping 'icon-push-button 'icon-push-button-pane)
+
 (defmethod compose-space ((gadget icon-push-button-pane) &key width height)
   ;; FIXME: I don't really know what these values should be
   (let* ((pw (pattern-width (icon gadget)))
@@ -79,9 +83,12 @@
   ((drawing-function :initarg :drawing-function :accessor button-drawing-function)
    (drawing-width :initarg :drawing-width :accessor drawing-width)
    (height :initarg :drawing-height :accessor drawing-height)))
+
 (defclass drawn-push-button-pane (drawn-push-button push-button-pane clim-stream-pane)
   ())
+
 (define-abstract-pane-mapping 'drawn-push-button 'drawn-push-button-pane)
+
 (defmethod compose-space ((gadget drawn-push-button-pane) &key width height)
   (let* ((dw (drawing-width  gadget))
          (dh (drawing-height gadget))
@@ -121,15 +128,19 @@
 
 (defparameter *file-text-style*
   (make-text-style :sans-serif :roman :small))
+
 ;;; Transport for holding pathname info between application frame and
 ;;; caller
 (defstruct filespec (pathname))
+
 ;;; FIXME: way to pass initargs to application gadget
 (defparameter *init-info* "") 
 
 (define-command-table path-input)
 ;; (defclass file-browser-pane (esa-pane-mixin application-pane) ())
+
 (define-gesture-name :adjust :pointer-button (:left :control))
+
 (define-gesture-name :hidden :keyboard (#\h :control))
 
 (defun read-text-path (gadget)
