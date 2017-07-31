@@ -109,7 +109,6 @@
   (declare (ignore ink))
   (funcall (button-drawing-function pane) pane x1 y1))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; File dialogue stuff
@@ -231,6 +230,7 @@
                   (pathname-name path))
               0)
          #\.))
+
 (defun directory-name (path)
   (car (last (pathname-directory path))))
 
@@ -246,6 +246,13 @@
             (or (string-lessp (pathname-name p1) (pathname-name p2))
                 (and (string-equal (pathname-name p1) (pathname-name p2))
                      (string-lessp (pathname-type p1) (pathname-type p2))))))))
+
+(defun file-filter (path frame)
+  (when (pathname-type path)
+    (if (extensions frame)
+        (member (pathname-type path) (extensions frame)
+                :test #'string-equal)
+        t)))
 
 (defun browser-show-directory (pane path
                                &key (show-hidden nil)
@@ -289,12 +296,6 @@
         (princ-to-string pathname))
   (redraw-file-browser-windows frame))
 
-(defun file-filter (path frame)
-  (when (pathname-type path)
-    (if (extensions frame)
-        (member (pathname-type path) (extensions frame)
-                :test #'string-equal)
-        t)))
 (define-file-browser-command (com-toggle-hidden :name t :menu t
                                                :keystroke :hidden)
     ()
