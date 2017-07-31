@@ -103,6 +103,7 @@
      :min-width w
      :height (or height h)
      :min-height h)))
+
 (defmethod draw-label* ((pane drawn-push-button) x1 y1 x2 y2
                         &key ink)
   (declare (ignore ink))
@@ -344,8 +345,10 @@
   (list object))
 
 (defparameter *gadget-init-hash* (make-hash-table))
+
 (defun get-gadget-value (keyword)
   (gethash keyword *gadget-init-hash*))
+
 (defun set-gadget-defaults (gadget-pairs)
   (setf *gadget-init-hash* (make-hash-table))
   (do* ((gadget-pairs gadget-pairs (cddr gadget-pairs))
@@ -353,6 +356,7 @@
         (val (second gadget-pairs) (second gadget-pairs)))
        ((null gadget-pairs))
     (setf (gethash key *gadget-init-hash*) val)))
+
 (defun make-application-frame-with-gadgets (type &key gadget-vars frame-vars)
   (set-gadget-defaults gadget-vars)
   (apply #'make-application-frame type frame-vars))
