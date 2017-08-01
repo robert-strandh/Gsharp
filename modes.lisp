@@ -51,11 +51,11 @@
 (set-key 'com-zoom-in 'global-gsharp-table '(#\+))
 (set-key 'com-zoom-out 'global-gsharp-table '(#\-))
 
-(set-key `(com-eval-expression ,*unsupplied-argument-marker*) 
+(set-key `(com-eval-expression ,*unsupplied-argument-marker*)
          'global-gsharp-table '((#\: :meta)))
 
-;;; the melody table contains commands that are specific to the 
-;;; melody layer
+;;; The melody table contains commands that are specific to the
+;;; melody layer.
 
 (define-command-table melody-table)
 
@@ -75,8 +75,8 @@
 (set-key 'com-more-sharps 'melody-table '((#\# :meta)))
 (set-key 'com-more-flats 'melody-table '((#\@ :meta)))
 
-;;; the rhythmic table contains command that are specific 
-;;; to rhythmic elements
+;;; The rhythmic table contains command that are specific
+;;; to rhythmic elements.
 (define-command-table rhythmic-table)
 
 (set-key 'com-more-dots 'rhythmic-table '((#\.)))
@@ -90,8 +90,8 @@
 (set-key 'com-up 'rhythmic-table '((#\u :meta)))
 (set-key 'com-down 'rhythmic-table '((#\d :meta)))
 
-;;; the cluster table contains commands that are specific to 
-;;; clusters
+;;; The cluster table contains commands that are specific to
+;;; clusters.
 
 (define-command-table cluster-table
     :inherit-from (rhythmic-table))
@@ -121,7 +121,7 @@
 (set-key 'com-octave-up 'cluster-table '((#\U :meta)))
 (set-key 'com-octave-down 'cluster-table '((#\D :meta)))
 
-;;; lyrics mode table
+;;; Lyrics mode table.
 
 (define-command-table lyrics-table
     :inherit-from (rhythmic-table))
@@ -133,17 +133,17 @@
 (defun make-insert-fun (code)
   (lambda () (append-char (cur-element) code)))
 
-(loop for c in '(#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M 
+(loop for c in '(#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M
                  #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
       for i from 65
       do (set-key (make-insert-fun i) 'lyrics-table `((,c))))
 
-(loop for c in '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m 
+(loop for c in '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m
                  #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)
       for i from 97
       do (set-key (make-insert-fun i) 'lyrics-table`((,c))))
 
-;;; try some latin prefix mode for national characters 
+;;; Try some latin prefix mode for national characters.
 (set-key (make-insert-fun 192) 'lyrics-table '((:dead--grave) (#\A)))
 (set-key (make-insert-fun 193) 'lyrics-table '((:dead--acute) (#\A)))
 (set-key (make-insert-fun 194) 'lyrics-table '((:dead--circumflex) (#\A)))
