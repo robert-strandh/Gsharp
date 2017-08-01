@@ -111,7 +111,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;; File dialogue stuff
+;;; File dialogue stuff.
 ;;;
 ;;; Dialogue box for file browing operations. Takes an object and puts
 ;;; the resulting pathname into it (for now, this means we can only
@@ -268,7 +268,7 @@
             (unless (> (+ (* 3 i) j) (length dir))
               (formatting-cell (pane)
                 (if (= i 0 j)
-                    ;; fixme: root dir
+                    ;; FIXME: Root dir.
                     (with-output-as-presentation
                         (pane parent 'clim:pathname :single-box t)
                       (clim-listener::draw-icon
@@ -363,7 +363,7 @@
   (apply #'make-application-frame type frame-vars))
 
 (defun gui-get-pathname (&key initial-path extensions)
-  ;; clunky way of getting default values into gadgets
+  ;; Clunky way of getting default values into gadgets.
   (unless initial-path
     (setf initial-path (directory-of-current-buffer)))
   (let* ((filespec (make-filespec :pathname ""))
