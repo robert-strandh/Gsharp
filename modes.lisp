@@ -38,7 +38,6 @@
 (set-key 'com-save-score-file-as 'global-gsharp-table '((#\S :meta)))
 (set-key 'com-save-buffer 'global-gsharp-table '((#\s :meta)))
 
-
 (set-key 'com-istate-more-dots 'global-gsharp-table '((#\i) (#\.)))
 (set-key 'com-istate-more-lbeams 'global-gsharp-table '((#\i) (#\[)))
 (set-key 'com-istate-more-rbeams 'global-gsharp-table '((#\i) (#\])))
@@ -131,7 +130,6 @@
 (set-key `(com-erase-element *numeric-argument-marker*) 'lyrics-table '((#\h :meta)))
 (set-key 'insert-lyrics-element 'lyrics-table '((#\Space :control)))
 
-
 (defun make-insert-fun (code)
   (lambda () (append-char (cur-element) code)))
 
@@ -177,7 +175,6 @@
 (set-key (make-insert-fun 220) 'lyrics-table '((:dead--diaeresis) (#\U)))
 (set-key (make-insert-fun 221) 'lyrics-table '((:dead--acute) (#\Y)))
 
-
 (set-key (make-insert-fun 224) 'lyrics-table '((:dead--grave) (#\a)))
 (set-key (make-insert-fun 225) 'lyrics-table '((:dead--acute) (#\a)))
 (set-key (make-insert-fun 226) 'lyrics-table '((:dead--circumflex) (#\a)))
@@ -194,7 +191,6 @@
 (set-key (make-insert-fun 237) 'lyrics-table '((:dead--acute) (#\i)))
 (set-key (make-insert-fun 238) 'lyrics-table '((:dead--circumflex) (#\i)))
 (set-key (make-insert-fun 239) 'lyrics-table '((:dead--diaeresis) (#\i)))
-
 
 (set-key (make-insert-fun 242) 'lyrics-table '((:dead--grave) (#\o)))
 (set-key (make-insert-fun 243) 'lyrics-table '((:dead--acute) (#\o)))
