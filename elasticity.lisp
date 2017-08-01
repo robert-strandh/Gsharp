@@ -48,8 +48,8 @@
   (:documentation "return the size of an elasticity at zero force"))
 
 (defgeneric force-at-size (elasticity size)
-  (:documentation "for a given size, return the force that is 
-required to obtain that size.  The size must be larger than the 
+  (:documentation "for a given size, return the force that is
+required to obtain that size.  The size must be larger than the
 size at zero force, as reported by zero-force-size"))
 
 (defgeneric size-at-force (elasticity force)
@@ -62,7 +62,7 @@ size at zero force, as reported by zero-force-size"))
 (defmethod print-object ((e elasticity) stream)
   (print-unreadable-object (e stream :type t :identity t)
     (format stream "zero-size: ~a  elements:~s"
-            (zero-force-size e) (elements e))))     
+            (zero-force-size e) (elements e))))
 
 (defun make-zero-elasticity (size)
   "create an elasticity function that is constant for all
@@ -70,8 +70,8 @@ values of the force"
   (make-instance 'elasticity :zero-force-size size))
 
 (defun make-elementary-elasticity (zero-force-size slope)
-  "create an elasticity function that gives a size which is the 
-product of the force and slope given, except that it will never 
+  "create an elasticity function that gives a size which is the
+product of the force and slope given, except that it will never
 have a size smaller than the zero-force-size given"
   (make-instance 'elasticity
     :zero-force-size zero-force-size
