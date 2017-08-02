@@ -388,7 +388,7 @@
               (cos phi))))))
 
 (defun handle-point-pair (p0 p1 tr tl theta phi)
-  (values 
+  (values
    (+ p0
       (/ (* (exp (* #c(0.0 1.0) theta))
             (- p1 p0)
@@ -442,28 +442,28 @@
                             x))
                       (flatten body))))
     (check-syntax path)
-    ;; replace each sequence of type `p & p' by a corner point
+    ;; Replace each sequence of type `p & p' by a corner point.
     (setf path (remove-concatenates path))
-    ;; replace the end points if path is not a cycle    
+    ;; Replace the end points if path is not a cycle.
     (unless (eq (car (last path)) *cycle*)
       (setf (car path) (make-instance 'left-endpoint :point (car path)))
       (setf (car (last path)) (make-instance 'right-endpoint :point (car (last path)))))
-    ;; replace all other points by interior points
+    ;; Replace all other points by interior points.
     (setf path (loop for element in path
                      collect (if (numberp element)
                                  (make-instance 'interior-point :point element)
                                  element)))
-    ;; propagate direction specifiers to their respective points
+    ;; Propagate direction specifiers to their respective points.
     (propagate-direction-specifiers path)
-    ;; remove all direction specifiers
+    ;; Remove all direction specifiers.
     (setf path (remove-if (lambda (x) (typep x 'direction-specifier)) path))
-    ;; propagate tensions and controls to their respective points
+    ;; Propagate tensions and controls to their respective points.
     (propagate-tensions-controls path)
-    ;; remove all tensions and controls objects
+    ;; Remove all tensions and controls objects.
     (setf path (remove-if (lambda (x) (typep x '(or tensions controls))) path))
-    ;; link and rank the points of the path, remove the cycle object
+    ;; Link and rank the points of the path, remove the cycle object.
     (link-and-rank-points path)
-    ;; now the path contains only point objects
+    ;; Now the path contains only point objects.
     (propagate-directions path)
     (solve-angles path)
     (assign-control-points path)
