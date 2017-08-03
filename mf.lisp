@@ -62,7 +62,7 @@
 
 (defun remove-concatenates (path)
   (loop until (null path)
-        if (and (not (null (cddr path))) ; path has at least 3 elements
+        if (and (not (null (cddr path))) ; Path has at least 3 elements.
                 (eq (second path) *concatenate-path-join*))
         collect (prog1 (make-instance 'corner-point :point (car path))
                   (setf path (cdddr path)))
@@ -77,8 +77,7 @@
           "the path must end with a point, but ~s was found" (car (last path))))
 
 (defun check-cycle (path)
-  ;; check that there is no `cycle' other than at
-  ;; the end of the path.
+  ;; Check that there is no CYCLE other than at the end of the path.
   (assert (not (member-if (lambda (x) (eq x *cycle*)) (butlast path)))
           ()
           "only the last element of a path can be CYCLE"))
@@ -87,9 +86,9 @@
   (check-start-end path)
   (check-cycle path)
   (loop for (x y z) on path
-        ;; check that each direction specifier is surrounded
+        ;; Check that each direction specifier is surrounded
         ;; by a point on one side and a tensions object on the other
-        ;; or possibly a cycle object on the right
+        ;; or possibly a cycle object on the right.
         do (when (typep y 'direction-specifier)
              (assert (or (and (typep x 'tensions)
                               (or (numberp z) (eq z *cycle*)))
@@ -97,9 +96,9 @@
                               (typep z 'tensions)))
                      ()
                      "a direction specifier must have a point on one side and a tensions object on the other, but ~a and ~a were found" x z))
-        ;; check that each controls object and each
+        ;; Check that each controls object and each
         ;; concatenate path join is surrounded by points
-        ;; or possibly a cycle object on the right
+        ;; or possibly a cycle object on the right.
         do (when (or (eq y *concatenate-path-join*)
                      (typep y 'controls))
              (assert (numberp x)
@@ -108,9 +107,9 @@
              (assert (or (numberp z) (eq z *cycle*))
                      ()
                      "a concatenate path join or a controls object must have a point or `cycle' to the right, but ~a was found" z))
-        ;; check that each tensions object is
+        ;; Check that each tensions object is
         ;; surrounded by a direction specifier or a point
-        ;; or possibly a cycle on the right
+        ;; or possibly a cycle on the right.
         do (when (typep y 'tensions)
              (assert (typep x '(or number direction-specifier))
                      ()
@@ -118,8 +117,8 @@
              (assert (or (typep z '(or number direction-specifier)) (eq z *cycle*))
                      ()
                      "a tension object must have a direction specifier, a point, or `cycle' to the right, but ~a was found" z))
-        ;; check that each point or cycle object is surrounded by a
-        ;; direction specifier or a basic path join
+        ;; Check that each point or cycle object is surrounded by a
+        ;; direction specifier or a basic path join.
         do (when (or (numberp y) (eq y *cycle*))
              (assert (typep x '(or direction-specifier basic-path-join))
                      ()
@@ -533,7 +532,7 @@
 (defun part-way (p0 p1 alpha)
   (+ (* (- 1 alpha) p0) (* alpha p1)))
 
-;;; some standard paths
+;;; Some standard paths.
 (defparameter +quarter-circle+
   (let* ((a (* 0.5 (- (sqrt 2) 1)))
          (q0 (clim:make-point 0.5 0.0))
@@ -584,7 +583,7 @@
 (defparameter +razor+
   (mcclim-bezier::close-path (mf #c(-0.5 0) -- #c(0.5 0) -- #c(-0.5 0))))
 
-;;; pen drawing
+;;; Pen drawing.
 
 (defvar *pen* nil)
 
