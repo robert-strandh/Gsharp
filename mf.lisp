@@ -71,10 +71,12 @@
 (defun check-start-end (path)
   (assert (numberp (car path))
           ()
-          "the path must start with a point, but ~s was found" (car path))
+          "the path must start with a point, but ~s was found"
+          (car path))
   (assert (or (numberp (car (last path))) (eq (car (last path)) *cycle*))
           ()
-          "the path must end with a point, but ~s was found" (car (last path))))
+          "the path must end with a point, but ~s was found"
+          (car (last path))))
 
 (defun check-cycle (path)
   ;; Check that there is no CYCLE other than at the end of the path.
@@ -95,7 +97,10 @@
                          (and (numberp x)
                               (typep z 'tensions)))
                      ()
-                     "a direction specifier must have a point on one side and a tensions object on the other, but ~a and ~a were found" x z))
+                     "A direction specifier must have a point on~@
+                      one side and a tensions object on the other,~@
+                      but ~a and ~a were found"
+                     x z))
         ;; Check that each controls object and each
         ;; concatenate path join is surrounded by points
         ;; or possibly a cycle object on the right.
@@ -103,7 +108,9 @@
                      (typep y 'controls))
              (assert (numberp x)
                      ()
-                     "a concatenate path join or a controls object must have a point to the left, but ~a was found" x)
+                     "A concatenate path join or a controls object~@
+                      must have a point to the left, but ~a was found")
+                     x)
              (assert (or (numberp z) (eq z *cycle*))
                      ()
                      "a concatenate path join or a controls object must have a point or `cycle' to the right, but ~a was found" z))
