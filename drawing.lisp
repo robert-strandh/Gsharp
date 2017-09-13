@@ -315,7 +315,7 @@ right of the center of its timeline"))
         ;; element of a bar, provided that its timeline is also the
         ;; last one in the measure
         do (compute-gaps-adjacent-timelines (measure-bars measure) method pane)
-        
+
         ;; then look at adjacent elements whose corresponding
         ;; timelines are NOT adjacent, or the last element of a bar
         ;; whose corresponding timeline is not the last one in the meaure
@@ -1157,7 +1157,7 @@ right of the center of its timeline"))
 
 (defmethod draw-element (pane (timesig time-signature) &optional (flags t))
   (declare (ignore flags))
-  (let ((staff (staff timesig)) 
+  (let ((staff (staff timesig))
         (x (final-absolute-element-xoffset timesig)))
     (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
       (dolist (component (time-signature-components timesig))
@@ -1174,7 +1174,7 @@ right of the center of its timeline"))
 
 (defmethod draw-element (pane (timesig time-signature) &optional (flags t))
   (declare (ignore flags))
-  (let ((staff (staff timesig)) 
+  (let ((staff (staff timesig))
         (x (final-absolute-element-xoffset timesig)))
     (score-pane:with-vertical-score-position (pane (staff-yoffset staff))
       (dolist (component (time-signature-components timesig))
