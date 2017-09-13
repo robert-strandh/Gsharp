@@ -399,7 +399,6 @@
             (y2 (- (+ (staff-step staff-step) up))))
         (draw-rectangle* pane x1 y1 x2 y2)))))
 
-
 ;;;;;;;;;;;;;;;;;; bar line
 
 (defun draw-bar-line (pane x y1 y2)
@@ -423,7 +422,6 @@
 (defun draw-horizontal-beam (medium x1 y x2)
   (multiple-value-bind (down up) (beam-offsets *font*)
     (draw-rectangle* medium x1 (+ y up) x2 (+ y down))))
-
 
 (defclass downward-beam-output-record (beam-output-record)
   ())
