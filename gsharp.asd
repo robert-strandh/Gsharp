@@ -6,6 +6,7 @@
   :depends-on (:mcclim
                :clim-listener
                :stealth-mixin
+               :acclimation
                :flexichain
                :midi
                :puri
