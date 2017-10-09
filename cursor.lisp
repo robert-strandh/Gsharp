@@ -1,7 +1,7 @@
 (cl:in-package #:gsharp-cursor)
 
 (defmacro defcclass (name base slots)
-  `(progn 
+  `(progn
      (stealth-mixin:define-stealth-mixin ,name () ,base
        ((cursors :initform '() :accessor cursors)
         ,@slots))))
@@ -57,7 +57,7 @@
 (defgeneric end-of-bar-p (cursor))
 
 (defgeneric beginning-of-bar-p (cursor))
-  
+
 (defgeneric forward-element (cursor))
 
 (defgeneric backward-element (cursor))
@@ -80,7 +80,7 @@
       (decf (pos cursor))))
 
 (defmethod cursor-element ((cursor gsharp-cursor))
-  (with-accessors ((bar bar) (pos pos)) cursor  
+  (with-accessors ((bar bar) (pos pos)) cursor
     (when (< pos (nb-elements bar))
       (elementno bar pos))))
 
@@ -169,7 +169,7 @@
 (defmethod add-element :after ((element staffwise-element) bar position)
   (let ((staff (staff element)))
     (setf (staffwise-elements staff)
-          (merge 'list (list element) (staffwise-elements staff) 
+          (merge 'list (list element) (staffwise-elements staff)
                  (lambda (x y) (gsharp::starts-before-p x (bar y) y))))))
 
 (defmethod remove-element :before ((element element) (bar cbar))
@@ -305,16 +305,16 @@
       (if (> nb-bars (1+ barno))
           (set-cursors (barno slice barno) 0)
           (let ((bar (barno slice (1- barno))))
-            (set-cursors bar (nb-elements bar)))))))        
+            (set-cursors bar (nb-elements bar)))))))
 
 (defmethod insert-bar-before ((bar bar) (cursor gsharp-cursor))
   (let ((cursor-bar (bar cursor)))
     (add-bar bar (slice cursor-bar) (number cursor-bar))))
-  
+
 (defmethod insert-bar-after ((bar bar) (cursor gsharp-cursor))
   (let ((cursor-bar (bar cursor)))
     (add-bar bar (slice cursor-bar) (1+ (number cursor-bar)))))
-  
+
 (defmethod delete-bar ((cursor gsharp-cursor))
   (assert (not (last-bar-p cursor)) () 'in-last-bar)
   (remove-bar (bar cursor)))
