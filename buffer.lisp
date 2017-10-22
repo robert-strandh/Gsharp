@@ -1,3 +1,44 @@
+;;; Author: Robert Strandh
+;;; Copyright (c) 2005 by Robert Strandh (robert.strandh@gmail.com)
+
+;;; This library is free software; you can redistribute it and/or
+;;; modify it under the terms of the GNU Library General Public
+;;; License as published by the Free Software Foundation; either
+;;; version 2 of the License, or (at your option) any later version.
+;;;
+;;; This library is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; Library General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Library General Public
+;;; License along with this library; if not, write to the
+;;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;;; Boston, MA  02111-1307  USA.
+
+;;; An elasticity function determines the physical size of a sequence
+;;; of objects as a function of the force that is applied to it.  In
+;;; our case, the force is always greater than or equal to zero, and
+;;; in the direction of stretching the objects.  For large force
+;;; values, the size of the sequence is always the force value times
+;;; the sum of the individual elasticities of each object in the
+;;; sequence.  However, individual objects may have stoppers that
+;;; require them to be larger or equal to a particular value.  For an
+;;; object to acquire a size larger than its stopper value, the force
+;;; must therefor be larger than the stopper value divide by the
+;;; elasticity.
+
+;;; For a sequence of such objects, we thus get an elasticity function
+;;; that is convex and piecewise linear, constant for small values of
+;;; the force, and then a piecewise increasing slope for increasing
+;;; values of the force.
+
+;;; We represent such a function by a number and a list.  The number
+;;; is the constant value for small values of the force.  The elements
+;;; of the list (which might be empty) are pairs of the form (x . s)
+;;; where x is the value of the force at which the slope changes, and
+;;; s is the slope after than point.
+
 (cl:in-package #:gsharp-buffer)
 
 (defparameter *gsharp-readtable-v3* (copy-readtable))
