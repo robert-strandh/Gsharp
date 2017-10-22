@@ -111,10 +111,6 @@
 (defmethod slots-to-be-saved append ((e element))
   '(xoffset annotations left-pad right-pad))
 
-;;; Return the number of right beams of the element.
-(defgeneric rbeams (element)
-  (:method ((element element)) 0))
-
 (defmethod duration ((element element)) 0)
 (defmethod lbeams ((element element)) 0)
 
@@ -127,13 +123,17 @@
 (defgeneric notehead (rhythmic-element))
 (defgeneric (setf notehead) (notehead rhythmic-element))
 
-;;; Return the number of right beams of the element.  With setf, set
-;;; the number of right beams of the element.
+;;; Return the number of right beams of the element.
+(defgeneric rbeams (element)
+  (:method ((element element)) 0))
+
+;;; Set the number of right beams of the element.
 (defgeneric (setf rbeams) (rbeams rhythmic-element))
 
-;;; Return the number of left beams of the element.  With setf, set
-;;; the number of left beams of the element.
+;;; Return the number of left beams of the element.
 (defgeneric lbeams (rhythmic-element))
+
+;;; Set the number of left beams of the element.
 (defgeneric (setf lbeams) (lbeams rhythmic-element))
 
 ;;; Return the number of dots of the element.  With setf, set the
