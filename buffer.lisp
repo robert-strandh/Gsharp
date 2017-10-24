@@ -590,12 +590,13 @@
            :initarg :staves :accessor staves)
    (rastral-size :initform 6 :initarg :r-size :accessor rastral-size)
    (zoom-level :initform 1 :initarg :zoom :accessor zoom-level)
-   ;; the min width determines the preferred geographic distance after the
-   ;; timeline with the shortest duration on a line.
+   ;; The min width determines the preferred geographic distance after
+   ;; the timeline with the shortest duration on a line.
    (min-width :initform *default-min-width* :initarg :min-width :accessor min-width)
-   ;; the spacing style of the buffer determines the how geographic distance
-   ;; between adjacent timelines is related to temporal distance.
-   ;; a value of 0 means constant spacing, a value of 1 means proportional spacing
+   ;; The spacing style of the buffer determines the how geographic
+   ;; distance between adjacent timelines is related to temporal
+   ;; distance.  A value of 0 means constant spacing, a value of 1
+   ;; means proportional spacing.
    (spacing-style :initform *default-spacing-style* :initarg :spacing-style :accessor spacing-style)
    (right-edge :initform *default-right-edge* :initarg :right-edge :accessor right-edge)
    (left-offset :initform *default-left-offset* :initarg :left-offset :accessor left-offset)
@@ -687,7 +688,7 @@
     (assert buffer () 'segment-not-in-buffer)
     (with-slots (segments) buffer
       (setf segments (delete segment segments :test #'eq))
-      ;; make sure there is one segment left
+      ;; Make sure there is one segment left.
       (unless segments
         (add-segment (make-instance 'segment :staff (car (staves buffer))) buffer 0)))
     (setf buffer nil)))
