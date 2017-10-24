@@ -50,26 +50,26 @@
                                           (average (notes element)
                                            :key #'cents-adjustment))))))
             (mapcar (lambda (note)
-		      (make-instance 'note-on-message
+                      (make-instance 'note-on-message
                                      :time time
-				     :status (+ #x90 channel)
-				     :key (midi-pitch note) :velocity 100))
-		    (remove-if #'tie-left (notes element)))
+                                     :status (+ #x90 channel)
+                                     :key (midi-pitch note) :velocity 100))
+                    (remove-if #'tie-left (notes element)))
             (mapcar (lambda (note)
                       (make-instance 'note-off-message
-				     :time (+ time (* *tempo* (duration element)))
-				     :status (+ #x80 channel)
-				     :key (midi-pitch note) :velocity 100))
-		    (remove-if #'tie-right (notes element))))))
+                                     :time (+ time (* *tempo* (duration element)))
+                                     :status (+ #x80 channel)
+                                     :key (midi-pitch note) :velocity 100))
+                    (remove-if #'tie-right (notes element))))))
 
 (defun events-from-bar (bar time channel)
   (mapcan (lambda (element)
-	    (prog1 (events-from-element element time channel)
-	      (incf time (* *tempo* (duration element)))))
-	  (elements bar)))
+            (prog1 (events-from-element element time channel)
+              (incf time (* *tempo* (duration element)))))
+          (elements bar)))
 
 (defun track-from-slice (slice channel durations &key (start-time 0))
-	(let ((time start-time))
+        (let ((time start-time))
     (cons (make-instance 'program-change-message
                          :time time :status  (+ #xc0 channel) :program 0)
           (mapcan (lambda (bar duration)
@@ -89,9 +89,9 @@
 
 (defun play-tracks (tracks)
   (let ((midifile (make-instance 'midifile
-		     :format 1
-		     :division 25
-		     :tracks tracks)))
+                     :format 1
+                     :division 25
+                     :tracks tracks)))
     (write-midi-file midifile *midi-temp-file*)
     #+cmu
     (ext:run-program *midi-player*
