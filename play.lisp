@@ -93,27 +93,10 @@
                      :division 25
                      :tracks tracks)))
     (write-midi-file midifile *midi-temp-file*)
-    #+cmu
-    (ext:run-program *midi-player*
-                     (append *midi-player-arguments*
-                             (list *midi-temp-file*)))
-    #+sbcl
-    (let ((process
-           (sb-ext:run-program *midi-player*
-                               (append *midi-player-arguments*
-                                       (list *midi-temp-file*))
-                               :search t)))
-      (sb-ext:process-wait process)
-      (when (not (zerop (sb-ext:process-exit-code process)))
-        (error 'midi-player-failed
-               :midi-player *midi-player*
-               :exit-code (sb-ext:process-exit-code process))))
-    #+clisp
-    (ext:run-program *midi-player*
-                     :arguments (append *midi-player-arguments*
-                                        (list *midi-temp-file*)))
-    #-(or cmu sbcl clisp)
-    (error "write compatibility layer for RUN-PROGRAM")))
+    (uiop/run-program:run-program
+     (cons *midi-player*
+           (append *midi-player-arguments*
+                   (list *midi-temp-file*))))))
 
 (defun play-layer (layer)
   (let* ((slice (body layer))
