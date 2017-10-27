@@ -150,5 +150,3 @@
                          :from-end t)))
 
     (play-tracks tracks)))
-
-
