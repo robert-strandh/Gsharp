@@ -116,7 +116,7 @@
                for i from 0
                collect (track-from-slice slice i durations :start-time start-time))
             (reduce #'+ durations))))
-  
+
 (defun play-segment (segment)
   (play-tracks (segment-tracks segment)))
 
@@ -138,7 +138,7 @@
           (incf time segment-duration)
 
           (loop :for track-addendum :in track-addendums
-                :for tracks-tail :on tracks                
+                :for tracks-tail :on tracks
                 :do (push track-addendum (car tracks-tail))))))
 
     ; Concatenate each track's snippets
@@ -147,7 +147,7 @@
                  (reduce (lambda (result snippet)
                            (nconc snippet result))
                          (car tracks-tail)
-                         :from-end t))) 
+                         :from-end t)))
 
     (play-tracks tracks)))
 
