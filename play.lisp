@@ -42,11 +42,15 @@
                             :status (+ #xE0 channel)
                             :value (+ 8192 ;; middle of pitch-bend controller
                                       (round
-                                       (* 4096/100 ;; 4096 points per 100 cents
-                                          ;; midi can only do per-channel pitch bend,
-                                          ;; not per-note pitch bend, so as a sad
-                                          ;; compromise we average the pitch bends
-                                          ;; of all notes in the cluster
+                                       (* 4096/100
+                                          ;; 4096 points per 100
+                                          ;; cents. MIDI can only do
+                                          ;; per-channel pitch bend,
+                                          ;; not per-note pitch bend,
+                                          ;; so as a sad compromise we
+                                          ;; average the pitch bends
+                                          ;; of all notes in the
+                                          ;; cluster.
                                           (average (notes element)
                                            :key #'cents-adjustment))))))
             (mapcar (lambda (note)
@@ -127,7 +131,8 @@
                            :maximize (length (layers segment))))
          (tracks (loop :for i :from 0 :below num-tracks :collect nil)))
 
-    ; Collect snippets from each segment that should go to different tracks
+    ;; Collect snippets from each segment that should go to different
+    ;; tracks.
     (dolist (segment (segments buffer))
       (let ((*tempo* (tempo segment))
             (*tuning* (tuning segment)))
@@ -141,7 +146,7 @@
                 :for tracks-tail :on tracks
                 :do (push track-addendum (car tracks-tail))))))
 
-    ; Concatenate each track's snippets
+    ;; Concatenate each track's snippets.
     (loop :for tracks-tail :on tracks
        :do (setf (car tracks-tail)
                  (reduce (lambda (result snippet)
