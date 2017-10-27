@@ -130,7 +130,6 @@
          (num-tracks (loop :for segment :in (segments buffer)
                            :maximize (length (layers segment))))
          (tracks (loop :for i :from 0 :below num-tracks :collect nil)))
-
     ;; Collect snippets from each segment that should go to different
     ;; tracks.
     (dolist (segment (segments buffer))
@@ -139,13 +138,10 @@
         (multiple-value-bind (track-addendums segment-duration)
             (segment-tracks segment :start-time time)
           (format t "~S" segment-duration)
-
           (incf time segment-duration)
-
           (loop :for track-addendum :in track-addendums
                 :for tracks-tail :on tracks
                 :do (push track-addendum (car tracks-tail))))))
-
     ;; Concatenate each track's snippets.
     (loop :for tracks-tail :on tracks
        :do (setf (car tracks-tail)
@@ -153,5 +149,4 @@
                            (nconc snippet result))
                          (car tracks-tail)
                          :from-end t)))
-
     (play-tracks tracks)))
