@@ -23,8 +23,8 @@
                                      (bars slice)))
                            slices)))
     (loop while durations
-       collect (reduce #'max durations :key #'car)
-       do (setf durations (remove nil (mapcar #'cdr durations))))))
+          collect (reduce #'max durations :key #'car)
+          do (setf durations (remove nil (mapcar #'cdr durations))))))
 
 (defun average (list &key (key #'identity))
   (let ((sum 0)
@@ -115,10 +115,9 @@
          (durations (measure-durations slices))
          (*tempo* (tempo segment))
          (*tuning* (gsharp-buffer:tuning segment)))
-    (values (loop
-               for slice in slices
-               for i from 0
-               collect (track-from-slice slice i durations :start-time start-time))
+    (values (loop for slice in slices
+                  for i from 0
+                  collect (track-from-slice slice i durations :start-time start-time))
             (reduce #'+ durations))))
 
 (defun play-segment (segment)
@@ -144,9 +143,9 @@
                 :do (push track-addendum (car tracks-tail))))))
     ;; Concatenate each track's snippets.
     (loop :for tracks-tail :on tracks
-       :do (setf (car tracks-tail)
-                 (reduce (lambda (result snippet)
-                           (nconc snippet result))
-                         (car tracks-tail)
-                         :from-end t)))
+          :do (setf (car tracks-tail)
+                    (reduce (lambda (result snippet)
+                              (nconc snippet result))
+                            (car tracks-tail)
+                            :from-end t)))
     (play-tracks tracks)))
