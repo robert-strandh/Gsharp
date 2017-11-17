@@ -163,4 +163,3 @@
 (define-fontview-command (com-antialiased-view :name t) ()
   (with-slots (view) *application-frame*
     (setf view :antialiased)))
-
