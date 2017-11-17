@@ -67,7 +67,7 @@
                     do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
               (loop for x from 0 below 300 by (* 4 zoom)
                     do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
-              ;; draw the bounding rectangle
+              ;; Draw the bounding rectangle.
               (draw-rectangle* pane
                                (* zoom min-x) (* zoom min-y)
                                (* zoom max-x) (1+ (* zoom min-y))
@@ -84,7 +84,7 @@
                                (* zoom max-x) (* zoom min-y)
                                (1+ (* zoom max-x)) (* zoom max-y)
                                :ink +red+)
-              ;; draw the reference point
+              ;; Draw the reference point.
               (draw-rectangle* pane -300 0 300 1 :ink +red+)
               (draw-rectangle* pane 0 -300 1 300 :ink +red+))))))))
 
