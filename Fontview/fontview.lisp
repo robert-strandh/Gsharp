@@ -23,76 +23,76 @@
     (with-translation (pane hoffset voffset)
       (sdl::draw-shape pane font shape 0 0)
       (when staff
-	(with-slots ((slt sdl::staff-line-thickness)
-		     (sld sdl::staff-line-distance)
-		     (yoff sdl::yoffset))
-	    font
-	  (let ((up (round (+ (* 0.5 slt) yoff)))
-		(down (round (- (* 0.5 slt) yoff))))
-	    (loop repeat 5
-		  for y from (* (+ -2 (* 1/2 staff-offset)) sld) by sld
-		  do (draw-rectangle* pane
-				      (* -10 sld) (- y up)
-				      (* 10 sld) (+ y down)))))))))
+        (with-slots ((slt sdl::staff-line-thickness)
+                     (sld sdl::staff-line-distance)
+                     (yoff sdl::yoffset))
+            font
+          (let ((up (round (+ (* 0.5 slt) yoff)))
+                (down (round (- (* 0.5 slt) yoff))))
+            (loop repeat 5
+                  for y from (* (+ -2 (* 1/2 staff-offset)) sld) by sld
+                  do (draw-rectangle* pane
+                                      (* -10 sld) (- y up)
+                                      (* 10 sld) (+ y down)))))))))
 
 (defun display-pixel-view (frame pane)
   (with-slots (font shape grid zoom hoffset voffset) frame
     (with-translation (pane hoffset voffset)
       (let ((design (sdl::ensure-design font shape)))
-	(multiple-value-bind (min-x min-y max-x max-y) (bounding-rectangle* design)
-	  (setf min-x (* 4 (floor min-x))
-		min-y (* 4 (floor min-y))
-		max-x (* 4 (ceiling max-x))
-		max-y (* 4 (ceiling max-y)))
-	  (let ((array (climi::render-to-array design)))
-	    (loop for y from min-y below max-y
-		  for y-index from 0
-		  do (loop with x0 = nil
-			   for x from min-x below max-x
-			   for x-index from 0
-			   do (if (zerop (aref array y-index x-index))
-				  (when (null x0)
-				    (setf x0 x))
-				  (unless (null x0)
-				    (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom))
-				    (setf x0 nil)))
-			   finally (unless (null x0)
-				     (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom)))))
-	    (when grid
-	      (loop for y downfrom 0 above -300 by (* 4 zoom)
-		    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
-	      (loop for y from 0 below 300 by (* 4 zoom)
-		    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
-	      (loop for x downfrom 0 above -300 by (* 4 zoom)
-		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
-	      (loop for x from 0 below 300 by (* 4 zoom)
-		    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
-	      ;; draw the bounding rectangle
-	      (draw-rectangle* pane
-			       (* zoom min-x) (* zoom min-y)
-			       (* zoom max-x) (1+ (* zoom min-y))
-			       :ink +red+)
-	      (draw-rectangle* pane
-			       (* zoom min-x) (* zoom max-y)
-			       (* zoom max-x) (1+ (* zoom max-y))
-			       :ink +red+)
-	      (draw-rectangle* pane
-			       (* zoom min-x) (* zoom min-y)
-			       (1+ (* zoom min-x)) (* zoom max-y)
-			       :ink +red+)
-	      (draw-rectangle* pane
-			       (* zoom max-x) (* zoom min-y)
-			       (1+ (* zoom max-x)) (* zoom max-y)
-			       :ink +red+)
-	      ;; draw the reference point
-	      (draw-rectangle* pane -300 0 300 1 :ink +red+)
-	      (draw-rectangle* pane 0 -300 1 300 :ink +red+))))))))
+        (multiple-value-bind (min-x min-y max-x max-y) (bounding-rectangle* design)
+          (setf min-x (* 4 (floor min-x))
+                min-y (* 4 (floor min-y))
+                max-x (* 4 (ceiling max-x))
+                max-y (* 4 (ceiling max-y)))
+          (let ((array (climi::render-to-array design)))
+            (loop for y from min-y below max-y
+                  for y-index from 0
+                  do (loop with x0 = nil
+                           for x from min-x below max-x
+                           for x-index from 0
+                           do (if (zerop (aref array y-index x-index))
+                                  (when (null x0)
+                                    (setf x0 x))
+                                  (unless (null x0)
+                                    (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom))
+                                    (setf x0 nil)))
+                           finally (unless (null x0)
+                                     (draw-rectangle* pane (* x0 zoom) (* y zoom) (* x zoom) (* (1+ y) zoom)))))
+            (when grid
+              (loop for y downfrom 0 above -300 by (* 4 zoom)
+                    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
+              (loop for y from 0 below 300 by (* 4 zoom)
+                    do (draw-rectangle* pane -300 y 300 (1+ y) :ink +blue+))
+              (loop for x downfrom 0 above -300 by (* 4 zoom)
+                    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
+              (loop for x from 0 below 300 by (* 4 zoom)
+                    do (draw-rectangle* pane x -300 (1+ x) 300 :ink +blue+))
+              ;; draw the bounding rectangle
+              (draw-rectangle* pane
+                               (* zoom min-x) (* zoom min-y)
+                               (* zoom max-x) (1+ (* zoom min-y))
+                               :ink +red+)
+              (draw-rectangle* pane
+                               (* zoom min-x) (* zoom max-y)
+                               (* zoom max-x) (1+ (* zoom max-y))
+                               :ink +red+)
+              (draw-rectangle* pane
+                               (* zoom min-x) (* zoom min-y)
+                               (1+ (* zoom min-x)) (* zoom max-y)
+                               :ink +red+)
+              (draw-rectangle* pane
+                               (* zoom max-x) (* zoom min-y)
+                               (1+ (* zoom max-x)) (* zoom max-y)
+                               :ink +red+)
+              ;; draw the reference point
+              (draw-rectangle* pane -300 0 300 1 :ink +red+)
+              (draw-rectangle* pane 0 -300 1 300 :ink +red+))))))))
 
 (defun display-entry (frame pane)
   (with-slots (view) frame
     (if (eq view :antialiased)
-	(display-antialiased-view frame pane)
-	(display-pixel-view frame pane))))
+        (display-antialiased-view frame pane)
+        (display-pixel-view frame pane))))
 
 (defun fontview (&optional (shape :g-clef))
   (let ((frame (make-application-frame 'fontview :shape shape)))
