@@ -96,7 +96,7 @@
 
 (defun fontview (&optional (shape :g-clef))
   (let ((frame (make-application-frame 'fontview :shape shape)))
-    (run-frame-top-level frame)))  
+    (run-frame-top-level frame)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
