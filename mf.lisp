@@ -132,7 +132,7 @@
                      "a point or a cycle object must have a direction specifier or a basic path joint to the left, but ~a was found" x)
              (assert (or (null z) (typep z '(or direction-specifier basic-path-join)))
                      ()
-                     "a point must have a direction specifier or a basic path joint to the right, but ~a was found" z))))
+                     "a point must have a direction specifier or a basic path joint to the right, but ~a was found" z)))
 
 (defun propagate-direction-specifiers (path)
   (loop for (x y z) on path
