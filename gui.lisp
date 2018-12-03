@@ -125,7 +125,7 @@
                                  :width 400 :height 500
                                  :name "score"
                                  ;; :incremental-redisplay t
-                                 :double-buffering t
+                                 ;; :double-buffering t
                                  :display-function 'display-score
                                  :command-table 'total-melody-table))
                  (info (make-pane 'gsharp-info-pane
