@@ -1,6 +1,6 @@
 (defpackage :gsharp-utilities
   (:shadow built-in-class)
-  (:use :clim-lisp :clim-mop)
+  (:use :clim-lisp)
   (:export #:ninsert-element #:define-stealth-mixin
 	   #:unicode-to-char #:char-to-unicode))
 
