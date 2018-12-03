@@ -59,12 +59,12 @@
 (defun save-object (object stream)
   (pprint-logical-block (stream nil :prefix "[" :suffix "]")
     (format stream "~s ~2i" (class-name (class-of object)))
-    (loop with slots = (clim-mop:class-slots (class-of object))
+    (loop with slots = (c2mop:class-slots (class-of object))
           for slot-name in (slots-to-be-saved object)
           for slot = (find slot-name slots
-                           :key #'clim-mop:slot-definition-name
+                           :key #'c2mop:slot-definition-name
                            :test #'eq)
-          for initarg = (car (clim-mop:slot-definition-initargs slot))
+          for initarg = (car (c2mop:slot-definition-initargs slot))
           for value = (slot-value object slot-name)
           do (format stream "~_~W ~W " initarg value))))
 

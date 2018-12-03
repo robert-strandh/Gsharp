@@ -19,7 +19,7 @@
 
 (defmethod append-paths ((path1 bezier-curve) (path2 bezier-curve))
   (make-instance 'bezier-curve
-    :segments (append (%segments path1) (%segments path2))))
+    :segments (concatenate 'vector (%segments path1) (%segments path2))))
 
 (defmethod close-path ((path bezier-curve))
   (let ((segments (%segments path)))
