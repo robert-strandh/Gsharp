@@ -447,7 +447,7 @@
                             (point-to-complex x)
                             x))
                       (flatten body))))
-    (check-syntax path)
+    #+nil (check-syntax path)
     ;; Replace each sequence of type `p & p' by a corner point.
     (setf path (remove-concatenates path))
     ;; Replace the end points if path is not a cycle.
