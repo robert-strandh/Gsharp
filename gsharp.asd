@@ -10,7 +10,8 @@
                :flexichain
                :midi
                :puri
-               :cxml)
+               :cxml
+               :obseq)
   :serial t
   :components
   ((:file "packages")
