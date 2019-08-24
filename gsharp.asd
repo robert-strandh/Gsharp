@@ -24,7 +24,6 @@
    (:file "melody")
    (:file "lyrics")
    (:file "numbering")
-   (:file "Obseq/obseq")
    (:file "measure")
    (:file "beaming")
    (:file "elasticity")
