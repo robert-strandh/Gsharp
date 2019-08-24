@@ -6,12 +6,12 @@
 
 ;;; the class for elements of the obseq
 (defclass numseq-elem (obseq-elem)
-  ((value :initarg :value :reader elem-value)
-   (index :initarg :index :reader elem-index)))
+  ((%value :initarg :value :reader value)
+   (%index :initarg :index :reader index)))
 
 (defmethod print-object ((object numseq-elem) stream)
-  (with-accessors ((value elem-value)
-                   (index elem-index)
+  (with-accessors ((value value)
+                   (index index)
                    (number-left number-left)
                    (number-right number-right)
                    (best-tcost-left best-tcost-left)
@@ -45,15 +45,15 @@
   (aref (numseq-data ns) 0))
 
 (defmethod obseq-next ((ns numseq) (elem numseq-elem))
-  (and (< (elem-index elem) (1- (length (numseq-data ns))))
-       (aref (numseq-data ns) (1+ (elem-index elem)))))
+  (and (< (index elem) (1- (length (numseq-data ns))))
+       (aref (numseq-data ns) (1+ (index elem)))))
 
 (defmethod obseq-prev ((ns numseq) (elem (eql nil)))
   (aref (numseq-data ns) (1- (length (numseq-data ns)))))
 
 (defmethod obseq-prev ((ns numseq) (elem numseq-elem))
-  (and (> (elem-index elem) 0)
-       (aref (numseq-data ns) (1- (elem-index elem)))))
+  (and (> (index elem) 0)
+       (aref (numseq-data ns) (1- (index elem)))))
 
 ;;; the class for the cost method
 (defclass numseq-method (cost-method)
@@ -76,7 +76,7 @@
 (defmethod combine-cost ((method numseq-method)
                          (seq-cost numseq-seq-cost)
                          (elem numseq-elem))
-  (make-instance 'numseq-seq-cost :sum (+ (cost-sum seq-cost) (elem-value elem))))
+  (make-instance 'numseq-seq-cost :sum (+ (cost-sum seq-cost) (value elem))))
 
 (defmethod combine-cost ((method numseq-method)
                          (total-cost numseq-total-cost)
@@ -92,7 +92,7 @@
     :maxcost (abs (- (cost-sum seq-cost) (cost-best-sum method)))))
 
 (defmethod combine-cost ((method numseq-method) (elem numseq-elem) (empty (eql nil)))
-  (make-instance 'numseq-seq-cost :sum (elem-value elem)))
+  (make-instance 'numseq-seq-cost :sum (value elem)))
 
 ;;; cost comparisons
 (defmethod cost-less ((method numseq-method)
