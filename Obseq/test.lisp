@@ -10,9 +10,15 @@
    (index :initarg :index :reader elem-index)))
 
 (defmethod print-object ((object numseq-elem) stream)
-  (with-slots (value index number-left number-right
-                     best-tcost-left best-cut-left
-                     best-tcost-right best-cut-right) object
+  (with-accessors ((value elem-value)
+                   (index elem-index)
+                   (number-left number-left)
+                   (number-right number-right)
+                   (best-tcost-left best-tcost-left)
+                   (best-cut-left best-cut-left)
+                   (best-tcost-right best-tcost-right)
+                   (best-cut-right best-cut-right))
+      object
     (format stream
             "[I: ~a V: ~a {L: N: ~a BT: ~a BC: ~a} {R: N: ~a BT: ~a BC: ~a}]"
             index value
