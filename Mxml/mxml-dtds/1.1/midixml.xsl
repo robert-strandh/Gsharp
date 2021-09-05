@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-	MIDI XML midixml.xsl for sorting MIDI files with
-	absolute timestamps.
+        MIDI XML midixml.xsl for sorting MIDI files with
+        absolute timestamps.
 
-	Version 1.1 - 20 May 2005
-	
-	Copyright © 2004-2005 Recordare LLC.
-	http://www.recordare.com/
-	
-	This MusicXML work is being provided by the copyright
-	holder under the MusicXML Document Type Definition 
-	Public License Version 1.02, available from:
-	
-		http://www.recordare.com/dtds/license.html
+        Version 1.1 - 20 May 2005
+        
+        Copyright © 2004-2005 Recordare LLC.
+        http://www.recordare.com/
+        
+        This MusicXML work is being provided by the copyright
+        holder under the MusicXML Document Type Definition 
+        Public License Version 1.02, available from:
+        
+                http://www.recordare.com/dtds/license.html
 -->
 
 <!--
-	XSL Stylesheet for sorting MIDI XML by absolute timestamp.
+        XSL Stylesheet for sorting MIDI XML by absolute timestamp.
 -->
 
 <xsl:stylesheet
-	version="1.0"
-	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+        version="1.0"
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 
   <!--
-	The identity transformation. Used for everything aside
-	from the track element.
+        The identity transformation. Used for everything aside
+        from the track element.
   -->
 
   <xsl:template match="text()">
@@ -42,8 +42,8 @@
   </xsl:template>
 
   <!--
-	When we get to a Track, sort all events within the 
-	track by their Absolute timestamp.
+        When we get to a Track, sort all events within the 
+        track by their Absolute timestamp.
   -->
 
   <xsl:template match="Track">

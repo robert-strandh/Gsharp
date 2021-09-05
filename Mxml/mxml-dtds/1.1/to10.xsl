@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-	MusicXML to10.xsl
-	
-	Version 1.1 - 20 May 2005
-	
-	Copyright © 2004-2005 Recordare LLC.
-	http://www.recordare.com/
-	
-	This MusicXML work is being provided by the copyright
-	holder under the MusicXML Document Type Definition 
-	Public License Version 1.02, available from:
-	
-		http://www.recordare.com/dtds/license.html
+        MusicXML to10.xsl
+        
+        Version 1.1 - 20 May 2005
+        
+        Copyright © 2004-2005 Recordare LLC.
+        http://www.recordare.com/
+        
+        This MusicXML work is being provided by the copyright
+        holder under the MusicXML Document Type Definition 
+        Public License Version 1.02, available from:
+        
+                http://www.recordare.com/dtds/license.html
 -->
 
 <!--
-	To10.xsl converts from MusicXML 1.1 to 1.0 for
-	compatibility with older products.
+        To10.xsl converts from MusicXML 1.1 to 1.0 for
+        compatibility with older products.
 -->
 
 <xsl:stylesheet
-	version="1.0"
-	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+        version="1.0"
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!--
     XML output, with a DOCTYPE refering the partwise DTD.
@@ -30,9 +30,9 @@
   -->
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8"
-	omit-xml-declaration="no" standalone="no"
-	doctype-system="http://www.musicxml.org/dtds/partwise.dtd"
-	doctype-public="-//Recordare//DTD MusicXML 1.0 Partwise//EN" />
+        omit-xml-declaration="no" standalone="no"
+        doctype-system="http://www.musicxml.org/dtds/partwise.dtd"
+        doctype-public="-//Recordare//DTD MusicXML 1.0 Partwise//EN" />
 
   <!--
     For the root, only look for score-partwise. Anything else 

@@ -5,7 +5,7 @@
 <score-partwise version="1.1">
   <part-list>
     <score-part id="P1">
-	  <part-name>Music</part-name>
+          <part-name>Music</part-name>
     </score-part>
   </part-list>
   <part id="P1">
@@ -29,7 +29,7 @@
         <type>quarter</type>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>D</step>
           <octave>4</octave>
@@ -38,18 +38,18 @@
         <type>quarter</type>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>F</step>
-		  <alter>1</alter>
+                  <alter>1</alter>
           <octave>4</octave>
         </pitch>
-		<duration>4</duration>
+                <duration>4</duration>
         <type>quarter</type>
-		<accidental>sharp</accidental>
+                <accidental>sharp</accidental>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>A</step>
           <octave>4</octave>
@@ -66,7 +66,7 @@
         <type>quarter</type>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>G</step>
           <octave>4</octave>
@@ -75,7 +75,7 @@
         <type>quarter</type>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>B</step>
           <octave>4</octave>
@@ -84,7 +84,7 @@
         <type>quarter</type>
       </note>
       <note>
-		<chord/>
+                <chord/>
         <pitch>
           <step>D</step>
           <octave>5</octave>

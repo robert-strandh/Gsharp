@@ -83,7 +83,7 @@
         </pitch>
         <duration>6</duration>
         <type>quarter</type>
-		<dot/>
+                <dot/>
       </note>
       <note>
         <pitch>
@@ -92,7 +92,7 @@
         </pitch>
         <duration>7</duration>
         <type>quarter</type>
-		<dot/><dot/>
+                <dot/><dot/>
       </note>
       <note>
         <pitch>
@@ -101,7 +101,7 @@
         </pitch>
         <duration>24</duration>
         <type>whole</type>
-		<dot/>
+                <dot/>
       </note>
       <note>
         <pitch>
@@ -110,7 +110,7 @@
         </pitch>
         <duration>30</duration>
         <type>whole</type>
-		<dot/><dot/><dot/>
+                <dot/><dot/><dot/>
       </note>
       <note>
         <pitch>
@@ -118,8 +118,8 @@
           <octave>4</octave>
         </pitch>
         <duration>12</duration>
-		<type>half</type>
-		<dot/>
+                <type>half</type>
+                <dot/>
       </note>
       <note>
         <pitch>

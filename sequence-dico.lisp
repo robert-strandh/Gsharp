@@ -24,26 +24,26 @@
 
 (defun make-sequence-dico (&key (test #'eql))
   (make-instance 'standard-sequence-dico
-		 :table (make-hash-table :test test)))
+                 :table (make-hash-table :test test)))
 
 (defmethod (setf dico-object) (object (sequence-dico standard-sequence-dico) sequence)
   (assert (not (null sequence)))
   (loop for subseq on sequence
-	for elem in sequence
-	and table = (table sequence-dico) then (gethash elem table)
-	do (unless (hash-table-p (gethash elem table))
-	     (setf (gethash elem table)
-		   (make-hash-table :test (hash-table-test (table sequence-dico)))))
-	finally (setf (gethash elem table) object)))
+        for elem in sequence
+        and table = (table sequence-dico) then (gethash elem table)
+        do (unless (hash-table-p (gethash elem table))
+             (setf (gethash elem table)
+                   (make-hash-table :test (hash-table-test (table sequence-dico)))))
+        finally (setf (gethash elem table) object)))
 
 (defmethod dico-object (sequence-dico sequence)
   (assert (not (null sequence)))
   (loop for subseq on sequence
-	for elem in sequence
-	for table-or-obj = (gethash elem (table sequence-dico))
-	then (gethash elem table-or-obj)
-	while (hash-table-p table-or-obj)
-	finally (cond ((null table-or-obj) (return (values nil nil nil)))
-		      ((hash-table-p table-or-obj) (return (values nil nil t)))
-		      ((null (cdr subseq)) (return (values table-or-obj t t)))
-		      (t (return (values nil nil nil))))))
+        for elem in sequence
+        for table-or-obj = (gethash elem (table sequence-dico))
+        then (gethash elem table-or-obj)
+        while (hash-table-p table-or-obj)
+        finally (cond ((null table-or-obj) (return (values nil nil nil)))
+                      ((hash-table-p table-or-obj) (return (values nil nil t)))
+                      ((null (cdr subseq)) (return (values table-or-obj t t)))
+                      (t (return (values nil nil nil))))))

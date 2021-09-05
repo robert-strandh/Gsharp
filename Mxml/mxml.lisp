@@ -15,9 +15,9 @@
   (let ((content (dom:first-child thing)))
     ;; Could be empty
     (if content
-	(string-trim '(#\Space #\Tab #\Newline) 
-		     (dom:node-value content))
-	"")))
+        (string-trim '(#\Space #\Tab #\Newline) 
+                     (dom:node-value content))
+        "")))
 (defun named-pcdata (node tag-name)
   (if (has-element-type node tag-name)
       (pcdata (elt (dom:get-elements-by-tag-name node tag-name) 0))
@@ -133,9 +133,9 @@ notehead, dots and beams values."
                 :filled)
                ("half" :half)
                ("whole" :whole)
-	       ;; KLUDGE: "full" here (and for beams) I think is a
-	       ;; feature of catering for Nightingale's MusicXML
-	       ;; export, which is wrong in this respect.
+               ;; KLUDGE: "full" here (and for beams) I think is a
+               ;; feature of catering for Nightingale's MusicXML
+               ;; export, which is wrong in this respect.
                (("breve" "full") :breve)
                ("long" :long))
              :filled))
@@ -407,22 +407,22 @@ specified, returns the first (hopefully default) staff."
 (defun parse-mxml-clef (clef)
   "Takes dom element for clef and returns a clef object"
   (let ((name (stringcase (named-pcdata clef "sign")
-			  ("G" (if (string= (named-pcdata clef "clef-octave-change")
-					    "-1")
-				   :treble8
-				   :treble))
-			  ("F" :bass)
-			  ("C" :c)
-			  ("percussion" :percussion)
-			  ;; "TAB" and "none" are the other, unsupported choices,
-			  ;; along with other octave shifts.
-			  (t  :c)))
-	(lineno (if (has-element-type clef "line")
-		    (* 2 (1- (parse-integer (named-pcdata clef "line"))))
-		    nil))
-	(staff-number (if (dom:has-attribute clef "number")
-			  (1- (parse-integer (dom:get-attribute clef "number")))
-			  0)))
+                          ("G" (if (string= (named-pcdata clef "clef-octave-change")
+                                            "-1")
+                                   :treble8
+                                   :treble))
+                          ("F" :bass)
+                          ("C" :c)
+                          ("percussion" :percussion)
+                          ;; "TAB" and "none" are the other, unsupported choices,
+                          ;; along with other octave shifts.
+                          (t  :c)))
+        (lineno (if (has-element-type clef "line")
+                    (* 2 (1- (parse-integer (named-pcdata clef "line"))))
+                    nil))
+        (staff-number (if (dom:has-attribute clef "number")
+                          (1- (parse-integer (dom:get-attribute clef "number")))
+                          0)))
     (values (make-clef name :lineno lineno) staff-number)))
 
 (defun parse-mxml-time (time staves)
@@ -565,23 +565,23 @@ note elements in that staff have associated lyrics."
       ;; allows the element to occur anywhere---not even limiting it
       ;; to the first bar. This may be stupid, but I can't tell.
       (do ((i 0 (1+ i)))
-	  ((= i (length measures)))
-	(do ((thing (dom:first-child (elt measures i))
-		    (dom:next-sibling thing)))
-	    ((not thing))
-	  (when (string= (dom:tag-name thing) "attributes")
-	    (setf attributes thing)
-	    (return)))
-	(when attributes
-	  (return)))
+          ((= i (length measures)))
+        (do ((thing (dom:first-child (elt measures i))
+                    (dom:next-sibling thing)))
+            ((not thing))
+          (when (string= (dom:tag-name thing) "attributes")
+            (setf attributes thing)
+            (return)))
+        (when attributes
+          (return)))
       (when attributes
 
         ;; clefs need to be made before i make the staves, keysigs
         ;; after. don't ask.
         ;; clefs
         (for-named-elements ("clef" clef attributes)
-	  (multiple-value-bind (new-clef staff-number)
-	      (parse-mxml-clef clef)
+          (multiple-value-bind (new-clef staff-number)
+              (parse-mxml-clef clef)
             (setf (elt clefs staff-number) new-clef)))
         ;; every fiveline staff must have a clef, even if the xml file did not specify one
         (loop for clef across clefs
@@ -699,11 +699,11 @@ note elements in that staff have associated lyrics."
               ;; keysignature got added to the staff itself
              (unless (= 0 measure-position *parsing-duration-gmeasure-position*)
  ;;            (unless (= 0 *parsing-duration-gmeasure-position*)
-		(when (has-element-type child "key")
+                (when (has-element-type child "key")
           (format t "~A ~A!!!~%" measure-position *parsing-duration-gmeasure-position*)
-		  (let ((new-keysignature (parse-mxml-key
-					   (elt (dom:get-elements-by-tag-name child "key") 0)
-					   staves)))
+                  (let ((new-keysignature (parse-mxml-key
+                                           (elt (dom:get-elements-by-tag-name child "key") 0)
+                                           staves)))
             (unless (listp new-keysignature)
               (setf new-keysignature (list new-keysignature)))
             (dolist (new-sig new-keysignature)
@@ -714,9 +714,9 @@ note elements in that staff have associated lyrics."
                        bar *parsing-duration-gmeasure-position*))))))
         (when (has-element-type child "time")
           (format t "~A ~A!!!~%" measure-position *parsing-duration-gmeasure-position*)
-		  (let ((new-timesignature (parse-mxml-time
-					   (elt (dom:get-elements-by-tag-name child "time") 0)
-					   staves)))
+                  (let ((new-timesignature (parse-mxml-time
+                                           (elt (dom:get-elements-by-tag-name child "time") 0)
+                                           staves)))
             (unless (listp new-timesignature)
               (setf new-timesignature (list new-timesignature)))
             (dolist (new-sig new-timesignature)
@@ -725,17 +725,17 @@ note elements in that staff have associated lyrics."
                       (add-element-at-duration
                        (copy-timesignature new-sig)
                        bar *parsing-duration-gmeasure-position*))))))
-		(when (has-element-type child "clef")
-		  ;; spacer till this is available in gsharp
-		  #+nil (multiple-value-bind (new-clef staff-number)
-		      (parse-mxml-clef (elt (dom:get-elements-by-tag-name child "clef") 0))
-		    (loop for bar in bars
-		       do (when (find (nth staff-number staves) (staves (layer (slice bar))))
-			    (add-element-at-duration
-			     (copy-clef new-clef) bar
-			     *parsing-duration-gmeasure-position*)))))))
+                (when (has-element-type child "clef")
+                  ;; spacer till this is available in gsharp
+                  #+nil (multiple-value-bind (new-clef staff-number)
+                      (parse-mxml-clef (elt (dom:get-elements-by-tag-name child "clef") 0))
+                    (loop for bar in bars
+                       do (when (find (nth staff-number staves) (staves (layer (slice bar))))
+                            (add-element-at-duration
+                             (copy-clef new-clef) bar
+                             *parsing-duration-gmeasure-position*)))))))
                      
-	     ("backup" (setf *parsing-duration-gmeasure-position*
+             ("backup" (setf *parsing-duration-gmeasure-position*
                          (max (- *parsing-duration-gmeasure-position*
                                  (gduration-from-xduration
                                   (parse-integer (named-pcdata child "duration"))))
@@ -810,9 +810,9 @@ note elements in that staff have associated lyrics."
                      :entity-resolver #'resolver :validate t)))
 (defun get-dtd-path (uri-path)
   (let* ((parsed-path uri-path)
-	 (parent-dir (nth (- (list-length parsed-path) 2)
-			  parsed-path))
-	 (filename (car (last parsed-path))))
+         (parent-dir (nth (- (list-length parsed-path) 2)
+                          parsed-path))
+         (filename (car (last parsed-path))))
     (cond
       ((member parent-dir '("1.0" "1.1" "2.0") :test #'string=)
        (format nil "~D/~D" parent-dir filename))
@@ -1132,20 +1132,20 @@ dotted 16th note will return 8."
       (loop repeat dots
          do (cxml:with-element "dot"))
       (when (> (hash-table-count *staff-hash*) 1)
-	(cxml:with-element "staff"
-	  (cxml:text (write-to-string (gethash (staff rest) *staff-hash*))))))))
+        (cxml:with-element "staff"
+          (cxml:text (write-to-string (gethash (staff rest) *staff-hash*))))))))
 
 (defmethod make-xml-element ((cluster cluster) voice)
   ;; this maybe should get called earlier. or later. i don't know.
   (gsharp-measure::compute-final-accidentals (notes cluster))
   (let ((duration (calculate-duration cluster)))
     (loop for note in (notes cluster)
-	  for x from 0
-	  do (make-xml-note note (> x 0) duration voice cluster))
+          for x from 0
+          do (make-xml-note note (> x 0) duration voice cluster))
     (when (null (notes cluster))
       ;; it's an empty cluster, a "space"
       (cxml:with-element "forward"
-	(cxml:text (write-to-string duration))))))
+        (cxml:text (write-to-string duration))))))
 
 (defmethod make-xml-element ((lyric lyrics-element) voice)
   (let ((duration (calculate-duration lyric))
@@ -1158,8 +1158,8 @@ dotted 16th note will return 8."
         (cxml:with-element "voice" (cxml:text (write-to-string voice))))
       ;; TODO: make this use the first melody staff above the lyrics staff
       (when (> (hash-table-count *staff-hash*) 1)
-	(cxml:with-element "staff"
-	  (cxml:text (write-to-string (gethash (staff lyric) *staff-hash*)))))
+        (cxml:with-element "staff"
+          (cxml:text (write-to-string (gethash (staff lyric) *staff-hash*)))))
       (cxml:with-element "lyric"
         (cxml:with-element "syllabic" (cxml:text syllabic))
         (cxml:with-element "text" (cxml:text text))))))
@@ -1223,21 +1223,21 @@ dotted 16th note will return 8."
 (defun note-articulations-p (note cluster)
   (let ((annotations (annotations cluster)))
     (or (member :staccato annotations)
-	(member :tenuto annotations))))
+        (member :tenuto annotations))))
 (defparameter *foo* nil)
 (defun make-xml-note (note in-chord duration voice cluster)
   (let ((type (rhythmic-element-type cluster))
         (dots (dots cluster))
-	(pitch (gshnote-to-xml (pitch note)))
+        (pitch (gshnote-to-xml (pitch note)))
         (accidental (note-accidental note))
         (alter (note-alter note)))
     (cxml:with-element "note"
       (when in-chord
-	(cxml:with-element "chord"))
+        (cxml:with-element "chord"))
       (cxml:with-element "pitch"
         (cxml:with-element "step" (cxml:text (car pitch)))
         (when alter 
-	  (cxml:with-element "alter" (cxml:text alter)))
+          (cxml:with-element "alter" (cxml:text alter)))
         (cxml:with-element "octave" (cxml:text (write-to-string (cadr pitch)))))
       (cxml:with-element "duration" (cxml:text (write-to-string duration)))
       (unless (null voice)
@@ -1246,23 +1246,23 @@ dotted 16th note will return 8."
       (loop repeat dots
            do (cxml:with-element "dot"))
       (when accidental 
-	(cxml:with-element "accidental" (cxml:text accidental)))
+        (cxml:with-element "accidental" (cxml:text accidental)))
       (unless (eq (final-stem-direction (cluster note)) :auto)
         (cxml:with-element "stem"
           (cxml:text (string-downcase
                       (string (final-stem-direction (cluster note)))))))
       (when (> (hash-table-count *staff-hash*) 1)
-	(cxml:with-element "staff"
-	  (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
+        (cxml:with-element "staff"
+          (cxml:text (write-to-string (gethash (staff note) *staff-hash*)))))
       (when (note-notations-p note cluster)
         (cxml:with-element "notations"
           (when (tie-left note)
             (cxml:with-element "tied" (cxml:attribute "type" "stop")))
           (when (tie-right note)
             (cxml:with-element "tied" (cxml:attribute "type" "start")))
-	  (when (note-articulations-p note cluster)
-	    (cxml:with-element "articulations"
-	      (when (member :staccato (annotations cluster))
-		(cxml:with-element "staccato"))
-	      (when (member :tenuto (annotations cluster))
-		(cxml:with-element "tenuto")))))))))
+          (when (note-articulations-p note cluster)
+            (cxml:with-element "articulations"
+              (when (member :staccato (annotations cluster))
+                (cxml:with-element "staccato"))
+              (when (member :tenuto (annotations cluster))
+                (cxml:with-element "tenuto")))))))))
