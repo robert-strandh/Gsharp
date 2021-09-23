@@ -9,8 +9,8 @@
 (defmethod number ((slice slice))
   (let ((layer (layer slice)))
     (cond ((eq slice (head layer)) 0)
-	  ((eq slice (body layer)) 1)
-	  ((eq slice (tail layer)) 2))))
+          ((eq slice (body layer)) 1)
+          ((eq slice (tail layer)) 2))))
 
 (defmethod number ((layer layer))
   (position layer (layers (segment layer))))

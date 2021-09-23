@@ -210,7 +210,7 @@
   (declare (ignore args))
   (with-slots (left-sentinel right-sentinel head tail) obseq
     (setf head left-sentinel
-	  tail right-sentinel)))
+          tail right-sentinel)))
 
 (defun left-sentinel-p (obseq elem)
   (eq elem (slot-value obseq 'left-sentinel)))
@@ -221,12 +221,12 @@
 (defun elem-next (obseq elem)
   (with-slots (left-sentinel right-sentinel) obseq
     (or (obseq-next obseq (if (eq elem left-sentinel) nil elem))
-	(slot-value obseq 'right-sentinel))))
+        (slot-value obseq 'right-sentinel))))
 
 (defun elem-prev (obseq elem)
   (with-slots (left-sentinel right-sentinel) obseq
     (or (obseq-prev obseq (if (eq elem right-sentinel) nil elem))
-	(slot-value obseq 'left-sentinel))))
+        (slot-value obseq 'left-sentinel))))
 
 ;;; we maintain an invariant that stipulates that 
 ;;; 1. elements are numbered in the `number-left' slot sequetially from 0 up-to
@@ -248,22 +248,22 @@
 (defun expand-head (obseq)
   (with-slots (head method) obseq
     (let ((new (elem-next obseq head))
-	  (left head))
+          (left head))
       (unless (right-sentinel-p obseq new)
-	(setf (number-left new) (1+ (number-left head)) ; invariant
-	      head new)
-	(with-slots (best-tcost-left best-cut-left) head
-	  (loop with seq-cost = (combine-cost method head nil)
-		with tcost = (combine-cost method (best-tcost-left left) seq-cost)
-		initially (setf best-tcost-left tcost
-				best-cut-left left)
-		until (left-sentinel-p obseq left)
-		do (setf seq-cost (combine-cost method left seq-cost)
-			 left (elem-prev obseq left)
-			 tcost (combine-cost method (best-tcost-left left) seq-cost))
-		do (when (cost-less method tcost best-tcost-left)
-		     (setf best-tcost-left tcost
-			   best-cut-left left))))))))
+        (setf (number-left new) (1+ (number-left head)) ; invariant
+              head new)
+        (with-slots (best-tcost-left best-cut-left) head
+          (loop with seq-cost = (combine-cost method head nil)
+                with tcost = (combine-cost method (best-tcost-left left) seq-cost)
+                initially (setf best-tcost-left tcost
+                                best-cut-left left)
+                until (left-sentinel-p obseq left)
+                do (setf seq-cost (combine-cost method left seq-cost)
+                         left (elem-prev obseq left)
+                         tcost (combine-cost method (best-tcost-left left) seq-cost))
+                do (when (cost-less method tcost best-tcost-left)
+                     (setf best-tcost-left tcost
+                           best-cut-left left))))))))
 
 (defun leftmost-element-p (obseq elem)
   (null (obseq-prev obseq elem)))
@@ -275,75 +275,75 @@
 (defun expand-tail (obseq)
   (with-slots (tail method) obseq
     (let ((new (elem-prev obseq tail))
-	  (right tail))
+          (right tail))
       (setf (number-right new) (1+ (number-right tail)) ; invariant
-	    tail new)
+            tail new)
       (unless (left-sentinel-p obseq new)
-	(with-slots (best-tcost-right best-cut-right) tail
-	  (loop with seq-cost = (combine-cost method tail nil)
-		with tcost = (combine-cost method seq-cost (best-tcost-right right))
-		initially (setf best-tcost-right tcost
-				best-cut-right right)
-		until (right-sentinel-p obseq right)
-		do (setf seq-cost (combine-cost method seq-cost right)
-			 right (elem-next obseq right)
-			 tcost (combine-cost method seq-cost (best-tcost-right right)))
-		do (when (cost-less method tcost best-tcost-right)
-		     (setf best-tcost-right tcost
-			   best-cut-right right))))))))
+        (with-slots (best-tcost-right best-cut-right) tail
+          (loop with seq-cost = (combine-cost method tail nil)
+                with tcost = (combine-cost method seq-cost (best-tcost-right right))
+                initially (setf best-tcost-right tcost
+                                best-cut-right right)
+                until (right-sentinel-p obseq right)
+                do (setf seq-cost (combine-cost method seq-cost right)
+                         right (elem-next obseq right)
+                         tcost (combine-cost method seq-cost (best-tcost-right right)))
+                do (when (cost-less method tcost best-tcost-right)
+                     (setf best-tcost-right tcost
+                           best-cut-right right))))))))
 
 (defun head-tail-overlap-p (obseq)
   (not (null (number-left (obseq-tail obseq)))))
 
 (defun close-the-gap (obseq)
   (loop until (head-tail-overlap-p obseq)
-	do (expand-head obseq)
-	until (head-tail-overlap-p obseq)
-	do (expand-tail obseq)))
+        do (expand-head obseq)
+        until (head-tail-overlap-p obseq)
+        do (expand-tail obseq)))
 
 (defun tcost-leftcut (obseq elem)
   (if (leftmost-element-p obseq elem)
       (best-tcost-right elem)
       (cost-max (obseq-cost-method obseq)
-		(best-tcost-right elem)
-		(best-tcost-left (elem-prev obseq elem)))))
+                (best-tcost-right elem)
+                (best-tcost-left (elem-prev obseq elem)))))
 
 (defun tcost-rightcut (obseq elem)
   (if (rightmost-element-p obseq elem)
       (best-tcost-left elem)
       (cost-max (obseq-cost-method obseq)
-		(best-tcost-left elem)
-		(best-tcost-right (elem-next obseq elem)))))
+                (best-tcost-left elem)
+                (best-tcost-right (elem-next obseq elem)))))
 
 (defun create-some-overlap (obseq)
   (with-slots (head tail method) obseq
     (loop with cost-best-cut = (cost-min method
-					 (tcost-leftcut obseq tail)
-					 (tcost-rightcut obseq head))
-	  with best-cut = (if (cost-less method
-					 (tcost-leftcut obseq tail)
-					 (tcost-rightcut obseq head))
-			      (list tail :left)
-			      (list head :right))
-	  with gap-cost = (combine-cost method tail nil)
-	  until (or (and (leftmost-element-p obseq tail)
-			 (rightmost-element-p obseq head))
-		    (and (cost-less method cost-best-cut gap-cost)
-			 (seq-cost-cannot-decrease method gap-cost)))
-	  do (when (not (leftmost-element-p obseq tail))
-	       (expand-tail obseq)
-	       (when (cost-less method (tcost-leftcut obseq tail) cost-best-cut)
-		 (setf cost-best-cut (tcost-leftcut obseq tail)
-		       best-cut (list tail :left)))
-	       (setf gap-cost (combine-cost method tail gap-cost)))
-	  do (when (not (rightmost-element-p obseq head))
-	       (expand-head obseq)
-	       (when (cost-less method (tcost-rightcut obseq head) cost-best-cut)
-		 (setf cost-best-cut (tcost-rightcut obseq head)
-		       best-cut (list head :right)))
-	       (setf gap-cost (combine-cost method gap-cost head)))
-	  finally (progn (setf (obseq-best-cut obseq) best-cut)
-			 (return (values (car best-cut) (cadr best-cut) cost-best-cut))))))
+                                         (tcost-leftcut obseq tail)
+                                         (tcost-rightcut obseq head))
+          with best-cut = (if (cost-less method
+                                         (tcost-leftcut obseq tail)
+                                         (tcost-rightcut obseq head))
+                              (list tail :left)
+                              (list head :right))
+          with gap-cost = (combine-cost method tail nil)
+          until (or (and (leftmost-element-p obseq tail)
+                         (rightmost-element-p obseq head))
+                    (and (cost-less method cost-best-cut gap-cost)
+                         (seq-cost-cannot-decrease method gap-cost)))
+          do (when (not (leftmost-element-p obseq tail))
+               (expand-tail obseq)
+               (when (cost-less method (tcost-leftcut obseq tail) cost-best-cut)
+                 (setf cost-best-cut (tcost-leftcut obseq tail)
+                       best-cut (list tail :left)))
+               (setf gap-cost (combine-cost method tail gap-cost)))
+          do (when (not (rightmost-element-p obseq head))
+               (expand-head obseq)
+               (when (cost-less method (tcost-rightcut obseq head) cost-best-cut)
+                 (setf cost-best-cut (tcost-rightcut obseq head)
+                       best-cut (list head :right)))
+               (setf gap-cost (combine-cost method gap-cost head)))
+          finally (progn (setf (obseq-best-cut obseq) best-cut)
+                         (return (values (car best-cut) (cadr best-cut) cost-best-cut))))))
 
 (defmethod obseq-solve (obseq)
   (unless (solvedp obseq)
@@ -354,26 +354,26 @@
   (with-slots (head) obseq
     (assert (not (left-sentinel-p obseq head)))
     (setf (number-left head) nil ; invariant
-	  head (elem-prev obseq head))))
+          head (elem-prev obseq head))))
 
 (defun contract-tail (obseq)
   (with-slots (tail) obseq
     (assert (not (right-sentinel-p obseq tail)))
     (setf (number-right tail) nil ; invariant
-	  tail (elem-next obseq tail))))
+          tail (elem-next obseq tail))))
 
 (defmethod obseq-last-undamaged-element (obseq (elem (eql nil)))
   (with-slots (tail) obseq
     (loop until (right-sentinel-p obseq tail)
-	  do (contract-tail obseq))))
+          do (contract-tail obseq))))
 
 (defmethod obseq-last-undamaged-element (obseq (elem obseq-elem))
   (with-slots (tail) obseq
     (when (and (number-right elem)
-	       (< (number-right elem)
-		  (number-right tail)))
+               (< (number-right elem)
+                  (number-right tail)))
       (loop until (eq tail elem)
-	    do (contract-tail obseq)))))
+            do (contract-tail obseq)))))
   
 (defmethod obseq-last-undamaged-element :after (obseq elem)
   (declare (ignore elem))
@@ -382,15 +382,15 @@
 (defmethod obseq-first-undamaged-element (obseq (elem (eql nil)))
   (with-slots (head) obseq
     (loop until (left-sentinel-p obseq head)
-	  do (contract-head obseq))))
+          do (contract-head obseq))))
 
 (defmethod obseq-first-undamaged-element (obseq (elem obseq-elem))
   (with-slots (head) obseq
     (when (and (number-left elem)
-	       (< (number-left elem)
-		  (number-left head)))
+               (< (number-left elem)
+                  (number-left head)))
       (loop until (eq head elem)
-	    do (contract-head obseq)))))
+            do (contract-head obseq)))))
 
 (defmethod obseq-first-undamaged-element :after (obseq elem)
   (declare (ignore elem))
@@ -423,12 +423,12 @@
 ;;; this function can only be used after the obseq is solved
 (defun elem<= (elem1 elem2)
   (let ((nl1 (number-left elem1))
-	(nl2 (number-left elem2))
-	(nr1 (number-right elem1))
-	(nr2 (number-right elem2)))
+        (nl2 (number-left elem2))
+        (nr1 (number-right elem1))
+        (nr2 (number-right elem2)))
     (cond ((and nl1 nl2) (<= nl1 nl2))
-	  ((and nr1 nr2) (>= nr1 nr2))
-	  (t nl1))))
+          ((and nr1 nr2) (>= nr1 nr2))
+          (t nl1))))
 
 (defun elem< (elem1 elem2)
   (and (elem<= elem1 elem2) (not (eq elem1 elem2))))
@@ -436,24 +436,24 @@
 (defmethod obseq-interval ((obseq obseq) (elem obseq-elem))
   (destructuring-bind (cut pos) (obseq-best-cut obseq)
     (if (eq pos :left)
-	(if (elem<= cut elem)
-	    (loop with left = cut
-		  until (elem< elem (best-cut-right left))
-		  do (setf left (best-cut-right left))
-		  finally (return (values left (elem-prev obseq (best-cut-right left)))))
-	    (loop with right = (elem-prev obseq cut)
-		  until (elem< (best-cut-left right) elem)
-		  do (setf right (best-cut-left right))
-		  finally (return (values (elem-next obseq (best-cut-left right)) right))))
-	(if (elem<= elem cut)
-	    (loop with right = cut
-		  until (elem< (best-cut-left right) elem)
-		  do (setf right (best-cut-left right))
-		  finally (return (values (elem-next obseq (best-cut-left right)) right)))
-	    (loop with left = (elem-next obseq cut)
-		  until (elem< elem (best-cut-right left))
-		  do (setf left (best-cut-right left))
-		  finally (return (values left (elem-prev obseq (best-cut-right left)))))))))
+        (if (elem<= cut elem)
+            (loop with left = cut
+                  until (elem< elem (best-cut-right left))
+                  do (setf left (best-cut-right left))
+                  finally (return (values left (elem-prev obseq (best-cut-right left)))))
+            (loop with right = (elem-prev obseq cut)
+                  until (elem< (best-cut-left right) elem)
+                  do (setf right (best-cut-left right))
+                  finally (return (values (elem-next obseq (best-cut-left right)) right))))
+        (if (elem<= elem cut)
+            (loop with right = cut
+                  until (elem< (best-cut-left right) elem)
+                  do (setf right (best-cut-left right))
+                  finally (return (values (elem-next obseq (best-cut-left right)) right)))
+            (loop with left = (elem-next obseq cut)
+                  until (elem< elem (best-cut-right left))
+                  do (setf left (best-cut-right left))
+                  finally (return (values left (elem-prev obseq (best-cut-right left)))))))))
 
 ;;; FIXME: implement an :after method on (setf obseq-cost-method) that
 ;;; invalidates the entire obseq. 
@@ -469,15 +469,15 @@
 
 (defmethod print-object ((object numseq-elem) stream)
   (with-slots (value index number-left number-right
-		     best-tcost-left best-cut-left
-		     best-tcost-right best-cut-right) object
+                     best-tcost-left best-cut-left
+                     best-tcost-right best-cut-right) object
     (format stream
-	    "[I: ~a V: ~a {L: N: ~a BT: ~a BC: ~a} {R: N: ~a BT: ~a BC: ~a}]"
-	    index value
-	    number-left
-	    best-tcost-left (if (null best-cut-left) "-" (number-left best-cut-left))
-	    number-right
-	    best-tcost-right (if (null best-cut-right) "-" (number-right best-cut-right)))))
+            "[I: ~a V: ~a {L: N: ~a BT: ~a BC: ~a} {R: N: ~a BT: ~a BC: ~a}]"
+            index value
+            number-left
+            best-tcost-left (if (null best-cut-left) "-" (number-left best-cut-left))
+            number-right
+            best-tcost-right (if (null best-cut-right) "-" (number-right best-cut-right)))))
 
 ;;; the class for the obseq itself
 (defclass numseq (obseq)
@@ -485,12 +485,12 @@
 
 (defmethod print-object ((object numseq) stream)
   (loop for elem = (obseq-head object) then (elem-prev object elem)
-	do (print elem stream)
-	until (left-sentinel-p object elem))
+        do (print elem stream)
+        until (left-sentinel-p object elem))
   (princ "****" stream)
   (loop for elem = (obseq-tail object) then (elem-next object elem)
-	do (print elem stream)
-	until (right-sentinel-p object elem)))
+        do (print elem stream)
+        until (right-sentinel-p object elem)))
 
 ;;; how to get from one element to the other
 (defmethod obseq-next ((ns numseq) (elem (eql nil)))
@@ -526,20 +526,20 @@
   (format stream "[TC: ~a]" (maxcost object)))
 
 (defmethod combine-cost ((method numseq-method)
-			 (seq-cost numseq-seq-cost)
-			 (elem numseq-elem))
+                         (seq-cost numseq-seq-cost)
+                         (elem numseq-elem))
   (make-instance 'numseq-seq-cost :sum (+ (cost-sum seq-cost) (elem-value elem))))
 
 (defmethod combine-cost ((method numseq-method)
-			 (total-cost numseq-total-cost)
-			 (seq-cost numseq-seq-cost))
+                         (total-cost numseq-total-cost)
+                         (seq-cost numseq-seq-cost))
   (make-instance 'numseq-total-cost
     :maxcost (max (maxcost total-cost)
-		  (abs (- (cost-sum seq-cost) (cost-best-sum method))))))
+                  (abs (- (cost-sum seq-cost) (cost-best-sum method))))))
 
 (defmethod combine-cost ((method numseq-method)
-			 (seq-cost numseq-seq-cost)
-			 (empty (eql nil)))
+                         (seq-cost numseq-seq-cost)
+                         (empty (eql nil)))
   (make-instance 'numseq-total-cost
     :maxcost (abs (- (cost-sum seq-cost) (cost-best-sum method)))))
 
@@ -548,23 +548,23 @@
 
 ;;; cost comparisons 
 (defmethod cost-less ((method numseq-method)
-		      (c1 numseq-seq-cost)
-		      (c2 numseq-seq-cost))
+                      (c1 numseq-seq-cost)
+                      (c2 numseq-seq-cost))
   (< (abs (- (cost-best-sum method)
-	     (cost-sum c1)))
+             (cost-sum c1)))
      (abs (- (cost-best-sum method)
-	     (cost-sum c2)))))
+             (cost-sum c2)))))
 
 
 (defmethod cost-less ((method numseq-method)
-		      (c1 numseq-total-cost)
-		      (c2 numseq-total-cost))
+                      (c1 numseq-total-cost)
+                      (c2 numseq-total-cost))
   (< (maxcost c1) (maxcost c2)))
 
 
 ;;; tell it how to stop adding cost
 (defmethod seq-cost-cannot-decrease ((method numseq-method)
-				     (seq-cost numseq-seq-cost))
+                                     (seq-cost numseq-seq-cost))
   (>= (cost-sum seq-cost)
       (cost-best-sum method)))
 
@@ -572,11 +572,11 @@
 (defparameter *ns*
   (make-instance 'numseq
     :data (coerce (loop for val in '(5 8 6 9 4 7 6 6 3 2 4 7 3 4
-				     5 4 7 7 6 3 4 9 2 3 4 3 5
-				     7 7 8 9 5 9 4 9 3 9 2 8 6 6
-				     6 7 7 8 9 5 9 4 9 3 9 2 8)
-			for i from 0
-			collect (make-instance 'numseq-elem :index i :value val))
-		  'vector)
+                                     5 4 7 7 6 3 4 9 2 3 4 3 5
+                                     7 7 8 9 5 9 4 9 3 9 2 8 6 6
+                                     6 7 7 8 9 5 9 4 9 3 9 2 8)
+                        for i from 0
+                        collect (make-instance 'numseq-elem :index i :value val))
+                  'vector)
     :cost-method (make-instance 'numseq-method :best-sum 30)))
 

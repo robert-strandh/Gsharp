@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-	MusicXML parttime.xsl
+        MusicXML parttime.xsl
 
-	Version 1.1 - 20 May 2005
-	
-	Copyright © 2004-2005 Recordare LLC.
-	http://www.recordare.com/
-	
-	This MusicXML work is being provided by the copyright
-	holder under the MusicXML Document Type Definition 
-	Public License Version 1.02, available from:
-	
-		http://www.recordare.com/dtds/license.html
+        Version 1.1 - 20 May 2005
+        
+        Copyright © 2004-2005 Recordare LLC.
+        http://www.recordare.com/
+        
+        This MusicXML work is being provided by the copyright
+        holder under the MusicXML Document Type Definition 
+        Public License Version 1.02, available from:
+        
+                http://www.recordare.com/dtds/license.html
 -->
 
 <!-- 
-	Parttime.xsl is an XSLT stylesheet for transforming
-	partwise MusicXML scores into timewise scores. Thus
-	instead of having measures included within each part,
-	the transformed score includes parts within each measure.
-	This type of transformation allows the 2-dimensional
-	nature of a musical score to be adequately represented
-	within a hierarchical format like XML.
+        Parttime.xsl is an XSLT stylesheet for transforming
+        partwise MusicXML scores into timewise scores. Thus
+        instead of having measures included within each part,
+        the transformed score includes parts within each measure.
+        This type of transformation allows the 2-dimensional
+        nature of a musical score to be adequately represented
+        within a hierarchical format like XML.
 -->
 
 <xsl:stylesheet
-	version="1.0"
-	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+        version="1.0"
+        xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!--
     XML output, with a DOCTYPE refering the timewise DTD.
     Here we use the full Internet URL. 
   -->
   <xsl:output method="xml" indent="yes" encoding="UTF-8"
-	omit-xml-declaration="no" standalone="no"
-	doctype-system="http://www.musicxml.org/dtds/timewise.dtd"
-	doctype-public="-//Recordare//DTD MusicXML 1.1 Timewise//EN" />
+        omit-xml-declaration="no" standalone="no"
+        doctype-system="http://www.musicxml.org/dtds/timewise.dtd"
+        doctype-public="-//Recordare//DTD MusicXML 1.1 Timewise//EN" />
 
   <!--
     For the root, only look for score-partwise and
@@ -61,15 +61,15 @@
   <xsl:template match="text()">
     <xsl:value-of select="." />
   </xsl:template>
-	
+        
   <!--
     Whitespace within an xsl:copy could cause problems with 
     empty elements.
   -->
   <xsl:template match="*|@*|comment()|processing-instruction()">
     <xsl:copy><xsl:apply-templates
-		select="*|@*|comment()|processing-instruction()|text()"
-	/></xsl:copy>
+                select="*|@*|comment()|processing-instruction()|text()"
+        /></xsl:copy>
   </xsl:template>
 
   <!--
@@ -80,10 +80,10 @@
     all others) from within that loop.
   -->
   <xsl:template match="score-partwise">
-	
+        
     <!-- Create the score-timewise element. -->
     <xsl:element name="score-timewise">
-		
+                
       <!--
         Copy the seven score header elements and their
         children. The DTD specifies that these occur, if
@@ -97,12 +97,12 @@
       <xsl:apply-templates select="defaults"/>
       <xsl:apply-templates select="credit"/>
       <xsl:apply-templates select="part-list"/>
-			
+                        
       <!--
         Now loop through all measures in the first part.
       -->
       <xsl:for-each select="part[1]/measure">
-		
+                
         <!--
           Bind measure number to a variable for use
           throughout the loop, including inner loop 
@@ -111,10 +111,10 @@
         <xsl:variable name="measure-number">
           <xsl:value-of select="@number"/>
         </xsl:variable>
-				
+                                
         <!-- Create the measure element. -->
         <xsl:element name="measure">
-				
+                                
           <!--
             Now we need to copy the measure attributes.
           -->
@@ -136,22 +136,22 @@
               <xsl:value-of select="@width"/>
             </xsl:attribute>
           </xsl:if>
-				
+                                
           <!--
             Now for the inner loop. We go back to the root
             ancestor, and loop through each part and
             measure, looking for the ones that match the
             measure number, and add it here.
-						
+                                                
             This is inefficient. but it provides a working
             starting point.
           -->
           <xsl:for-each select="../../part/measure">
             <xsl:if test="@number=$measure-number">
-					
+                                        
               <!-- Create the part element. -->
               <xsl:element name="part">
-						
+                                                
                 <!-- Copy the ID from the parent part element. -->
                 <xsl:attribute name="id">
                   <xsl:value-of select="parent::part/@id"/>
@@ -165,7 +165,7 @@
               </xsl:element>
             </xsl:if>
           </xsl:for-each>
-					
+                                        
         </xsl:element>
       </xsl:for-each>
     </xsl:element>       

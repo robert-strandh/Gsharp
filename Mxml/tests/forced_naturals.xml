@@ -5,7 +5,7 @@
 <score-partwise version="1.1">
   <part-list>
     <score-part id="P1">
-	  <part-name>Music</part-name>
+          <part-name>Music</part-name>
     </score-part>
   </part-list>
   <part id="P1">
@@ -27,7 +27,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -36,7 +36,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -45,7 +45,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -54,7 +54,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -63,7 +63,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -72,7 +72,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -81,7 +81,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
       <note>
         <pitch>
@@ -90,7 +90,7 @@
         </pitch>
         <duration>4</duration>
         <type>whole</type>
-		<accidental>natural</accidental>
+                <accidental>natural</accidental>
       </note>
     </measure>
   </part>

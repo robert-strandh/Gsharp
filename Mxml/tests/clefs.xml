@@ -5,7 +5,7 @@
 <score-partwise version="1.1">
   <part-list>
     <score-part id="P1">
-	  <part-name>Music</part-name>
+          <part-name>Music</part-name>
     </score-part>
   </part-list>
   <part id="P1">
@@ -15,19 +15,19 @@
         <key number="3">
           <fifths>3</fifths>
         </key>
-		<staves>4</staves>
-		<clef number="4">
+                <staves>4</staves>
+                <clef number="4">
           <sign>C</sign>
-		  <line>4</line>
+                  <line>4</line>
         </clef>
-		<clef number="1">
+                <clef number="1">
           <sign>G</sign>
-		  <line>2</line>
+                  <line>2</line>
         </clef>
-		<clef number="3">
-		  <sign>C</sign>
+                <clef number="3">
+                  <sign>C</sign>
         </clef>
-		<clef number="2">
+                <clef number="2">
           <sign>F</sign>
         </clef>
       </attributes>
